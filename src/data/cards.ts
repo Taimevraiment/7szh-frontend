@@ -904,6 +904,32 @@ const allCards: CardObj = {
             }
         }, { useCnt: 2 }),
 
+    124: new GICard(124, '黄金剧团的奖赏', '【入场时：】此牌附带1点｢报酬｣。；【结束阶段：】如果所附属的角色在后台。则此牌累积1点｢报酬｣。(最多累积2点)；【角色使用｢元素战技｣或装备｢天赋｣时：】此牌每有1点｢报酬｣，就将其消耗，以少花费1个元素骰。',
+        '',
+        1, 8, 0, [1], 0, 1, (card: Card, cardOpt: CardOption = {}) => {
+            const { heros = [], hidxs = [], hcard, trigger = '', minusDiceCard: mdc = 0, isSkill = -1 } = cardOpt;
+            const minusCnt = Math.floor(-card.useCnt);
+            const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(cardOpt, { skilltype2: [0, 0, minusCnt] });
+            const isCardMinus = hcard && hcard.subType.includes(6) && hcard.userType == heros[hidxs[0]]?.id && hcard.cost > mdc;
+            return {
+                ...minusSkillRes,
+                minusDiceCard: minusCnt,
+                trigger: ['phase-end', 'card', 'skilltype2'],
+                exec: () => {
+                    if (trigger == 'phase-end' && card.useCnt > -2 && !!heros[hidxs[0]]?.isFront) {
+                        --card.useCnt;
+                    } else if (trigger == 'card' && isCardMinus) {
+                        card.useCnt += hcard.cost - mdc;
+                    } else if (trigger == 'skilltype2' && isMinusSkill) {
+                        const skill = heros[hidxs[0]]?.skills[isSkill].cost ?? [{ val: 0 }, { val: 0 }];
+                        const skillcost = skill[0].val + skill[1].val;
+                        card.useCnt += skillcost - mdc - minusSkillRes.minusDiceSkill[isSkill].reduce((a, b) => a + b);
+                    }
+                    return {}
+                }
+            }
+        }, { useCnt: -1.001, isReset: false }),
+
 
     180: normalElArtifact(180, '破冰踏雪的回音', 4, 'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/75720734/65841e618f66c6cb19823657118de30e_3244206711075165707.png'),
 
@@ -1000,6 +1026,10 @@ const allCards: CardObj = {
     217: new GICard(217, '欧庇克莱歌剧院', '【我方选择行动前：】如果我方角色所装备卡牌的原本元素骰费用总和不比对方更低，则生成1个出战角色类型的元素骰。(每回合1次)；[可用次数]：3',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/17/258999284/d34719921cedd17675f38dccc24ebf43_8000545229587575448.png',
         1, 8, 1, [2], 0, 0, () => ({ site: [newSite(4041, 217)] })),
+
+    218: new GICard(218, '梅洛彼得堡', '【我方出战角色受到伤害或治疗后：】此牌累积1点｢特许券｣。(最多累积到5点)；【行动阶段开始时：】如果此牌已有4点｢特许券｣，则消耗4点，使本回合内对方打出的1张事件牌无效。',
+        '',
+        1, 8, 1, [2], 0, 0, () => ({ site: [newSite(4047, 218)] })),
 
     301: new GICard(301, '派蒙', '【行动阶段开始时：】生成2点[万能元素骰]。；[可用次数]：2。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/158741257/8b291b7aa846d8e987a9c7d60af3cffb_7229054083686130166.png',
@@ -1446,6 +1476,10 @@ const allCards: CardObj = {
     566: new GICard(566, '裁定之时', '本回合中，对方牌手打出的3张｢事件牌｣无效。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/12/258999284/9ed8846c18cdf85e9b451a702d91c6e8_6360061723145748301.png',
         1, 8, 2, [8], 0, 0, () => ({ outStatusOppo: [heroStatus(2146)] })),
+
+    567: new GICard(567, '抗争之日·碎梦之时', '本回合中，目标我方角色受到的伤害-4。(最多生效4次)',
+        '',
+        1, 8, 2, [8], 0, 1, () => ({ inStatus: [heroStatus(2173)] })),
 
     570: new GICard(570, '深渊的呼唤', '召唤一个随机｢丘丘人｣召唤物！',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/75833613/011610bb3aedb5dddfa1db1322c0fd60_7383120485374723900.png',

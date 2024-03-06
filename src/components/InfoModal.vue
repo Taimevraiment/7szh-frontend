@@ -376,7 +376,7 @@ const wrapRule = (...desc: string[]) => {
 
 // 获取骰子背景
 const getDiceIcon = (name: string) => {
-    return new URL(`@/assets/image/${name}-dice-bg.png`, import.meta.url).href;
+    return new URL(`/src/assets/image/${name}-dice-bg.png`, import.meta.url).href;
 }
 
 // 获取png图片
@@ -384,12 +384,12 @@ const getPngIcon = (name: string) => {
     if (name.startsWith('http')) return name;
     if (name.endsWith('-dice')) return getSvgIcon(name);
     if (name == 'energy') name += '-dice-bg';
-    return new URL(`@/assets/image/${name}.png`, import.meta.url).href;
+    return new URL(`/src/assets/image/${name}.png`, import.meta.url).href;
 }
 
 // 获取svg filter
 const getSvgIcon = (name: string) => {
-    return new URL(`@/assets/svg/${name}.svg`, import.meta.url).href;
+    return new URL(`/src/assets/svg/${name}.svg`, import.meta.url).href;
 }
 
 watchEffect(() => {
@@ -450,7 +450,7 @@ watchEffect(() => {
 
 // 获取图片
 const getIcon = (name: string) => {
-    return new URL(`@/assets/svg/${name}.svg`, import.meta.url).href;
+    return new URL(`/src/assets/svg/${name}.svg`, import.meta.url).href;
 }
 
 // 是否显示描述

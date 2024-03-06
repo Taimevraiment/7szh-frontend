@@ -71,12 +71,14 @@ export const minusDiceSkillHandle = (options: { heros?: Hero[], hidxs?: number[]
     skills: { skill?: number[], skilltype?: number[], skilltype1?: number[], skilltype2?: number[], skilltype3?: number[] },
     cdt: ((skill: Skill) => boolean) = (() => true)): {
         isMinusSkill: boolean,
-        minusSkillRes: { minusDiceSkill?: number[][], minusDiceSkills?: number[][] }
+        minusSkillRes: { minusDiceSkill: number[][], minusDiceSkills: number[][] }
     } => {
     const { heros = [], hidxs = [], hidx = -1, isSkill: skidx = -1, minusDiceSkill: mds, trigger = '' } = options;
     const triggers: Trigger[] = Reflect.ownKeys(skills)
         .flatMap(v => v == 'skilltype' ? ['skill'] : v) as Trigger[];
-    if (!mds || ![...triggers, 'calc'].includes(trigger)) return { isMinusSkill: false, minusSkillRes: {} }
+    if (!mds || ![...triggers, 'calc'].includes(trigger)) {
+        return { isMinusSkill: false, minusSkillRes: { minusDiceSkill: [], minusDiceSkills: [] } }
+    }
     const hero = heros[hidxs[0] ?? hidx];
     const { skill, skilltype, skilltype1, skilltype2, skilltype3 } = skills;
     const nskillstype = [skilltype1, skilltype2, skilltype3];

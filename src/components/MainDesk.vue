@@ -413,28 +413,28 @@ watchEffect(() => {
 const getPngIcon = (name: string) => {
     if (name.startsWith('http')) return name;
     if (name.endsWith('-dice')) return getSvgIcon(name);
-    return new URL(`@/assets/image/${name}.png`, import.meta.url).href;
+    return new URL(`/src/assets/image/${name}.png`, import.meta.url).href;
 }
 
 // 获取svg图片
 const getSvgIcon = (name: string) => {
-    return new URL(`@/assets/svg/${name}.svg`, import.meta.url).href;
+    return new URL(`/src/assets/svg/${name}.svg`, import.meta.url).href;
 }
 
 // 获取骰子背景
 const getDiceBgIcon = (name: string, isCard = false) => {
     if (name == 'any' && !isCard) name += '1';
-    return new URL(`@/assets/image/${name}-dice-bg.png`, import.meta.url).href;
+    return new URL(`/src/assets/image/${name}-dice-bg.png`, import.meta.url).href;
 }
 
 // 获取骰子元素图案
 const getDiceIcon = (name: string) => {
-    return new URL(`@/assets/svg/${name}-dice.svg`, import.meta.url).href;
+    return new URL(`/src/assets/svg/${name}-dice.svg`, import.meta.url).href;
 }
 
 // 获取充能图标
 const getEnergyIcon = (isCharged: boolean = false) => {
-    return new URL(`@/assets/image/energy-${isCharged ? 'charged' : 'empty'}.png`, import.meta.url).href;
+    return new URL(`/src/assets/image/energy-${isCharged ? 'charged' : 'empty'}.png`, import.meta.url).href;
 }
 
 // 选择要换的卡

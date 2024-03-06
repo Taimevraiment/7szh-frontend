@@ -181,7 +181,7 @@ const router = useRouter();
 
 const herosPool: Hero[] = clone(heroTotal).filter((h: Hero) => h.id < 1850); // 选择的角色池
 const cardsPool: Card[] = clone(cardTotal).filter(c => c.id < 900); // 选择的卡组池
-const OriDecks = ref<OriDeck[]>(JSON.parse(localStorage.getItem('GIdecks') ?? '[]')); // 原始卡组列表
+const OriDecks = ref<OriDeck[]>(JSON.parse(localStorage.getItem('GIdecks') || '[]')); // 原始卡组列表
 const isMobile = ref(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)); // 是否为手机
 
 const currIdx = ref<number>(0); // 当前选择的tab：0角色 1卡组
@@ -237,7 +237,7 @@ const pShareCode = ref<string>('');
 // 获取png图片
 const getPngIcon = (name: string) => {
     if (name.startsWith('http')) return name;
-    return new URL(`@/assets/image/${name}.png`, import.meta.url).href;
+    return new URL(`/src/assets/image/${name}.png`, import.meta.url).href;
 }
 
 // 选择出战卡组
@@ -390,7 +390,7 @@ const updateInfo = (init = false) => {
 
 // 获取骰子背景
 const getDiceIcon = (name: string) => {
-    return new URL(`@/assets/image/${name}-dice-bg.png`, import.meta.url).href;
+    return new URL(`/src/assets/image/${name}-dice-bg.png`, import.meta.url).href;
 }
 
 // 进入编辑卡组界面

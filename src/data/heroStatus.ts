@@ -2109,6 +2109,14 @@ const statusTotal: StatusObj = {
             },
         })),
 
+    2173: () => new GIStatus(2173, '抗争之日·碎梦之时(生效中)', '本回合中，目标角色受到的伤害-4。',
+        '', 0, [2], 4, 0, 1, (status: Status, options: StatusOption = {}) => {
+            const { restDmg = 0 } = options;
+            if (restDmg <= 0) return { restDmg };
+            --status.useCnt;
+            return { restDmg: Math.max(0, restDmg - 4) };
+        }),
+
 };
 
 export const heroStatus = (id: number, ...args: any) => statusTotal[id](...args);

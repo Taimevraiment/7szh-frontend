@@ -860,7 +860,7 @@ const allHeros: HeroObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/01/25/258999284/a21241c40833d2aee5336ae8fdd58c41_7254789917363324478.png',
         skill1('迅破枪势'), [
         new GISkill('烈烧佑命之侍护', '造成{dmg}点[火元素伤害]，生成【烈烧佑命护盾】。', 2, 2, 3, 2, {},
-            'https://patchwiki.biligame.com/images/ys/6/6a/s3cppco85ykmlq1xuqfqfohdwuk3opng',
+            'https://patchwiki.biligame.com/images/ys/6/6a/s3cppco85ykmlq1xuqfqfohdwuk3ogi.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2024/01/17/258999284/5943ef23f4dde5b6015a06e67e8332a5_7948056671343155927.png',
             [heroStatus(2106)], () => ({ outStatusOppo: [heroStatus(2106)] })),
         new GISkill('真红炽火之大铠', '造成{dmg}点[火元素伤害]，生成【烈烧佑命护盾】和【炽火大铠】。', 3, 2, 3, 2, { ec: 2 },
