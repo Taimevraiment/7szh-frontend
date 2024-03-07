@@ -2117,6 +2117,20 @@ const statusTotal: StatusObj = {
             return { restDmg: Math.max(0, restDmg - 4) };
         }),
 
+    2174: () => new GIStatus(2174, '梅洛彼得堡(todo名称待定)', '本回合中，我方打出的1张事件牌无效。',
+        'debuff', 1, [4], 1, 0, 1, (status: Status, options: StatusOption = {}) => {
+            const { card } = options;
+            const isInvalid = card?.type == 2;
+            return {
+                trigger: ['card'],
+                isInvalid,
+                exec: () => {
+                    if (isInvalid) --status.useCnt;
+                    return {}
+                }
+            }
+        }),
+
 };
 
 export const heroStatus = (id: number, ...args: any) => statusTotal[id](...args);

@@ -99,7 +99,7 @@ export default class GeniusInvokationClient {
         this.socket = socket;
         this.userid = userid;
         this.players = players;
-        this.playerIdx = players.findIndex(p => p.id == this.userid);
+        this.playerIdx = players.findIndex((p, pi) => p.id == this.userid && pi < 2);
         this.player = players.find(p => p.pidx == this.playerIdx) ?? { ...this.NULL_PLAYER };
         this.opponent = players.find(p => p.pidx == (this.playerIdx ^ 1)) ?? { ...this.NULL_PLAYER };
         this.deckIdx = deckIdx;
@@ -255,6 +255,8 @@ export default class GeniusInvokationClient {
             round: this.round,
             hcardsCnt: this.handCards.length,
             ehcardsCnt: this.opponent.handCards.length,
+            esiteCnt: this.opponent.site.length,
+            esummonCnt: this.opponent.summon.length,
         });
         if (cardres?.hidxs?.length == 0 ||
             cardres?.summon && summon.length == 4 ||
@@ -670,13 +672,17 @@ export default class GeniusInvokationClient {
      * @param data players: 玩家信息, winnerIdx: 胜者索引idx, phase: 游戏阶段, log: 日志
      * @param callback 上层updateInfo回调函数
      */
-    async getServerInfo(data: any, callback: () => void) {
+    async getServerInfo(data: any, isLookon: boolean, callback: () => void) {
         const { players, winnerIdx, phase, round, log, isSendActionInfo, dmgElements,
             willDamage, willHeals, startIdx, isUseSkill, dieChangeBack, isChangeHero,
             changeTo, resetOnly, elTips, changeFrom, taskQueueVal, execIdx, cidx,
             actionStart, heroDie, chooseInitHero = false, isSwitchAtking = false,
             flag } = data;
         // console.info('server-flag:', flag);
+        if (!isLookon) {
+            this.players = players;
+            return;
+        }
         if (flag == 'game-end') {
             this.isStart = false;
             this.phase = phase;

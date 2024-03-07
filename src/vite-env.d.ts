@@ -232,9 +232,10 @@ type Cmds = {
     isReadySkill?: boolean,
 }
 
-type Cmd = 'getDice' | 'getCard' | 'getCard-oppo' | 'getEnergy' | 'heal' | 'getInStatus' | 'getOutStatus' | 'reroll' | 'revive' |
-    'switch-to-self' | 'switch-after-self' | 'switch-before-self' | 'switch-to' | 'switch-before' | 'switch-after' | 'attach' |
-    'attack' | 'changeDice' | 'changeCard' | 'changeElement' | 'useSkill' | 'changePattern' | 'getSkill' | 'loseSkill' | '';
+type Cmd = 'getDice' | 'getCard' | 'getCard-oppo' | 'getEnergy' | 'heal' | 'getInStatus' | 'getOutStatus' | 'getOutStatusOppo' |
+    'getInStatusOppo' | 'reroll' | 'revive' | 'switch-to-self' | 'switch-after-self' | 'switch-before-self' | 'switch-to' |
+    'switch-before' | 'switch-after' | 'attach' | 'attack' | 'changeDice' | 'changeCard' | 'changeElement' | 'useSkill' |
+    'changePattern' | 'getSkill' | 'loseSkill' | '';
 
 type GameInfo = {
     artifactCnt: number, // 初始牌堆圣遗物数量

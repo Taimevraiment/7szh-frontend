@@ -52,6 +52,8 @@ type SiteOption = {
     isSkill?: number,
     hidx?: number,
     minusDiceSkill?: number[][],
+    heal?: number[],
+    getdmg?: number[],
 }
 
 type SiteHandleRes = {
@@ -773,6 +775,42 @@ const siteTotal: SiteObj = {
                     site.cnt = Math.min(4, elcnt);
                 }
                 return { isDestroy: false }
+            }
+        }
+    }),
+    // 梅洛彼得堡
+    4047: (cardId: number) => new GISite(4047, cardId, 0, 0, 2, (site: GISite, options: SiteOption = {}) => {
+        const { hidxs = [], getdmg = [0, 0, 0], heal = [0, 0, 0], trigger = '' } = options;
+        const triggers: Trigger[] = [];
+        if (trigger == 'getdmg' && getdmg[hidxs[0]] > 0) triggers.push('getdmg');
+        if (trigger == 'heal' && heal[hidxs[0]] > 0) triggers.push('heal');
+        if (site.cnt >= 4) triggers.push('phase-start');
+        return {
+            trigger: triggers,
+            isNotAddTask: trigger != 'phase-start',
+            exec: () => {
+                if (trigger == 'phase-start' && site.cnt >= 4) {
+                    site.cnt -= 4;
+                    return { cmds: [{ cmd: 'getOutStatusOppo', status: [heroStatus(2174)] }], isDestroy: false }
+                }
+                site.cnt = Math.min(4, site.cnt + 1);
+                return { isDestroy: false }
+            }
+        }
+    }),
+    // 流明石触媒
+    4048: (cardId: number) => new GISite(4048, cardId, 3, 4, 2, (site: GISite, options: SiteOption = {}) => {
+        const { trigger = '' } = options;
+        const triggers: Trigger[] = [];
+        if (site.perCnt == 1) triggers.push('action-start');
+        if (site.perCnt > 1) triggers.push('card');
+        return {
+            trigger: triggers,
+            exec: () => {
+                --site.perCnt;
+                if (trigger == 'card') return { isDestroy: false }
+                --site.cnt;
+                return { cmds: [{ cmd: 'getCard', cnt: 1 }, { cmd: 'getDice', cnt: 1, element: 0 }], isDestroy: site.cnt == 0 }
             }
         }
     }),

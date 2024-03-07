@@ -49,7 +49,13 @@
             >
               <div class="player-name">{{ player.name }}</div>
               <div class="player-status">
-                {{ player.rid < 0 ? "空闲" : "游戏中" }}
+                {{
+                  player.rid < 0
+                    ? "空闲"
+                    : roomList.find((r) => r.id == player.rid)?.isStart
+                    ? "游戏中"
+                    : "房间中"
+                }}
               </div>
             </div>
           </div>
@@ -203,6 +209,14 @@ socket.on("enterRoom", ({ roomId = -1, isLookon = false, err }) => {
     name: "gameRoom",
     params: { roomId },
     state: { isLookon },
+  });
+});
+
+// 继续游戏
+socket.on("continueGame", ({ roomId }) => {
+  socket.emit("enterRoom", {
+    roomId,
+    isForce: true,
   });
 });
 </script>

@@ -224,6 +224,8 @@ type CardOption = {
     minusDiceCard?: number,
     ehidx?: number,
     minusDiceSkill?: number[][],
+    esiteCnt?: number,
+    esummonCnt?: number,
 }
 
 type CardHandleRes = {
@@ -1171,6 +1173,10 @@ const allCards: CardObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/17/258999284/aa32049459ce38daffbfe5dc82eb9303_2738230079920133028.png',
         1, 8, 1, [4], 0, 0, () => ({ site: [newSite(4044, 406)] })),
 
+    407: new GICard(407, '流明石触媒', '【我方打出行动牌后：】如果此牌在场期间本回合中我方已打出3张行动牌，则摸1张牌并生成1个[万能元素骰]。(每回合1次)；[可用次数]：3',
+        '',
+        2, 8, 1, [4], 0, 0, () => ({ site: [newSite(4048, 407)] })),
+
     501: new GICard(501, '最好的伙伴！', '将所花费的元素骰转换为2个[万能元素骰]。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/79683714/3fc6d26bb7b306296834c0b14abd4bc6_3989407061293772527.png',
         2, 0, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'getDice', cnt: 2, element: 0 }] })),
@@ -1438,6 +1444,18 @@ const allCards: CardObj = {
             }
             return { outStatus: [heroStatus(2161)], cmds: [{ cmd: 'getCard', cnt: 2, card: cards }] };
         }, { canSelectSite: 1 }),
+
+    528: new GICard(528, '可控性去危害化式定向爆破', '【对方支援区和召唤物区的卡牌数量总和至少为4时，才能打出：】双方所有召唤物的[可用次数]-1。',
+        '',
+        1, 8, 2, [], 0, 0, (_card: Card, cardOpt: CardOption = {}) => {
+            const { esiteCnt = 0, esummonCnt = 0, summons = [], esummons = [] } = cardOpt;
+            const isValid = esiteCnt + esummonCnt >= 4;
+            if (isValid) {
+                summons.forEach(smn => smn.useCnt = Math.max(0, smn.useCnt - 1));
+                esummons.forEach(smn => smn.useCnt = Math.max(0, smn.useCnt - 1));
+            }
+            return { isValid }
+        }),
 
     561: new GICard(561, '自由的新风', '【本回合中，轮到我方行动期间有对方角色被击倒时：】本次行动结束后，我方可以再连续行动一次。；【[可用次数]：】1',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/09/24/258999284/bccf12a9c926bec7203e543c469ac58d_1423280855629304603.png',
