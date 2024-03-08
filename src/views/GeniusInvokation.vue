@@ -4,7 +4,9 @@
     :class="{ 'mobile-container': isMobile }"
     @click.stop="cancel"
   >
-    <button v-if="!client.isStart" class="exit" @click="exit">返回</button>
+    <button v-if="!client.isStart || isLookon > -1" class="exit" @click="exit">
+      返回
+    </button>
     <div class="player-info">{{ client.players[client.playerIdx]?.info }}</div>
     <button
       v-if="isLookon == -1 && client.phase < 2"
@@ -402,7 +404,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watchEffect } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import type { Socket } from "socket.io-client";
 
@@ -448,13 +450,12 @@ const canAction = computed<boolean>(
   () =>
     client.value.canAction &&
     client.value.tip.content == "" &&
-    client.value.actionInfo == ""
+    client.value.actionInfo == "" &&
+    !client.value.taskQueue.isExecuting
 ); // 是否可以操作
 const afterWinHeros = ref<Hero[][]>([]); // 游戏结束后显示的角色信息
-const isLookon = ref<number>(
-  history.state.isLookon
-    ? Math.floor(Math.random() * client.value.players.length)
-    : -1
+const isLookon = ref<number>( // todo 如果是跟随那就不能随机
+  history.state.isLookon ? Math.floor(Math.random() * 2) : -1
 ); // 是否旁观
 
 setTimeout(() => lookonTo(isLookon.value), 1000);
@@ -482,42 +483,37 @@ const debounce = (fn: (...args: any[]) => any, wait: number = 100) => {
   };
 };
 
-const updateInfo = () => {
-  if (client.value.isWin < 2)
+watchEffect(() => {
+  if (client.value.isWin < 2) {
     afterWinHeros.value = client.value.players.map((p) => p.heros);
-};
+  }
+});
 
 // 鼠标放入
 const mouseenter = (idx: number) => {
   client.value.mouseenter(idx);
-  updateInfo();
 };
 // 鼠标离开
 const mouseleave = (idx: number) => {
   client.value.mouseleave(idx);
-  updateInfo();
 };
 // 取消选择
 const cancel = () => {
   if (client.value.player.phase < 2) return;
   client.value.cancel();
-  updateInfo();
 };
 // 选择要换的卡牌
 const selectChangeCard = (idx: number) => {
   client.value.selectChangeCard(idx);
-  updateInfo();
 };
 // 选择卡牌
 const selectCard = (idx: number) => {
   if (isLookon.value > -1 || client.value.phase < 2) return;
-  client.value.selectCard(idx, updateInfo);
-  updateInfo();
+  client.value.selectCard(idx);
 };
 // 开始游戏
 const startGame = () => {
   client.value.startGame();
-  updateInfo();
 };
 // 查看卡组
 const enterEditDeck = () => {
@@ -531,94 +527,79 @@ const exit = () => {
 // 换卡
 const changeCard = (cidxs: number[]) => {
   client.value.changeCard(cidxs);
-  updateInfo();
 };
 // 选择出战角色
 const chooseHero = () => {
   client.value.chooseHero();
-  updateInfo();
 };
 // 重掷骰子
 const reroll = (dices: DiceVO[]) => {
   client.value.reroll(dices);
-  updateInfo();
 };
 // 选择角色
 const selectHero = (pidx: number, hidx: number) => {
-  if (client.value.selectCardHero(pidx, hidx, updateInfo))
+  if (client.value.selectCardHero(pidx, hidx))
     client.value.selectHero(pidx, hidx);
-  updateInfo();
 };
 // 选择召唤物
 const selectCardSummon = (pidx: number, suidx: number, isNotShow: boolean) => {
   client.value.selectCardSummon(pidx, suidx);
   if (!isNotShow) client.value.showSummonInfo(pidx, suidx);
-  updateInfo();
 };
 // 选择场地
 const selectCardSite = (pidx: number, siidx: number) => {
   client.value.selectCardSite(siidx);
   client.value.showSiteInfo(pidx, siidx);
-  updateInfo();
 };
 // 选择要消费的骰子
 const selectUseDice = (dices: boolean[]) => {
   client.value.selectUseDice(dices);
-  updateInfo();
 };
 // 进入调和模式
 const reconcile = (bool: boolean) => {
   client.value.reconcile(bool);
-  updateInfo();
 };
 // 使用技能
 const useSkill = (sidx: number, isOnlyRead: boolean) => {
-  client.value.useSkill(sidx, { isOnlyRead }, updateInfo);
-  updateInfo();
+  client.value.useSkill(sidx, { isOnlyRead });
 };
 // 切换角色
 const changeHero = debounce(() => {
   client.value.changeHero();
-  updateInfo();
 });
 // 结束回合
 const endPhase = () => {
   client.value.endPhase();
-  updateInfo();
 };
 // 使用卡
 const useCard = () => {
-  client.value.useCard(updateInfo);
-  updateInfo();
+  client.value.useCard();
 };
 
 // 切换旁观人
 const lookonTo = (idx: number) => {
   if (isLookon.value == -1) return;
   client.value.playerIdx = idx;
-  client.value.userid = client.value.players[client.value.playerIdx].id;
   client.value.getPlayer({ isFlag: true });
-  client.value.handCards = [
-    ...client.value.players[client.value.playerIdx].handCards,
-  ];
+  client.value.handCards = [...client.value.players[idx].handCards];
   client.value.updatePlayerPositionInfo();
-  updateInfo();
 };
 
 socket.emit("roomInfoUpdate", { roomId });
 socket.on("roomInfoUpdate", (data) => {
   const isFlag = data.isStart && !client.value.isStart;
   client.value.getPlayer({ isFlag, ...data });
-  updateInfo();
 });
 
 socket.on("getServerInfo", (data) => {
-  client.value.getServerInfo(
-    data,
-    isLookon.value == -1 || isLookon.value == client.value.playerIdx,
-    updateInfo
-  );
-  updateInfo();
+  const cisLookon =
+    isLookon.value > -1 && isLookon.value != client.value.playerIdx;
+  client.value.getServerInfo(data, cisLookon);
+});
+
+socket.on("getPlayerList", ({ plist }) => {
+  const me = plist.find((p: Player) => p.id == userid);
+  if (me.rid == -1) router.back();
 });
 
 // dev
@@ -652,7 +633,7 @@ const devOps = (cidx = 0) => {
       heros[hidx].hp = hp;
       flag.add("setHp");
     } else if (op.startsWith("@")) {
-      const [cnt = 1, hidx = heros.findIndex((h) => h.isFront)] = op
+      const [cnt = 3, hidx = heros.findIndex((h) => h.isFront)] = op
         .slice(1)
         .split(/[:：]+/)
         .map(h);
