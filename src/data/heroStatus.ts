@@ -2013,28 +2013,36 @@ const statusTotal: StatusObj = {
             }
         }),
 
-    2163: (icon = '') => new GIStatus(2163, '瞬时剪影', `【结束阶段：】对所附属角色造成1点[冰元素伤害]; 如果[可用次数]仅剩余1，则此伤害+1。；【[可用次数]：{useCnt}】`,
-        icon, 0, [1], 2, 0, -1, (status: Status) => ({
-            damage: isCdt(status.useCnt == 1, 2, 1),
-            element: 4,
-            isOppo: true,
-            trigger: ['phase-end'],
-            exec: (eStatus?: Status) => {
-                if (eStatus) --eStatus.useCnt;
-                return { cmds: [{ cmd: '' }] };
-            },
-        })),
+    2163: (icon = '') => new GIStatus(2163, '瞬时剪影', `【结束阶段：】对所附属角色造成1点[冰元素伤害]; 如果[可用次数]仅剩余1且所附属角色具有[冰元素附着]，则此伤害+1。；【[可用次数]：{useCnt}】`,
+        icon, 0, [1], 2, 0, -1, (status: Status, options: StatusOption = {}) => {
+            const { heros = [], hidx = -1 } = options;
+            const isAddDmg = heros[hidx]?.attachElement.includes(4) && status.useCnt == 1;
+            return {
+                damage: isCdt(isAddDmg, 2, 1),
+                element: 4,
+                isOppo: true,
+                trigger: ['phase-end'],
+                exec: (eStatus?: Status) => {
+                    if (eStatus) --eStatus.useCnt;
+                    return { cmds: [{ cmd: '' }] };
+                },
+            }
+        }),
 
-    2164: (icon = '', expl?: ExplainContent[], cnt = 1) => new GIStatus(2164, '源水之滴', `【角色进行｢普通攻击｣后：】治疗角色2点，然后角色[准备技能]：【衡平推裁】。；【[可用次数]：{useCnt}(可叠加，最多叠加到3次)】`,
-        icon, 0, [1], cnt, 3, -1, () => ({
-            heal: 2,
-            trigger: ['after-skilltype1'],
-            exec: (eStatus?: Status) => {
-                if (!eStatus) return {}
-                --eStatus.useCnt;
-                return { inStatus: [heroStatus(2165, expl)] }
-            },
-        }), { expl }),
+    2164: (icon = '', expl?: ExplainContent[], cnt = 1) => new GIStatus(2164, '源水之滴', `【那维莱特进行｢普通攻击｣后：】治疗角色2点，然后角色[准备技能]：【衡平推裁】。；【[可用次数]：{useCnt}(可叠加，最多叠加到3次)】`,
+        icon, 1, [1], cnt, 3, -1, (_status: Status, options: StatusOption = {}) => {
+            const { heros = [], hidx = -1 } = options;
+            if (heros[hidx]?.id != 1110) return {}
+            return {
+                heal: 2,
+                trigger: ['after-skilltype1'],
+                exec: (eStatus?: Status) => {
+                    if (!eStatus) return {}
+                    --eStatus.useCnt;
+                    return { inStatus: [heroStatus(2165, expl)] }
+                },
+            }
+        }, { expl }),
 
     2165: (expl?: ExplainContent[]) => new GIStatus(2165, '衡平推裁', `本角色将在下次行动时，直接使用技能：【衡平推裁】。`,
         '', 0, [1], 2, 0, -1, (status: Status) => ({
@@ -2050,7 +2058,7 @@ const statusTotal: StatusObj = {
 
     2166: () => new GIStatus(2166, '古海子遗的权柄(todo名字待定)', '该角色造成的伤害+1。', 'buff2', 0, [4], 2, 0, -1, () => ({ addDmg: 1 })),
 
-    2167: (icon = '') => new GIStatus(2167, '猫箱急件', '【绮良良为出战角色，我方进行｢切换角色｣行动后：】造成1点[草元素伤害]，摸1张牌。；【[可用次数]：{useCnt}(可叠加，最多叠加到2次)】',
+    2167: (icon = '') => new GIStatus(2167, '猫箱急件', '【绮良良为出战角色时，我方切换角色后：】造成1点[草元素伤害]，摸1张牌。；【[可用次数]：{useCnt}(可叠加，最多叠加到2次)】',
         icon, 1, [1], 1, 2, -1, (_status: Status, options: StatusOption = {}) => {
             const { heros = [] } = options;
             if (!heros.find(h => h.id == 1607)?.isFront) return {}
@@ -2068,7 +2076,7 @@ const statusTotal: StatusObj = {
 
     2168: () => new GIStatus(2033, '安全运输护盾', '为我方出战角色提供2点[护盾]。', '', 1, [7], 2, 0, -1),
 
-    2169: (icon = '') => new GIStatus(2169, '猫草豆蔻', '【所在阵营打出3张行动牌后：】对所在阵营的出战角色造成1点[草元素伤害]。；【[可用次数]：{useCnt}】',
+    2169: (icon = '') => new GIStatus(2169, '猫草豆蔻', '【所在阵营打出2张行动牌后：】对所在阵营的出战角色造成1点[草元素伤害]。；【[可用次数]：{useCnt}】',
         icon, 1, [1, 4], 2, 0, -1, (status: Status) => ({
             damage: isCdt(status.perCnt <= -1, 1),
             element: 7,
@@ -2084,7 +2092,7 @@ const statusTotal: StatusObj = {
             },
         }), { icbg: STATUS_BG_COLOR[7] }),
 
-    2170: (useCnt = 0) => new GIStatus(2170, '雷萤护罩', '为我方出战角色提供1点[护盾]。；【创建时：】如果我方场上存在【冰萤】，则额外提供其[可用次数]的[护盾]。(最多额外提供3点[护盾])',
+    2170: (useCnt = 0) => new GIStatus(2170, '雷萤护罩', '为我方出战角色提供1点[护盾]。；【创建时：】如果我方场上存在【雷萤】，则额外提供其[可用次数]的[护盾]。(最多额外提供3点[护盾])',
         '', 1, [7], 1 + Math.min(3, useCnt), 0, -1),
 
     2171: (expl?: ExplainContent[]) => new GIStatus(2171, '霆电迸发', '本角色将在下次行动时，直接使用技能：【霆电迸发】。',
@@ -2109,15 +2117,15 @@ const statusTotal: StatusObj = {
             },
         })),
 
-    2173: () => new GIStatus(2173, '抗争之日·碎梦之时(生效中)', '本回合中，目标角色受到的伤害-4。',
+    2173: () => new GIStatus(2173, '抗争之日·碎梦之时(生效中)', '本回合中，目标角色受到的伤害-1。',
         '', 0, [2], 4, 0, 1, (status: Status, options: StatusOption = {}) => {
             const { restDmg = 0 } = options;
             if (restDmg <= 0) return { restDmg };
             --status.useCnt;
-            return { restDmg: Math.max(0, restDmg - 4) };
+            return { restDmg: Math.max(0, restDmg - 1) };
         }),
 
-    2174: () => new GIStatus(2174, '梅洛彼得堡(todo名称待定)', '本回合中，我方打出的1张事件牌无效。',
+    2174: () => new GIStatus(2174, '严格禁令', '本回合中，所在阵营打出的事件牌无效。；【[可用次数]：{useCnt}】',
         'debuff', 1, [4], 1, 0, 1, (status: Status, options: StatusOption = {}) => {
             const { card } = options;
             const isInvalid = card?.type == 2;

@@ -218,11 +218,20 @@ const siteTotal: SiteObj = {
         addRollCnt: 1,
     })),
     // 群玉阁
-    4010: (cardId: number) => new GISite(4010, cardId, 0, 0, 3, () => ({
-        trigger: ['phase-dice'],
-        element: -2,
-        cnt: 2,
-    })),
+    4010: (cardId: number) => new GISite(4010, cardId, 0, 0, 3, (_site: GISite, options: SiteOption = {}) => {
+        const { hcards = [], trigger = '' } = options;
+        return {
+            trigger: ['phase-dice', 'phase-start'],
+            element: -2,
+            cnt: 2,
+            exec: () => {
+                if (hcards.length <= 3 && trigger == 'phase-start') {
+                    return { cmds: [{ cmd: 'getDice', cnt: 1, element: 0 }], isDestroy: true }
+                }
+                return { isDestroy: false }
+            }
+        }
+    }),
     // 凯瑟琳
     4011: (cardId: number) => new GISite(4011, cardId, 0, 1, 3, (site: GISite) => ({
         trigger: ['change'],

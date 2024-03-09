@@ -48,7 +48,7 @@
       </div>
       <img class="subtype8" :src="getDiceIcon('subtype8-empty')" />
       <img
-        v-if="!client.player.isUsedSubType8"
+        v-if="!client.player?.isUsedSubType8"
         class="subtype8"
         :src="getDiceIcon('subtype8')"
       />
@@ -95,7 +95,7 @@
       />
     </div>
 
-    <main-desk
+    <MainDesk
       v-if="client.phase > 1 || client.isWin > -1"
       :isMobile="isMobile"
       :canAction="canAction"
@@ -104,7 +104,6 @@
       :client="client"
       @select-change-card="selectChangeCard"
       @change-card="changeCard"
-      @choose-hero="chooseHero"
       @reroll="reroll"
       @select-hero="selectHero"
       @select-use-dice="selectUseDice"
@@ -174,12 +173,12 @@
     <div
       class="btn-group"
       v-if="
-        (isLookon == -1 &&
-          ((client.player.status == 1 && canAction) ||
-            client.player.phase >= 9) &&
-          client.player.phase > 4 &&
+        isLookon == -1 &&
+        ((((client.player?.status == 1 && canAction) ||
+          client.player?.phase >= 9) &&
+          client.player?.phase > 4 &&
           (client.currCard.id > 0 || client.isShowChangeHero > 0)) ||
-        client.player.phase == 3
+          client.player?.phase == 3)
       "
     >
       <button
@@ -357,7 +356,7 @@
     </div>
   </div>
 
-  <info-modal
+  <InfoModal
     v-if="client.phase > 1"
     :info="client.modalInfo"
     :isMobile="isMobile"
@@ -390,10 +389,10 @@
   <div
     class="modal-action"
     :class="{
-      'modal-action-my': client.player.status == 1,
+      'modal-action-my': client.player?.status == 1,
       'modal-action-oppo': client.opponent?.status == 1,
       'modal-action-enter-my':
-        client.player.status == 1 && client.actionInfo != '',
+        client.player?.status == 1 && client.actionInfo != '',
       'modal-action-enter-oppo':
         client.opponent?.status == 1 && client.actionInfo != '',
       'modal-action-leave': client.actionInfo == '',
@@ -404,7 +403,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watchEffect } from "vue";
+import { computed, ref, watchEffect, onUnmounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import type { Socket } from "socket.io-client";
 
@@ -432,17 +431,22 @@ const isMobile = ref(
 const env = process.env.NODE_ENV;
 const isDev = env == "development";
 const socket: Socket = getSocket(isDev);
+const { players: cplayers, isLookon: cisLookon, follow } = history.state;
 
 const userid = Number(localStorage.getItem("7szh_userid") || "-1"); // 玩家id
 const roomId = route.params.roomId; // 房间id
+const isLookon = ref<number>(
+  cisLookon ? follow ?? Math.floor(Math.random() * 2) : -1
+); // 是否旁观
 const client = ref(
   new GeniusInvokationClient(
     socket,
     userid,
-    [],
+    cplayers,
     isMobile.value,
     JSON.parse(localStorage.getItem("GIdecks") || "[]"),
-    Number(localStorage.getItem("GIdeckIdx") || "0")
+    Number(localStorage.getItem("GIdeckIdx") || "0"),
+    isLookon.value
   )
 );
 
@@ -454,11 +458,6 @@ const canAction = computed<boolean>(
     !client.value.taskQueue.isExecuting
 ); // 是否可以操作
 const afterWinHeros = ref<Hero[][]>([]); // 游戏结束后显示的角色信息
-const isLookon = ref<number>( // todo 如果是跟随那就不能随机
-  history.state.isLookon ? Math.floor(Math.random() * 2) : -1
-); // 是否旁观
-
-setTimeout(() => lookonTo(isLookon.value), 1000);
 
 // 获取骰子背景
 const getDiceIcon = (name: string) => {
@@ -508,7 +507,6 @@ const selectChangeCard = (idx: number) => {
 };
 // 选择卡牌
 const selectCard = (idx: number) => {
-  if (isLookon.value > -1 || client.value.phase < 2) return;
   client.value.selectCard(idx);
 };
 // 开始游戏
@@ -522,24 +520,25 @@ const enterEditDeck = () => {
 // 返回
 const exit = () => {
   socket.emit("exitRoom");
-  router.back();
+  if (isLookon.value > -1) router.back();
 };
 // 换卡
 const changeCard = (cidxs: number[]) => {
   client.value.changeCard(cidxs);
 };
-// 选择出战角色
-const chooseHero = () => {
-  client.value.chooseHero();
-};
 // 重掷骰子
 const reroll = (dices: DiceVO[]) => {
   client.value.reroll(dices);
 };
+// 选择出战角色
+const chooseHero = () => {
+  client.value.chooseHero();
+};
 // 选择角色
 const selectHero = (pidx: number, hidx: number) => {
-  if (client.value.selectCardHero(pidx, hidx))
+  if (client.value.selectCardHero(pidx, hidx)) {
     client.value.selectHero(pidx, hidx);
+  }
 };
 // 选择召唤物
 const selectCardSummon = (pidx: number, suidx: number, isNotShow: boolean) => {
@@ -578,11 +577,7 @@ const useCard = () => {
 
 // 切换旁观人
 const lookonTo = (idx: number) => {
-  if (isLookon.value == -1) return;
-  client.value.playerIdx = idx;
-  client.value.getPlayer({ isFlag: true });
-  client.value.handCards = [...client.value.players[idx].handCards];
-  client.value.updatePlayerPositionInfo();
+  client.value.lookonTo(idx);
 };
 
 socket.emit("roomInfoUpdate", { roomId });
@@ -592,14 +587,19 @@ socket.on("roomInfoUpdate", (data) => {
 });
 
 socket.on("getServerInfo", (data) => {
-  const cisLookon =
-    isLookon.value > -1 && isLookon.value != client.value.playerIdx;
-  client.value.getServerInfo(data, cisLookon);
+  client.value.getServerInfo(data);
 });
 
-socket.on("getPlayerList", ({ plist }) => {
-  const me = plist.find((p: Player) => p.id == userid);
-  if (me.rid == -1) router.back();
+const getPlayerList = ({ plist }: { plist: Player[] }) => {
+  const me = plist.find((p) => p.id == userid);
+  if (me?.rid == -1) router.back();
+};
+socket.on("getPlayerAndRoomList", getPlayerList);
+
+onUnmounted(() => {
+  socket.off("roomInfoUpdate");
+  socket.off("getServerInfo");
+  socket.off("getPlayerAndRoomList", getPlayerList);
 });
 
 // dev

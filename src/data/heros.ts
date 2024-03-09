@@ -247,7 +247,7 @@ const readySkillTotal: { [key: number]: (...args: any) => Skill } = {
 
     16: () => new GISkill('风风轮舞踢', '(需准备1个行动轮)；造成{dmg}点[冰元素伤害]。', 2, 2, 0, 4, { ec: -2, rdskidx: 16 }),
 
-    17: () => new GISkill('衡平推裁', '(需准备1个行动轮)；造成{dmg}点[水元素伤害]。如果生命值至少为6，则对自身造成1点[穿透伤害]使伤害+1。',
+    17: () => new GISkill('衡平推裁', '(需准备1个行动轮)；造成{dmg}点[水元素伤害]，如果生命值至少为6，则对自身造成1点[穿透伤害]使伤害+1。',
         1, 2, 0, 1, { ec: -2, rdskidx: 17 }, '', '', [], (options: SkillOption) => {
             const { hero } = options;
             if (hero.hp < 6) return {}
@@ -653,7 +653,7 @@ const allHeros: HeroObj = {
                 const { hero: { skills: [, { src }] } } = options;
                 return { inStatusOppo: [heroStatus(2164, src, [readySkill(17)])] }
             }),
-        new GISkill('潮水啊，我已归来', '造成{dmg}点[水元素伤害]，对所有敌方后台角色造成1点[穿透伤害]，附属[可用次数]为2的【源水之滴】。', 3, 2, 3, 1, { ec: 2 },
+        new GISkill('潮水啊，我已归来', '造成{dmg}点[水元素伤害]，对所有后台敌人造成1点[穿透伤害]，生成[可用次数]为2的【源水之滴】。', 3, 2, 3, 1, { ec: 2 },
             '',
             '',
             [heroStatus(2164), readySkill(17)], (options: SkillOption) => {
@@ -1479,7 +1479,7 @@ const allHeros: HeroObj = {
             '',
             '',
             [heroStatus(2167), heroStatus(2168)], (options: SkillOption) => ({ outStatusOppo: [heroStatus(2167, options.hero.skills[1].src), heroStatus(2168)] })),
-        new GISkill('秘法·惊喜特派', '造成{dmg}点[草元素伤害]，在地方场上生成【猫草豆蔻】。', 3, 4, 3, 7, { ec: 2 },
+        new GISkill('秘法·惊喜特派', '造成{dmg}点[草元素伤害]，在敌方场上生成【猫草豆蔻】。', 3, 4, 3, 7, { ec: 2 },
             '',
             '',
             [heroStatus(2169)], (options: SkillOption) => ({ outStatus: [heroStatus(2169, options.hero.skills[2].src)] }))
@@ -1739,7 +1739,7 @@ const allHeros: HeroObj = {
     1764: new GIHero(1764, '愚人众·雷萤术士', 8, 10, 3, 0,
         '',
         skill1('轰闪落雷', 4), [
-        new GISkill('雾虚之召', '造成{dmg}点[雷元素伤害]，召唤【雷萤】。', 2, 1, 3, 3, {},
+        new GISkill('雾虚之召', '召唤【雷萤】。', 2, 0, 3, 3, {},
             '',
             '',
             [newSummonee(3057)], () => ({ summon: [newSummonee(3057)] })),

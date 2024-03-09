@@ -838,9 +838,9 @@ const summonTotal: SummoneeObj = {
         '',
         2, 2, 1, 1, 4),
 
-    3057: () => new GISummonee(3057, '雷萤', '【结束阶段：】造成{dmg}点[雷元素伤害]。；【[可用次数]：{useCnt}(可叠加，最多叠加到3次)】；【敌方累积打出3张行动牌后：】此牌[可用次数]+1(最多叠加到3)；【愚人众·雷萤术士受到元素反应伤害后：】此牌[可用次数]-1。',
+    3057: () => new GISummonee(3057, '雷萤', '【结束阶段：】造成{dmg}点[雷元素伤害]。；【[可用次数]：{useCnt}】；【敌方累积打出3张行动牌后：】此牌[可用次数]+1。(最多叠加到3)；【愚人众·雷萤术士受到元素反应伤害后：】此牌[可用次数]-1。',
         '',
-        2, 3, 0, 1, 3, (summon: Summonee, smnOpt: SummonOption = {}) => {
+        3, 3, 0, 1, 3, (summon: Summonee, smnOpt: SummonOption = {}) => {
             const { trigger = '', heros = [], isExec = true } = smnOpt;
             const triggers: Trigger[] = ['phase-end', 'ecard'];
             const hero = heros.find(h => h.id == 1674);

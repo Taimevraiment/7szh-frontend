@@ -114,12 +114,12 @@ const tiankongWeapon = (id: number, name: string, userType: number, src: string)
 }
 
 const senlinWeapon = (id: number, name: string, userType: number, src: string) => {
-    return new GICard(id, name, '【角色造成的伤害+1】。；【入场时：】所附属角色在本回合中，下次使用｢元素战技｣或者装备｢天赋｣时少花费2个元素骰。', src, 3, 8, 0, [0], userType, 1,
+    return new GICard(id, name, '【角色造成的伤害+1】。；【入场时：】所附属角色在本回合中，下次对角色打出｢天赋｣或使用｢元素战技｣时少花费2个元素骰。', src, 3, 8, 0, [0], userType, 1,
         () => ({ addDmg: 1, inStatus: [heroStatus(2061, name)] }));
 }
 
 const normalElArtifact = (id: number, name: string, element: number, src: string) => {
-    return new GICard(id, name, `【角色使用技能或装备｢天赋｣时：】少花费1个[${ELEMENT[element]}骰]。(每回合1次)`, src, 2, 0, 0, [1], 0, 1,
+    return new GICard(id, name, `【对角色打出｢天赋｣或角色使用技能时：】少花费1个[${ELEMENT[element]}骰]。(每回合1次)`, src, 2, 0, 0, [1], 0, 1,
         (card: Card, cardOpt: CardOption = {}) => {
             const { heros = [], hidxs = [], hcard, trigger = '', minusDiceCard: mdc = 0 } = cardOpt;
             const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(cardOpt, { skilltype: [1, 0, 0] },
@@ -139,7 +139,7 @@ const normalElArtifact = (id: number, name: string, element: number, src: string
 }
 
 const advancedElArtifact = (id: number, name: string, element: number, src: string) => {
-    return new GICard(id, name, `【角色使用技能或装备｢天赋｣时：】少花费1个[${ELEMENT[element]}骰]。(每回合1次)；【投掷阶段：】2个元素骰初始总是投出[${ELEMENT[element]}骰]。`, src, 2, 8, 0, [1], 0, 1,
+    return new GICard(id, name, `【对角色打出｢天赋｣或角色使用技能时：】少花费1个[${ELEMENT[element]}骰]。(每回合1次)；【投掷阶段：】2个元素骰初始总是投出[${ELEMENT[element]}骰]。`, src, 2, 8, 0, [1], 0, 1,
         (card: Card, cardOpt: CardOption = {}) => {
             const { heros = [], hidxs = [], hcard, trigger = '', minusDiceCard: mdc = 0 } = cardOpt;
             const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(cardOpt, { skilltype: [1, 0, 0] },
@@ -329,7 +329,7 @@ const allCards: CardObj = {
             }
         }, { useCnt: 2 }),
 
-    8: new GICard(8, '万世流涌大典', '【角色造成的伤害+1】。；【本回合角色受到伤害或治疗2次后：】本回合中。角色下次造成的伤害+2。(每回合1次)',
+    8: new GICard(8, '万世流涌大典', '【角色造成的伤害+1】。；【角色受到伤害或治疗后：】如果本回合已受到伤害或治疗累积2次，则角色本回合中下次造成的伤害+2。(每回合1次)',
         '',
         3, 8, 0, [0], 4, 1, (card: Card, cardOpt: CardOption = {}) => {
             const { heal = [0, 0, 0], hidxs = [] } = cardOpt;
@@ -672,7 +672,7 @@ const allCards: CardObj = {
             }
         }, { useCnt: 1, expl: [heroStatus(2050)] }),
 
-    111: new GICard(111, '虺雷之姿', '【角色使用｢普通攻击｣或装备｢天赋｣时：】少花费1个元素骰。(每回合1次)',
+    111: new GICard(111, '虺雷之姿', '【对角色打出｢天赋｣或角色使用｢普通攻击｣时：】少花费1个元素骰。(每回合1次)',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/d136fc0fd368a268fe3adaba8c0e64bb_8574805937216108762.png',
         2, 0, 0, [1], 0, 1, (card: Card, cardOpt: CardOption = {}) => {
             const { hcard, heros = [], hidxs = [], trigger = '', minusDiceCard: mdc = 0 } = cardOpt;
@@ -691,7 +691,7 @@ const allCards: CardObj = {
             }
         }, { useCnt: 1 }),
 
-    112: new GICard(112, '辰砂往生录', '【角色使用｢普通攻击｣或装备｢天赋｣时：】少花费1个元素骰。(每回合1次)；【角色被切换为｢出战角色｣后：】本回合中，角色｢普通攻击｣造成的伤害+1。',
+    112: new GICard(112, '辰砂往生录', '【对角色打出｢天赋｣或角色使用｢普通攻击｣时：】少花费1个元素骰。(每回合1次)；【角色被切换为｢出战角色｣后：】本回合中，角色｢普通攻击｣造成的伤害+1。',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/ad8e8b77b4efc4aabd42b7954fbc244c_7518202688884952912.png',
         3, 0, 0, [1], 0, 1, (card: Card, cardOpt: CardOption = {}) => {
             const { hcard, heros = [], hidxs = [], trigger = '', minusDiceCard: mdc = 0 } = cardOpt;
@@ -711,7 +711,7 @@ const allCards: CardObj = {
             }
         }, { useCnt: 1 }),
 
-    113: new GICard(113, '无常之面', '【角色使用｢元素战技｣或装备｢天赋｣时：】少花费1个元素骰。(每回合1次)',
+    113: new GICard(113, '无常之面', '【对角色打出｢天赋｣或角色使用｢元素战技｣时：】少花费1个元素骰。(每回合1次)',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/24/183046623/e2a6d4ad4958d5fff80bb17ec93189ab_7011820758446145491.png',
         2, 0, 0, [1], 0, 1, (card: Card, cardOpt: CardOption = {}) => {
             const { hcard, heros = [], hidxs = [], trigger = '', minusDiceCard: mdc = 0 } = cardOpt;
@@ -730,7 +730,7 @@ const allCards: CardObj = {
             }
         }, { useCnt: 1 }),
 
-    114: new GICard(114, '追忆之注连', '【角色使用｢元素战技｣或装备｢天赋｣时：】少花费1个元素骰。(每回合1次)；【如果角色具有至少2点[充能]，】就使角色｢普通攻击｣和｢元素战技｣造成的伤害+1。',
+    114: new GICard(114, '追忆之注连', '【对角色打出｢天赋｣或角色使用｢元素战技｣时：】少花费1个元素骰。(每回合1次)；【如果角色具有至少2点[充能]，】就使角色｢普通攻击｣和｢元素战技｣造成的伤害+1。',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/24/183046623/48be75f0a23375adb34789dcb1e95a97_850843251536084281.png',
         3, 0, 0, [1], 0, 1, (card: Card, cardOpt: CardOption = {}) => {
             const { hcard, heros = [], hidxs = [], trigger = '', minusDiceCard: mdc = 0 } = cardOpt;
@@ -809,17 +809,15 @@ const allCards: CardObj = {
             }
         }, { useCnt: 1 }),
 
-    118: new GICard(118, '饰金之梦', '【入场时：】生成1个所附属角色类型的元素骰。如果我方队伍中存在3种不同元素类型的角色，则额外生成1个[万能元素骰]。；【所附属角色为出战角色期间，敌方受到元素反应伤害时：】摸1张牌。(每回合1次)',
+    118: new GICard(118, '饰金之梦', '【入场时：】生成1个所附属角色类型的元素骰。如果我方队伍中存在3种不同元素类型的角色，则改为生成2个。；【所附属角色为出战角色期间，敌方受到元素反应伤害时：】摸1张牌。(每回合1次)',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/18/258999284/b0f1283d8fec75259495c4ef24cc768a_277942760294951822.png',
-        3, 0, 0, [1], 0, 1, (card: Card, cardOpt: CardOption = {}) => {
+        3, 8, 0, [1], 0, 1, (card: Card, cardOpt: CardOption = {}) => {
             const { heros = [], hidxs = [] } = cardOpt;
             const isExtra = new Set(heros.map(h => h.element)).size == 3;
-            const hel = heros[hidxs[0]].element;
-            const cmds = isCdt<Cmds[]>(isExtra, [{ cmd: 'getDice', cnt: 2, element: [hel, 0] }], [{ cmd: 'getDice', cnt: 1, element: hel }]);
-            const isUse = card.useCnt > 0 && heros[hidxs[0]].isFront;
+            const isUse = card.useCnt > 0 && heros[hidxs[0]]?.isFront;
             return {
                 trigger: ['elReaction'],
-                cmds,
+                cmds: [{ cmd: 'getDice', cnt: isExtra ? 2 : 1, element: heros[hidxs[0]].element }],
                 execmds: isCdt<Cmds[]>(isUse, [{ cmd: 'getCard', cnt: 1 }]),
                 exec: () => {
                     if (isUse) --card.useCnt;
@@ -906,9 +904,9 @@ const allCards: CardObj = {
             }
         }, { useCnt: 2 }),
 
-    124: new GICard(124, '黄金剧团的奖赏', '【入场时：】此牌附带1点｢报酬｣。；【结束阶段：】如果所附属的角色在后台。则此牌累积1点｢报酬｣。(最多累积2点)；【角色使用｢元素战技｣或装备｢天赋｣时：】此牌每有1点｢报酬｣，就将其消耗，以少花费1个元素骰。',
+    124: new GICard(124, '黄金剧团的奖赏', '【结束阶段：】如果所附属的角色在后台，则此牌累积1点｢报酬｣。(最多累积2点)；【对角色打出｢天赋｣或角色使用｢元素战技｣时：】此牌每有1点｢报酬｣，就将其消耗，以少花费1个元素骰。',
         '',
-        1, 8, 0, [1], 0, 1, (card: Card, cardOpt: CardOption = {}) => {
+        0, 8, 0, [1], 0, 1, (card: Card, cardOpt: CardOption = {}) => {
             const { heros = [], hidxs = [], hcard, trigger = '', minusDiceCard: mdc = 0, isSkill = -1 } = cardOpt;
             const minusCnt = Math.floor(-card.useCnt);
             const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(cardOpt, { skilltype2: [0, 0, minusCnt] });
@@ -930,7 +928,7 @@ const allCards: CardObj = {
                     return {}
                 }
             }
-        }, { useCnt: -1.001, isReset: false }),
+        }, { useCnt: -0.001, isReset: false }),
 
 
     180: normalElArtifact(180, '破冰踏雪的回音', 4, 'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/75720734/65841e618f66c6cb19823657118de30e_3244206711075165707.png'),
@@ -967,9 +965,9 @@ const allCards: CardObj = {
 
     202: new GICard(202, '骑士团图书馆', '【入场时：】选择任意元素骰重投。；【投掷阶段：】获得额外一次重投机会。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/158741257/cedc39cd65a6fde9ec51971973328b74_5542237863639059092.png',
-        1, 8, 1, [2], 0, 0, () => ({ site: [newSite(4009, 202)], cmds: [{ cmd: 'reroll', cnt: 1 }], })),
+        0, 8, 1, [2], 0, 0, () => ({ site: [newSite(4009, 202)], cmds: [{ cmd: 'reroll', cnt: 1 }], })),
 
-    203: new GICard(203, '群玉阁', '【投掷阶段：】2个元素骰初始总是投出我方出战角色类型的元素。',
+    203: new GICard(203, '群玉阁', '【行动阶段开始时：】如果我方手牌数不多于3，则弃置此牌，生成1个[万能元素骰]。；【投掷阶段：】2个元素骰初始总是投出我方出战角色类型的元素。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/158741257/a170755e85072e3672834ae9f4d558d5_593047424158919411.png',
         0, 8, 1, [2], 0, 0, () => ({ site: [newSite(4010, 203)] })),
 
@@ -997,7 +995,7 @@ const allCards: CardObj = {
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/2d016c4db4d3ce5c383d4fdb2a33f3e9_8583073738643262052.png',
         2, 8, 1, [2], 0, 0, () => ({ site: [newSite(4023, 209)] })),
 
-    210: new GICard(210, '须弥城', '【我方角色使用技能或装备｢天赋｣时：】如果我方元素骰数量不多于手牌数量，则少花费1个元素骰。(每回合1次)',
+    210: new GICard(210, '须弥城', '【对角色打出｢天赋｣或我方角色使用技能时：】如果我方元素骰数量不多于手牌数量，则少花费1个元素骰。(每回合1次)',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/a659c38687c72bdd6244b9ef3c28390b_972040861793737387.png',
         2, 8, 1, [2], 0, 0, () => ({ site: [newSite(4024, 210)] })),
 
@@ -1029,7 +1027,7 @@ const allCards: CardObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/17/258999284/d34719921cedd17675f38dccc24ebf43_8000545229587575448.png',
         1, 8, 1, [2], 0, 0, () => ({ site: [newSite(4041, 217)] })),
 
-    218: new GICard(218, '梅洛彼得堡', '【我方出战角色受到伤害或治疗后：】此牌累积1点｢特许券｣。(最多累积到5点)；【行动阶段开始时：】如果此牌已有4点｢特许券｣，则消耗4点，使本回合内对方打出的1张事件牌无效。',
+    218: new GICard(218, '梅洛彼得堡', '【我方出战角色受到伤害或治疗后：】此牌累积1点｢禁令｣。(最多累积到4点)；【行动阶段开始时：】如果此牌已有4点｢禁令｣，则消耗4点，在敌方场上生成【严格禁令】。',
         '',
         1, 8, 1, [2], 0, 0, () => ({ site: [newSite(4047, 218)] })),
 
@@ -1495,9 +1493,9 @@ const allCards: CardObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/12/258999284/9ed8846c18cdf85e9b451a702d91c6e8_6360061723145748301.png',
         1, 8, 2, [8], 0, 0, () => ({ outStatusOppo: [heroStatus(2146)] })),
 
-    567: new GICard(567, '抗争之日·碎梦之时', '本回合中，目标我方角色受到的伤害-4。(最多生效4次)',
+    567: new GICard(567, '抗争之日·碎梦之时', '本回合中，目标我方角色受到的伤害-1。(最多生效4次)',
         '',
-        1, 8, 2, [8], 0, 1, () => ({ inStatus: [heroStatus(2173)] })),
+        0, 8, 2, [8], 0, 1, () => ({ inStatus: [heroStatus(2173)] })),
 
     570: new GICard(570, '深渊的呼唤', '召唤一个随机｢丘丘人｣召唤物！',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/75833613/011610bb3aedb5dddfa1db1322c0fd60_7383120485374723900.png',
@@ -2185,21 +2183,22 @@ const allCards: CardObj = {
     776: new GICard(776, '以有趣相关为要义', '[战斗行动]：我方出战角色为【夏洛蒂】时，装备此牌。；【夏洛蒂】装备此牌后，立刻使用一次【取景·冰点构图法】。；装备有此牌的【夏洛蒂】在场时，我方角色进行｢普通攻击｣后：如果对方场上附属有【瞬时剪影】，则治疗我方出战角色2点。(每回合1次)',
         '',
         3, 4, 0, [6, 7], 1010, 1, (card: Card, cardOpt: CardOption = {}) => talentHandle(cardOpt, 1, () => {
-            const isUse = card.useCnt > 0;
+            const { eheros = [] } = cardOpt;
+            const isUse = card.useCnt > 0 && eheros.flatMap(h => h.inStatus).some(ist => ist.id == 2163);
             return [() => {
                 if (isUse) --card.useCnt;
                 return {}
             }, { execmds: isCdt<Cmds[]>(isUse, [{ cmd: 'heal', cnt: 2 }]) }]
         }, ['skilltype1', 'other-skilltype1']), { useCnt: 1, expl: talentExplain(1010, 1) }),
 
-    777: new GICard(777, '古海子遗的权柄', '[战斗行动]：我方出战角色为【那维莱特】时，装备此牌。；【那维莱特】装备此牌后，立刻使用一次【如水从平】。；我方角色引发[水元素相关反应]后：装备有此牌的【那维莱特】接下来2次造成的伤害+1。',
+    777: new GICard(777, '古海孑遗的权柄', '[战斗行动]：我方出战角色为【那维莱特】时，装备此牌。；【那维莱特】装备此牌后，立刻使用一次【如水从平】。；我方角色引发[水元素相关反应]后：装备有此牌的【那维莱特】接下来2次造成的伤害+1。',
         '',
         1, 1, 0, [6, 7], 1110, 1, (_card: Card, cardOpt: CardOption = {}) => talentHandle(cardOpt, 0, () => {
             const { isSkill = -1 } = cardOpt;
             return [() => ({}), { inStatus: isCdt(isSkill > -1, [heroStatus(2166)]) }]
         }, ['el1Reaction', 'other-el1Reaction']), { expl: talentExplain(1110, 0), anydice: 2 }),
 
-    778: new GICard(778, '沿途百景会心', '[战斗行动]：我方出战角色为【绮良良】时，装备此牌。；【绮良良】装备此牌后，立刻使用一次【呜喵町飞足】。；装备有此牌的【绮良良】为出战角色，我方进行｢切换角色｣行动时少花费1个元素骰。(每回合1次)',
+    778: new GICard(778, '沿途百景会心', '[战斗行动]：我方出战角色为【绮良良】时，装备此牌。；【绮良良】装备此牌后，立刻使用一次【呜喵町飞足】。；装备有此牌的【绮良良】为出战角色，我方进行｢切换角色｣行动时：少花费1个元素骰。(每回合1次)',
         '',
         3, 7, 0, [6, 7], 1607, 1, (card: Card, cardOpt: CardOption = {}) => talentHandle(cardOpt, 1, () => {
             let { changeHeroDiceCnt = 0 } = cardOpt;
@@ -2213,7 +2212,7 @@ const allCards: CardObj = {
             }, { minusDiceHero: isMinus ? 1 : 0 }]
         }, 'change-from'), { useCnt: 1, expl: talentExplain(1607, 1) }),
 
-    779: new GICard(779, '雷萤闪烁', '[战斗行动]：我方出战角色为【愚人众·雷萤术士】时，装备此牌。；【愚人众·雷萤术士】装备此牌后，立刻使用一次【雾虚之召】。；装备有此牌的【愚人众·雷萤术士】在场时，我方选择行动前：如果【雷萤】的[可用次数]至少为3，则【雷萤】立刻造成1点[雷元素伤害]。(需消耗[可用次数]，每回合1次)',
+    779: new GICard(779, '雷萤浮闪', '[战斗行动]：我方出战角色为【愚人众·雷萤术士】时，装备此牌。；【愚人众·雷萤术士】装备此牌后，立刻使用一次【雾虚之召】。；装备有此牌的【愚人众·雷萤术士】在场时，我方选择行动前：如果【雷萤】的[可用次数]至少为3，则【雷萤】立刻造成1点[雷元素伤害]。(需消耗[可用次数]，每回合1次)',
         '',
         3, 3, 0, [6, 7], 1764, 1, talentSkill(1), { useCnt: 1, expl: talentExplain(1764, 1) }),
 

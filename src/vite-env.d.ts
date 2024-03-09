@@ -12,6 +12,7 @@ type PlayerList = {
     id: number,
     name: string,
     rid: number,
+    status: string,
 }[]
 
 type Player = {

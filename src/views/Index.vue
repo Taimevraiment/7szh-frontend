@@ -25,11 +25,7 @@
               class="game-room"
               v-for="(room, ri) in roomList"
               :key="'roomList' + ri"
-              @click="
-                room.hasPassWord
-                  ? openEnterRoom(room.id)
-                  : enterRoom(room.id.toString(), '')
-              "
+              @click="enterRoom(room.id.toString())"
             >
               <span class="game-room-id">{{ room.id }}</span>
               <span class="game-room-name">{{ room.name }}</span>
@@ -49,13 +45,15 @@
             >
               <div class="player-name">{{ player.name }}</div>
               <div class="player-status">
-                {{
-                  player.rid < 0
-                    ? "空闲"
-                    : roomList.find((r) => r.id == player.rid)?.isStart
-                    ? "游戏中"
-                    : "房间中"
-                }}
+                <button
+                  v-if="player.status != '空闲'"
+                  @click="
+                    enterRoom(player.rid.toString(), { follow: player.id })
+                  "
+                >
+                  跟随
+                </button>
+                <span>{{ player.status }}</span>
               </div>
             </div>
           </div>
@@ -69,12 +67,12 @@
       </div>
     </div>
   </div>
-  <create-room-modal
+  <CreateRoomModal
     v-if="isShowCreateRoom"
     @create-room-cancel="cancelCreateRoom"
     @create-room="createRoom"
   />
-  <enter-room-modal
+  <EnterRoomModal
     v-if="isShowEnterRoom"
     :select-room-id="selectRoomId"
     @enter-room-cancel="cancelEnterRoom"
@@ -83,7 +81,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import CreateRoomModal from "@/components/CreateRoomModal.vue";
 import EnterRoomModal from "@/components/EnterRoomModal.vue";
@@ -109,6 +107,7 @@ const isShowEditName = ref<boolean>(username.value == ""); // 是否显示改名
 const isShowCreateRoom = ref<boolean>(false); // 是否显示创建房间界面
 const isShowEnterRoom = ref<boolean>(false); // 是否显示加入房间界面
 const selectRoomId = ref<number>(-1); // 选择的房间的id
+let followIdx: number = -1; // 跟随的玩家id
 
 if (username.value != "" && userid.value > 0) {
   socket.emit("login", { id: userid.value, name: username.value });
@@ -170,7 +169,7 @@ const createRoom = (roomName: string, roomPassword: string) => {
 const openEnterRoom = (rid: number = -1) => {
   const prid = playerList.value.find((p) => p.id == userid.value)?.rid ?? -1;
   if (prid > 0) {
-    enterRoom(prid.toString(), "", true);
+    enterRoom(prid.toString(), { isForce: true });
     return;
   }
   selectRoomId.value = rid;
@@ -183,8 +182,16 @@ const cancelEnterRoom = () => {
 };
 
 // 加入房间
-const enterRoom = (roomId: string, roomPassword: string, isForce = false) => {
+const enterRoom = (
+  roomId: string,
+  options: { roomPassword?: string; isForce?: boolean; follow?: number } = {}
+) => {
+  const { roomPassword = "", isForce = false, follow = -1 } = options;
   isShowEnterRoom.value = false;
+  const room = roomList.value.find((r) => r.id == Number(roomId));
+  if (!room) return console.error(`room${roomId} not found`);
+  if (follow > -1) followIdx = follow;
+  if (room.hasPassWord && roomPassword == "") return openEnterRoom(room.id);
   socket.emit("enterRoom", { roomId: Number(roomId), roomPassword, isForce });
 };
 
@@ -195,21 +202,43 @@ socket.on("login", ({ pid, name }) => {
   localStorage.setItem("7szh_userid", pid.toString());
 });
 
-// 获取房间列表
-socket.on("getRoomList", ({ rlist }) => (roomList.value = rlist));
-
-// 获取玩家列表
-socket.on("getPlayerList", ({ plist }) => (playerList.value = plist));
+// 获取玩家和房间列表
+const getPlayerAndRoomList = ({
+  plist,
+  rlist,
+}: {
+  plist: Player[];
+  rlist: RoomList;
+}) => {
+  roomList.value = rlist;
+  playerList.value = plist.map((p) => {
+    return {
+      ...p,
+      status:
+        p.rid < 0
+          ? "空闲"
+          : roomList.value.find((r) => r.id == p.rid)?.isStart
+          ? "游戏中"
+          : "房间中",
+    };
+  });
+};
+socket.on("getPlayerAndRoomList", getPlayerAndRoomList);
 
 // 进入房间
-socket.on("enterRoom", ({ roomId = -1, isLookon = false, err }) => {
+socket.on("enterRoom", ({ roomId = -1, isLookon = false, players, err }) => {
   if (err) return alert(err);
   if (isLookon) alert("游戏已满员！进入成为旁观者");
   router.push({
     name: "gameRoom",
     params: { roomId },
-    state: { isLookon },
+    state: {
+      isLookon,
+      players,
+      follow: players.find((p: Player) => p.id == followIdx)?.pidx,
+    },
   });
+  followIdx = -1;
 });
 
 // 继续游戏
@@ -218,6 +247,13 @@ socket.on("continueGame", ({ roomId }) => {
     roomId,
     isForce: true,
   });
+});
+
+onUnmounted(() => {
+  socket.off("login");
+  socket.off("getPlayerAndRoomList", getPlayerAndRoomList);
+  socket.off("enterRoom");
+  socket.off("continueGame");
 });
 </script>
 
@@ -284,10 +320,9 @@ button:active {
 }
 
 .game-list-container {
-  width: 100%;
   height: 70vh;
   border-radius: 5px;
-  flex: 4;
+  flex-grow: 10;
   border: 4px double black;
   background-color: #aac4f4;
   display: flex;
@@ -295,10 +330,9 @@ button:active {
 }
 
 .player-list-container {
-  width: 100%;
   height: 70vh;
   border-radius: 5px;
-  flex: 1;
+  flex-grow: 1;
   border: 4px double black;
   background-color: #faebd7;
   display: flex;
@@ -364,7 +398,12 @@ button:active {
 }
 
 .player-item {
-  display: flex;
   justify-content: space-between;
+}
+
+.player-status > button {
+  width: auto;
+  padding: 0 3px;
+  margin-right: 5px;
 }
 </style>

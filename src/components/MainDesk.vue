@@ -667,7 +667,10 @@
       </div>
     </div>
 
-    <div class="dice-change" v-if="[4, 6].includes(phase) && player.phase == 4">
+    <div
+      class="dice-change"
+      v-if="[4, 6].includes(phase) && player.phase == 4 && isLookon == -1"
+    >
       <div class="dice-change-area">
         <div
           class="dice-container"
@@ -703,7 +706,7 @@
       </button>
     </div>
 
-    <div class="card-change" v-if="player.phase == 2">
+    <div class="card-change" v-if="player.phase == 2 && isLookon == -1">
       <div class="init-cards">
         <div
           class="init-card"
@@ -772,7 +775,6 @@ const props = defineProps([
 const emits = defineEmits([
   "selectChangeCard",
   "changeCard",
-  "chooseHero",
   "reroll",
   "selectHero",
   "selectUseDice",
@@ -897,7 +899,6 @@ const changeCard = () => {
 };
 // 选择角色
 const selectHero = (pidx: number, hidx: number) => {
-  // 展示角色信息
   emits("selectHero", pidx, hidx);
 };
 // 选择骰子
@@ -984,7 +985,7 @@ const endPhase = () => {
 
 .side {
   height: 95%;
-  width: 5%;
+  width: min(50px, 5%);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -1804,7 +1805,8 @@ button:active {
   height: 120px;
   border: 2px solid black;
   border-radius: 10px;
-  background: #14408c;
+  background-color: #14408c;
+  background: url("@/assets/image/card-back.png");
   color: black;
   text-align: center;
   padding-top: 20px;
