@@ -2194,8 +2194,8 @@ const allCards: CardObj = {
     777: new GICard(777, '古海孑遗的权柄', '[战斗行动]：我方出战角色为【那维莱特】时，装备此牌。；【那维莱特】装备此牌后，立刻使用一次【如水从平】。；我方角色引发[水元素相关反应]后：装备有此牌的【那维莱特】接下来2次造成的伤害+1。',
         '',
         1, 1, 0, [6, 7], 1110, 1, (_card: Card, cardOpt: CardOption = {}) => talentHandle(cardOpt, 0, () => {
-            const { isSkill = -1 } = cardOpt;
-            return [() => ({}), { inStatus: isCdt(isSkill > -1, [heroStatus(2166)]) }]
+            const { isSkill = -1, hidxs = [] } = cardOpt;
+            return [() => ({}), { inStatus: isCdt(isSkill > -1, [heroStatus(2166)]), hidxs }]
         }, ['el1Reaction', 'other-el1Reaction']), { expl: talentExplain(1110, 0), anydice: 2 }),
 
     778: new GICard(778, '沿途百景会心', '[战斗行动]：我方出战角色为【绮良良】时，装备此牌。；【绮良良】装备此牌后，立刻使用一次【呜喵町飞足】。；装备有此牌的【绮良良】为出战角色，我方进行｢切换角色｣行动时：少花费1个元素骰。(每回合1次)',

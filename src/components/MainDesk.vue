@@ -318,7 +318,7 @@
           <img
             v-for="(el, eidx) in hero.attachElement.filter(() => hero?.hp > 0)"
             :key="eidx"
-            :src="getPngIcon(ELEMENT_ICON[el])"
+            :src="ELEMENT_URL[el]"
             style="width: 20px"
           />
           <img
@@ -326,7 +326,7 @@
             v-for="(attach, waidx) in willAttachs[playerIdx == 0 ? (hidx + 3) % 6 : hidx]
             .filter((wa: number) => hero?.hp > 0 && wa > 0)"
             :key="waidx"
-            :src="getPngIcon(ELEMENT_ICON[attach])"
+            :src="ELEMENT_URL[attach]"
           />
         </div>
         <div class="instatus" v-if="phase > 3 && hero.hp > 0">
@@ -631,7 +631,7 @@
             }"
             :src="
               summon.damage > 0
-                ? getPngIcon(ELEMENT_ICON[summon.element])
+                ? ELEMENT_URL[summon.element]
                 : getSvgIcon('heal')
             "
           />
@@ -763,7 +763,12 @@
 
 <script setup lang="ts">
 import { computed, ref, watchEffect } from "vue";
-import { ELEMENT_COLOR, ELEMENT_ICON, STATUS_BG_COLOR } from "@/data/constant";
+import {
+  ELEMENT_COLOR,
+  ELEMENT_ICON,
+  ELEMENT_URL,
+  STATUS_BG_COLOR,
+} from "@/data/constant";
 
 const props = defineProps([
   "isMobile",
@@ -1794,6 +1799,7 @@ button:active {
   border-radius: 10px;
   color: black;
   text-align: center;
+  background-color: #a7bbdd;
   padding-top: 20px;
   transform: rotate(90deg);
   animation: getcardmy 1.5s linear forwards;

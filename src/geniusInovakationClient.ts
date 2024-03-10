@@ -138,7 +138,7 @@ export default class GeniusInvokationClient {
      * @param idx 选择卡的索引idx
      */
     selectCard(idx: number) {
-        if (this.phase < 2) return;
+        if (this.phase < 2 || this.taskQueue.isExecuting) return;
         if (this.player.status == 1) this.reconcile(false);
         this.currSkill = { ...NULL_SKILL };
         this.willSummons = [[], []];
@@ -487,7 +487,6 @@ export default class GeniusInvokationClient {
      * 鼠标进入卡
      * @param idx 进入的卡的索引idx
      * @param force 是否强制执行该函数
-     * @returns void
      */
     mouseenter(idx: number, force = false) {
         if (this.isMobile && !force) return;
@@ -518,7 +517,7 @@ export default class GeniusInvokationClient {
         };
         if (deck == undefined) return console.error('卡组未找到');
         if (deck.heroIds.includes(0) || deck.cardIds.length < 30) return alert(`当前出战卡组不完整`);
-        console.info(`player[${this.players[this.playerIdx].name}]:${this.isStart ? 'cancelReady' : 'startGame'}`);
+        console.info(`player[${this.players[this.playerIdx].name}]:${this.isStart ? 'cancelReady' : 'startGame'}-${this.playerIdx}`);
         this.isStart = !this.isStart;
         this.isWin = -1;
         this.socket.emit('sendToServer', {
@@ -618,9 +617,9 @@ export default class GeniusInvokationClient {
         this.players = [...(data?.players ?? this.players)];
         if (data.isFlag) {
             this.socket.emit('sendToServer');
-            this.isStart = data.isStart;
+            if (data.isStart != undefined) this.isStart = data.isStart;
         }
-        this.phase = data.phase;
+        if (data.phase != undefined) this.phase = data.phase;
         this.canAction = this.players[this.playerIdx]?.canAction ?? false;
         if (data.taskQueueVal) {
             this.taskQueue.queue = data.taskQueueVal.queue;
@@ -1486,7 +1485,7 @@ export default class GeniusInvokationClient {
                 aWillDamages[di + this.playerIdx * 3] = allHeros[di + (this.playerIdx ^ 1) * 3].hp > 0 ? [...dmg] : [-1, 0];
             });
             if (skillres?.pendamage && skillres?.isOppo) {
-                skillres?.hidxs?.forEach((hi: number) => {
+                (skillres?.hidxs ?? [hidx]).forEach((hi: number) => {
                     aWillDamages[hi + (this.playerIdx ^ 1) * 3][1] += skillres.pendamage;
                 });
             }
@@ -1910,6 +1909,7 @@ export default class GeniusInvokationClient {
             const { isQuickAction: stsiqa, changeHeroDiceCnt: stschd } = this._doStatus(this.playerIdx, 4, 'change-from', { isQuickAction, changeHeroDiceCnt, isOnlyFront: true });
             isQuickAction = stsiqa;
             changeHeroDiceCnt = stschd;
+            changeHeroDiceCnt = this._doSlot(['change-from'], { hidxs: this.player.hidx, changeHeroDiceCnt, summons: this.player.summon }).changeHeroDiceCnt;
             changeHeroDiceCnt = this._doSlot(['change'], { hidxs: [1, 2].map(v => (this.player.hidx + v) % 3), changeHeroDiceCnt, summons: this.player.summon }).changeHeroDiceCnt;
             changeHeroDiceCnt = this._doSlot(['change-to'], { hidxs: hidx, changeHeroDiceCnt, summons: this.player.summon }).changeHeroDiceCnt;
             const { cmds: sitecmd, outStatus: siteost, isQuickAction: stiqa } = this._doSite(this.playerIdx, 'change', { isQuickAction, changeHeroDiceCnt, hidx });
@@ -3185,7 +3185,7 @@ export default class GeniusInvokationClient {
         }
         const p = players[pidx];
         const pheros = options.heros ?? p.heros;
-        const peheros = options.eheros ?? players[p.pidx ^ 1].heros;
+        const peheros = options.eheros ?? players[pidx ^ 1].heros;
         const doStatus = (stses: Status[], group: number, hidx: number, trigger: Trigger) => {
             const nist: Status[] = [];
             const nost: Status[] = [];
@@ -3198,7 +3198,7 @@ export default class GeniusInvokationClient {
                     hidx,
                     trigger,
                     hidxs: [ophidx],
-                    phase: p.pidx == this.playerIdx ? phase : p.phase,
+                    phase: pidx == this.playerIdx ? phase : p.phase,
                     card,
                     minusDiceCard,
                     heal,
@@ -3214,7 +3214,10 @@ export default class GeniusInvokationClient {
                 minusDiceCard += stsres?.minusDiceCard ?? 0;
                 isInvalid ||= stsres?.isInvalid ?? false;
                 if (sts.type.includes(1) && (stsres.damage || stsres.pendamage || stsres.heal) && !trigger.includes('phase')) {
-                    statusIdsAndPidx.push({ id: sts.id, type: group, pidx: p.pidx, isOppo: 0, trigger, hidx, isQuickAction: isQuickAction == 2, isSwitchAtk });
+                    statusIdsAndPidx.push({
+                        id: sts.id, type: group, pidx, isOppo: stsres.isOppo ? 1 : 0, trigger, hidx,
+                        isQuickAction: isQuickAction == 2 || (!!card && !card.subType.includes(7)), isSwitchAtk
+                    });
                 }
                 if (isExec) {
                     const stsexecres = stsres?.exec?.(undefined, { hidx, changeHeroDiceCnt, minusDiceCard });
@@ -3407,40 +3410,44 @@ export default class GeniusInvokationClient {
             let { heros: eheros, hidx: eFrontIdx, summon: eSummon } = this.players[pidx ^ 1];
             ahidx = stype == 1 ? ahidx : ohidx;
             const frontHero = aheros[ahidx];
-            const eFrontHero = eheros[eFrontIdx];
-            const slots = [frontHero.artifactSlot, frontHero.talentSlot, frontHero.weaponSlot];
+            const atkedIdx = isOppo ? ahidx : eFrontIdx;
             const handleres = stype == 0 ?
-                heroStatus(sid).handle((isOppo ? eFrontHero : frontHero).inStatus
+                heroStatus(sid).handle(frontHero.inStatus
                     .find(ist3 => ist3.id == sid) ?? heroStatus(sid), {
                     heros: isOppo ? eheros : aheros,
                     eheros: isOppo ? aheros : eheros,
-                    trigger: trigger as Trigger,
-                    hidx: isOppo ? eFrontIdx : ahidx,
+                    trigger: trigger,
+                    hidx: ahidx,
+                    force: true,
                 }) :
-                heroStatus(sid).handle((isOppo ? eFrontHero : frontHero).outStatus
+                heroStatus(sid).handle(frontHero.outStatus
                     .find(ost3 => ost3.id == sid) ?? heroStatus(sid), {
                     heros: isOppo ? eheros : aheros,
                     eheros: isOppo ? aheros : eheros,
                     trigger: trigger as Trigger,
-                    hidx: isOppo ? eFrontIdx : ahidx,
+                    hidx: ahidx,
+                    force: true,
                 });
             let { willDamage, willAttachs: willAttachs1, dmgElements, eheros: eheros1, summon: esummon, aheros: aheros1, summonOppo, elrcmds, elTips }
                 = this._elementReaction(
                     handleres?.element ?? 0,
                     [0, 0, 0].map((_, i) => [
-                        i == eFrontIdx ? (handleres?.damage ?? -1) : -1,
-                        (handleres?.hidxs?.includes(i) || (i != eFrontIdx && handleres?.hidxs == undefined)) ? (handleres?.pendamage ?? 0) : 0
+                        i == atkedIdx ? (handleres?.damage ?? -1) : -1,
+                        (handleres?.hidxs?.includes(i) || (i != atkedIdx && handleres?.hidxs == undefined)) ? (handleres?.pendamage ?? 0) : 0
                     ]),
-                    eFrontIdx,
-                    eheros, eSummon,
-                    aheros, aSummon,
-                    { pidx }
+                    atkedIdx,
+                    isOppo ? aheros : eheros,
+                    isOppo ? aSummon : eSummon,
+                    isOppo ? eheros : aheros,
+                    isOppo ? eSummon : aSummon,
+                    { pidx: pidx ^ isOppo }
                 );
-            const { cmds: execmds = [] } = handleres?.exec?.(stype < 2 ? ((stype == 0 ? (isOppo ? eheros1[eFrontIdx].inStatus : aheros1[ahidx].inStatus) :
-                (isOppo ? eheros1[eFrontIdx].outStatus : aheros1[ahidx].outStatus)).find(sts3 => sts3.id == sid)) :
-                slots.find(slot => slot?.id == sid), { heros: isOppo ? eheros1 : aheros1 }) ?? {};
-            if (pidx == 0) this.willDamages = [...clone(willDamage), [-1, 0], [-1, 0], [-1, 0]];
-            else this.willDamages = [[-1, 0], [-1, 0], [-1, 0], ...clone(willDamage)];
+            const { cmds: execmds = [] } = handleres?.exec?.((stype == 0 ?
+                (isOppo ? eheros1 : aheros1)[ahidx].inStatus :
+                (isOppo ? eheros1 : aheros1)[ahidx].outStatus)
+                .find(sts3 => sts3.id == sid)) ?? {};
+            if (pidx ^ isOppo) this.willDamages = [[-1, 0], [-1, 0], [-1, 0], ...clone(willDamage)];
+            else this.willDamages = [...clone(willDamage), [-1, 0], [-1, 0], [-1, 0]];
             const aWillAttach: number[][] = [[], [], [], [], [], []];
             for (let i = 0; i < 3; ++i) aWillAttach[i + (pidx ^ 1) * 3].push(willAttachs1[i]);
             let willHeals: number[] | undefined;
@@ -3496,10 +3503,10 @@ export default class GeniusInvokationClient {
             this.socket.emit('sendToServer', {
                 statusId: stype < 2 ? [sid, stype, isOppo, ahidx, isSwitchAtking, isQuickAction] : [],
                 cpidx: pidx,
-                summonee: summonOppo,
-                heros: aheros1,
-                eheros: eheros1,
-                esummon,
+                summonee: isOppo ? esummon : summonOppo,
+                heros: isOppo ? eheros1 : aheros1,
+                eheros: isOppo ? aheros1 : eheros1,
+                esummon: isOppo ? summonOppo : esummon,
                 willDamage: this.willDamages,
                 willAttachs,
                 dmgElements,
@@ -3608,16 +3615,16 @@ export default class GeniusInvokationClient {
         let willHeals: number[] = [-1, -1, -1];
         let addDmg = 0;
         let addDmgSummon = 0;
-        let inStatus: Status[] | undefined;
-        let outStatus: Status[] | undefined;
+        let inStatus: Status[] = [];
+        let outStatus: Status[] = [];
         let summon: Summonee[] | undefined;
         let minusDiceHero = 0;
         let task: [(() => void)[], number[]] | undefined;
+        const ahidx = this.players[pidx].hidx;
         if (typeof hidxs == 'number') {
             if (hidxs < 0) hidxs = [];
             else hidxs = [hidxs];
         } else {
-            const ahidx = this.players[pidx].hidx;
             hidxs = hidxs.map(hi => (hi - ahidx + heros.length) % heros.length).sort().map(hi => (hi + ahidx) % heros.length);
         }
         for (const hidx of hidxs) {
@@ -3625,7 +3632,7 @@ export default class GeniusInvokationClient {
             const fHero = heros[hidx];
             const slots = [fHero.weaponSlot, fHero.artifactSlot, fHero.talentSlot];
             const cmds: Cmds[][] = [];
-            if (card?.type == 0 && slots.every(slot => slot?.id != card.id)) slots.push(card);
+            if (card?.type == 0 && slots.every(slot => slot?.id != card.id) && fHero.id == card.userType) slots.push(card);
             slots.forEach(slot => {
                 if (slot != null && (!taskMark || slot.subType.includes(taskMark[1]))) {
                     for (const trigger of triggers) {
@@ -3656,12 +3663,10 @@ export default class GeniusInvokationClient {
                         if (isExec && (!slotres?.execmds?.length || taskMark)) {
                             const slotexecres = slotres?.exec?.();
                             if (slotexecres?.inStatus) {
-                                if (inStatus == undefined) inStatus = [...slotexecres.inStatus];
-                                else inStatus.push(...slotexecres.inStatus);
+                                inStatus.push(...slotexecres.inStatus);
                             }
                             if (slotexecres?.outStatus) {
-                                if (outStatus == undefined) outStatus = [...slotexecres.outStatus];
-                                else outStatus.push(...slotexecres.outStatus);
+                                outStatus.push(...slotexecres.outStatus);
                             }
                             if (slotexecres?.inStatusOppo) {
                                 const ehidxs = slotexecres?.hidxs ?? [eheros.findIndex(h => h.isFront)];
@@ -3682,7 +3687,7 @@ export default class GeniusInvokationClient {
                         if (slotres?.execmds?.some(cmds => cmds.cmd == 'heal') && !isExec) {
                             const { cnt: heal = -1, hidxs } = slotres.execmds.find(cmds => cmds.cmd == 'heal') ?? {};
                             willHeals.forEach((v, i, a) => {
-                                if (hidxs?.includes(i) || (hidxs == undefined && fHero.isFront && hidx == i)) {
+                                if (hidxs?.includes(i) || (hidxs == undefined && heros[i].isFront)) {
                                     if (v < 0) a[i] = heal;
                                     else a[i] += heal;
                                 }
@@ -3692,11 +3697,16 @@ export default class GeniusInvokationClient {
                             if (summon == undefined) summon = [...slotres.summon];
                             else summon.push(...slotres.summon);
                         }
+                        if (slotres?.inStatus) inStatus.push(...slotres.inStatus)
                         if (slotres?.inStatusOppo) {
-                            const ehidxs = slotres?.hidxs ?? [eheros.findIndex(h => h.isFront)];
-                            for (const hidx of ehidxs) {
-                                eheros[hidx].inStatus = this._updateStatus(slotres.inStatusOppo, eheros[hidx].inStatus).nstatus;
-                            }
+                            (slotres?.hidxs ?? [eheros.findIndex(h => h.isFront)]).forEach(hi => {
+                                eheros[hi].inStatus = this._updateStatus(slotres.inStatusOppo ?? [], eheros[hi].inStatus).nstatus;
+                            });
+                        }
+                        if (slotres?.outStatus) outStatus.push(...slotres.outStatus);
+                        if (slotres?.outStatusOppo) {
+                            const ehidx = eheros.findIndex(h => h.isFront);
+                            eheros[ehidx].outStatus = this._updateStatus(slotres.outStatusOppo ?? [], eheros[ehidx].outStatus).nstatus;
                         }
                     }
                 }
@@ -3751,8 +3761,8 @@ export default class GeniusInvokationClient {
             }
         }
         return {
-            willHeals, pidx, changeHeroDiceCnt, addDmg, addDmgSummon, inStatus, outStatus,
-            minusDiceHero, summon, isEndAtk: oisEndAtk, minusDiceCard, minusDiceSkill, task,
+            willHeals, pidx, changeHeroDiceCnt, addDmg, addDmgSummon, inStatus: isCdt(inStatus.length > 0, inStatus),
+            outStatus: isCdt(outStatus.length > 0, outStatus), minusDiceHero, summon, isEndAtk: oisEndAtk, minusDiceCard, minusDiceSkill, task,
         };
     }
     /**
@@ -3822,9 +3832,7 @@ export default class GeniusInvokationClient {
             } else if (cmd == 'getCard') {
                 if (card) {
                     const cards = Array.isArray(card) ? card : [card];
-                    if (cards.some(c => typeof c == 'number')) {
-                        cmds[i].card = cards.map(c => cardsTotal(c as number));
-                    }
+                    cmds[i].card = cards.map(c => typeof c == 'number' ? cardsTotal(c) : c);
                 }
             } else if (cmd == 'getDice' && isExec) {
                 ndices = this._getDice(dices, cnt, element, { pidx });
@@ -3915,7 +3923,7 @@ export default class GeniusInvokationClient {
                 heros[hidxs[0]].skills.splice(element as number, 1);
             }
         }
-        return { ndices, phase, heros, inStatus, outStatus, willHeals, changedEl, isSwitch, isSwitchOppo, inStatusOppo, outStatusOppo }
+        return { cmds, ndices, phase, heros, inStatus, outStatus, willHeals, changedEl, isSwitch, isSwitchOppo, inStatusOppo, outStatusOppo }
     }
     /**
     * 计算变化的伤害和骰子消耗
@@ -4116,7 +4124,7 @@ export default class GeniusInvokationClient {
         if (isOnlyAdd) return 1 + addDiceHero;
         minusDiceHero += stsmh1 + stsmh2;
         minusDiceHero += this._doSlot('change-to', { isExec: false, hidxs: tohidx }).minusDiceHero;
-        minusDiceHero += this._doSlot('change', { isExec: false }).minusDiceHero;
+        minusDiceHero += this._doSlot(['change', 'change-from'], { isExec: false }).minusDiceHero;
         minusDiceHero += this._doSite(this.playerIdx, 'change', { isExec: false }).minusDiceHero;
         return this.heroChangeDice = Math.max(0, 1 - minusDiceHero + addDiceHero);
     }

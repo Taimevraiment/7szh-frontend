@@ -611,6 +611,7 @@ import {
   RULE_EXPLAIN,
   CARD_SUBTYPE_URL,
   WEAPON_TYPE_URL,
+  ELEMENT_URL,
 } from "@/data/constant";
 
 const props = defineProps(["info", "isMobile"]);
@@ -635,9 +636,11 @@ const isShowRule = ref<boolean>(false); // 是否显示规则
 
 const wrapedIcon = (idx: number, isDice = false) => {
   if ([-1, 8, 10].includes(idx)) return "";
-  return `<img style="width:18px;transform:translateY(20%);" src="${getPngIcon(
-    ELEMENT_ICON[idx] + `${isDice ? "-dice-bg" : ""}`
-  )}"/>`;
+  const url =
+    idx < 8
+      ? ELEMENT_URL[idx]
+      : getPngIcon(ELEMENT_ICON[idx] + `${isDice ? "-dice-bg" : ""}`);
+  return `<img style="width:18px;transform:translateY(20%);" src="${url}"/>`;
 };
 const wrapDesc = (desc: string, obj?: Skill | Status | Summonee): string => {
   let res = desc
@@ -809,12 +812,15 @@ watchEffect(() => {
     ].forEach((slot) => {
       if (slot != null) {
         const desc = slot.description.split("；").map((desc) => wrapDesc(desc));
-        slot.descriptions = desc[0].includes("战斗行动") ? desc.slice(2) : desc;
+        const isActionTalent = [6, 7].every((v) => slot.subType.includes(v));
+        slot.descriptions = isActionTalent ? desc.slice(2) : desc;
         const onceDesc = slot.descriptions.findIndex((v) =>
           v.includes("入场时")
         );
         if (onceDesc > -1) slot.descriptions.splice(onceDesc, 1);
-        slotExplain.value.push(wrapExpl(slot.explains));
+        slotExplain.value.push(
+          wrapExpl(slot.explains).slice(isActionTalent ? 1 : 0)
+        );
       }
     });
     skills.value = [];

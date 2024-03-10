@@ -46,14 +46,16 @@
               <div class="player-name">{{ player.name }}</div>
               <div class="player-status">
                 <button
-                  v-if="player.status != '空闲'"
+                  v-if="player.status > 0"
                   @click="
                     enterRoom(player.rid.toString(), { follow: player.id })
                   "
                 >
                   跟随
                 </button>
-                <span>{{ player.status }}</span>
+                <span :style="{ color: playerStatus[player.status].color }">
+                  {{ playerStatus[player.status].name }}
+                </span>
               </div>
             </div>
           </div>
@@ -107,6 +109,11 @@ const isShowEditName = ref<boolean>(username.value == ""); // 是否显示改名
 const isShowCreateRoom = ref<boolean>(false); // 是否显示创建房间界面
 const isShowEnterRoom = ref<boolean>(false); // 是否显示加入房间界面
 const selectRoomId = ref<number>(-1); // 选择的房间的id
+const playerStatus = ref([
+  { name: "空闲", color: "#38b100" },
+  { name: "房间中", color: "black" },
+  { name: "游戏中", color: "#eb7e00" },
+]); // 玩家状态
 let followIdx: number = -1; // 跟随的玩家id
 
 if (username.value != "" && userid.value > 0) {
@@ -216,10 +223,10 @@ const getPlayerAndRoomList = ({
       ...p,
       status:
         p.rid < 0
-          ? "空闲"
+          ? 0
           : roomList.value.find((r) => r.id == p.rid)?.isStart
-          ? "游戏中"
-          : "房间中",
+          ? 2
+          : 1,
     };
   });
 };

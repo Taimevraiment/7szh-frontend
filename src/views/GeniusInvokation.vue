@@ -138,7 +138,7 @@
         />
         <img
           class="subtype8-border"
-          v-if="card.subType.includes(8)"
+          v-if="card.subType?.includes(8)"
           :src="getPngIcon('subtype8-border')"
         />
         <div class="card-content">
@@ -163,7 +163,7 @@
             <img class="cost-img hcard" :src="getDiceIcon(ELEMENT_ICON[9])" />
             <span>{{ card.energy }}</span>
           </div>
-          <div class="card-energy" v-if="card.subType.includes(8)">
+          <div class="card-energy" v-if="card.subType?.includes(8)">
             <img class="cost-img hcard" :src="getDiceIcon(ELEMENT_ICON[10])" />
           </div>
         </div>
@@ -318,7 +318,9 @@
             v-if="skill.src.length > 0"
             :alt="SKILL_TYPE_ABBR[skill.type]"
           />
-          <span v-else>{{ SKILL_TYPE_ABBR[skill.type] }}</span>
+          <span v-else class="skill-img">{{
+            SKILL_TYPE_ABBR[skill.type]
+          }}</span>
         </div>
         <div
           class="skill-cost"
@@ -613,7 +615,7 @@ const devOps = (cidx = 0) => {
   let heros = client.value.players[cpidx].heros;
   let dices;
   let flag = new Set<string>();
-  let cards: number[] = [];
+  let cards: (number | Card)[] = [];
   const h = (v: string) => (v == "" ? undefined : Number(v));
   for (const op of ops) {
     if (op.startsWith("&")) {
@@ -622,15 +624,22 @@ const devOps = (cidx = 0) => {
         .slice(isAdd ? 2 : 1)
         .split(/[:：]+/)
         .map(h);
-      if (!isAdd || el == 0) heros[hidx].attachElement = [];
-      if (el > 0) heros[hidx].attachElement.push(el);
+      if (!isAdd || el == 0) {
+        if (hidx > 2) heros.forEach((h) => (h.attachElement = []));
+        else heros[hidx].attachElement = [];
+      }
+      if (el > 0) {
+        if (hidx > 2) heros.forEach((h) => h.attachElement.push(el));
+        else heros[hidx].attachElement.push(el);
+      }
       flag.add("setEl");
     } else if (op.startsWith("%")) {
       const [hp = 10, hidx = heros.findIndex((h) => h.isFront)] = op
         .slice(1)
         .split(/[:：]+/)
         .map(h);
-      heros[hidx].hp = hp;
+      if (hidx > 2) heros.forEach((h) => (h.hp = hp));
+      else heros[hidx].hp = hp;
       flag.add("setHp");
     } else if (op.startsWith("@")) {
       const [cnt = 3, hidx = heros.findIndex((h) => h.isFront)] = op
@@ -638,7 +647,7 @@ const devOps = (cidx = 0) => {
         .split(/[:：]+/)
         .map(h);
       const { heros: nheros } = client.value._doCmds(
-        [{ cmd: "getEnergy", cnt, hidxs: [hidx] }],
+        [{ cmd: "getEnergy", cnt, hidxs: hidx > 2 ? [0, 1, 2] : [hidx] }],
         { heros }
       );
       if (nheros) heros = nheros;
@@ -655,14 +664,16 @@ const devOps = (cidx = 0) => {
       flag.add("getDice");
     } else {
       const [cid = 0, cnt = 1] = op.split("*").map(h);
-      if (cid == 0)
+      if (cid == 0) {
         cards.push(
           cardTotal.find(
             (c) => c.userType == heros[client.value.players[cpidx].hidx].id
           )?.id ?? 0
         );
-      if (cid <= 0) continue;
-      cards.push(...new Array(cnt).fill(cid));
+      }
+      if (cid > 0) cards.push(...new Array(cnt).fill(cid));
+      cards = client.value._doCmds([{ cmd: "getCard", cnt, card: cards }])
+        .cmds?.[0].card as Card[];
       flag.add("getCard");
     }
   }
@@ -832,6 +843,9 @@ body {
   width: 100%;
   height: 100%;
   border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .skill-forbidden {

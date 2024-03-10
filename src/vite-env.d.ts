@@ -12,7 +12,7 @@ type PlayerList = {
     id: number,
     name: string,
     rid: number,
-    status: string,
+    status: number,
 }[]
 
 type Player = {
@@ -213,7 +213,7 @@ type StatusTask = {
     type: number, // 攻击状态类型：0角色状态 1阵营状态
     pidx: number, // 攻击者pidx
     isOppo: number, // 是否为自伤
-    trigger: string, // 触发条件
+    trigger: Trigger, // 触发条件
     hidx?: number, // 攻击者hidx
     isSwitchAtk?: boolean, // 是否为下落攻击/刻晴切换攻击
     isQuickAction?: boolean, // 是否为快速行动
@@ -227,7 +227,7 @@ type Cmds = {
     hidxs?: number[],
     newdices?: number[],
     isAttach?: boolean,
-    card?: Card | Card[] | number | number[],
+    card?: Card | (Card | number)[] | number,
     subtype?: number | number[],
     status?: Status[],
     isReadySkill?: boolean,

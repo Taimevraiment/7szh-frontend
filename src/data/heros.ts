@@ -249,8 +249,7 @@ const readySkillTotal: { [key: number]: (...args: any) => Skill } = {
 
     17: () => new GISkill('衡平推裁', '(需准备1个行动轮)；造成{dmg}点[水元素伤害]，如果生命值至少为6，则对自身造成1点[穿透伤害]使伤害+1。',
         1, 2, 0, 1, { ec: -2, rdskidx: 17 }, '', '', [], (options: SkillOption) => {
-            const { hero } = options;
-            if (hero.hp < 6) return {}
+            if (options.hero.hp < 6) return {}
             return { addDmgCdt: 1, pendamage: 1, isOppo: true }
         }),
 
@@ -651,14 +650,14 @@ const allHeros: HeroObj = {
             '',
             [heroStatus(2164), readySkill(17)], (options: SkillOption) => {
                 const { hero: { skills: [, { src }] } } = options;
-                return { inStatusOppo: [heroStatus(2164, src, [readySkill(17)])] }
+                return { outStatusOppo: [heroStatus(2164, src, [readySkill(17)])] }
             }),
         new GISkill('潮水啊，我已归来', '造成{dmg}点[水元素伤害]，对所有后台敌人造成1点[穿透伤害]，生成[可用次数]为2的【源水之滴】。', 3, 2, 3, 1, { ec: 2 },
             '',
             '',
             [heroStatus(2164), readySkill(17)], (options: SkillOption) => {
                 const { hero: { skills: [, { src }] } } = options;
-                return { pendamage: 1, inStatusOppo: [heroStatus(2164, src, [readySkill(17)], 2)] }
+                return { pendamage: 1, outStatusOppo: [heroStatus(2164, src, [readySkill(17)], 2)] }
             }),
     ]),
 
@@ -836,11 +835,10 @@ const allHeros: HeroObj = {
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/1d65a51c36eca7169247316ff7e14a89.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/19/258999284/5e46c170e7ce41c20bf76c27c4a16d89_689217131128119675.png',
             [newSummonee(3048), heroStatus(2132)], (options: SkillOption) => {
-                const { hero: { hp, skills: [, , skill2] }, heros = [] } = options;
+                const { hero: { hp, skills: [, , skill2] } } = options;
                 return {
                     pendamage: isCdt(hp >= 6, 1),
                     isOppo: true,
-                    hidxs: [heros.findIndex(h => h.isFront)],
                     summon: [newSummonee(3048)],
                     inStatusOppo: [heroStatus(2132, [skill2])],
                 }

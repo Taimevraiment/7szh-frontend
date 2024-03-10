@@ -120,6 +120,7 @@ type StatusOption = {
     minusDiceCard?: number,
     minusDiceSkill?: number[][],
     heal?: number[],
+    force?: boolean,
 }
 
 type StatusHandleRes = {
@@ -2030,22 +2031,21 @@ const statusTotal: StatusObj = {
         }),
 
     2164: (icon = '', expl?: ExplainContent[], cnt = 1) => new GIStatus(2164, '源水之滴', `【那维莱特进行｢普通攻击｣后：】治疗角色2点，然后角色[准备技能]：【衡平推裁】。；【[可用次数]：{useCnt}(可叠加，最多叠加到3次)】`,
-        icon, 1, [1], cnt, 3, -1, (_status: Status, options: StatusOption = {}) => {
+        icon, 1, [1], cnt, 3, -1, (status: Status, options: StatusOption = {}) => {
             const { heros = [], hidx = -1 } = options;
             if (heros[hidx]?.id != 1110) return {}
             return {
                 heal: 2,
                 trigger: ['after-skilltype1'],
                 exec: (eStatus?: Status) => {
-                    if (!eStatus) return {}
-                    --eStatus.useCnt;
-                    return { inStatus: [heroStatus(2165, expl)] }
+                    if (eStatus) --eStatus.useCnt;
+                    return { cmds: [{ cmd: 'getInStatus', status: [heroStatus(2165, status.explains)] }] }
                 },
             }
         }, { expl }),
 
     2165: (expl?: ExplainContent[]) => new GIStatus(2165, '衡平推裁', `本角色将在下次行动时，直接使用技能：【衡平推裁】。`,
-        '', 0, [1], 2, 0, -1, (status: Status) => ({
+        'buff3', 0, [10, 11], 1, 0, -1, (status: Status) => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 17,
             exec: () => {
@@ -2056,12 +2056,19 @@ const statusTotal: StatusObj = {
             }
         }), { expl }),
 
-    2166: () => new GIStatus(2166, '古海子遗的权柄(todo名字待定)', '该角色造成的伤害+1。', 'buff2', 0, [4], 2, 0, -1, () => ({ addDmg: 1 })),
+    2166: () => new GIStatus(2166, '古海子遗的权柄(todo名字待定)', '该角色造成的伤害+1。', 'buff2', 0, [4], 2, 0, -1, (status: Status) => ({
+        addDmg: 1,
+        trigger: ['skill'],
+        exec: () => {
+            --status.useCnt;
+            return {}
+        }
+    })),
 
     2167: (icon = '') => new GIStatus(2167, '猫箱急件', '【绮良良为出战角色时，我方切换角色后：】造成1点[草元素伤害]，摸1张牌。；【[可用次数]：{useCnt}(可叠加，最多叠加到2次)】',
         icon, 1, [1], 1, 2, -1, (_status: Status, options: StatusOption = {}) => {
-            const { heros = [] } = options;
-            if (!heros.find(h => h.id == 1607)?.isFront) return {}
+            const { heros = [], force = false } = options;
+            if (!heros.find(h => h.id == 1607)?.isFront && !force) return {}
             return {
                 damage: 1,
                 element: 7,
