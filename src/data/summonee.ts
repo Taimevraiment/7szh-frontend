@@ -843,7 +843,7 @@ const summonTotal: SummoneeObj = {
         3, 3, 0, 1, 3, (summon: Summonee, smnOpt: SummonOption = {}) => {
             const { trigger = '', heros = [], isExec = true } = smnOpt;
             const triggers: Trigger[] = ['phase-end', 'ecard'];
-            const hero = heros.find(h => h.id == 1674);
+            const hero = heros.find(h => h.id == 1764);
             if (hero?.isFront) {
                 triggers.push('get-elReaction');
                 if (!isExec && trigger == 'get-elReaction') {
@@ -870,8 +870,8 @@ const summonTotal: SummoneeObj = {
                         return {}
                     }
                     smn.useCnt = Math.max(0, smn.useCnt - 1);
-                    if (trigger == 'action-start' && hero?.talentSlot) --hero.talentSlot.useCnt;
                     if (trigger == 'get-elReaction') return {}
+                    if (trigger == 'action-start' && hero?.talentSlot) --hero.talentSlot.useCnt;
                     return { cmds: [{ cmd: 'attack' }] }
                 }
             }

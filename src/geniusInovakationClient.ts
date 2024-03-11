@@ -224,6 +224,12 @@ export default class GeniusInvokationClient {
             esiteCnt: this.opponent.site.length,
             esummonCnt: this.opponent.summon.length,
         });
+        const { csummon = [] } = this._doSummon(this.playerIdx ^ 1, 'ecard', { isExec: false, csummon: clone(this.opponent.summon) });
+        this.summonCnt[this.playerIdx ^ 1] = [0, 0, 0, 0].map((_, si) => {
+            const osmn = this.opponent.summon;
+            if (osmn.length - 1 < si) return 0;
+            return csummon[si].useCnt - osmn[si].useCnt;
+        });
         if (cardres?.hidxs?.length == 0 ||
             cardres?.summon && summon.length == 4 ||
             cardres?.isValid == false ||
@@ -345,6 +351,7 @@ export default class GeniusInvokationClient {
         if (currCard.type != 0) cardres?.exec?.();
         let { minusDiceCard } = this._doSlot('card', { hidxs: allHidxs(player.heros, { isAll: true }), hcard: currCard });
         const { isInvalid, minusDiceCard: stsmdc } = this._doStatus(this.playerIdx, 4, 'card', { card: currCard, isOnlyFront: true, minusDiceCard });
+        this._doSummon(this.playerIdx ^ 1, 'ecard', { isExec: true });
         if (isInvalid) {
             this.socket.emit('sendToServer', {
                 handCards,
@@ -713,7 +720,7 @@ export default class GeniusInvokationClient {
         if (actionStart == this.playerIdx && ![PHASE.DIE_CHANGE, PHASE.DIE_CHANGE_END].includes(players[this.playerIdx].phase)) { // 我方选择行动前
             const { cmds } = this._doSite(this.playerIdx, 'action-start', { players });
             this._doStatus(this.playerIdx, [1, 4], 'action-start', { intvl: [100, 500, 1000, 100], players, isOnlyFront: true });
-            this._doSummon(this.playerIdx, 'action-start', { intvl: [100, 700, 2000, 200] });
+            this._doSummon(this.playerIdx, 'action-start', { intvl: [100, 700, 2000, 200], players });
             this._execTask();
             if (cmds.length > 0) {
                 const { ndices } = this._doCmds(cmds);
@@ -1244,8 +1251,8 @@ export default class GeniusInvokationClient {
         const { isOnlyRead = false, isCard = false, isSwitch = -1, isReadySkill = false, otriggers = [] } = options;
         this.willSwitch = [false, false, false, false, false, false];
         const currSkill = { ...this.currSkill };
-        const skill = isReadySkill ? readySkill(sidx, this.player.heros[this.player.hidx].element) :
-            (isSwitch > -1 ? this._calcSkillChange(1, isSwitch, { isSwitch: true }) ?? [] : this.skills)[sidx];
+        const skill = isReadySkill ? this._calcSkillChange(1, this.player.hidx, { isReadySkill: sidx }) as Skill :
+            (isSwitch > -1 ? (this._calcSkillChange(1, isSwitch, { isSwitch: true }) ?? []) as Skill[] : this.skills)[sidx];
         this.currSkill = { ...skill };
         if (sidx > -1 && (!this.currCard.subType.includes(7) || !isCard)) {
             this.currCard = { ...NULL_CARD };
@@ -1759,14 +1766,18 @@ export default class GeniusInvokationClient {
                     })
             ];
         }
-        this.summonCnt = this.summonCnt.map((smns, pi) => {
-            const osmn = (pi == this.playerIdx ? this.player : this.opponent).summon;
-            return smns.map((_, si) => {
-                if (osmn.length - 1 < si) return 0;
-                const smnCnt = (pi == this.playerIdx ? aSummon : esummon).find(smn => smn.id == osmn[si].id)?.useCnt ?? 0;
-                return smnCnt - osmn[si].useCnt;
+        if (isExec) {
+            this.summonCnt = [[0, 0, 0, 0], [0, 0, 0, 0]];
+        } else {
+            this.summonCnt = this.summonCnt.map((smns, pi) => {
+                const osmn = (pi == this.playerIdx ? this.player : this.opponent).summon;
+                return smns.map((_, si) => {
+                    if (osmn.length - 1 < si) return 0;
+                    const smnCnt = (pi == this.playerIdx ? aSummon : esummon).find(smn => smn.id == osmn[si].id)?.useCnt ?? 0;
+                    return smnCnt - osmn[si].useCnt;
+                });
             });
-        });
+        }
         if (sidx == -1) return;
 
         if (!isOnlyRead && currSkill.name == skill.name || isReadySkill) {
@@ -1830,7 +1841,7 @@ export default class GeniusInvokationClient {
      * @returns 选择骰子情况的数组
      */
     checkSkill(sidx: number, isSwitch: number = -1) {
-        const skill = (isSwitch > -1 ? this._calcSkillChange(1, isSwitch, { isSwitch: true }) ?? [] : this.skills)[sidx];
+        const skill = (isSwitch > -1 ? (this._calcSkillChange(1, isSwitch, { isSwitch: true }) ?? []) as Skill[] : this.skills)[sidx];
         let anyDiceCnt = skill.cost[1].val - skill.costChange[1];
         let { val: elementDiceCnt, color: costType } = skill.cost[0];
         elementDiceCnt -= skill.costChange[0];
@@ -2532,6 +2543,10 @@ export default class GeniusInvokationClient {
                         card: this.currCard,
                         minusDiceSkill: res.minusDiceSkill,
                     });
+                    const skillAddDmgTrgs: Trigger[] = [`skilltype${sktype}` as Trigger, 'skill'];
+                    if (sts.type.includes(6) && isReadySkill && skillAddDmgTrgs.some(trg => stsres.trigger?.includes(trg))) {
+                        stsres.trigger = [...(stsres.trigger ?? []), 'useReadySkill']
+                    }
                     if (this._hasNotTrigger(stsres.trigger, trigger)) continue;
                     if (res.willDamage[frontIdx][0] > 0) {
                         res.willDamage[frontIdx][0] += (stsres?.[`${dmg}`] ?? 0) + (isSummon > -1 ? stsres?.addDmgSummon ?? 0 : 0);
@@ -2778,21 +2793,22 @@ export default class GeniusInvokationClient {
      * @param state 触发状态
      * @param time 当前时间
      * @param options intvl 间隔时间, isUnshift 是否前插入事件, csummon 当前的召唤物, isExec 是否执行召唤物攻击, isDmg 是否造成伤害, isExecTask 是否执行任务队列, hidx 当前出战角色
-     *                isChargedAtk 是否为重击, isFallAtk 是否为下落攻击, hcard 使用的牌, minusDiceSkill 用技能减骰子, isUseSkill 是否使用技能, tsummon 执行task的召唤物
+     *                isChargedAtk 是否为重击, isFallAtk 是否为下落攻击, hcard 使用的牌, minusDiceSkill 用技能减骰子, isUseSkill 是否使用技能, tsummon 执行task的召唤物 players 玩家数组
      * @returns smncmds 命令集, addDmg 加伤, addDiceHero 增加切换角色骰子数, changeHeroDiceCnt 改变骰子数, minusDiceSkill 用技能减骰子, willheals 将回血数
      */
     _doSummon(pidx: number, ostate: Trigger | Trigger[],
         options: {
             intvl?: number[], isUnshift?: boolean, csummon?: Summonee[], isExec?: boolean, isDmg?: boolean, isExecTask?: boolean, hidx?: number,
             isChargedAtk?: boolean, isFallAtk?: boolean, hcard?: Card, minusDiceSkill?: number[][], isUseSkill?: boolean, tsummon?: Summonee[],
+            players?: Player[],
         } = {}) {
         const states: Trigger[] = [];
         if (typeof ostate == 'string') states.push(ostate);
         else states.push(...ostate);
         const { intvl, isUnshift = false, csummon, isExec = true, isDmg = false, isChargedAtk = false, hidx = this.players[pidx].hidx,
-            isFallAtk = false, hcard, isExecTask = false, isUseSkill = false, tsummon } = options;
+            isFallAtk = false, hcard, isExecTask = false, isUseSkill = false, tsummon, players = this.players } = options;
         let { minusDiceSkill } = options;
-        const p = this.players[pidx];
+        const p = players[pidx];
         const smncmds: Cmds[] = [];
         let addDmg = 0;
         let addDiceHero = 0;
@@ -2805,7 +2821,7 @@ export default class GeniusInvokationClient {
                 const summonres = newSummonee(summon.id).handle(summon, {
                     trigger: state,
                     heros: p.heros,
-                    eheros: this.players[p.pidx ^ 1].heros,
+                    eheros: players[p.pidx ^ 1].heros,
                     hidxs: [hidx],
                     isChargedAtk,
                     isFallAtk,
@@ -2997,7 +3013,7 @@ export default class GeniusInvokationClient {
                 }
             }
         }
-        return { smncmds, addDmg, addDiceHero, changeHeroDiceCnt, willheals, minusDiceSkill, task }
+        return { smncmds, addDmg, addDiceHero, changeHeroDiceCnt, willheals, minusDiceSkill, csummon, task }
     }
     /**
      * 场地效果发动
@@ -3929,23 +3945,27 @@ export default class GeniusInvokationClient {
     * 计算变化的伤害和骰子消耗
     * @param pidx 玩家识别符: 0对方 1我方
     * @param hidx 角色索引idx
-    * @param options isUpdateHandcards 是否更新手牌, isSwitch 是否为切换角色
+    * @param options isUpdateHandcards 是否更新手牌, isSwitch 是否为切换角色, isReadySkill 准备技能rdskidx
     */
-    _calcSkillChange(pidx: number, hidx: number, options: { isUpdateHandcards?: boolean, isSwitch?: boolean } = {}) {
+    _calcSkillChange(pidx: number, hidx: number, options: { isUpdateHandcards?: boolean, isSwitch?: boolean, isReadySkill?: number } = {}) {
         const plidx = this.playerIdx ^ pidx ^ 1;
-        const { isUpdateHandcards = true, isSwitch = false } = options;
+        const { isUpdateHandcards = true, isSwitch = false, isReadySkill = -1 } = options;
         const heros: Hero[] = (!isSwitch ? this.players[plidx] : clone(this.players[plidx])).heros;
         if (isSwitch) this._doSkill5(hidx, 'change-to', { heros });
         const curHero = heros[hidx];
         if (!curHero) return this.wrap(this.players[plidx], { isUpdateHandcards });
+        const rdskill = isReadySkill > -1 ? readySkill(isReadySkill) : null;
         const dmgChange = curHero.skills.filter(sk => sk.type < 4).map(() => 0);
         const costChange = curHero.skills.filter(sk => sk.type < 4).map(() => new Array(2).fill(0));
         let mds: number[][] = [];
         const calcDmgChange = (res: any) => {
-            dmgChange.forEach((_, i, a) => {
-                const curSkill = curHero.skills[i];
-                a[i] += (res?.addDmg ?? 0) + (res?.[`addDmgType${curSkill.type}`] ?? 0);
-            });
+            if (rdskill) dmgChange[0] += (res?.addDmg ?? 0) + (res?.[`addDmgType${rdskill.type}`] ?? 0);
+            else {
+                dmgChange.forEach((_, i, a) => {
+                    const curSkill = curHero.skills[i];
+                    a[i] += (res?.addDmg ?? 0) + (res?.[`addDmgType${curSkill.type}`] ?? 0);
+                });
+            }
         }
         const calcCostChange = (res: any) => {
             mds = res?.minusDiceSkill ?? mds;
@@ -4021,12 +4041,14 @@ export default class GeniusInvokationClient {
             calcDmgChange(siteres);
             calcCostChange(siteres);
         });
+        if (rdskill) {
+            rdskill.dmgChange = dmgChange[0];
+            return rdskill;
+        }
         for (let i = 0; i < curHero.skills.length; ++i) {
             const curSkill = curHero.skills[i];
             if (curSkill.type == 4) continue;
-            const skillres = (curSkill.rdskidx == -1 ? herosTotal(curHero.id).skills[i] : readySkill(curSkill.rdskidx)).handle({ hero: curHero, skidx: 5 });
             curSkill.costChange = [...costChange[i]];
-            calcDmgChange(skillres);
             curSkill.dmgChange = dmgChange[i];
         }
         return this.wrap(this.players[plidx], { isUpdateHandcards, hero: isCdt(isSwitch, heros[hidx]) });

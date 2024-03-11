@@ -308,7 +308,7 @@ const statusTotal: StatusObj = {
         }, { smnId: summonId }),
 
     2014: () => new GIStatus(2014, '绝云锅巴(生效中)', '本回合中，目标角色下一次｢普通攻击｣造成的伤害+1。',
-        'buff5', 0, [4, 10], 1, 0, 1, (status: Status) => ({
+        'buff5', 0, [4, 6, 10], 1, 0, 1, (status: Status) => ({
             addDmgType1: 1,
             trigger: ['skilltype1'],
             exec: () => {
@@ -318,7 +318,7 @@ const statusTotal: StatusObj = {
         })),
 
     2015: () => new GIStatus(2015, '仙跳墙(生效中)', '本回合中，目标角色下一次｢元素爆发｣造成的伤害+3。',
-        'buff2', 0, [4, 10], 1, 0, 1, (status: Status) => ({
+        'buff2', 0, [4, 6, 10], 1, 0, 1, (status: Status) => ({
             addDmgType3: 3,
             trigger: ['skilltype3'],
             exec: () => {
@@ -397,10 +397,10 @@ const statusTotal: StatusObj = {
     2022: () => new GIStatus(2022, '复苏冷却中', '本回合无法通过｢料理｣复苏角色。', 'satiety', 1, [3, 10], -1, 0, 1),
 
     2023: () => new GIStatus(2023, '刺身拼盘(生效中)', '本回合中，该角色｢普通攻击｣造成的伤害+1。',
-        'buff2', 0, [4, 10], -1, 0, 1, () => ({ addDmgType1: 1 })),
+        'buff2', 0, [4, 6, 10], -1, 0, 1, () => ({ addDmgType1: 1 })),
 
     2024: () => new GIStatus(2024, '唐杜尔烤鸡(生效中)', '本回合中，所附属角色下一次｢元素战技｣造成的伤害+2。',
-        'buff2', 0, [4, 10], 1, 0, 1, (status: Status) => ({
+        'buff2', 0, [4, 6, 10], 1, 0, 1, (status: Status) => ({
             addDmgType2: 2,
             trigger: ['skilltype2'],
             exec: () => {
@@ -482,7 +482,7 @@ const statusTotal: StatusObj = {
         }),
 
     2032: () => new GIStatus(2032, '元素共鸣：蔓生之草(生效中)', '本回合中，我方下一次引发元素反应时，造成的伤害+2。',
-        'buff2', 1, [4, 10], 1, 0, 1, (status: Status) => ({
+        'buff2', 1, [4, 6, 10], 1, 0, 1, (status: Status) => ({
             addDmgCdt: 2,
             trigger: ['elReaction'],
             exec: () => {
@@ -521,7 +521,7 @@ const statusTotal: StatusObj = {
         }),
 
     2037: (icon = '') => new GIStatus(2037, '大扫除', '【角色使用｢普通攻击｣时：】少花费1个[岩元素骰]。(每回合1次)；角色｢普通攻击｣造成的伤害+2，造成的[物理伤害]变为[岩元素伤害]。；【[持续回合]：{roundCnt}】',
-        icon, 0, [8], -1, 0, 2, (status: Status, options: StatusOption = {}) => {
+        icon, 0, [6, 8], -1, 0, 2, (status: Status, options: StatusOption = {}) => {
             const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(options, { skilltype1: [0, 0, 1] }, () => status.perCnt > 0);
             return {
                 addDmgType1: 2,
@@ -547,7 +547,7 @@ const statusTotal: StatusObj = {
         }), { icbg: STATUS_BG_COLOR[4] }),
 
     2039: (isTalent = false) => new GIStatus(2039, '重华叠霜领域', `我方单手剑、双手剑或长柄武器角色造成的[物理伤害]变为[冰元素伤害]${isTalent ? '，｢普通攻击｣造成的伤害+1' : ''}。；【[持续回合]：{roundCnt}】`,
-        'buff', 1, [8], -1, 0, 2, (status: Status, options: StatusOption = {}) => {
+        'buff', 1, isTalent ? [6, 8] : [8], -1, 0, 2, (status: Status, options: StatusOption = {}) => {
             const { heros = [], hidx = -1 } = options;
             const isWeapon = hidx > -1 && [1, 2, 5].includes(heros[hidx]?.weaponType ?? 0);
             return {
@@ -558,7 +558,7 @@ const statusTotal: StatusObj = {
         }, { icbg: STATUS_BG_COLOR[4], isTalent }),
 
     2040: (isTalent = false) => new GIStatus(2040, '庭火焰硝', `所附属角色｢普通攻击｣伤害+1，造成的[物理伤害]变为[火元素伤害]。${isTalent ? '；【所附属角色使用｢普通攻击｣后：】造成1点[火元素伤害]。' : ''}；【[可用次数]：{useCnt}】`,
-        'buff4', 0, isTalent ? [1, 8] : [8], isTalent ? 3 : 2, 0, -1, (status: Status, options: StatusOption = {}) => {
+        'buff4', 0, isTalent ? [1, 6, 8] : [6, 8], isTalent ? 3 : 2, 0, -1, (status: Status, options: StatusOption = {}) => {
             const { trigger = '' } = options;
             const dmgCdt = status.type.includes(1) && trigger == 'after-skilltype1';
             return {
@@ -607,7 +607,7 @@ const statusTotal: StatusObj = {
         }, { isTalent }),
 
     2044: (isTalent = false) => new GIStatus(2044, '潜行', '所附属角色受到的伤害-1，造成的伤害+1。；【[可用次数]：{useCnt}】',
-        '', 0, isTalent ? [2, 8] : [2], isTalent ? 3 : 2, 0, -1, (status: Status, options: StatusOption = {}) => {
+        '', 0, isTalent ? [2, 6, 8] : [2, 6], isTalent ? 3 : 2, 0, -1, (status: Status, options: StatusOption = {}) => {
             const { restDmg = 0 } = options;
             if (restDmg > 0) --status.useCnt;
             return {
@@ -636,7 +636,7 @@ const statusTotal: StatusObj = {
         }),
 
     2046: () => new GIStatus(2046, '坚岩之力', '角色造成的[物理伤害]变为[岩元素伤害]。；【每回合1次：】角色造成的伤害+1。；【角色所附属的岩盔被移除后：】也移除此状态。',
-        'buff4', 0, [4, 8, 10], 1, 0, -1, (status: Status) => ({
+        'buff4', 0, [4, 6, 8, 10], 1, 0, -1, (status: Status) => ({
             addDmg: status.perCnt > 0 ? 1 : 0,
             trigger: ['skill'],
             attachEl: 6,
@@ -669,7 +669,7 @@ const statusTotal: StatusObj = {
         }, { icbg: STATUS_BG_COLOR[7] }),
 
     2048: () => new GIStatus(2048, '千年的大乐章·别离之歌', '我方角色造成的伤害+1。；【[持续回合]：{roundCnt}】',
-        'buff5', 0, [3], -1, 0, 2, () => ({ addDmg: 1 })),
+        'buff5', 0, [3, 6], -1, 0, 2, () => ({ addDmg: 1 })),
 
     2049: () => new GIStatus(2049, '叛逆的守护', '为我方出战角色提供1点[护盾]。(可叠加，最多到2)', '', 1, [7], 1, 2, -1),
 
@@ -759,7 +759,7 @@ const statusTotal: StatusObj = {
         })),
 
     2058: (isTalent = false) => new GIStatus(2058, '爆裂火花', '【所附属角色进行[重击]时：】少花费1个[火元素骰]，并且伤害+1。；【[可用次数]：{useCnt}】',
-        'buff5', 0, [4], isTalent ? 2 : 1, 0, -1, (status: Status, options: StatusOption = {}) => {
+        'buff5', 0, [4, 6], isTalent ? 2 : 1, 0, -1, (status: Status, options: StatusOption = {}) => {
             const { isChargedAtk = false } = options;
             const { minusSkillRes } = minusDiceSkillHandle(options, { skilltype1: [0, 0, 1] }, () => isChargedAtk);
             return {
@@ -822,12 +822,11 @@ const statusTotal: StatusObj = {
         }),
 
     2062: (expl?: ExplainContent[]) => new GIStatus(2062, '捉浪·涛拥之守', '本角色将在下次行动时，直接使用技能：【踏潮】。；【准备技能期间：】提供2点[护盾]，保护所附属角色。',
-        '', 0, [7, 9, 11], 2, 0, 1, (status: Status) => ({
+        '', 0, [7, 9, 11], 2, 0, -1, (status: Status) => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 1,
             exec: () => {
-                status.type.length = 0;
-                status.type.push(0);
+                status.type.splice(status.type.indexOf(9), 1);
                 status.useCnt = 0;
                 return {}
             }
@@ -846,11 +845,9 @@ const statusTotal: StatusObj = {
 
     2064: () => new GIStatus(2064, '鸣煌护持', '所附属角色｢元素战技｣和｢元素爆发｣造成的伤害+1。；【[可用次数]：{useCnt}】',
         'buff5', 0, [6], 2, 0, -1, (status: Status, options: StatusOption = {}) => {
-            const { heros = [], hidx = -1, hasDmg = false } = options;
-            const hero = heros[hidx];
+            const { skilltype = -1, hasDmg = false } = options;
             const trigger: Trigger[] = [];
-            if (hero?.skills.some(sk => sk.type == 2 && sk.damage > 0) || hasDmg) trigger.push('skilltype2');
-            if (hero?.skills.some(sk => sk.type == 3 && sk.damage > 0) || hasDmg) trigger.push('skilltype3');
+            if (hasDmg && [2, 3].includes(skilltype)) trigger.push(`skilltype${skilltype}` as Trigger);
             return {
                 addDmgType2: 1,
                 addDmgType3: 1,
@@ -874,7 +871,7 @@ const statusTotal: StatusObj = {
         }, { icbg: STATUS_BG_COLOR[1] }),
 
     2066: (expl?: ExplainContent[]) => new GIStatus(2066, '冷酷之心', '【所附属角色使用冰潮的涡旋时：】移除此状态，使本次伤害+3。',
-        'buff4', 0, [4, 10], 1, 0, -1, (status: Status) => ({
+        'buff4', 0, [4, 6, 10], 1, 0, -1, (status: Status) => ({
             trigger: ['skilltype2'],
             exec: () => {
                 --status.useCnt;
@@ -883,7 +880,7 @@ const statusTotal: StatusObj = {
         }), { icbg: STATUS_BG_COLOR[4], expl }),
 
     2067: () => new GIStatus(2067, '泷廻鉴花', '所附属角色｢普通攻击｣造成的伤害+1，造成的[物理伤害]变为[水元素伤害]。；【[可用次数]：{useCnt}】',
-        'buff4', 0, [8], 3, 0, -1, (status: Status) => {
+        'buff4', 0, [6, 8], 3, 0, -1, (status: Status) => {
             return {
                 addDmgType1: 1,
                 trigger: ['skilltype1'],
@@ -911,7 +908,7 @@ const statusTotal: StatusObj = {
         }),
 
     2069: (icon = '') => new GIStatus(2069, '怒目鬼王', '所附属角色｢普通攻击｣造成的伤害+1，造成的[物理伤害]变为[岩元素伤害]。；【[持续回合]：{roundCnt}】；【所附属角色｢普通攻击｣后：】为其附属【乱神之怪力】。(每回合1次)',
-        icon, 0, [8], -1, 0, 2, (status: Status) => ({
+        icon, 0, [6, 8], -1, 0, 2, (status: Status) => ({
             addDmgType1: 1,
             attachEl: 6,
             trigger: ['skilltype1'],
@@ -1046,7 +1043,7 @@ const statusTotal: StatusObj = {
         }), { icbg: DEBUFF_BG_COLOR }),
 
     2080: (icon = '', expl?: ExplainContent[]) => new GIStatus(2080, '诸愿百眼之轮', '【其他我方角色使用｢元素爆发｣后：】累积1点｢愿力｣。(最多累积3点)；【所附属角色使用奥义·梦想真说时：】消耗所有｢愿力｣，每点｢愿力｣使造成的伤害+1。',
-        icon, 0, [9], 0, 3, -1, (status: Status, options: StatusOption = {}) => {
+        icon, 0, [6, 9], 0, 3, -1, (status: Status, options: StatusOption = {}) => {
             const { trigger = '' } = options;
             return {
                 trigger: ['other-skilltype3', 'skilltype3'],
@@ -1201,19 +1198,18 @@ const statusTotal: StatusObj = {
         '', 0, [6, 7], 3, 0, -1, () => ({ addDmg: 1 })),
 
     2094: (expl?: ExplainContent[]) => new GIStatus(2094, '苍鹭护盾', '本角色将在下次行动时，直接使用技能：【苍鹭震击】。；【准备技能期间：】提供2点[护盾]，保护所附属角色。',
-        '', 0, [7, 9, 11], 2, 0, 1, (status: Status) => ({
+        '', 0, [7, 9, 11], 2, 0, -1, (status: Status) => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 4,
             exec: () => {
-                status.type.length = 0;
-                status.type.push(0);
+                status.type.splice(status.type.indexOf(9), 1);
                 status.useCnt = 0;
                 return {}
             }
         }), { expl }),
 
     2095: (icon = '', isTalent = false) => new GIStatus(2095, '赤冕祝祷', `我方角色｢普通攻击｣造成的伤害+1。；我方单手剑、双手剑或长柄武器角色造成的[物理伤害]变为[水元素伤害]。；【我方切换角色后：】造成1点[水元素伤害]。(每回合1次)；${isTalent ? '【我方角色｢普通攻击｣后：】造成1点[水元素伤害]。(每回合1次)；' : ''}【[持续回合]：{roundCnt}】`,
-        icon, 1, [1, 8], -1, 0, 2, (status: Status, options: StatusOption = {}) => {
+        icon, 1, [1, 6, 8], -1, 0, 2, (status: Status, options: StatusOption = {}) => {
             const { heros = [], hidx = -1, trigger = '' } = options;
             const isWeapon = hidx > -1 && [1, 2, 5].includes(heros[hidx]?.weaponType ?? 0);
             let isDmg = true;
@@ -1497,27 +1493,23 @@ const statusTotal: StatusObj = {
     2116: () => new GIStatus(2116, '本大爷还没有输！(冷却中)', '本回合无法再打出【本大爷还没有输！】。', 'debuff', 1, [3, 10], -1, 0, 1),
 
     2117: (expl?: ExplainContent[]) => new GIStatus(2117, '猜拳三连击·剪刀', '本角色将在下次行动时，直接使用技能：【猜拳三连击·剪刀】。',
-        'buff3', 0, [10, 11], 1, 0, 1, (status: Status, options: StatusOption = {}) => ({
+        'buff3', 0, [10, 11], 1, 0, -1, (status: Status, options: StatusOption = {}) => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 2,
             exec: () => {
                 const { trigger = '' } = options;
-                status.type.length = 0;
-                status.type.push(0);
-                status.useCnt = 0;
+                --status.useCnt;
                 if (trigger == 'change-from') return {}
                 return { inStatus: [heroStatus(2118, [status.addition?.[0]])] }
             }
         }), { expl: [expl?.[0] as ExplainContent], add: [expl?.[1]] }),
 
     2118: (expl?: ExplainContent[]) => new GIStatus(2118, '猜拳三连击·布', '本角色将在下次行动时，直接使用技能：【猜拳三连击·布】。',
-        'buff3', 0, [10, 11], 1, 0, 1, (status: Status) => ({
+        'buff3', 0, [10, 11], 1, 0, -1, (status: Status) => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 3,
             exec: () => {
-                status.type.length = 0;
-                status.type.push(0);
-                status.useCnt = 0;
+                --status.useCnt;
                 return {}
             }
         }), { expl }),
@@ -1531,13 +1523,11 @@ const statusTotal: StatusObj = {
     2122: () => card751sts(4),
 
     2123: (icon = '', expl?: ExplainContent[]) => new GIStatus(2123, '焚落踢', '本角色将在下次行动时，直接使用技能：【焚落踢】。',
-        icon, 0, [10, 11], 1, 0, 1, (status: Status) => ({
+        icon, 0, [10, 11], 1, 0, -1, (status: Status) => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 5,
             exec: () => {
-                status.type.length = 0;
-                status.type.push(0);
-                status.useCnt = 0;
+                --status.useCnt;
                 return {}
             }
         }), { icbg: STATUS_BG_COLOR[2], expl }),
@@ -1709,7 +1699,7 @@ const statusTotal: StatusObj = {
         }), { icbg: DEBUFF_BG_COLOR, pct: 1, expl: [heroStatus(2141)] }),
 
     2141: () => new GIStatus(2141, '雷鸣探知', '【所附属角色受到雷音权现及其召唤物造成的伤害时：】移除此状态，使此伤害+1。；(同一方场上最多存在一个此状态。【雷音权现】的部分技能，会以所附属角色为目标。)',
-        'debuff', 0, [10], 1, 0, -1, (status: Status, options: StatusOption = {}) => {
+        'debuff', 0, [6, 10], 1, 0, -1, (status: Status, options: StatusOption = {}) => {
             const { dmgSource = 0, eheros = [] } = options;
             const getDmg = dmgSource == 1762 || dmgSource == 3052 ? 1 : 0;
             const talent = eheros.find(h => h.id == 1762)?.talentSlot;
@@ -1749,27 +1739,23 @@ const statusTotal: StatusObj = {
         }),
 
     2143: (expl?: ExplainContent[]) => new GIStatus(2143, '风龙吐息', '本角色将在下次行动时，直接使用技能：【长延涤流】。',
-        'buff3', 0, [11], 1, 0, 1, (status: Status, options: StatusOption = {}) => ({
+        'buff3', 0, [11], 1, 0, -1, (status: Status, options: StatusOption = {}) => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 6,
             exec: () => {
                 const { trigger = '' } = options;
-                status.type.length = 0;
-                status.type.push(0);
-                status.useCnt = 0;
+                --status.useCnt;
                 if (trigger == 'change-from') return {}
                 return { inStatus: [heroStatus(2144, [status.explains?.[1]])] }
             }
         }), { expl }),
 
     2144: (expl?: ExplainContent[]) => new GIStatus(2144, '风龙吐息', '本角色将在下次行动时，直接使用技能：【终幕涤流】。',
-        'buff3', 0, [11], 1, 0, 1, (status: Status) => ({
+        'buff3', 0, [11], 1, 0, -1, (status: Status) => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 7,
             exec: () => {
-                status.type.length = 0;
-                status.type.push(0);
-                status.useCnt = 0;
+                --status.useCnt;
                 return {}
             }
         }), { expl }),
@@ -1909,13 +1895,11 @@ const statusTotal: StatusObj = {
         }), { icbg: STATUS_BG_COLOR[2], expl: [heroStatus(2106)], isTalent }),
 
     2155: (windEl = 0, expl?: ExplainContent[]) => new GIStatus(2155, '风风轮', '本角色将在下次行动时，直接使用技能：【风风轮舞踢】。',
-        'buff3', 0, [10, 11], 1, 0, 1, (status: Status) => ({
+        'buff3', 0, [10, 11], 1, 0, -1, (status: Status) => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 12 + Number(status.addition[0]),
             exec: () => {
-                status.type.length = 0;
-                status.type.push(0);
-                status.useCnt = 0;
+                --status.useCnt;
                 return {}
             }
         }), { expl, add: [windEl] }),
@@ -2049,21 +2033,20 @@ const statusTotal: StatusObj = {
             trigger: ['change-from', 'useReadySkill'],
             skill: 17,
             exec: () => {
-                status.type.length = 0;
-                status.type.push(0);
-                status.useCnt = 0;
+                --status.useCnt;
                 return {}
             }
         }), { expl }),
 
-    2166: () => new GIStatus(2166, '古海子遗的权柄(todo名字待定)', '该角色造成的伤害+1。', 'buff2', 0, [4], 2, 0, -1, (status: Status) => ({
-        addDmg: 1,
-        trigger: ['skill'],
-        exec: () => {
-            --status.useCnt;
-            return {}
-        }
-    })),
+    2166: () => new GIStatus(2166, '古海子遗的权柄(todo名字待定)', '该角色造成的伤害+1。',
+        'buff2', 0, [4, 6], 2, 0, -1, (status: Status) => ({
+            addDmg: 1,
+            trigger: ['skill'],
+            exec: () => {
+                --status.useCnt;
+                return {}
+            }
+        })),
 
     2167: (icon = '') => new GIStatus(2167, '猫箱急件', '【绮良良为出战角色时，我方切换角色后：】造成1点[草元素伤害]，摸1张牌。；【[可用次数]：{useCnt}(可叠加，最多叠加到2次)】',
         icon, 1, [1], 1, 2, -1, (_status: Status, options: StatusOption = {}) => {
@@ -2103,19 +2086,17 @@ const statusTotal: StatusObj = {
         '', 1, [7], 1 + Math.min(3, useCnt), 0, -1),
 
     2171: (expl?: ExplainContent[]) => new GIStatus(2171, '霆电迸发', '本角色将在下次行动时，直接使用技能：【霆电迸发】。',
-        '', 0, [10, 11], 1, 0, 1, (status: Status) => ({
+        '', 0, [10, 11], 1, 0, -1, (status: Status) => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 18,
             exec: () => {
-                status.type.length = 0;
-                status.type.push(0);
-                status.useCnt = 0;
+                --status.useCnt;
                 return {}
             }
         }), { expl }),
 
     2172: () => new GIStatus(2172, '万世流涌大典(todo名字待定)', '本回合中，目标角色下一次造成的伤害+2。',
-        'buff5', 0, [4, 10], 1, 0, 1, (status: Status) => ({
+        'buff5', 0, [4, 6, 10], 1, 0, 1, (status: Status) => ({
             addDmg: 2,
             trigger: ['skill'],
             exec: () => {

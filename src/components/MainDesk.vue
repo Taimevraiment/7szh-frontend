@@ -592,9 +592,7 @@
               'will-destroy': summonCnt[saidx ^ playerIdx ^ 1][suidx] < 0,
               'will-add': summonCnt[saidx ^ playerIdx ^ 1][suidx] > 0,
             }"
-            v-if="
-              currSkill.type > 0 && summonCnt[saidx ^ playerIdx ^ 1][suidx] != 0
-            "
+            v-if="summonCnt[saidx ^ playerIdx ^ 1][suidx] != 0"
           >
             <img
               v-if="
