@@ -136,50 +136,6 @@ type HeroObj = {
     [id: string]: Hero
 }
 
-type SkillHandleRes = {
-    outStatus?: Status[],
-    inStatus?: Status[],
-    outStatusOppo?: Status[],
-    inStatusOppo?: Status[],
-    summon?: Summonee[],
-    trigger?: Trigger[],
-    isAttach?: boolean,
-    pendamage?: number,
-    addDmgCdt?: number,
-    isQuickAction?: boolean,
-    inStatusOppoPre?: Status[],
-    outStatusOppoPre?: Status[],
-    inStatusPre?: Status[],
-    outStatusPre?: Status[],
-    summonPre?: Summonee[],
-    cmds?: Cmds[],
-    heal?: number,
-    hidxs?: number[],
-    handCards?: Card[],
-    dmgElement?: number,
-    atkBefore?: boolean,
-    atkAfter?: boolean,
-    atkTo?: number,
-    exec?: () => void,
-}
-
-type SkillOption = {
-    hero: Hero,
-    skidx: number,
-    reset?: boolean,
-    card?: Card,
-    heros?: Hero[],
-    eheros?: Hero[],
-    hcards?: Card[],
-    summons?: Summonee[],
-    isChargedAtk?: boolean,
-    isFallAtk?: boolean,
-    isReadySkill?: boolean,
-    isExec?: boolean,
-    dmg?: number,
-    windEl?: number,
-}
-
 // id 10xx：冰
 // id 11xx：水
 // id 12xx：火
@@ -246,7 +202,7 @@ const readySkillTotal: { [key: number]: (...args: any) => Skill } = {
     17: () => new GISkill('衡平推裁', '(需准备1个行动轮)；造成{dmg}点[水元素伤害]，如果生命值至少为6，则对自身造成1点[穿透伤害]使伤害+1。',
         1, 2, 0, 1, { ec: -2, rdskidx: 17 }, '', '', [], (options: SkillOption) => {
             if (options.hero.hp < 6) return {}
-            return { addDmgCdt: 1, pendamage: 1, isOppo: true }
+            return { addDmgCdt: 1, pendamageOppo: 1 }
         }),
 
     18: () => new GISkill('霆电迸发', '(需准备1个行动轮)；造成{dmg}点[雷元素伤害]。', 3, 2, 0, 3, { ec: -2, rdskidx: 18 }),
@@ -833,8 +789,7 @@ const allHeros: HeroObj = {
             [newSummonee(3048), heroStatus(2132)], (options: SkillOption) => {
                 const { hero: { hp, skills: [, , skill2] } } = options;
                 return {
-                    pendamage: isCdt(hp >= 6, 1),
-                    isOppo: true,
+                    pendamageOppo: isCdt(hp >= 6, 1),
                     summon: [newSummonee(3048)],
                     inStatusOppo: [heroStatus(2132, [skill2])],
                 }

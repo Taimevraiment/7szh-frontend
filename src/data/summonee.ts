@@ -65,50 +65,6 @@ type SummoneeObj = {
     [id: string]: (...args: any) => GISummonee
 }
 
-type SummonOption = {
-    trigger?: Trigger,
-    heros?: Hero[],
-    eheros?: Hero[],
-    hidxs?: number[],
-    reset?: boolean,
-    isChargedAtk?: boolean,
-    isFallAtk?: boolean,
-    hcard?: Card,
-    isExec?: boolean,
-    isSkill?: number,
-    minusDiceCard?: number,
-    minusDiceSkill?: number[][],
-}
-
-type SummonRes = {
-    trigger?: Trigger[],
-    cmds?: Cmds[],
-    addDmg?: number,
-    addDmgType1?: number,
-    addDmgType2?: number,
-    addDmgType3?: number,
-    addDmgCdt?: number,
-    rOutStatus?: Status[],
-    isNotAddTask?: boolean,
-    damage?: number,
-    element?: number,
-    addDiceHero?: number,
-    minusDiceCard?: number,
-    minusDiceSkill?: number[][],
-    minusDiceSkills?: number[][],
-    exec?: (smnexeOpt: SummonExecOption) => SummonExecRes,
-}
-
-type SummonExecOption = {
-    summon?: Summonee,
-    changeHeroDiceCnt?: number,
-}
-
-type SummonExecRes = {
-    cmds?: Cmds[],
-    changeHeroDiceCnt?: number,
-}
-
 const phaseEndAtk = (summon: Summonee, healHidxs?: number[]): SummonRes => {
     if (summon.isDestroy == 0) summon.useCnt = Math.max(0, summon.useCnt - 1);
     const cmds: Cmds[] = [];
@@ -860,7 +816,7 @@ const summonTotal: SummoneeObj = {
                 element: 3,
                 isNotAddTask: ['ecard', 'get-elReaction'].includes(trigger),
                 exec: (smnexeOpt: SummonExecOption) => {
-                    const { summon: smn = summon } = smnexeOpt;
+                    const { summon: smn = summon, heros: hrs = heros } = smnexeOpt;
                     if (trigger == 'ecard') {
                         --smn.perCnt;
                         if (smn.perCnt <= -3) {
@@ -871,7 +827,8 @@ const summonTotal: SummoneeObj = {
                     }
                     smn.useCnt = Math.max(0, smn.useCnt - 1);
                     if (trigger == 'get-elReaction') return {}
-                    if (trigger == 'action-start' && hero?.talentSlot) --hero.talentSlot.useCnt;
+                    const chero = hrs.find(h => h.id == 1764);
+                    if (trigger == 'action-start' && chero?.talentSlot) --chero.talentSlot.useCnt;
                     return { cmds: [{ cmd: 'attack' }] }
                 }
             }

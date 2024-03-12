@@ -37,56 +37,6 @@ type SiteObj = {
     [id: string]: (...args: any) => GISite
 }
 
-type SiteOption = {
-    dices?: number[],
-    trigger?: Trigger,
-    eheros?: Hero[],
-    heros?: Hero[],
-    reset?: boolean,
-    card?: Card,
-    hcards?: Card[],
-    isFirst?: boolean,
-    hidxs?: number[],
-    playerInfo?: GameInfo,
-    minusDiceCard?: number,
-    isSkill?: number,
-    hidx?: number,
-    minusDiceSkill?: number[][],
-    heal?: number[],
-    getdmg?: number[],
-}
-
-type SiteHandleRes = {
-    trigger?: Trigger[],
-    exec?: (...args: any) => SiteExecRes,
-    minusDiceCard?: number,
-    minusDiceHero?: number,
-    minusDiceSkill?: number[][],
-    minusDiceSkills?: number[][],
-    element?: number,
-    cnt?: number,
-    addRollCnt?: number,
-    isQuickAction?: boolean,
-    isExchange?: boolean,
-    siteCnt?: number,
-    isNotAddTask?: boolean,
-    isOrTrigger?: boolean,
-    isLast?: boolean,
-}
-
-type SiteExeOption = {
-    changeHeroDiceCnt?: number,
-    isQuickAction?: boolean,
-    summonDiffCnt?: number,
-}
-
-type SiteExecRes = {
-    cmds?: Cmds[],
-    isDestroy: boolean,
-    changeHeroDiceCnt?: number,
-    outStatus?: Status[],
-}
-
 const siteTotal: SiteObj = {
     // 派蒙
     4001: (cardId: number) => new GISite(4001, cardId, 2, 0, 1, (site: GISite) => ({
@@ -789,7 +739,7 @@ const siteTotal: SiteObj = {
     }),
     // 梅洛彼得堡
     4047: (cardId: number) => new GISite(4047, cardId, 0, 0, 2, (site: GISite, options: SiteOption = {}) => {
-        const { hidxs = [], getdmg = [0, 0, 0], heal = [0, 0, 0], trigger = '' } = options;
+        const { hidxs = [], getdmg = [], heal = [], trigger = '' } = options;
         const triggers: Trigger[] = [];
         if (trigger == 'getdmg' && getdmg[hidxs[0]] > 0) triggers.push('getdmg');
         if (trigger == 'heal' && heal[hidxs[0]] > 0) triggers.push('heal');

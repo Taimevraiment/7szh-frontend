@@ -47,6 +47,13 @@ export const getNearestHidx = (hidx: number, heros: Hero[]): number => {
     return res;
 }
 
+// 获得所有后台角色hidx
+export const getBackHidxs = (heros: Hero[], frontIdx: number = -1): number[] => {
+    return heros.map((h, hi) => ({ hi, hp: h.hp, isFront: h.isFront }))
+        .filter(v => v.hp > 0 && (frontIdx == -1 ? !v.isFront : v.hi != frontIdx))
+        .map(v => v.hi) ?? [];
+}
+
 // 序列化函数
 export const funcStringfy = <T>(obj: T): string => {
     return JSON.stringify(obj, (_, v) => {

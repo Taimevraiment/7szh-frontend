@@ -197,76 +197,6 @@ type CardObj = {
     [id: string]: GICard
 }
 
-type CardOption = {
-    heros?: Hero[],
-    eheros?: Hero[],
-    hidxs?: number[],
-    reset?: boolean,
-    hcard?: Card,
-    trigger?: Trigger,
-    summons?: Summonee[],
-    esummons?: Summonee[],
-    changeHeroDiceCnt?: number,
-    hcardsCnt?: number,
-    ehcardsCnt?: number,
-    heal?: number[],
-    dices?: number[],
-    ephase?: number,
-    isChargedAtk?: boolean,
-    isFallAtk?: boolean,
-    round?: number,
-    playerInfo?: GameInfo,
-    dicesCnt?: number,
-    restDmg?: number,
-    isSkill?: number,
-    isExec?: boolean,
-    site?: Site[],
-    minusDiceCard?: number,
-    ehidx?: number,
-    minusDiceSkill?: number[][],
-    esiteCnt?: number,
-    esummonCnt?: number,
-}
-
-type CardHandleRes = {
-    site?: Site[],
-    cmds?: Cmds[],
-    execmds?: Cmds[],
-    trigger?: Trigger[],
-    inStatus?: Status[],
-    outStatus?: Status[],
-    inStatusOppo?: Status[],
-    outStatusOppo?: Status[],
-    canSelectHero?: boolean[],
-    summon?: Summonee[],
-    addDmg?: number,
-    addDmgType1?: number,
-    addDmgType2?: number,
-    addDmgType3?: number,
-    addDmgSummon?: number,
-    addDmgCdt?: number,
-    minusDiceSkill?: number[][],
-    minusDiceSkills?: number[][],
-    minusDiceCard?: number,
-    minusDiceHero?: number,
-    hidxs?: number[],
-    isValid?: boolean,
-    element?: number,
-    cnt?: number,
-    isDestroy?: boolean,
-    restDmg?: number,
-    exec?: (...args: any) => CardExecRes
-}
-
-type CardExecRes = {
-    inStatus?: Status[],
-    outStatus?: Status[],
-    inStatusOppo?: Status[],
-    outStatusOppo?: Status[],
-    hidxs?: number[],
-    changeHeroDiceCnt?: number,
-}
-
 // id 0xx：武器
 // id 1xx：圣遗物
 // id 2xx：场地
@@ -332,18 +262,19 @@ const allCards: CardObj = {
     8: new GICard(8, '万世流涌大典', '【角色造成的伤害+1】。；【角色受到伤害或治疗后：】如果本回合已受到伤害或治疗累积2次，则角色本回合中下次造成的伤害+2。(每回合1次)',
         '',
         3, 8, 0, [0], 4, 1, (card: Card, cardOpt: CardOption = {}) => {
-            const { heal = [0, 0, 0], hidxs = [] } = cardOpt;
-            const isMinus = heal[hidxs[0]] > 0 && card.useCnt > 0;
+            const { heal = [], hidxs = [], trigger = '' } = cardOpt;
+            const isMinus = (trigger == 'getdmg' || trigger == 'heal' && heal[hidxs[0]] > 0) && card.useCnt > 0;
             return {
                 trigger: ['getdmg', 'heal'],
                 addDmg: 1,
                 exec: () => {
                     if (!isMinus) return {}
                     --card.useCnt;
+                    if (card.useCnt > 0) return {}
                     return { inStatus: [heroStatus(2172)] }
                 }
             }
-        }, { useCnt: 1 }),
+        }, { useCnt: 2 }),
 
     21: normalWeapon(21, '鸦羽弓', 3, 'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/75720734/e20881692f9c3dcb128e3768347af4c0_5029781426547880539.png'),
 
@@ -755,8 +686,8 @@ const allCards: CardObj = {
     115: new GICard(115, '海祇之冠', '我方角色每受到3点治疗，此牌就累计1个｢海染泡沫｣。(最多累积2个)；【角色造成伤害时：】消耗所有｢海染泡沫｣，每消耗1个都能使造成的伤害+1。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/09/25/258999284/dfea4a0c2219c145125277f8eddb8269_3306254185680856587.png',
         1, 8, 0, [1], 0, 1, (card: Card, cardOpt: CardOption = {}) => {
-            const { trigger = '', heal = [0, 0, 0] } = cardOpt;
-            const allHeal = heal.reduce((a, b) => a + b);
+            const { trigger = '', heal = [] } = cardOpt;
+            const allHeal = heal.reduce((a, b) => a + b, 0);
             return {
                 trigger: ['dmg', 'heal'],
                 addDmgCdt: Math.floor(-card.useCnt),
@@ -775,7 +706,7 @@ const allCards: CardObj = {
     116: new GICard(116, '海染砗磲', '【入场时：】治疗所附属角色2点。；我方角色每受到3点治疗，此牌就累计1个｢海染泡沫｣。(最多累积2个)；【角色造成伤害时：】消耗所有｢海染泡沫｣，每消耗1个都能使造成的伤害+1。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/11/07/258999284/16b4765f951281f2547ba40eeb994271_8658397109914249143.png',
         3, 0, 0, [1], 0, 1, (card: Card, cardOpt: CardOption = {}) => {
-            const { trigger = '', heal = [0, 0, 0] } = cardOpt;
+            const { trigger = '', heal = [] } = cardOpt;
             const allHeal = heal.reduce((a, b) => a + b);
             return {
                 trigger: ['dmg', 'heal'],
@@ -892,7 +823,7 @@ const allCards: CardObj = {
     123: new GICard(123, '老兵的容颜', '【角色受到伤害或治疗后：】根据本回合触发此效果的次数，执行不同的效果。；【第一次触发：】生成1个此角色类型的元素骰。；【第二次触发：】摸1张牌。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/01/27/258999284/166e56c3c68e531c97f4fdfde1adde06_4511818010196081435.png',
         2, 0, 0, [1], 0, 1, (card: Card, cardOpt: CardOption = {}) => {
-            const { heros = [], hidxs = [], heal = [0, 0, 0], trigger = '' } = cardOpt;
+            const { heros = [], hidxs = [], heal = [], trigger = '' } = cardOpt;
             const isTriggered = card.useCnt > 0 && (trigger == 'getdmg' || trigger == 'heal' && heal[hidxs[0]] > 0);
             return {
                 trigger: ['getdmg', 'heal'],

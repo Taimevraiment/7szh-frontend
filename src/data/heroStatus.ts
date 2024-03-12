@@ -96,83 +96,6 @@ type StatusObj = {
     [id: string]: (...args: any) => GIStatus
 }
 
-type StatusOption = {
-    restDmg?: number,
-    summon?: Summonee,
-    hidx?: number,
-    heros?: Hero[],
-    eheros?: Hero[],
-    willAttach?: number,
-    reset?: boolean,
-    trigger?: Trigger,
-    card?: Card,
-    isChargedAtk?: boolean,
-    isFallAtk?: boolean,
-    phase?: number,
-    skilltype?: number,
-    hidxs?: number[],
-    isElStatus?: boolean[],
-    hasDmg?: boolean,
-    isSkill?: number,
-    dmgSource?: number,
-    dmgElement?: number,
-    isSummon?: number,
-    minusDiceCard?: number,
-    minusDiceSkill?: number[][],
-    heal?: number[],
-    force?: boolean,
-}
-
-type StatusHandleRes = {
-    restDmg?: number,
-    damage?: number,
-    pendamage?: number,
-    element?: number,
-    trigger?: Trigger[],
-    addDmg?: number,
-    addDmgType1?: number,
-    addDmgType2?: number,
-    addDmgType3?: number,
-    addDmgCdt?: number,
-    addDmgSummon?: number,
-    getDmg?: number,
-    minusDiceCard?: number,
-    minusDiceHero?: number,
-    addDiceHero?: number,
-    minusDiceSkill?: number[][],
-    minusDiceSkills?: number[][],
-    heal?: number,
-    hidxs?: number[],
-    isQuickAction?: boolean,
-    isOppo?: boolean,
-    skill?: number,
-    cmds?: Cmds[],
-    summon?: Summonee[],
-    isInvalid?: boolean,
-    onlyOne?: boolean,
-    attachEl?: number,
-    isUpdateAttachEl?: boolean,
-    exec?: (...args: any) => StatusExecRes,
-}
-
-type StatusExecOption = {
-    changeHeroDiceCnt?: number,
-    heros?: Hero[],
-    drawEl?: number,
-}
-
-type StatusExecRes = {
-    restDmg?: number,
-    cmds?: Cmds[],
-    addDmg?: number,
-    trigger?: Trigger[],
-    inStatus?: Status[],
-    outStatus?: Status[],
-    changeHeroDiceCnt?: number,
-    immediate?: boolean,
-    inStatusOppo?: Status[],
-}
-
 const card587sts = (element: number) => {
     const names = ['', '藏镜仕女', '火铳游击兵', '雷锤前锋军', '冰萤术士'];
     return new GIStatus(2123 + element, '愚人众伏兵·' + names[element], `所在阵营的角色使用技能后：对所在阵营的出战角色造成1点[${ELEMENT[element]}伤害]。(每回合1次)；【[可用次数]：{useCnt}】`,
@@ -1065,7 +988,7 @@ const statusTotal: StatusObj = {
             trigger: ['action-start'],
             exec: (eStatus?: Status) => {
                 if (eStatus) --eStatus.useCnt;
-                return { cmds: [{ cmd: '' }] };
+                return {}
             },
         }), { icbg: STATUS_BG_COLOR[3] }),
 
@@ -1981,7 +1904,7 @@ const statusTotal: StatusObj = {
 
     2162: () => new GIStatus(2162, '机关铸成之链(生效中)', '【所附属角色每次受到伤害或治疗后：】累积1点｢备战度｣(最多累积2点)。；【我方打出费用不多于｢备战度｣的｢武器｣或｢圣遗物｣时:】移除此状态，以免费打出该牌。',
         'buff3', 1, [4, 9], 0, 0, -1, (status: Status, options: StatusOption = {}) => {
-            const { card, trigger = '', heal = [0, 0, 0], hidx = -1, minusDiceCard: mdc = 0 } = options;
+            const { card, trigger = '', heal = [], hidx = -1, minusDiceCard: mdc = 0 } = options;
             const isMinus = card && card.subType.some(st => st < 2) && card.cost > mdc && status.useCnt >= card.cost - mdc;
             return {
                 trigger: ['getdmg', 'heal', 'card'],
