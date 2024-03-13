@@ -185,8 +185,8 @@
                   <img
                     :src="getIcon((slot as Card).subType.includes(0) ? 'weapon' : (slot as Card).subType.includes(1) ? 'artifact' : 'talent')"
                   />
-                  <div class="status-cnt" v-if="(slot as Card).useCnt < 0">
-                    {{ Math.floor(-(slot as Card).useCnt) }}
+                  <div class="status-cnt" v-if="(slot as Card).useCnt > -1">
+                    {{ Math.floor((slot as Card).useCnt) }}
                   </div>
                   <span>{{ (slot as Card).name }}</span>
                 </span>
@@ -401,8 +401,8 @@
               <img
                 :src="getIcon((slot as Card).subType.includes(0) ? 'weapon' : (slot as Card).subType.includes(1) ? 'artifact' : 'talent')"
               />
-              <div class="status-cnt" v-if="(slot as Card).useCnt < 0">
-                {{ Math.floor(-(slot as Card).useCnt) }}
+              <div class="status-cnt" v-if="(slot as Card).useCnt > -1">
+                {{ Math.floor((slot as Card).useCnt) }}
               </div>
               <span>{{ (slot as Card).name }}</span>
             </span>

@@ -1921,8 +1921,8 @@ const statusTotal: StatusObj = {
             }
         }),
 
-    2163: (icon = '') => new GIStatus(2163, '瞬时剪影', `【结束阶段：】对所附属角色造成1点[冰元素伤害]; 如果[可用次数]仅剩余1且所附属角色具有[冰元素附着]，则此伤害+1。；【[可用次数]：{useCnt}】`,
-        icon, 0, [1], 2, 0, -1, (status: Status, options: StatusOption = {}) => {
+    2163: () => new GIStatus(2163, '瞬时剪影', `【结束阶段：】对所附属角色造成1点[冰元素伤害]; 如果[可用次数]仅剩余1且所附属角色具有[冰元素附着]，则此伤害+1。；【[可用次数]：{useCnt}】`,
+        'ice-dice', 0, [1], 2, 0, -1, (status: Status, options: StatusOption = {}) => {
             const { heros = [], hidx = -1 } = options;
             const isAddDmg = heros[hidx]?.attachElement.includes(4) && status.useCnt == 1;
             return {
@@ -1935,10 +1935,10 @@ const statusTotal: StatusObj = {
                     return { cmds: [{ cmd: '' }] };
                 },
             }
-        }),
+        }, { icbg: DEBUFF_BG_COLOR }),
 
-    2164: (icon = '', expl?: ExplainContent[], cnt = 1) => new GIStatus(2164, '源水之滴', `【那维莱特进行｢普通攻击｣后：】治疗角色2点，然后角色[准备技能]：【衡平推裁】。；【[可用次数]：{useCnt}(可叠加，最多叠加到3次)】`,
-        icon, 1, [1], cnt, 3, -1, (status: Status, options: StatusOption = {}) => {
+    2164: (expl?: ExplainContent[], cnt = 1) => new GIStatus(2164, '源水之滴', `【那维莱特进行｢普通攻击｣后：】治疗角色2点，然后角色[准备技能]：【衡平推裁】。；【[可用次数]：{useCnt}(可叠加，最多叠加到3次)】`,
+        'sts2164', 1, [1], cnt, 3, -1, (status: Status, options: StatusOption = {}) => {
             const { heros = [], hidx = -1 } = options;
             if (heros[hidx]?.id != 1110) return {}
             return {

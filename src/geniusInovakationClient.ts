@@ -402,7 +402,7 @@ export default class GeniusInvokationClient {
                                 summonOppo: esummon1, elTips: elTips1
                             } = this._elementReaction(
                                 typeof element == 'number' ? element == -1 ? aHeros[player.hidx].element : element : element[hi],
-                                [[-1, 0], [-1, 0], [-1, 0]],
+                                [],
                                 hidx,
                                 aHeros, aSummon,
                                 this.opponent.heros, esummon,
@@ -1282,8 +1282,8 @@ export default class GeniusInvokationClient {
         let esummon: Summonee[] = clone(oeSummon);
         let aOutStatusOppoPre: Status[] = clone(aHeros[ahidx].outStatus);
         let aInStatusOppoPre: Status[][] = aHeros.map(h => clone(h.inStatus));
-        const willDamagesPre: number[][] = [[-1, 0], [-1, 0], [-1, 0], [-1, 0], [-1, 0], [-1, 0]];
-        const willAttachPre: number[][] = [[], [], [], [], [], []];
+        const willDamagesPre: number[][] = new Array(aHeros.length + eaHeros.length).fill(0).map(() => [-1, 0]);
+        const willAttachPre: number[][] = new Array(aHeros.length + eaHeros.length).fill(0).map(() => []);
         const allHeros = this.players.flatMap(p => p.heros);
         const skillcmds: Cmds[] = [];
         const eskillcmds: Cmds[] = [];
@@ -1317,7 +1317,7 @@ export default class GeniusInvokationClient {
                         { isExec, usedDice: skill.cost.reduce((a, b) => a + b.val, 0) }
                     );
                     willDamage0.forEach((dmg, di) => {
-                        willDamagesPre[di + this.playerIdx * 3] = allHeros[di + (this.playerIdx ^ 1) * 3].hp > 0 ? [...dmg] : [-1, 0];
+                        willDamagesPre[di] = allHeros[di].hp > 0 ? [...dmg] : [-1, 0];
                     });
                     for (let i = 0; i < 3; ++i) willAttachPre[i + (this.playerIdx ^ 1) * 3].push(willAttachs0[i]);
                     eaHeros = [...eheros0];
@@ -1358,7 +1358,7 @@ export default class GeniusInvokationClient {
         const isChargedAtk = skill?.type == 1 && ((this.player.dice.length + (!isOnlyRead && isCard ? (skill?.cost[0].val ?? 0) + (skill?.cost[1].val ?? 0) : 0)) & 1) == 0;
         const isFallAtk = skill?.type == 1 && (this.isFall || isSwitch > -1);
         if (curCard.id > 0) this._doSlot('card', { hidxs: allHidxs(aHeros, { isAll: true }), hcard: curCard, heros: aHeros });
-        const skillres = curHandle?.({
+        const skillres: SkillHandleRes = curHandle?.({
             hero: aHeros[hidx],
             heros: aHeros,
             eheros: eaHeros,
@@ -1400,10 +1400,18 @@ export default class GeniusInvokationClient {
                 eFrontIdx = lhidx[(lhidx.indexOf(eFrontIdx) + offset + lhidx.length) % lhidx.length];
             }
             if (skillres?.atkTo) eFrontIdx = skillres.atkTo;
-            const willDamages = [0, 0, 0].map((_, i) => [
-                i == eFrontIdx && skill.damage > 0 ? skill.damage + skill.dmgChange || -1 : -1,
-                !skillres?.isOppo && (skillres?.hidxs?.includes(i) || (i != eFrontIdx && skillres?.hidxs == undefined)) ? (skillres?.pendamage ?? 0) : 0
-            ]);
+            const skillreshidxs = skillres.hidxs ?? getBackHidxs(eaHeros);
+            const willDamages = new Array(aHeros.length + eaHeros.length).fill(0).map((_, di) => {
+                if (di >= eaHeros.length) {
+                    const ahi = di - eaHeros.length;
+                    const penDmgOppo = (skillres?.hidxs ?? [hidx]).includes(ahi) ? (skillres?.pendamageOppo ?? 0) : 0;
+                    return [-1, penDmgOppo]
+                }
+                const addDmg = skillres?.addDmgCdt ?? 0;
+                const elDmg = di == eFrontIdx && skill.damage + addDmg > 0 ? skill.damage + skill.dmgChange + addDmg : -1;
+                const penDmg = skillreshidxs.includes(di) ? (skillres?.pendamage ?? 0) : 0;
+                return [elDmg, penDmg]
+            });
             aOutStatusPre = clone(eaHeros[eFrontIdx].outStatus);
             if (skillres?.outStatusOppoPre) {
                 const { nstatus: onsp, nheros: nhp } = this._updateStatus(skillres.outStatusOppoPre, aOutStatusOppoPre, aHeros);
@@ -1447,7 +1455,7 @@ export default class GeniusInvokationClient {
                 this.player.heros.forEach((h, hi) => {
                     if (healHidxs.includes(hi)) {
                         const hidx = hi + (this.playerIdx ^ 1) * 3;
-                        const hl = Math.min(h.maxhp - h.hp, skillres.heal);
+                        const hl = Math.min(h.maxhp - h.hp, skillres.heal ?? 0);
                         if (aWillHeal[hidx] < 0) aWillHeal[hidx] = hl;
                         else aWillHeal[hidx] += hl;
                     }
@@ -1495,7 +1503,7 @@ export default class GeniusInvokationClient {
             skillcmds.push(...elrcmds1[0]);
             eskillcmds.push(...elrcmds1[1]);
             willDamage1.forEach((dmg, di) => {
-                aWillDamages[di + this.playerIdx * 3] = allHeros[di + (this.playerIdx ^ 1) * 3].hp > 0 ? [...dmg] : [-1, 0];
+                aWillDamages[di] = allHeros[di].hp > 0 ? [...dmg] : [-1, 0];
             });
             if (skillres?.summon) aSummon = this._updateSummon(skillres.summon, aSummon, aOutStatusOppo);
             const { nstatus: nstatusoppo1, nheros: nahero1 }
@@ -1539,7 +1547,7 @@ export default class GeniusInvokationClient {
                     summonOppo: esummon2, elTips: elTips2, atriggers: etriggers2, etriggers: atriggers2,
                 } = this._elementReaction(
                     skill.dmgElement,
-                    [[-1, 0], [-1, 0], [-1, 0]],
+                    [],
                     hidx,
                     aHeros, aSummon,
                     eaHeros, esummon,
@@ -1644,8 +1652,7 @@ export default class GeniusInvokationClient {
             bSummon.push([...(isOppo ? esummon3 : asummon3)]);
             ebSummon.push([...(isOppo ? asummon3 : esummon3)]);
             for (let i = 0; i < 3; ++i) bWillAttach[i + ((this.playerIdx ^ (isOppo ? 0 : 1))) * 3].push(willAttachs3[i]);
-            if (this.playerIdx ^ (isOppo ? 0 : 1)) bWillDamages.push([...clone(willDamage3), [-1, 0], [-1, 0], [-1, 0]]);
-            else bWillDamages.push([[-1, 0], [-1, 0], [-1, 0], ...clone(willDamage3)]);
+            bWillDamages.push(willDamage3);
             if (isOppo) {
                 ahidx = cswo > -1 ? cswo : ahidx;
                 ehidx = csw > -1 ? csw : ehidx;
@@ -2291,12 +2298,21 @@ export default class GeniusInvokationClient {
             minusDiceSkill?: number[][], elTips?: [string, number, number][], willAttachs?: number[],
         } = {}) {
         const { isAttach = false, isSummon = -1, pidx = this.playerIdx, isWind = false, isExec = true, isChargedAtk = false,
-            skidx = -1, sktype = -1, isReadySkill = false, isWindExec = true, isFallAtk = false, willheals = [-1, -1, -1, -1, -1, -1],
+            skidx = -1, sktype = -1, isReadySkill = false, isWindExec = true, isFallAtk = false, willheals = new Array(aheros.length + eheros.length).fill(-1),
             elrcmds = [[], []], usedDice = 0, dmgElements = [0, 0, 0], minusDiceSkill, willAttachs = [0, 0, 0],
-            elTips = [['', 0, 0], ['', 0, 0], ['', 0, 0], ['', 0, 0], ['', 0, 0], ['', 0, 0]], atriggers: atrg = [[], [], []],
-            etriggers: etrg = [[], [], []] } = options;
+            elTips = new Array(aheros.length + eheros.length).fill(0).map(() => ['', 0, 0]), atriggers: atrg = new Array(aheros.length).fill(0).map(() => []),
+            etriggers: etrg = new Array(eheros.length).fill(0).map(() => []) } = options;
+        let resdmg = willDamage;
+        if (willDamage.length == 0) resdmg = new Array(aheros.length + eheros.length).fill(0).map(() => [-1, 0]);
+        else if (willDamage.length == eheros.length) {
+            const admg = new Array(aheros.length).fill(0).map(() => [-1, 0]);
+            if (pidx == 0) resdmg = willDamage.concat(admg);
+            else resdmg = admg.concat(willDamage);
+        } else if (pidx == 1) {
+            resdmg = willDamage.slice(eheros.length).concat(willDamage.slice(0, eheros.length));
+        }
         let res = {
-            willDamage: clone(willDamage),
+            willDamage: clone(resdmg),
             willAttachs: [...willAttachs],
             dmgElements: [...dmgElements],
             eheros: clone(eheros),
@@ -2316,17 +2332,19 @@ export default class GeniusInvokationClient {
         const attachElements = eheros.map(h => [...h.attachElement]);
         let efhero = res.eheros[frontIdx];
         if (efhero.hp <= 0) return res;
+        const getDmgIdxOffset = eheros.length * pidx;
+        const getDmgIdx = frontIdx + getDmgIdxOffset;
         const aFrontIdx = getAtkHidx(aheros);
         let afhero = res.aheros[aFrontIdx];
         const isElReaction: number[] = new Array(8).fill(0);
         const isElStatus = [false, false]; // [绽放, 激化]
-        if (res.willDamage[frontIdx][0] > 0 || isAttach) {
+        if (res.willDamage[getDmgIdx][0] > 0 || isAttach) {
             res.dmgElements[frontIdx] = willAttach;
             if (!attachElements[frontIdx].includes(willAttach) && ![5, 6].includes(willAttach)) res.willAttachs[frontIdx] = willAttach;
             if ([0, 2].includes(willAttach) && efhero.inStatus.some(ist => ist.id == 2004)) { // 碎冰
                 const freezeIdx = res.eheros[frontIdx].inStatus.findIndex(ist => ist.id == 2004);
                 res.eheros[frontIdx].inStatus.splice(freezeIdx, 1);
-                res.willDamage[frontIdx][0] += 2;
+                res.willDamage[getDmgIdx][0] += 2;
             }
             if (attachElements[frontIdx].length == 0 || attachElements[frontIdx].includes(willAttach)) { // 没有元素反应
                 if (attachElements[frontIdx].length == 0 && ![0, 5, 6].includes(willAttach)) {
@@ -2343,7 +2361,7 @@ export default class GeniusInvokationClient {
                 }
                 const elTipIdx = (pidx ^ (isAttach ? 1 : 0)) * 3 + frontIdx;
                 if (willAttach == 5 && attachElement < 5) { // 扩散
-                    const otheridx = [1, 2].map(i => (frontIdx + i) % eheros.length);
+                    const otheridx = new Array(eheros.length - 1).fill(0).map((_, i) => ((frontIdx + i + 1) % eheros.length) + getDmgIdxOffset);
                     otheridx.forEach((i, idx) => {
                         if (res.willDamage[i][0] < 0) res.willDamage[i][0] = 0;
                         ++res.willDamage[i][0];
@@ -2364,7 +2382,7 @@ export default class GeniusInvokationClient {
                     afhero = res.aheros[aFrontIdx];
                 } else if (willAttach == 6 && attachElement < 5) { // 结晶
                     res.willAttachs[frontIdx] = willAttach;
-                    ++res.willDamage[frontIdx][0];
+                    ++res.willDamage[getDmgIdx][0];
                     isElReaction[attachElement] = 1;
                     isElReaction[6] = attachElement;
                     res.elTips[elTipIdx] = ['结晶', willAttach, attachElement];
@@ -2375,7 +2393,7 @@ export default class GeniusInvokationClient {
                         isElReaction[0] = 0;
                         attachElements[frontIdx].push(attachElement, willAttach);
                     } else if (hasEls(1, 2) || hasEls(2, 4)) { // 水火 蒸发  冰火 融化
-                        res.willDamage[frontIdx][0] += isAttach ? 0 : 2;
+                        res.willDamage[getDmgIdx][0] += isAttach ? 0 : 2;
                         res.elTips[elTipIdx] = [attachType == 6 ? '蒸发' : '融化', willAttach, attachElement];
                     } else if (hasEls(1, 3) || hasEls(3, 4)) { // 水雷 感电  冰雷 超导
                         if (!isAttach) {
@@ -2387,23 +2405,23 @@ export default class GeniusInvokationClient {
                         }
                         res.elTips[elTipIdx] = [attachType == 10 ? '感电' : '超导', willAttach, attachElement];
                     } else if (hasEls(1, 4)) { // 水冰 冻结
-                        res.willDamage[frontIdx][0] += isAttach ? 0 : 1;
+                        res.willDamage[getDmgIdx][0] += isAttach ? 0 : 1;
                         efhero.inStatus = this._updateStatus([heroStatus(2004)], efhero.inStatus).nstatus;
                         res.elTips[elTipIdx] = ['冻结', willAttach, attachElement];
                     } else if (hasEls(1, 7)) { // 水草 绽放
-                        ++res.willDamage[frontIdx][0];
+                        ++res.willDamage[getDmgIdx][0];
                         isElStatus[0] = true;
                         res.elTips[elTipIdx] = ['绽放', willAttach, attachElement];
                     } else if (hasEls(2, 3)) { // 火雷 超载
-                        res.willDamage[frontIdx][0] += 2;
+                        res.willDamage[getDmgIdx][0] += 2;
                         if (efhero.isFront) res.elrcmds[0].push({ cmd: 'switch-after', cnt: 2500 });
                         res.elTips[elTipIdx] = ['超载', willAttach, attachElement];
                     } else if (hasEls(2, 7)) { // 火草 燃烧
-                        ++res.willDamage[frontIdx][0];
+                        ++res.willDamage[getDmgIdx][0];
                         res.summonOppo = this._updateSummon([newSummonee(3002)], res.summonOppo, afhero.outStatus, { isSummon });
                         res.elTips[elTipIdx] = ['燃烧', willAttach, attachElement];
                     } else if (hasEls(3, 7)) { // 雷草 原激化
-                        ++res.willDamage[frontIdx][0];
+                        ++res.willDamage[getDmgIdx][0];
                         isElStatus[1] = true;
                         res.elTips[elTipIdx] = ['原激化', willAttach, attachElement];
                     }
@@ -2412,18 +2430,27 @@ export default class GeniusInvokationClient {
             }
             res.eheros[frontIdx].attachElement = attachElements[frontIdx];
         }
-        const slotInStatus: Status[][] = [[], [], []];
+        const slotInStatus: Status[][] = new Array(aheros.length).fill(0).map(() => []);
         const slotOutStatus: Status[] = [];
-        const eslotInStatus: Status[][] = [[], [], []];
+        const eslotInStatus: Status[][] = new Array(eheros.length).fill(0).map(() => []);
         const eslotOutStatus: Status[] = [];
-        const atriggers: Trigger[][] = [[], [], []];
-        const etriggers: Trigger[][] = [[], [], []];
+        const atriggers: Trigger[][] = new Array(aheros.length).fill(0).map(() => []);
+        const etriggers: Trigger[][] = new Array(eheros.length).fill(0).map(() => []);
         etriggers.forEach((trg, tidx) => {
-            if (res.willDamage[tidx][0] > 0 || res.willDamage[tidx][1] > 0) {
+            const [elDmg, penDmg] = res.willDamage[tidx + getDmgIdxOffset];
+            if (elDmg > 0 || penDmg > 0) {
                 trg.push('getdmg');
                 if (willAttach > 0) trg.push('el-getdmg');
-                if (res.willDamage[tidx][0] > 0) trg.push(`${ELEMENT_ICON[willAttach]}-getdmg` as Trigger);
-                if (res.willDamage[tidx][1] > 0) trg.push('pen-getdmg');
+                if (elDmg > 0) trg.push(`${ELEMENT_ICON[willAttach]}-getdmg` as Trigger);
+                if (penDmg > 0) trg.push('pen-getdmg');
+            }
+        });
+        atriggers.forEach((trg, tidx) => {
+            const [elDmg, penDmg] = res.willDamage[tidx + (aheros.length * epidx)];
+            if (elDmg > 0 || penDmg > 0) {
+                trg.push('getdmg');
+                if (elDmg > 0) trg.push(`${ELEMENT_ICON[willAttach]}-getdmg` as Trigger);
+                if (penDmg > 0) trg.push('pen-getdmg');
             }
         });
         isElReaction.forEach((el, i) => {
@@ -2496,7 +2523,7 @@ export default class GeniusInvokationClient {
                         else res.willheals[nhli] += hl;
                     }
                 });
-                if (res.willDamage[frontIdx][0] > 0) res.willDamage[frontIdx][0] += slotres.addDmg + (isSummon > -1 ? slotres.addDmgSummon : 0);
+                if (res.willDamage[getDmgIdx][0] > 0) res.willDamage[getDmgIdx][0] += slotres.addDmg + (isSummon > -1 ? slotres.addDmgSummon : 0);
                 if (skidx > -1) res.minusDiceSkill = slotres.minusDiceSkill;
             }
             res.summonOppo = this._updateSummon(slotSummons, res.summonOppo, afhero.outStatus, { isSummon });
@@ -2512,8 +2539,8 @@ export default class GeniusInvokationClient {
                 eslotInStatus[i].push(...(slotres.inStatus ?? []));
                 eslotOutStatus.push(...(slotres.outStatus ?? []));
                 res.eheros.forEach((h, hi) => {
-                    const hli = hi + pidx * 3;
-                    if (slotres.willHeals[hi] > 0 && h.hp > res.willDamage[hi].reduce((a, b) => a + Math.max(0, b))) {
+                    const hli = hi + pidx * eheros.length;
+                    if (slotres.willHeals[hi] > 0 && h.hp > res.willDamage[hi + getDmgIdxOffset].reduce((a, b) => a + Math.max(0, b))) {
                         if (res.willheals[hli] == -1) res.willheals[hli] = slotres.willHeals[hi];
                         else res.willheals[hli] = Math.min(h.maxhp - h.hp, (res.willheals[hli] ?? 0) + slotres.willHeals[hi]);
                     }
@@ -2535,7 +2562,7 @@ export default class GeniusInvokationClient {
                         skilltype: sktype,
                         isElStatus,
                         isFallAtk,
-                        hasDmg: res.willDamage[frontIdx][0] > 0,
+                        hasDmg: res.willDamage[getDmgIdx][0] > 0,
                         isSkill: skidx,
                         dmgSource: skidx > -1 ? afhero.id : isSummon,
                         card: this.currCard,
@@ -2546,8 +2573,8 @@ export default class GeniusInvokationClient {
                         stsres.trigger = [...(stsres.trigger ?? []), 'useReadySkill']
                     }
                     if (this._hasNotTrigger(stsres.trigger, trigger)) continue;
-                    if (res.willDamage[frontIdx][0] > 0) {
-                        res.willDamage[frontIdx][0] += (stsres?.[`${dmg}`] ?? 0) + (isSummon > -1 ? stsres?.addDmgSummon ?? 0 : 0);
+                    if (res.willDamage[getDmgIdx][0] > 0) {
+                        res.willDamage[getDmgIdx][0] += (stsres?.[`${dmg}`] ?? 0) + (isSummon > -1 ? stsres?.addDmgSummon ?? 0 : 0);
                     }
                     if (stsres?.summon && !isOppo) {
                         res.summonOppo = this._updateSummon(stsres.summon, res.summonOppo, afhero.outStatus);
@@ -2565,7 +2592,7 @@ export default class GeniusInvokationClient {
                         }
                         if (stsres?.pendamage) {
                             (stsres.hidxs ?? allHidxs(res.eheros, { exclude: frontIdx })).forEach(hi => {
-                                res.willDamage[hi][1] += stsres?.pendamage ?? 0;
+                                res.willDamage[hi + getDmgIdxOffset][1] += stsres?.pendamage ?? 0;
                             });
                         }
                     } else if (trigger.startsWith('skill')) {
@@ -2636,7 +2663,7 @@ export default class GeniusInvokationClient {
                     minusDiceSkill: res.minusDiceSkill,
                     isUseSkill: skidx > -1,
                 });
-                if (res.willDamage[frontIdx][0] > 0) res.willDamage[frontIdx][0] += addDmg;
+                if (res.willDamage[getDmgIdx][0] > 0) res.willDamage[getDmgIdx][0] += addDmg;
                 if (willheals.length > 0) {
                     willheals.forEach((hl, hli) => {
                         if (hl >= 0) {
@@ -2663,7 +2690,7 @@ export default class GeniusInvokationClient {
             if (isExec) this.players[this.playerIdx].playerInfo.oppoGetElDmgType = elcnt;
         }
 
-        let restDmg = res.willDamage[frontIdx][0];
+        let restDmg = res.willDamage[getDmgIdx][0];
         if (efhero.talentSlot?.subType.includes(-1) && efhero.isFront) {
             const { restDmg: slotresdmg = 0, inStatusOppo = [], hidxs }
                 = cardsTotal(efhero.talentSlot.id).handle(efhero.talentSlot, { restDmg, heros: res.eheros, hidxs: [frontIdx] });
@@ -2687,14 +2714,14 @@ export default class GeniusInvokationClient {
                 });
                 restDmg = nrdmg;
                 if (pendamage > 0 && penhidxs.length > 0) {
-                    penhidxs.forEach(v => res.willDamage[v][1] += pendamage);
+                    penhidxs.forEach(v => res.willDamage[v + getDmgIdxOffset][1] += pendamage);
                 }
             });
             afhero.outStatus.filter(ost => ost.type.includes(5)).forEach(ost => {
                 restDmg = heroStatus(ost.id).handle(ost, { restDmg }).restDmg ?? 0;
             });
         }
-        res.willDamage[frontIdx][0] = restDmg;
+        res.willDamage[getDmgIdx][0] = restDmg;
         res.aheros.forEach((h, hi) => res.willheals[hi + epidx * 3] = Math.min(h.maxhp - h.hp, res.willheals[hi + epidx * 3]));
         res.eheros.forEach((h, hi) => res.willheals[hi + pidx * 3] = Math.min(h.maxhp - h.hp, res.willheals[hi + pidx * 3]));
         res.eheros = this._doSkill5(frontIdx, etriggers[frontIdx], { pidx: pidx ^ 1, heros: res.eheros, isExec, dmg: restDmg }).heros;
@@ -2731,7 +2758,7 @@ export default class GeniusInvokationClient {
             if (res.willDamage.some(d => Math.max(0, d[0]) + Math.max(0, d[1]) > 0)) {
                 const willkilledhidxs: number[] = [];
                 res.eheros.forEach((h, hi) => {
-                    if (h.hp <= res.willDamage[hi].reduce((a, b) => a + b)) {
+                    if (h.hp <= res.willDamage[hi + getDmgIdxOffset].reduce((a, b) => a + b)) {
                         willkilledhidxs.push(hi);
                     }
                 });
@@ -2913,8 +2940,7 @@ export default class GeniusInvokationClient {
                                                     aheros, aSummon,
                                                     { pidx: p.pidx, isSummon: summon.id }
                                                 );
-                                            if (p.pidx == 0) this.willDamages = [...clone(willDamage), [-1, 0], [-1, 0], [-1, 0]];
-                                            else this.willDamages = [[-1, 0], [-1, 0], [-1, 0], ...clone(willDamage)];
+                                            this.willDamages = [...willDamage];
                                             willDamages = this.willDamages;
                                             dmgElements = dmgElements1;
                                             aheros = [...aheros1];
@@ -2951,7 +2977,7 @@ export default class GeniusInvokationClient {
                                             const { eheros: eheros2, willAttachs, aheros: aheros2, summon: asummon2, summonOppo: esummon2, elrcmds: elrcmds2, elTips: elTips2 }
                                                 = this._elementReaction(
                                                     summon.element,
-                                                    [[-1, 0], [-1, 0], [-1, 0]],
+                                                    [],
                                                     this.players[p.pidx].hidx,
                                                     aheros, aSummon,
                                                     eheros, esummon,
@@ -3297,11 +3323,10 @@ export default class GeniusInvokationClient {
                                             eheros = isOppo ? aheros1 : eheros1;
                                             asummon = isOppo ? esummon1 : asummon1;
                                             esummon = isOppo ? asummon1 : esummon1;
-                                            dmgElements = dmgElements1;
+                                            dmgElements = [...dmgElements1];
                                             aWillAttach = [[], [], [], [], [], []];
                                             for (let i = 0; i < 3; ++i) aWillAttach[i + (apidx ^ 1) * 3].push(willAttachs1[i]);
-                                            if (p.pidx ^ (isOppo ? 1 : 0)) willDamage = [[-1, 0], [-1, 0], [-1, 0], ...willDamage1];
-                                            else willDamage = [...willDamage1, [-1, 0], [-1, 0], [-1, 0]];
+                                            willDamage = [...willDamage1];
                                             stscmds.push(...elrcmds1[0]);
                                             elTips = elTips1;
                                             willAttachs = [[], [], [], [], [], []];
@@ -3465,8 +3490,7 @@ export default class GeniusInvokationClient {
                 (isOppo ? eheros1 : aheros1)[ahidx].inStatus :
                 (isOppo ? eheros1 : aheros1)[ahidx].outStatus)
                 .find(sts3 => sts3.id == sid)) ?? {};
-            if (pidx ^ isOppo) this.willDamages = [[-1, 0], [-1, 0], [-1, 0], ...clone(willDamage)];
-            else this.willDamages = [...clone(willDamage), [-1, 0], [-1, 0], [-1, 0]];
+            this.willDamages = [...willDamage];
             const aWillAttach: number[][] = [[], [], [], [], [], []];
             for (let i = 0; i < 3; ++i) aWillAttach[i + (pidx ^ 1) * 3].push(willAttachs1[i]);
             let willHeals: number[] | undefined;

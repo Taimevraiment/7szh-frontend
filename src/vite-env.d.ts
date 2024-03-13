@@ -74,7 +74,8 @@ type Card = {
     type: number, // 牌类型：0装备 1支援 2事件
     subType: number[], // 副类型：0武器 1圣遗物 2场地 3伙伴 4道具 5料理 6天赋 7战斗行动 8秘传 9元素共鸣 -1减伤 -2复苏料理 -3所属共鸣
     userType: number, // 使用人类型匹配：0全匹配 匹配武器Hero.weaponType 匹配天赋Hero.id
-    useCnt: number, // 每回合的效果使用次数
+    useCnt: number, // 累积点数
+    perCnt: number, // 每回合的效果使用次数
     cnt: number, // 卡牌数量，默认为2
     energy: number, // 需要的充能
     anydice: number, // 除了元素骰以外需要的任意骰

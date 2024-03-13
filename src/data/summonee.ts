@@ -791,11 +791,11 @@ const summonTotal: SummoneeObj = {
         2, 2, 0, 1, 3),
 
     3056: () => new GISummonee(3056, '临事场域', '【结束阶段：】造成{dmg}点[冰元素伤害]，治疗我方出战角色{shield}点。；【[可用次数]：{useCnt}】',
-        '',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/03/06/258999284/a4249ebb8a68e2843cdd2fa78937912c_2796631322062911422.png',
         2, 2, 1, 1, 4),
 
     3057: () => new GISummonee(3057, '雷萤', '【结束阶段：】造成{dmg}点[雷元素伤害]。；【[可用次数]：{useCnt}】；【敌方累积打出3张行动牌后：】此牌[可用次数]+1。(最多叠加到3)；【愚人众·雷萤术士受到元素反应伤害后：】此牌[可用次数]-1。',
-        '',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/03/06/258999284/b49d5bd6e23362e65f2819b62c1752f6_652290106975576928.png',
         3, 3, 0, 1, 3, (summon: Summonee, smnOpt: SummonOption = {}) => {
             const { trigger = '', heros = [], isExec = true } = smnOpt;
             const triggers: Trigger[] = ['phase-end', 'ecard'];

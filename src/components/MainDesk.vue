@@ -247,7 +247,7 @@
                 }%`,
                 borderRadius: '50%',
               }"
-              :class="{ 'slot-can-use': hero.weaponSlot.useCnt > 0 }"
+              :class="{ 'slot-can-use': hero.weaponSlot.perCnt > 0 }"
             ></div>
           </div>
           <div
@@ -266,7 +266,7 @@
                 }%`,
                 borderRadius: '50%',
               }"
-              :class="{ 'slot-can-use': hero.artifactSlot.useCnt > 0 }"
+              :class="{ 'slot-can-use': hero.artifactSlot.perCnt > 0 }"
             ></div>
           </div>
           <div
@@ -285,7 +285,7 @@
                 }%`,
                 borderRadius: '50%',
               }"
-              :class="{ 'slot-can-use': hero.talentSlot.useCnt > 0 }"
+              :class="{ 'slot-can-use': hero.talentSlot.perCnt > 0 }"
             ></div>
           </div>
         </div>
