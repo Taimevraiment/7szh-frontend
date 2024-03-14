@@ -1513,12 +1513,12 @@ const statusTotal: StatusObj = {
         }), { icbg: STATUS_BG_COLOR[1] }),
 
     2132: (expl?: ExplainContent[]) => new GIStatus(2132, '隐具余数', '｢隐具余数｣最多可以叠加到3层。；【角色使用眩惑光戏法时：】每层｢隐具余数｣使伤害+1。技能结算后，耗尽｢隐具余数｣，每层治疗角色1点。',
-        'buff2', 0, [6], 1, 3, -1, (status: Status, options: StatusOption = {}) => ({
+        'buff2', 0, [1, 6], 1, 3, -1, (status: Status, options: StatusOption = {}) => ({
             trigger: ['skilltype2', 'after-skilltype2'],
             addDmgCdt: status.useCnt,
             heal: isCdt(options.trigger == 'after-skilltype2', status.useCnt),
-            exec: () => {
-                status.useCnt = 0;
+            exec: (eStatus?: Status) => {
+                if (eStatus) eStatus.useCnt = 0;
                 return {}
             }
         }), { expl }),
@@ -2009,7 +2009,7 @@ const statusTotal: StatusObj = {
         '', 1, [7], 1 + Math.min(3, useCnt), 0, -1),
 
     2171: (expl?: ExplainContent[]) => new GIStatus(2171, '霆电迸发', '本角色将在下次行动时，直接使用技能：【霆电迸发】。',
-        '', 0, [10, 11], 1, 0, -1, (status: Status) => ({
+        'buff3', 0, [10, 11], 1, 0, -1, (status: Status) => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 18,
             exec: () => {
@@ -2049,6 +2049,21 @@ const statusTotal: StatusObj = {
                 }
             }
         }),
+
+    2175: (expl?: ExplainContent[]) => new GIStatus(2175, '雷压', '每当我方累积打出3张行动牌，就会触发敌方场上【雷萤】的效果。(使【雷萤】的[可用次数]+1)',
+        'debuff', 1, [4, 9], 0, 3, -1, (status: Status, options: StatusOption = {}) => ({
+            trigger: ['card'],
+            exec: () => {
+                const { esummons = [] } = options;
+                status.useCnt = Math.min(status.maxCnt, status.useCnt + 1);
+                const summon = esummons.find(smn => smn.id == status.summonId);
+                if (summon && summon.useCnt < 3) {
+                    ++summon.useCnt;
+                    status.useCnt = 0;
+                }
+                return {}
+            },
+        }), { icbg: DEBUFF_BG_COLOR, expl }),
 
 };
 

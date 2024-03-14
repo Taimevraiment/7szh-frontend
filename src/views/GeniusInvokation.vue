@@ -7,18 +7,16 @@
     <button v-if="!client.isStart || isLookon > -1" class="exit" @click="exit">
       返回
     </button>
-    <div class="player-info">{{ client.players[client.playerIdx]?.info }}</div>
+    <div class="player-info">{{ client.player?.info }}</div>
     <button
       v-if="isLookon == -1 && client.phase < 2"
       class="start"
       @click="startGame"
     >
-      {{
-        client.players[client.playerIdx]?.phase == 0 ? "准备开始" : "取消准备"
-      }}
+      {{ client.player?.phase == 0 ? "准备开始" : "取消准备" }}
     </button>
     <button
-      v-if="isLookon == -1 && client.players[client.playerIdx]?.phase == 0"
+      v-if="isLookon == -1 && client.player?.phase == 0"
       class="deck-open"
       @click="enterEditDeck"
     >
@@ -29,7 +27,7 @@
       :class="{
         'player-display': true,
         'curr-player':
-          client.players[client.playerIdx]?.status == 1 &&
+          client.player?.status == 1 &&
           client.phase < 7 &&
           client.phase > 2 &&
           client.isWin == -1,
@@ -38,7 +36,7 @@
       @click.stop="devOps()"
     >
       <span v-if="isLookon > -1">旁观中......</span>
-      <p>{{ client.players[client.playerIdx]?.name }}</p>
+      <p>{{ client.player?.name }}</p>
       <div
         v-if="client.isWin > -1 || client.isStart"
         class="rest-card"

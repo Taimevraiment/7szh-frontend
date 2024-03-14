@@ -407,6 +407,8 @@ type StatusOption = {
     minusDiceSkill?: number[][],
     heal?: number[],
     force?: boolean,
+    summons?: Summonee[],
+    esummons?: Summonee[],
 }
 
 type StatusHandleRes = {
@@ -546,6 +548,7 @@ type SummonRes = {
 type SummonExecOption = {
     summon?: Summonee,
     heros?: Hero[],
+    eheros?: Hero[],
     changeHeroDiceCnt?: number,
 }
 

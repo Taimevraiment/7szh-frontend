@@ -828,14 +828,14 @@ const allCards: CardObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/01/27/258999284/166e56c3c68e531c97f4fdfde1adde06_4511818010196081435.png',
         2, 0, 0, [1], 0, 1, (card: Card, cardOpt: CardOption = {}) => {
             const { heros = [], hidxs = [], heal = [], trigger = '' } = cardOpt;
-            const isTriggered = card.useCnt < 2 && (trigger == 'getdmg' || trigger == 'heal' && heal[hidxs[0]] > 0);
+            const isTriggered = card.perCnt > 0 && (trigger == 'getdmg' || trigger == 'heal' && heal[hidxs[0]] > 0);
             const execmds: Cmds[] = [{ cmd: 'getDice', element: heros[hidxs[0]].element, cnt: 1 }, { cmd: 'getCard', cnt: 1 }];
             return {
                 trigger: ['getdmg', 'heal'],
                 execmds: isCdt(isTriggered, [execmds[card.useCnt]]),
                 exec: () => {
                     if (isTriggered && ++card.useCnt == 2) {
-                        card.perCnt = 0;
+                        --card.perCnt;
                     }
                     return {}
                 }

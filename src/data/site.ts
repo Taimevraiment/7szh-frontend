@@ -1,7 +1,7 @@
 import { cardsTotal } from './cards';
 import { ELEMENT_ICON } from './constant';
 import { heroStatus } from './heroStatus';
-import { allHidxs, minusDiceSkillHandle } from './utils';
+import { allHidxs, isCdt, minusDiceSkillHandle } from './utils';
 
 class GISite implements Site {
     id: number;
@@ -747,6 +747,7 @@ const siteTotal: SiteObj = {
         return {
             trigger: triggers,
             isNotAddTask: trigger != 'phase-start',
+            siteCnt: isCdt(site.cnt < 4, 1),
             exec: () => {
                 if (trigger == 'phase-start' && site.cnt >= 4) {
                     site.cnt -= 4;

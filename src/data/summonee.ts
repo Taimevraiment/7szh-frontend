@@ -697,7 +697,6 @@ const summonTotal: SummoneeObj = {
                 exec: (smnexeOpt: SummonExecOption) => {
                     const { summon: smn = summon } = smnexeOpt;
                     if (trigger == 'phase-end') return phaseEndAtk(smn);
-                    console.log(trigger);
                     if (trigger.includes('-getdmg') && smn.element == 5) {
                         const element = ELEMENT_ICON.indexOf(trigger.slice(0, trigger.indexOf('-getdmg')));
                         return { cmds: [{ cmd: 'changeElement', element }] };
@@ -798,7 +797,7 @@ const summonTotal: SummoneeObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/03/06/258999284/b49d5bd6e23362e65f2819b62c1752f6_652290106975576928.png',
         3, 3, 0, 1, 3, (summon: Summonee, smnOpt: SummonOption = {}) => {
             const { trigger = '', heros = [], isExec = true } = smnOpt;
-            const triggers: Trigger[] = ['phase-end', 'ecard'];
+            const triggers: Trigger[] = ['phase-end'];
             const hero = heros.find(h => h.id == 1764);
             if (hero?.isFront) {
                 triggers.push('get-elReaction');
@@ -807,25 +806,19 @@ const summonTotal: SummoneeObj = {
                 }
             }
             if ((hero?.talentSlot?.useCnt ?? 0) > 0 && summon.useCnt >= 3) triggers.push('action-start');
-            if (!isExec && trigger == 'ecard' && summon.perCnt == -2) {
-                summon.useCnt = Math.max(summon.useCnt, Math.min(summon.maxUse, summon.useCnt + 1));
-            }
             return {
                 trigger: triggers,
                 damage: 1,
                 element: 3,
-                isNotAddTask: ['ecard', 'get-elReaction'].includes(trigger),
+                isNotAddTask: trigger == 'get-elReaction',
                 exec: (smnexeOpt: SummonExecOption) => {
-                    const { summon: smn = summon, heros: hrs = heros } = smnexeOpt;
-                    if (trigger == 'ecard') {
-                        --smn.perCnt;
-                        if (smn.perCnt <= -3) {
-                            smn.perCnt = 0;
-                            smn.useCnt = Math.max(smn.useCnt, Math.min(smn.maxUse, smn.useCnt + 1));
-                        }
-                        return {}
-                    }
+                    const { summon: smn = summon, heros: hrs = heros, eheros = [] } = smnexeOpt;
                     smn.useCnt = Math.max(0, smn.useCnt - 1);
+                    if (smn.useCnt == 0) {
+                        const eOutStatus = eheros.find(h => h.isFront)?.outStatus;
+                        const sts2175 = eOutStatus?.findIndex(ist => ist.id == 2175) ?? -1;
+                        if (sts2175 > -1) eOutStatus?.splice(sts2175, 1);
+                    }
                     if (trigger == 'get-elReaction') return {}
                     const chero = hrs.find(h => h.id == 1764);
                     if (trigger == 'action-start' && chero?.talentSlot) --chero.talentSlot.useCnt;

@@ -1683,7 +1683,7 @@ const allHeros: HeroObj = {
         new GISkill('雾虚之召', '召唤【雷萤】。', 2, 0, 3, 3, {},
             '',
             'https://act-upload.mihoyo.com/wiki-user-upload/2024/03/06/258999284/170a763eb069a3f4577b04dbeb73f3a7_245180266074223049.png',
-            [newSummonee(3057)], () => ({ summon: [newSummonee(3057)] })),
+            [newSummonee(3057)], () => ({ summon: [newSummonee(3057)], outStatus: [heroStatus(2175, [newSummonee(3057)])] })),
         new GISkill('霆雷之护', '造成{dmg}点[雷元素伤害]，本角色[附着雷元素]，生成【雷萤护罩】并[准备技能]：【霆电迸发】。', 3, 1, 3, 3, { ec: 2 },
             '',
             'https://act-upload.mihoyo.com/wiki-user-upload/2024/03/06/258999284/7ddbd6e73bea8f907590c964c2f88d98_2187578641261417207.png',
