@@ -596,11 +596,11 @@ const allHeros: HeroObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/03/06/258999284/86e0474f40841fbc5faff7870fe9cd0c_8511334021456599978.png',
         skill1('如水从平'), [
         new GISkill('泪水啊，我必偿还', '造成{dmg}点[水元素伤害]，角色附属【源水之滴】。', 2, 2, 3, 1, {},
-            '',
+            'https://patchwiki.biligame.com/images/ys/thumb/3/32/ofkmgc3tu39kdxmivhd6al7h17rsq3r.png/45px-%E6%B3%AA%E6%B0%B4%E5%95%8A%EF%BC%8C%E6%88%91%E5%BF%85%E5%81%BF%E8%BF%98.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2024/02/28/258999284/472b87458851b9cf53d0bbe34596e076_7997139213955787355.png',
             [heroStatus(2164), readySkill(17)], () => ({ outStatusOppo: [heroStatus(2164, [readySkill(17)])] })),
         new GISkill('潮水啊，我已归来', '造成{dmg}点[水元素伤害]，对所有后台敌人造成1点[穿透伤害]，生成[可用次数]为2的【源水之滴】。', 3, 2, 3, 1, { ec: 2 },
-            '',
+            'https://patchwiki.biligame.com/images/ys/thumb/5/5f/g5p5d8xodqqe18ok2sk5dseinb54wmz.png/45px-%E6%BD%AE%E6%B0%B4%E5%95%8A%EF%BC%8C%E6%88%91%E5%B7%B2%E5%BD%92%E6%9D%A5.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2024/02/28/258999284/31a30f1436a733695fc91d1248c157e1_6560934694291577179.png',
             [heroStatus(2164), readySkill(17)], () => ({ pendamage: 1, outStatusOppo: [heroStatus(2164, [readySkill(17)], 2)] })),
     ]),

@@ -1809,10 +1809,7 @@ const statusTotal: StatusObj = {
             element: 2,
             trigger: ['skilltype1', 'after-skilltype1'],
             exec: (eStatus?: Status) => {
-                if (eStatus) {
-                    --eStatus.useCnt;
-                    if (!eStatus.isTalent) --eStatus.perCnt;
-                }
+                if (eStatus) --eStatus.useCnt;
                 return { outStatus: [heroStatus(2106)] }
             },
         }), { icbg: STATUS_BG_COLOR[2], expl: [heroStatus(2106)], isTalent }),
@@ -1961,7 +1958,7 @@ const statusTotal: StatusObj = {
             }
         }), { expl }),
 
-    2166: () => new GIStatus(2166, '古海子遗的权柄(todo名字待定)', '该角色造成的伤害+1。',
+    2166: () => new GIStatus(2166, '遗龙之荣', '角色造成的伤害+1。【[可用次数]:{useCnt}】',
         'buff2', 0, [4, 6], 2, 0, -1, (status: Status) => ({
             addDmg: 1,
             trigger: ['skill'],
@@ -2003,7 +2000,7 @@ const statusTotal: StatusObj = {
                 }
                 return {}
             },
-        }), { icbg: STATUS_BG_COLOR[7] }),
+        }), { icbg: DEBUFF_BG_COLOR }),
 
     2170: (useCnt = 0) => new GIStatus(2170, '雷萤护罩', '为我方出战角色提供1点[护盾]。；【创建时：】如果我方场上存在【雷萤】，则额外提供其[可用次数]的[护盾]。(最多额外提供3点[护盾])',
         '', 1, [7], 1 + Math.min(3, useCnt), 0, -1),
@@ -2028,7 +2025,7 @@ const statusTotal: StatusObj = {
             },
         })),
 
-    2173: () => new GIStatus(2173, '抗争之日·碎梦之时(生效中)', '本回合中，目标角色受到的伤害-1。',
+    2173: () => new GIStatus(2173, '抗争之日·碎梦之时(生效中)', '本回合中，所附属角色受到的伤害-1。；【[可用次数]：{useCnt}】',
         '', 0, [2], 4, 0, 1, (status: Status, options: StatusOption = {}) => {
             const { restDmg = 0 } = options;
             if (restDmg <= 0) return { restDmg };

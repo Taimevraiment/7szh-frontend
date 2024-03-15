@@ -1142,6 +1142,7 @@ button:active {
   justify-content: center;
   align-items: center;
   box-sizing: border-box;
+  transition: 0.5s;
 }
 
 .hero-weapon > img,
