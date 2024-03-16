@@ -168,14 +168,13 @@ const elCard = (id: number, element: number, src: string) => {
         src, 0, 8, 2, [9], 0, 0, () => ({ cmds: [{ cmd: 'getDice', cnt: 1, element }] }));
 }
 
-const talentSkill = (skidx: number): () => ({ trigger: Trigger[], execmds: Cmds[] }) => {
-    const execmds: Cmds[] = [{ cmd: 'useSkill', cnt: skidx }];
-    return () => ({ trigger: ['skill'], execmds });
+const talentSkill = (skidx: number): () => ({ trigger: Trigger[], cmds: Cmds[] }) => {
+    return () => ({ trigger: ['skill'], cmds: [{ cmd: 'useSkill', cnt: skidx }] });
 }
 
 const talentHandle = (cardOpt: CardOption, skidx: number, nexec: () => [() => CardExecRes, CardHandleRes?], ntrigger: Trigger | Trigger[] = 'skill') => {
     const { trigger = '' } = cardOpt;
-    const { trigger: talTrg, execmds: talCmds } = talentSkill(skidx)();
+    const { trigger: talTrg, cmds: talCmds } = talentSkill(skidx)();
     const cmds: Cmds[] = [...talCmds];
     if (typeof ntrigger == 'string') {
         if (ntrigger != '') ntrigger = [ntrigger];
@@ -848,12 +847,14 @@ const allCards: CardObj = {
             const { heros = [], hidxs = [], hcard, trigger = '', minusDiceCard: mdc = 0, isSkill = -1 } = cardOpt;
             const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(cardOpt, { skilltype2: [0, 0, card.useCnt] });
             const isCardMinus = hcard && hcard.subType.includes(6) && hcard.userType == heros[hidxs[0]]?.id && hcard.cost > mdc;
+            const isPhaseEnd = trigger == 'phase-end' && card.useCnt < 2 && !heros[hidxs[0]]?.isFront;
             return {
                 ...minusSkillRes,
-                minusDiceCard: card.useCnt,
+                minusDiceCard: isCdt(isCardMinus, card.useCnt),
                 trigger: ['phase-end', 'card', 'skilltype2'],
+                execmds: isCdt<Cmds[]>(isPhaseEnd, [{ cmd: '' }]),
                 exec: () => {
-                    if (trigger == 'phase-end' && card.useCnt < 2 && !!heros[hidxs[0]]?.isFront) {
+                    if (isPhaseEnd) {
                         ++card.useCnt;
                     } else if (trigger == 'card' && isCardMinus) {
                         card.useCnt -= hcard.cost - mdc;

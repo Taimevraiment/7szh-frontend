@@ -83,7 +83,7 @@
 </template>
 
 <script setup lang="ts">
-import { onUnmounted, ref } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import CreateRoomModal from "@/components/CreateRoomModal.vue";
 import EnterRoomModal from "@/components/EnterRoomModal.vue";
@@ -202,13 +202,6 @@ const enterRoom = (
   socket.emit("enterRoom", { roomId: Number(roomId), roomPassword, isForce });
 };
 
-// 获取登录pid
-socket.on("login", ({ pid, name }) => {
-  userid.value = pid;
-  username.value = name;
-  localStorage.setItem("7szh_userid", pid.toString());
-});
-
 // 获取玩家和房间列表
 const getPlayerAndRoomList = ({
   plist,
@@ -230,29 +223,35 @@ const getPlayerAndRoomList = ({
     };
   });
 };
-socket.on("getPlayerAndRoomList", getPlayerAndRoomList);
-
-// 进入房间
-socket.on("enterRoom", ({ roomId = -1, isLookon = false, players, err }) => {
-  if (err) return alert(err);
-  if (isLookon) alert("游戏已满员！进入成为旁观者");
-  router.push({
-    name: "gameRoom",
-    params: { roomId },
-    state: {
-      isLookon,
-      players,
-      follow: players.find((p: Player) => p.id == followIdx)?.pidx,
-    },
+onMounted(() => {
+  // 获取登录pid
+  socket.on("login", ({ pid, name }) => {
+    userid.value = pid;
+    username.value = name;
+    localStorage.setItem("7szh_userid", pid.toString());
   });
-  followIdx = -1;
-});
-
-// 继续游戏
-socket.on("continueGame", ({ roomId }) => {
-  socket.emit("enterRoom", {
-    roomId,
-    isForce: true,
+  socket.on("getPlayerAndRoomList", getPlayerAndRoomList);
+  // 进入房间
+  socket.on("enterRoom", ({ roomId = -1, isLookon = false, players, err }) => {
+    if (err) return alert(err);
+    if (isLookon) alert("游戏已满员！进入成为旁观者");
+    router.push({
+      name: "gameRoom",
+      params: { roomId },
+      state: {
+        isLookon,
+        players,
+        follow: players.find((p: Player) => p.id == followIdx)?.pidx,
+      },
+    });
+    followIdx = -1;
+  });
+  // 继续游戏
+  socket.on("continueGame", ({ roomId }) => {
+    socket.emit("enterRoom", {
+      roomId,
+      isForce: true,
+    });
   });
 });
 

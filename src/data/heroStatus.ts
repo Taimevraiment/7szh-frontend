@@ -1804,13 +1804,13 @@ const statusTotal: StatusObj = {
         }), { expl }),
 
     2154: (icon = '', isTalent = false) => new GIStatus(2154, '炽火大铠', '【我方角色｢普通攻击｣后：】造成1点[火元素伤害]，生成【烈烧佑命护盾】。；【[可用次数]：{useCnt}】',
-        icon, 1, [1], isTalent ? 3 : 2, 0, -1, (_status: Status, options: StatusOption = {}) => ({
-            damage: isCdt(options.trigger == 'after-skilltype1', 1),
+        icon, 1, [1], isTalent ? 3 : 2, 0, -1, (_status: Status) => ({
+            damage: 1,
             element: 2,
-            trigger: ['skilltype1', 'after-skilltype1'],
+            trigger: ['after-skilltype1'],
             exec: (eStatus?: Status) => {
                 if (eStatus) --eStatus.useCnt;
-                return { outStatus: [heroStatus(2106)] }
+                return { cmds: [{ cmd: 'getOutStatus', status: [heroStatus(2106)] }] }
             },
         }), { icbg: STATUS_BG_COLOR[2], expl: [heroStatus(2106)], isTalent }),
 
@@ -2015,7 +2015,7 @@ const statusTotal: StatusObj = {
             }
         }), { expl }),
 
-    2172: () => new GIStatus(2172, '万世流涌大典(todo名字待定)', '本回合中，目标角色下一次造成的伤害+2。',
+    2172: () => new GIStatus(2172, '万世的浪涛', '角色在本回合中，下次造成的伤害+2。',
         'buff5', 0, [4, 6, 10], 1, 0, 1, (status: Status) => ({
             addDmg: 2,
             trigger: ['skill'],

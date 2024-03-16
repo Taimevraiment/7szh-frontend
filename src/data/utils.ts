@@ -95,7 +95,7 @@ export const minusDiceSkillHandle = (options: { heros?: Hero[], hidxs?: number[]
     for (let i = 0; i < hero.skills.length; ++i) {
         const curskill = hero.skills[i];
         if (curskill.type == 4) break;
-        if ((mds[i] ?? []).every(v => v <= 0) || !nskill && !nskillstype[i] || !cdt(curskill)) {
+        if ((mds[i] ?? []).every(v => v <= 0) || !nskill && !nskillstype[curskill.type - 1] || !cdt(curskill)) {
             if (skidx == i) isMinusSkill = false;
             minusDiceSkills.push([0, 0]);
             continue;

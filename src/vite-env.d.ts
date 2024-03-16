@@ -136,7 +136,7 @@ type Status = {
     description: string, // 描述
     icon: string, // 图标
     group: number, // 0角色状态 1阵营状态
-    type: number[], // 类型: 0隐藏 1攻击 2挡伤 3回合 4使用 5翻倍伤害 6条件加伤 7护盾 8元素附魔 9累积 10标记 11准备技能 12死后不删除 13免击倒 14无法行动 15状态暂时不消失
+    type: number[], // 类型: 0隐藏 1攻击 2挡伤 3回合 4使用 5翻倍伤害 6条件加伤 7护盾 8元素附魔 9累积 10标记 11准备技能 12死后不删除 13免击倒 14无法行动 15暂时不消失
     useCnt: number, // 剩余使用次数: -1为无次数限制
     maxCnt: number, // 最多叠加的次数: 0为不能叠加
     addCnt: number, // 叠加时次数
@@ -370,6 +370,7 @@ type CardHandleRes = {
     cnt?: number,
     isDestroy?: boolean,
     restDmg?: number,
+    isNotAddTask?: boolean,
     exec?: (...args: any) => CardExecRes
 }
 

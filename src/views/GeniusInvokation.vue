@@ -403,7 +403,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watchEffect, onUnmounted } from "vue";
+import { computed, ref, watchEffect, onUnmounted, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import type { Socket } from "socket.io-client";
 
@@ -580,21 +580,22 @@ const lookonTo = (idx: number) => {
   client.value.lookonTo(idx);
 };
 
-socket.emit("roomInfoUpdate", { roomId });
-socket.on("roomInfoUpdate", (data) => {
-  const isFlag = data.isStart && !client.value.isStart;
-  client.value.getPlayer({ isFlag, ...data });
-});
-
-socket.on("getServerInfo", (data) => {
-  client.value.getServerInfo(data);
-});
-
 const getPlayerList = ({ plist }: { plist: Player[] }) => {
   const me = plist.find((p) => p.id == userid);
   if (me?.rid == -1) router.back();
 };
-socket.on("getPlayerAndRoomList", getPlayerList);
+onMounted(() => {
+  socket.emit("roomInfoUpdate", { roomId });
+  socket.on("roomInfoUpdate", (data) => {
+    const isFlag = data.isStart && !client.value.isStart;
+    client.value.roomInfoUpdate({ isFlag, ...data });
+  });
+
+  socket.on("getServerInfo", (data) => {
+    client.value.getServerInfo(data);
+  });
+  socket.on("getPlayerAndRoomList", getPlayerList);
+});
 
 onUnmounted(() => {
   socket.off("roomInfoUpdate");
@@ -651,7 +652,7 @@ const devOps = (cidx = 0) => {
       if (nheros) heros = nheros;
       flag.add("setEnergy");
     } else if (op.startsWith("#")) {
-      const [cnt = 5, el = 0] = op
+      const [cnt = 16, el = 0] = op
         .slice(1)
         .split(/[:：]+/)
         .map(h);

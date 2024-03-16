@@ -573,13 +573,10 @@ export default class GeniusInvokationClient {
      * 获取玩家信息
      * @param data 一些数据
      */
-    getPlayer(data: any) {
+    roomInfoUpdate(data: any) {
         this.players = [...(data?.players ?? this.players)];
-        if (data.isFlag) {
-            this.socket.emit('sendToServer');
-            if (data.isStart != undefined) this.isStart = data.isStart;
-        }
-        if (data.phase != undefined) this.phase = data.phase;
+        this.isStart = data.isStart ?? this.isStart;
+        this.phase = data.phase ?? this.phase;
         this.canAction = this.player?.canAction ?? false;
         if (data.taskQueueVal) {
             this.taskQueue.queue = data.taskQueueVal.queue;
@@ -587,6 +584,7 @@ export default class GeniusInvokationClient {
             this.taskQueue.isExecuting = data.taskQueueVal.isExecuting;
             this.taskQueue.statusAtk = data.taskQueueVal.statusAtk;
         }
+        if (data.isFlag) this.socket.emit('sendToServer');
         this.wrap(this.player);
         this._clacCardChange();
     }
@@ -642,7 +640,7 @@ export default class GeniusInvokationClient {
             if (players[this.playerIdx]?.phase == PHASE.ACTION && players[this.playerIdx ^ 1]?.phase == PHASE.ACTION_END &&
                 (isUseSkill || isChangeHero) && !this.isSwitchAtking && dieChangeBack == undefined) {
                 setTimeout(async () => {
-                    await this._wait(() => !this.taskQueue.isExecuting && this.taskQueue.isTaskEmpty(), { delay: 10 });
+                    await this._wait(() => !this.taskQueue.isExecuting && this.taskQueue.isTaskEmpty(), { delay: 0 });
                     this._sendTip('继续你的回合')
                     if (isMyTurn()) {
                         setTimeout(() => {
@@ -655,7 +653,7 @@ export default class GeniusInvokationClient {
             if (players[this.playerIdx ^ 1]?.phase == PHASE.ACTION && players[this.playerIdx]?.phase == PHASE.ACTION_END &&
                 (isUseSkill || isChangeHero) && !this.isSwitchAtking) {
                 setTimeout(async () => {
-                    await this._wait(() => !this.taskQueue.isExecuting && this.taskQueue.isTaskEmpty(), { delay: 10 });
+                    await this._wait(() => !this.taskQueue.isExecuting && this.taskQueue.isTaskEmpty(), { delay: 0 });
                     this._sendTip('对方继续回合');
                 }, 2000);
             }
@@ -797,7 +795,7 @@ export default class GeniusInvokationClient {
                     flag: 'getServerInfo-phase-start-reset-' + this.playerIdx,
                 });
                 if (this.playerIdx == execIdx) {
-                    await this._wait(() => this.isReseted, { delay: 10 });
+                    await this._wait(() => this.isReseted, { delay: 0 });
                     this._doSlot('phase-start', { pidx: startIdx, hidxs: allHidxs(players[startIdx].heros, { isAll: true }) });
                     await this._execTask(true);
                     this._doStatus(startIdx, [1, 4], 'phase-start', { intvl: [100, 500, 1000, 100] });
@@ -822,6 +820,7 @@ export default class GeniusInvokationClient {
                     for (const [exsite, pidx] of this.exchangeSite) {
                         this.players[pidx].site.push(exsite);
                     }
+                    await this._wait(() => this.actionInfo == '', { delay: 500, freq: 100, isImmediate: false })
                     this.socket.emit('sendToServer', {
                         roundPhase: PHASE.ACTION,
                         sites: isCdt(this.exchangeSite.length > 0, this.players.map(p => p.site)),
@@ -850,7 +849,6 @@ export default class GeniusInvokationClient {
                 await this._execTask(true);
                 this._doSite(startIdx ^ 1, 'phase-end');
                 await this._execTask(true);
-                await this._delay(1100);
                 this._wait(() => !this.taskQueue.isExecuting, { delay: 1100 });
                 if (this.taskQueue.hasStatusAtk() || this.isSwitchAtking) {
                     this.isSwitchAtking = true;
@@ -872,6 +870,7 @@ export default class GeniusInvokationClient {
                             a[hi].outStatus = nost;
                         });
                     });
+                    await this._wait(() => this.actionInfo == '', { delay: 500, freq: 100, isImmediate: false })
                     this.socket.emit('sendToServer', {
                         roundPhase: PHASE.PHASE_END,
                         cpidx: this.playerIdx,
@@ -1338,7 +1337,7 @@ export default class GeniusInvokationClient {
             for (const curSkill of this.player.heros[this.player.hidx].skills) {
                 if (curSkill.type == 4) continue;
                 if (!curSkill) mds.push([0, 0]);
-                else mds.push(curSkill.cost.toString().padStart(2, '0').split('').map(Number));
+                else mds.push(curSkill.cost.slice(0, 2).map(v => v.val));
             }
             if (skillres?.atkAfter || skillres?.atkBefore) {
                 const lhidx = allHidxs(this.opponent.heros);
@@ -2031,7 +2030,7 @@ export default class GeniusInvokationClient {
     lookonTo(idx: number) {
         if (this.isLookon == -1) return;
         this.playerIdx = idx;
-        this.getPlayer({ isFlag: true });
+        this.roomInfoUpdate({ isFlag: true });
         this.handCards = [...this.players[idx].handCards];
     }
     /**
@@ -2059,8 +2058,7 @@ export default class GeniusInvokationClient {
         setTimeout(() => {
             this.actionInfo = '';
             this.isShowDmg = false;
-            this.currSkill = { ...NULL_SKILL };
-            this.elTips = [['', 0, 0], ['', 0, 0], ['', 0, 0], ['', 0, 0], ['', 0, 0], ['', 0, 0]];
+            this.elTips.forEach((_, i, a) => a[i] = ['', 0, 0]);
             this.cancel();
         }, time);
     }
@@ -2138,13 +2136,13 @@ export default class GeniusInvokationClient {
                 const stsres = heroStatus(sts.id).handle(sts, { heros: nheros, hidx: chidx });
                 if (stsres?.isUpdateAttachEl && nheros) updateAttachEl(nheros, chidx, sts.group);
             }
-            if (ohidx > -1 || (sts.useCnt == 0 || sts.roundCnt == 0) && !sts.type.some(t => [9, 15].includes(t))) {
+            if (ohidx > -1 || (sts.useCnt == 0 || sts.roundCnt == 0) && !sts.type.some(t => [1, 9, 15].includes(t))) {
                 if (sts.type.includes(8) && nheros) updateAttachEl(nheros, chidx, sts.group);
             }
         });
         return {
             nstatus: oriStatus.sort((a, b) => Math.sign(a.summonId) - Math.sign(b.summonId))
-                .filter(sts => (sts.useCnt != 0 && sts.roundCnt != 0) || sts.type.some(t => [9, 15].includes(t))),
+                .filter(sts => (sts.useCnt != 0 && sts.roundCnt != 0) || sts.type.some(t => [1, 9, 15].includes(t))),
             nheros,
         };
     }
@@ -3370,9 +3368,8 @@ export default class GeniusInvokationClient {
     /**
      * 进行额外的攻击
      */
-    _doAddAtk(stsTask: StatusTask, isDieChangeBack = false) {
+    _doAddAtk(stsTask: StatusTask) {
         return new Promise<boolean>(async resolve => {
-            // if (!isDieChangeBack) await this._delay(2300);
             if (!this._hasNotDieChange() || !this.taskQueue.isExecuting) {
                 resolve(false);
                 return;
@@ -3441,8 +3438,8 @@ export default class GeniusInvokationClient {
                 for (let i = 0; i < 3; ++i) {
                     if (heals[i] < 0) continue;
                     const hlidx = i + (pidx ^ 1) * 3;
-                    if (willHeals[hlidx] < 0) willHeals[hlidx] = heals[i];
-                    else willHeals[hlidx] += heals[i];
+                    if (willHeals[hlidx] < 0) willHeals[hlidx] = 0;
+                    willHeals[hlidx] = Math.min(aheros1[hlidx].maxhp - aheros1[hlidx].hp, willHeals[hlidx] + heals[i]);
                 }
             }
             this._doHeal(willHeals, aheros1, { pidx });
@@ -3578,9 +3575,10 @@ export default class GeniusInvokationClient {
         else triggers.push(...otriggers);
         const { pidx = this.playerIdx, summons = this.players[pidx].summon, heal = [0, 0, 0], hcard, ehidx = -1,
             heros = this.players[pidx].heros, eheros = this.players[pidx ^ 1].heros, taskMark,
-            isChargedAtk = false, isFallAtk = this.isFall, isExec = true, card, intvl = [0, 0, 0, 0],
+            isChargedAtk = false, isFallAtk = this.isFall, isExec = true, intvl = [0, 0, 0, 0], card,
             dieChangeBack = false, isSkill = -1, usedDice = 0 } = options;
         let { changeHeroDiceCnt = 0, minusDiceCard = 0, hidxs = [this.players[pidx].hidx], minusDiceSkill, isEndAtk: oisEndAtk = true } = options;
+        const slotIds: [number, Card][][] = [[], [], []];
         let willHeals: number[] = [-1, -1, -1];
         let addDmg = 0;
         let addDmgSummon = 0;
@@ -3628,59 +3626,21 @@ export default class GeniusInvokationClient {
                         if (isExec) {
                             if (slotres?.execmds) {
                                 cmds.push(slotres.execmds);
-                                const useSkillIdx = slotres.execmds.findIndex(v => v.cmd == 'useSkill');
-                                if (useSkillIdx > -1) slotres.execmds.splice(useSkillIdx, 1);
+                                slotIds[hidx].push([hidx, slot]);
                             }
-                            if (taskMark) {
-                            }
-                            if (!taskMark) {
-                                const args = Array.from(arguments);
-                                args[1] = clone(args[1]) ?? {};
-                                args[1].pidx = pidx;
-                                args[1].taskMark = [hidx, slot.subType[0]];
-                                this.taskQueue.addTask('slot', args);
-                            } else {
-                                const slotHandle = [
-                                    () => { },
-                                    (isEndAtk = false) => {
-                                        const slotexecres = slotres?.exec?.();
-                                        if (slotexecres?.inStatus) inStatus.push(...slotexecres.inStatus);
-                                        if (slotexecres?.outStatus) outStatus.push(...slotexecres.outStatus);
-                                        if (slotexecres?.inStatusOppo) {
-                                            const ehidxs = slotexecres?.hidxs ?? [eheros.findIndex(h => h.isFront)];
-                                            for (const ehidx of ehidxs) {
-                                                eheros[ehidx].inStatus = this._updateStatus(slotexecres.inStatusOppo, eheros[ehidx].inStatus).nstatus;
-                                            }
-                                        }
-                                        if (slotexecres?.outStatusOppo) {
-                                            eheros[this.players[pidx ^ 1].hidx].outStatus = this._updateStatus(slotexecres.outStatusOppo, eheros[this.players[pidx ^ 1].hidx].outStatus).nstatus;
-                                        }
-                                        let nheros: Hero[] = this.players[pidx].heros;
-                                        const { ndices, heros: nh, inStatus: nist, willHeals } = this._doCmds(slotres.execmds, { pidx, heros: nheros });
-                                        if (nh) nheros = nh;
-                                        if (nist) nheros[hidx].inStatus = nist;
-                                        if (slotexecres?.inStatus) {
-                                            nheros[hidx].inStatus = this._updateStatus(slotexecres?.inStatus, nheros[hidx].inStatus).nstatus;
-                                        }
-                                        if (slotexecres?.outStatus) {
-                                            nheros[hidx].outStatus = this._updateStatus(slotexecres?.outStatus, nheros[hidx].outStatus).nstatus;
-                                        }
-                                        this._doHeal(willHeals, nheros, { pidx });
-                                        this.socket.emit('sendToServer', {
-                                            cpidx: pidx,
-                                            slotres: { cmds: slotres.execmds, slotIds: [hidx, slot] },
-                                            heros: nheros,
-                                            eheros: this.players[pidx ^ 1].heros,
-                                            dices: ndices,
-                                            hidx,
-                                            isEndAtk: isEndAtk && oisEndAtk && !dieChangeBack,
-                                            flag: `_doSlot-${slot.name}-${pidx}`,
-                                        });
-                                    },
-                                    () => { },
-                                    () => { },
-                                ];
-                                task = [slotHandle, intvl];
+                            if (!slotres?.execmds?.length || taskMark) {
+                                const slotexecres = slotres?.exec?.();
+                                if (slotexecres?.inStatus) inStatus.push(...slotexecres.inStatus);
+                                if (slotexecres?.outStatus) outStatus.push(...slotexecres.outStatus);
+                                if (slotexecres?.inStatusOppo) {
+                                    const ehidxs = slotexecres?.hidxs ?? [eheros.findIndex(h => h.isFront)];
+                                    for (const ehidx of ehidxs) {
+                                        eheros[ehidx].inStatus = this._updateStatus(slotexecres.inStatusOppo, eheros[ehidx].inStatus).nstatus;
+                                    }
+                                }
+                                if (slotexecres?.outStatusOppo) {
+                                    eheros[this.players[pidx ^ 1].hidx].outStatus = this._updateStatus(slotexecres.outStatusOppo, eheros[this.players[pidx ^ 1].hidx].outStatus).nstatus;
+                                }
                             }
                         }
                         changeHeroDiceCnt -= slotres?.minusDiceHero ?? 0;
@@ -3716,6 +3676,54 @@ export default class GeniusInvokationClient {
                     }
                 }
             });
+            for (let i = 0; i < cmds.length; ++i) {
+                if (cmds[i].length == 0) continue;
+                if (isExec) {
+                    if (!taskMark) {
+                        const args = Array.from(arguments);
+                        args[1] = clone(args[1]) ?? {};
+                        args[1].pidx = pidx;
+                        args[1].taskMark = [hidx, slotIds[hidx][i][1].subType[0]];
+                        this.taskQueue.addTask('slot', args);
+                    } else {
+                        const slotHandle = [
+                            () => { },
+                            (isEndAtk = false) => {
+                                let nheros: Hero[] | undefined;
+                                let dices: { val: number[], isDone: boolean } | undefined;
+                                const isOnlyEffect = cmds[i][0].cmd == '';
+                                if (!isOnlyEffect) {
+                                    nheros = this.players[pidx].heros;
+                                    const { ndices: nd, heros: nh, inStatus: nist, willHeals } = this._doCmds(cmds[i], { pidx, heros: nheros });
+                                    dices = nd;
+                                    if (nh) nheros = nh;
+                                    if (nist) nheros[hidx].inStatus = nist;
+                                    if (inStatus) {
+                                        nheros[hidx].inStatus = this._updateStatus(inStatus, nheros[hidx].inStatus).nstatus;
+                                    }
+                                    if (outStatus) {
+                                        nheros[hidx].outStatus = this._updateStatus(outStatus, nheros[hidx].outStatus).nstatus;
+                                    }
+                                    this._doHeal(willHeals, nheros, { pidx });
+                                }
+                                this.socket.emit('sendToServer', {
+                                    cpidx: pidx,
+                                    slotres: { cmds: cmds[i], slotIds: slotIds[hidx][i] },
+                                    heros: nheros,
+                                    eheros: this.players[pidx ^ 1].heros,
+                                    dices,
+                                    hidx,
+                                    isEndAtk: isEndAtk && oisEndAtk && !dieChangeBack,
+                                    flag: `_doSlot-${slotIds[hidx][i][1].name}-${pidx}`,
+                                });
+                            },
+                            () => { },
+                            () => { },
+                        ];
+                        task = [slotHandle, intvl];
+                    }
+                }
+            }
         }
         return {
             willHeals, pidx, changeHeroDiceCnt, addDmg, addDmgSummon, inStatus: isCdt(inStatus.length > 0, inStatus),
@@ -3935,8 +3943,8 @@ export default class GeniusInvokationClient {
             });
         }
         for (const curSkill of curHero.skills) {
-            if (curSkill.type == 4) continue;
-            mds.push(curSkill.cost.toString().padStart(2, '0').split('').map(Number));
+            if (curSkill.type == 4) break;
+            mds.push(curSkill.cost.slice(0, 2).map(v => v.val));
         }
         [curHero.weaponSlot, curHero.talentSlot, curHero.artifactSlot].forEach(slot => {
             if (slot != null) {
@@ -4116,7 +4124,7 @@ export default class GeniusInvokationClient {
         return new Promise<void>(async resolve => {
             let isDieChangeBack = false;
             while (this._hasNotDieChange() && !this.taskQueue.isTaskEmpty() && this.taskQueue.isExecuting) {
-                await this._wait(() => this.actionInfo == '', { delay: 10, freq: 100, isImmediate: false });
+                await this._wait(() => this.actionInfo == '', { delay: 0, freq: 100, isImmediate: false });
                 const [taskType, args] = this.taskQueue.getTask();
                 if (taskType == undefined || args == undefined) break;
                 let task: [(() => void)[], number[]] | undefined;
@@ -4126,7 +4134,7 @@ export default class GeniusInvokationClient {
                 else if (taskType.startsWith('summon')) task = this._doSummon(...(args as [any, any, any])).task;
                 else if (taskType.startsWith('slot')) task = this._doSlot(...(args as [any, any])).task;
                 if (taskType.startsWith('addAtk')) {
-                    const isExeced = await this._doAddAtk(args as StatusTask, isDieChangeBack);
+                    const isExeced = await this._doAddAtk(args as StatusTask);
                     if (!isExeced) {
                         this.taskQueue.addStatusId([args as StatusTask], true);
                         break;
@@ -4135,7 +4143,7 @@ export default class GeniusInvokationClient {
                 if (isDieChangeBack) isDieChangeBack = false;
                 if (isWait) {
                     if (!this._hasNotDieChange()) isDieChangeBack = true;
-                    await this._wait(() => this._hasNotDieChange(), { delay: 10, recnt: 100000 });
+                    await this._wait(() => this._hasNotDieChange(), { delay: 0, recnt: 100000 });
                 }
             }
             this.taskQueue.setIsExecuting(false);
@@ -4156,6 +4164,7 @@ export default class GeniusInvokationClient {
      * @param time 延迟时间
      */
     _delay(time = 0) {
+        if (time == 0) return;
         return new Promise<void>(resolve => {
             setTimeout(resolve, time);
         });
@@ -4179,7 +4188,7 @@ export default class GeniusInvokationClient {
                 await this._delay(delay);
                 break;
             }
-            if (loop > recnt) throw new Error('too many loops');
+            if (loop > recnt) throw new Error('too many loops: ' + cdt.toString());
         }
     }
 }
