@@ -741,13 +741,13 @@ const siteTotal: SiteObj = {
     4047: (cardId: number) => new GISite(4047, cardId, 0, 0, 2, (site: GISite, options: SiteOption = {}) => {
         const { hidxs = [], getdmg = [], heal = [], trigger = '' } = options;
         const triggers: Trigger[] = [];
-        if (trigger == 'getdmg' && getdmg[hidxs[0]] > 0) triggers.push('getdmg');
-        if (trigger == 'heal' && heal[hidxs[0]] > 0) triggers.push('heal');
+        if (trigger == 'getdmg' && getdmg[hidxs[0]] > 0 && site.cnt < 4) triggers.push('getdmg');
+        if (trigger == 'heal' && heal[hidxs[0]] > 0 && site.cnt < 4) triggers.push('heal');
         if (site.cnt >= 4) triggers.push('phase-start');
+        const isAdd = triggers.some(tr => ['getdmg', 'heal'].includes(tr));
         return {
             trigger: triggers,
-            isNotAddTask: trigger != 'phase-start',
-            siteCnt: isCdt(site.cnt < 4, 1),
+            siteCnt: isCdt(isAdd, 1),
             exec: () => {
                 if (trigger == 'phase-start' && site.cnt >= 4) {
                     site.cnt -= 4;
@@ -759,18 +759,18 @@ const siteTotal: SiteObj = {
         }
     }),
     // 流明石触媒
-    4048: (cardId: number) => new GISite(4048, cardId, 3, 4, 2, (site: GISite, options: SiteOption = {}) => {
-        const { trigger = '' } = options;
+    4048: (cardId: number) => new GISite(4048, cardId, 3, 3, 2, (site: GISite) => {
         const triggers: Trigger[] = [];
-        if (site.perCnt == 1) triggers.push('action-start');
-        if (site.perCnt > 1) triggers.push('card');
+        if (site.perCnt > 0) triggers.push('card');
         return {
             trigger: triggers,
             exec: () => {
                 --site.perCnt;
-                if (trigger == 'card') return { isDestroy: false }
-                --site.cnt;
-                return { cmds: [{ cmd: 'getCard', cnt: 1 }, { cmd: 'getDice', cnt: 1, element: 0 }], isDestroy: site.cnt == 0 }
+                if (site.perCnt == 0) --site.cnt;
+                return {
+                    cmds: isCdt(site.perCnt == 0, [{ cmd: 'getCard', cnt: 1 }, { cmd: 'getDice', cnt: 1, element: 0 }]),
+                    isDestroy: site.cnt == 0,
+                }
             }
         }
     }),

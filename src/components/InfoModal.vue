@@ -68,7 +68,7 @@
         </div>
         <div
           class="info-hero-skill"
-          v-for="(skill, sidx) in skills.filter(
+          v-for="(skill, sidx) in (skills as Skill[]).filter(
             (_, i) => type == 4 || i == type
           )"
           :key="sidx"
@@ -103,7 +103,7 @@
                 <div>
                   <div
                     class="skill-cost"
-                    v-for="(cost, cidx) in skill.cost.filter((c) => c.val > 0)"
+                    v-for="(cost, cidx) in (skill as Skill).cost.filter((c) => c.val > 0)"
                     :key="cidx"
                     :style="{
                       color:
@@ -613,6 +613,7 @@ import {
   CARD_SUBTYPE_URL,
   WEAPON_TYPE_URL,
   ELEMENT_URL,
+  HERO_LOCAL_URL,
 } from "@/data/constant";
 
 const props = defineProps(["info", "isMobile"]);
@@ -639,8 +640,10 @@ const wrapedIcon = (idx: number, isDice = false) => {
   if ([-1, 8, 10].includes(idx)) return "";
   const url =
     idx < 8
-      ? ELEMENT_URL[idx]
-      : getPngIcon(ELEMENT_ICON[idx] + `${isDice ? "-dice-bg" : ""}`);
+      ? isDice
+        ? getPngIcon(ELEMENT_ICON[idx] + "-dice-bg")
+        : ELEMENT_URL[idx]
+      : getPngIcon(ELEMENT_ICON[idx]);
   return `<img style="width:18px;transform:translateY(20%);" src="${url}"/>`;
 };
 const wrapDesc = (desc: string, obj?: Skill | Status | Summonee): string => {
@@ -651,10 +654,20 @@ const wrapDesc = (desc: string, obj?: Skill | Status | Summonee): string => {
       let icon = "";
       const sbtpIdx = CARD_SUBTYPE.indexOf(word);
       const wpIdx = WEAPON_TYPE.indexOf(word);
-      if (sbtpIdx > -1 && !!CARD_SUBTYPE_URL[sbtpIdx])
-        icon = `<img style="width:18px;transform:translateY(20%);" src="${CARD_SUBTYPE_URL[sbtpIdx]}"/>`;
-      else if (wpIdx > -1)
-        icon = `<img style="width:18px;transform:translateY(20%);" src="${WEAPON_TYPE_URL[wpIdx]}"/>`;
+      const lcIdx = HERO_LOCAL.indexOf(word);
+      const iconUrl =
+        sbtpIdx > -1 && !!CARD_SUBTYPE_URL[sbtpIdx]
+          ? CARD_SUBTYPE_URL[sbtpIdx]
+          : wpIdx > -1
+          ? WEAPON_TYPE_URL[wpIdx]
+          : lcIdx > -1 && !!HERO_LOCAL_URL[lcIdx]
+          ? HERO_LOCAL_URL[lcIdx]
+          : "";
+      if (iconUrl != "") {
+        icon = `<img style="width:18px;transform:translateY(20%);${
+          lcIdx > -1 ? `filter:url(${getSvgIcon("filter")}#status-color-0)` : ""
+        }" src="${iconUrl}"/>`;
+      }
       return `<span style="color:white;">${prefix}${icon}${word}${suffix}</span>`;
     })
     .replace(
@@ -668,10 +681,7 @@ const wrapDesc = (desc: string, obj?: Skill | Status | Summonee): string => {
           v != "" && ((vi < 11 && ctt.includes(v)) || (vi > 11 && ctt == v))
       );
       const c = el > 10 || el == -1 ? "white" : ELEMENT_COLOR[el];
-      return `${wrapedIcon(
-        el,
-        el < 8 && ctt.includes("骰")
-      )}<span style="color:${c};${
+      return `${wrapedIcon(el, ctt.includes("骰"))}<span style="color:${c};${
         isUnderline == "" ? `border-bottom:2px solid ${c};cursor:pointer;` : ""
       }margin-right:2px;${
         [-1, 8, 10].includes(el) ? "margin-left:2px;" : ""
@@ -895,7 +905,7 @@ const cancel = () => {
   max-height: 50vh;
   border: 2px solid black;
   border-radius: 10px;
-  background-color: #3e4d69f5;
+  background-color: #3e4d69e7;
   padding: 10px 5px;
   margin-right: 2px;
   overflow: auto;
@@ -1003,7 +1013,7 @@ const cancel = () => {
   cursor: pointer;
   border-radius: 4px;
   color: #bdd5ff;
-  background: #272f3b;
+  background: #272f3be7;
 }
 
 .equipment-title-left,

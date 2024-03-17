@@ -136,14 +136,14 @@
             hero?.isFront &&
             ((hidx > 2 &&
               player.status == 1 &&
-              player.summon.every((s) => !s.isSelected)) ||
+              player.summon.every((s:Summonee) => !s.isSelected)) ||
               (hidx < 3 &&
                 opponent.status == 1 &&
-                opponent.summon.every((s) => !s.isSelected))) &&
+                opponent.summon.every((s:Summonee) => !s.isSelected))) &&
             isShowDmg &&
             phase < 7 &&
             heros.every(
-              (h) =>
+              (h:Hero) =>
                 h.inStatus.every((s) => !s.isSelected) &&
                 h.outStatus.every((s) => !s.isSelected)
             )
@@ -170,7 +170,7 @@
             'hero-shield7':
               hero.hp > 0 &&
               [...hero.inStatus, ...hero.outStatus].some(
-                (sts) => sts.type.some((t) => t == 7) && sts.useCnt > 0
+                (sts) => sts.type.some((t:number) => t == 7) && sts.useCnt > 0
               ),
           }"
         >
@@ -184,23 +184,23 @@
         </div>
         <div
           class="hero-freeze"
-          v-if="hero.hp > 0 && hero.inStatus.some((ist) => ist.id == 2004)"
+          v-if="hero.hp > 0 && hero.inStatus.some((ist:Status) => ist.id == 2004)"
         >
           <img :src="getPngIcon('freeze-bg')" />
         </div>
         <div
           class="hero-freeze"
           style="background-color: #716446de"
-          v-if="hero.hp > 0 && hero.inStatus.some((ist) => ist.id == 2087)"
+          v-if="hero.hp > 0 && hero.inStatus.some((ist:Status) => ist.id == 2087)"
         ></div>
         <div
           class="hero-shield2"
           v-if="
             hero.hp > 0 &&
             (hero.inStatus.some(
-              (ist) => ist.type.some((t) => t == 2) && ist.useCnt > 0
+              (ist:Status) => ist.type.some((t) => t == 2) && ist.useCnt > 0
             ) ||
-              hero.outStatus.some((ost) =>
+              hero.outStatus.some((ost:Status) =>
                 ost.type.some(
                   (t) =>
                     t == 2 &&
@@ -336,7 +336,7 @@
               'mobile-status': isMobile,
               'status-select': ists.isSelected,
             }"
-            v-for="ists in hero.inStatus.filter((sts, stsi) =>
+            v-for="ists in (hero.inStatus as Status[]).filter((sts, stsi) =>
               hero.inStatus.length < 5 ? !sts.type.includes(0) : stsi < 4
             )"
             :key="ists.id"
@@ -402,7 +402,7 @@
               'mobile-status': isMobile,
               'status-select': osts.isSelected,
             }"
-            v-for="osts in hero.outStatus.filter((sts, stsi) =>
+            v-for="osts in (hero.outStatus as Status[]).filter((sts, stsi) =>
               hero.outStatus.length < 5 ? !sts.type.includes(0) : stsi < 3
             )"
             :key="osts.id"
@@ -700,7 +700,7 @@
         还可重投{{ rollCnt }}轮
       </div>
       <button @click="reroll(dices)" :class="{ 'not-show': !showRerollBtn }">
-        {{ dices.some((d) => d.isSelected) ? "重掷" : "确认" }}
+        {{ dices.some((d:DiceVO) => d.isSelected) ? "重掷" : "确认" }}
       </button>
     </div>
 
@@ -753,7 +753,7 @@
         </div>
       </div>
       <button @click="changeCard" v-if="showChangeCardBtn">
-        {{ initCards.some((c) => c.isSelected) ? "换牌" : "确认手牌" }}
+        {{ initCards.some((c:any) => c.isSelected) ? "换牌" : "确认手牌" }}
       </button>
     </div>
   </div>

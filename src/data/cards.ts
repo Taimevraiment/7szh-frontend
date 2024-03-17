@@ -49,7 +49,7 @@ class GICard implements Card {
         else if (subType?.includes(9)) {
             const el = Math.ceil((id - 580) / 2);
             this.description += `；(牌组中包含至少2个‹${el}${ELEMENT[el]}›角色，才能加入牌组)`;
-        } else if (subType?.includes(6)) this.description += `；(牌组中包含${herosTotal(userType).name}，才能加入牌组)`;
+        } else if (subType?.includes(6)) this.description += `；(牌组中包含【${herosTotal(userType).name}】，才能加入牌组)`;
         this.src = src ?? '';
         this.cost = cost ?? 0;
         this.costType = costType ?? 8;
@@ -710,7 +710,7 @@ const allCards: CardObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/11/07/258999284/16b4765f951281f2547ba40eeb994271_8658397109914249143.png',
         3, 0, 0, [1], 0, 1, (card: Card, cardOpt: CardOption = {}) => {
             const { trigger = '', heal = [] } = cardOpt;
-            const allHeal = heal.reduce((a, b) => a + b);
+            const allHeal = heal.reduce((a, b) => a + b, 0);
             return {
                 trigger: ['dmg', 'heal'],
                 addDmgCdt: Math.floor(card.useCnt),
@@ -1242,30 +1242,36 @@ const allCards: CardObj = {
 
     512: new GICard(512, '快快缝补术', '选择一个我方｢召唤物｣，使其[可用次数]+1。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/79683714/1ede638fa4bb08aef24d03edf5c5d1d9_6232288201967488424.png',
-        1, 8, 2, [], 0, 0, (_card: Card, cardOpt: CardOption = {}) => {
-            const { summons = [] } = cardOpt;
-            const selectSmn = summons.find(smn => smn.isSelected);
-            if (selectSmn) ++selectSmn.useCnt;
-            return {}
-        }, { canSelectSummon: 1 }),
+        1, 8, 2, [], 0, 0, (_card: Card, cardOpt: CardOption = {}) => ({
+            exec: () => {
+                const { summons = [] } = cardOpt;
+                const selectSmn = summons.find(smn => smn.isSelected);
+                if (selectSmn) ++selectSmn.useCnt;
+                return {}
+            }
+        }), { canSelectSummon: 1 }),
 
     513: new GICard(513, '送你一程', '选择一个敌方｢召唤物｣，使其[可用次数]-2。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/75833613/c0c1b91fe602e0d29159e8ae5effe537_7465992504913868183.png',
-        2, 0, 2, [], 0, 0, (_card: Card, cardOpt: CardOption = {}) => {
-            const { esummons = [] } = cardOpt;
-            const selectSmn = esummons.find(smn => smn.isSelected);
-            if (selectSmn) selectSmn.useCnt = Math.max(0, selectSmn.useCnt - 2);
-            return {}
-        }, { canSelectSummon: 0 }),
+        2, 0, 2, [], 0, 0, (_card: Card, cardOpt: CardOption = {}) => ({
+            exec: () => {
+                const { esummons = [] } = cardOpt;
+                const selectSmn = esummons.find(smn => smn.isSelected);
+                if (selectSmn) selectSmn.useCnt = Math.max(0, selectSmn.useCnt - 2);
+                return {}
+            }
+        }), { canSelectSummon: 0 }),
 
     514: new GICard(514, '护法之誓', '消灭所有｢召唤物｣。(不分敌我！)',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/75833613/9df79dcb5f6faeed4d1f1b286dcaba76_1426047687046512159.png',
-        4, 8, 2, [], 0, 0, (_card: Card, cardOpt: CardOption = {}) => {
-            const { summons = [], esummons = [] } = cardOpt;
-            summons.forEach(smn => smn.useCnt = 0);
-            esummons.forEach(smn => smn.useCnt = 0);
-            return {}
-        }),
+        4, 8, 2, [], 0, 0, (_card: Card, cardOpt: CardOption = {}) => ({
+            exec: () => {
+                const { summons = [], esummons = [] } = cardOpt;
+                summons.forEach(smn => (smn.useCnt = 0, smn.isDestroy = 0));
+                esummons.forEach(smn => (smn.useCnt = 0, smn.isDestroy = 0));
+                return {}
+            }
+        })),
 
     515: new GICard(515, '下落斩', '[战斗行动]：切换到目标角色，然后该角色进行｢普通攻击｣。',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/20/1694811/a3aa3a8c13499a0c999fc765c4a0623d_2838069371786460200.png',
@@ -1384,13 +1390,15 @@ const allCards: CardObj = {
     528: new GICard(528, '可控性去危害化式定向爆破', '【对方支援区和召唤物区的卡牌数量总和至少为4时，才能打出：】双方所有召唤物的[可用次数]-1。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/03/06/258999284/2e859c0e0c52bfe566e2200bb70dae89_789491720602984153.png',
         1, 8, 2, [], 0, 0, (_card: Card, cardOpt: CardOption = {}) => {
-            const { esiteCnt = 0, esummonCnt = 0, summons = [], esummons = [] } = cardOpt;
-            const isValid = esiteCnt + esummonCnt >= 4;
-            if (isValid) {
-                summons.forEach(smn => smn.useCnt = Math.max(0, smn.useCnt - 1));
-                esummons.forEach(smn => smn.useCnt = Math.max(0, smn.useCnt - 1));
+            const { esite = [], summons = [], esummons = [] } = cardOpt;
+            return {
+                isValid: esite.length + esummons.length >= 4,
+                exec: () => {
+                    summons.forEach(smn => smn.useCnt = Math.max(0, smn.useCnt - 1));
+                    esummons.forEach(smn => smn.useCnt = Math.max(0, smn.useCnt - 1));
+                    return {}
+                }
             }
-            return { isValid }
         }),
 
     561: new GICard(561, '自由的新风', '【本回合中，轮到我方行动期间有对方角色被击倒时：】本次行动结束后，我方可以再连续行动一次。；【[可用次数]：】1',
@@ -1680,7 +1688,7 @@ const allCards: CardObj = {
         3, 1, 0, [6, 7], 1102, 1, talentSkill(1), { expl: talentExplain(1102, 1) }),
 
     704: new GICard(704, '沉没的预言', '[战斗行动]：我方出战角色为【莫娜】时，装备此牌。；【莫娜】装备此牌后，立刻使用一次【命定星轨】。；装备有此牌的【莫娜】出战期间，我方引发的[水元素相关反应]伤害额外+2。',
-        'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/75720734/b3047b5bb33042d52efd49fe6966a25b_3574354225091217182.png',
+        'https://patchwiki.biligame.com/images/ys/d/de/1o1lt07ey988flsh538t7ywvnpzvzjk.png',
         3, 1, 0, [6, 7], 1103, 1, (_card: Card, cardOpt: CardOption = {}) => talentHandle(cardOpt, 2, () => {
             const { heros = [], hidxs = [] } = cardOpt;
             return [() => ({}), { addDmgCdt: heros[hidxs[0]]?.isFront ? 2 : 0 }]
@@ -1714,7 +1722,7 @@ const allCards: CardObj = {
         4, 6, 0, [6, 7], 1501, 1, talentSkill(1), { expl: talentExplain(1501, 1) }),
 
     711: new GICard(711, '飞叶迴斜', '[战斗行动]：我方出战角色为【柯莱】时，装备此牌。；【柯莱】装备此牌后，立刻使用一次【拂花偈叶】。；装备有此牌的【柯莱】使用了【拂花偈叶】的回合中，我方角色的技能引发[草元素相关反应]后：造成1点[草元素伤害]。(每回合1次)',
-        'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/75720734/498477350c3824e043ea0a13c8dc19a3_4859048513140644909.png',
+        'https://patchwiki.biligame.com/images/ys/0/01/6f79lc4y34av8nsfwxiwtbir2g9b93e.png',
         4, 7, 0, [6, 7], 1601, 1, talentSkill(1), { expl: talentExplain(1601, 1) }),
 
     712: new GICard(712, '猫爪冰摇', '[战斗行动]：我方出战角色为【迪奥娜】时，装备此牌。；【迪奥娜】装备此牌后，立刻使用一次【猫爪冻冻】。；装备有此牌的【迪奥娜】生成的【猫爪护盾】，所提供的[护盾]值+1。',
@@ -1788,7 +1796,7 @@ const allCards: CardObj = {
         }), { pct: 1, expl: talentExplain(1003, 1) }),
 
     718: new GICard(718, '吐纳真定', '[战斗行动]：我方出战角色为【重云】时，装备此牌。；【重云】装备此牌后，立刻使用一次【重华叠霜】。；装备有此牌的【重云】生成的【重华叠霜领域】获得以下效果：；使我方单手剑、双手剑或长柄武器角色的｢普通攻击｣伤害+1。',
-        'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/75720734/06f283da39baa2e65703e7e8e9003224_4719122239550886598.png',
+        'https://patchwiki.biligame.com/images/ys/e/e6/qfsltpvntkjxioew81iehfhy5xvl7v6.png',
         3, 4, 0, [6, 7], 1004, 1, talentSkill(1), { expl: talentExplain(1004, 1) }),
 
     719: new GICard(719, '长野原龙势流星群', '[战斗行动]：我方出战角色为【宵宫】时，装备此牌。；【宵宫】装备此牌后，立刻使用一次【焰硝庭火舞】。；装备有此牌的【宵宫】生成的【庭火焰硝】初始[可用次数]+1，触发【庭火焰硝】后：额外造成1点[火元素伤害]。',
@@ -1808,7 +1816,7 @@ const allCards: CardObj = {
         3, 1, 0, [6, 7], 1722, 1, talentSkill(1), { expl: talentExplain(1722, 1) }),
 
     723: new GICard(723, '悉数讨回', '[战斗行动]：我方出战角色为【愚人众·火之债务处理人】时，装备此牌。；【愚人众·火之债务处理人】装备此牌后，立刻使用一次【伺机而动】。；装备有此牌的【愚人众·火之债务处理人】生成的【潜行】获得以下效果：；初始持续回合+1，并且使所附属角色造成的[物理伤害]变为[火元素伤害]。',
-        'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/75720734/76fb98056cd2596bcf2ccbc662f95e96_4523278099418751694.png',
+        'https://patchwiki.biligame.com/images/ys/4/4b/p2lmo1107n5nwc2pulpjkurlixa2o4h.png',
         3, 2, 0, [6, 7], 1741, 1, talentSkill(1), { expl: talentExplain(1741, 1) }),
 
     724: new GICard(724, '机巧神通', '[战斗行动]：我方出战角色为【魔偶剑鬼】时，装备此牌。；【魔偶剑鬼】装备此牌后，立刻使用一次【孤风刀势】。；装备有此牌的【魔偶剑鬼】施放【孤风刀势】后，我方切换到后一个角色；施放【霜驰影突】后，我方切换到前一个角色。',
@@ -1816,12 +1824,12 @@ const allCards: CardObj = {
         3, 5, 0, [6, 7], 1781, 1, talentSkill(1), { expl: [...talentExplain(1781, 1), newSummonee(3020)] }),
 
     725: new GICard(725, '重铸：岩盔', '[战斗行动]：我方出战角色为【丘丘岩盔王】时，装备此牌。；【丘丘岩盔王】装备此牌后，立刻使用一次【Upa Shato】。；装备有此牌的【丘丘岩盔王】击倒地方角色后：【丘丘岩盔王】重新附属【岩盔】和【坚岩之力】。',
-        'https://uploadstatic.mihoyo.com/ys-obc/2022/12/04/10827219/799147249b3f9da7daf71a29faa9718d_4932357483312981105.png',
+        'https://patchwiki.biligame.com/images/ys/9/9f/ijpaagvk7o9jh1pzb933vl9l2l4islk.png',
         4, 6, 0, [6, 7], 1801, 1, (_card: Card, cardOpt: CardOption = {}) => talentHandle(cardOpt, 2, () =>
             [() => ({}), { execmds: [{ cmd: 'getInStatus', status: [heroStatus(2045), heroStatus(2046)] }] }], 'kill'), { expl: talentExplain(1801, 2), energy: 2 }),
 
     726: new GICard(726, '孢子增殖', '[战斗行动]：我方出战角色为【翠翎恐蕈】时，装备此牌。；【翠翎恐蕈】装备此牌后，立刻使用一次【不稳定孢子云】。；装备有此牌的【翠翎恐蕈】可累积的｢活化激能｣层数+1。',
-        'https://uploadstatic.mihoyo.com/ys-obc/2022/12/04/10827219/e8a6f51c84083731f9377a437db46f73_7481799731263851778.png',
+        'https://patchwiki.biligame.com/images/ys/4/41/bj27pgk1uzd78oc9twitrw7aj1fzatb.png',
         3, 7, 0, [6, 7], 1821, 1, talentSkill(1), { expl: talentExplain(1781, 1) }),
 
     727: new GICard(727, '砰砰礼物', '[战斗行动]：我方出战角色为【可莉】时，装备此牌。；【可莉】装备此牌后，立刻使用一次【蹦蹦炸弹】。；装备有此牌的【可莉】生成的【爆裂火花】的[可用次数]+1。',

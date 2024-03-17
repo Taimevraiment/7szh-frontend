@@ -388,11 +388,11 @@ const allHeros: HeroObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/03/06/258999284/0bad00e61b01e543de83347130cab711_7623245668285687441.png',
         skill1('冷色摄影律'), [
         new GISkill('取景·冰点构图法', '造成{dmg}点[冰元素伤害]，目标角色附属【瞬时剪影】。', 2, 1, 3, 4, {},
-            '',
+            'https://patchwiki.biligame.com/images/ys/5/59/dzffxm3w1c8nanj1jt7vwoafxvetdbm.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2024/03/06/258999284/b6d86920e87c55dfbde7ca49052830f4_4249513964105684090.png',
             [heroStatus(2163)], () => ({ inStatus: [heroStatus(2163)] })),
         new GISkill('定格·全方位确证', '造成{dmg}点[冰元素伤害]，治疗我方所有角色1点，召唤【临事场域】。', 3, 1, 3, 4, { ec: 2 },
-            '',
+            'https://patchwiki.biligame.com/images/ys/0/06/sg317tpcyew82aovprl39dfxavasbd4.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2024/03/06/258999284/e1d95cabb132d11c4fc412719e026aa6_3660966934155106231.png',
             [newSummonee(3056)], (options: SkillOption) => ({ heal: 1, hidxs: allHidxs(options.heros), summon: [newSummonee(3056)] }))
     ]),
@@ -596,11 +596,11 @@ const allHeros: HeroObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/03/06/258999284/86e0474f40841fbc5faff7870fe9cd0c_8511334021456599978.png',
         skill1('如水从平'), [
         new GISkill('泪水啊，我必偿还', '造成{dmg}点[水元素伤害]，角色附属【源水之滴】。', 2, 2, 3, 1, {},
-            'https://patchwiki.biligame.com/images/ys/thumb/3/32/ofkmgc3tu39kdxmivhd6al7h17rsq3r.png/45px-%E6%B3%AA%E6%B0%B4%E5%95%8A%EF%BC%8C%E6%88%91%E5%BF%85%E5%81%BF%E8%BF%98.png',
+            'https://patchwiki.biligame.com/images/ys/7/78/l63dicjkhcq42evmggc34tdr97rsc29.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2024/02/28/258999284/472b87458851b9cf53d0bbe34596e076_7997139213955787355.png',
             [heroStatus(2164), readySkill(17)], () => ({ outStatusOppo: [heroStatus(2164, [readySkill(17)])] })),
         new GISkill('潮水啊，我已归来', '造成{dmg}点[水元素伤害]，对所有后台敌人造成1点[穿透伤害]，生成[可用次数]为2的【源水之滴】。', 3, 2, 3, 1, { ec: 2 },
-            'https://patchwiki.biligame.com/images/ys/thumb/5/5f/g5p5d8xodqqe18ok2sk5dseinb54wmz.png/45px-%E6%BD%AE%E6%B0%B4%E5%95%8A%EF%BC%8C%E6%88%91%E5%B7%B2%E5%BD%92%E6%9D%A5.png',
+            'https://patchwiki.biligame.com/images/ys/3/34/f74fkdp404dawd3hcptki3v7yaw6ydg.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2024/02/28/258999284/31a30f1436a733695fc91d1248c157e1_6560934694291577179.png',
             [heroStatus(2164), readySkill(17)], () => ({ pendamage: 1, outStatusOppo: [heroStatus(2164, [readySkill(17)], 2)] })),
     ]),
@@ -1417,11 +1417,11 @@ const allHeros: HeroObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/03/06/258999284/650f884967057168a0b9b4025a032c11_2097188456727270580.png',
         skill1('箱纸切削术'), [
         new GISkill('呜喵町飞足', '生成【猫箱急件】和【安全运输护盾】。', 2, 0, 3, 7, {},
-            '',
+            'https://patchwiki.biligame.com/images/ys/e/e6/t5pihmh5sg8ccu6nm7stvb71maxxz9x.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2024/02/28/258999284/f19df62c04e80071c2278ae5ef2f21ff_8786745388682460864.png',
             [heroStatus(2167), heroStatus(2168)], (options: SkillOption) => ({ outStatusOppo: [heroStatus(2167, options.hero.skills[1].src), heroStatus(2168)] })),
         new GISkill('秘法·惊喜特派', '造成{dmg}点[草元素伤害]，在敌方场上生成【猫草豆蔻】。', 3, 4, 3, 7, { ec: 2 },
-            '',
+            'https://patchwiki.biligame.com/images/ys/9/9a/dbkhj9brr5xbkjgx56nabv1dgk7gxio.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2024/02/28/258999284/562bc0909575afbc29f1971ae2c4b24d_5181008040290623097.png',
             [heroStatus(2169)], (options: SkillOption) => ({ outStatus: [heroStatus(2169, options.hero.skills[2].src)] }))
     ]),
@@ -1681,11 +1681,11 @@ const allHeros: HeroObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/03/06/258999284/e7e0e8c1cab4d08764f95d14345c4eef_4303268682366227358.png',
         skill1('轰闪落雷', 4), [
         new GISkill('雾虚之召', '召唤【雷萤】。', 2, 0, 3, 3, {},
-            '',
+            'https://patchwiki.biligame.com/images/ys/b/ba/gyx575dg0jl0555jhw17pfr0kkge1dg.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2024/03/06/258999284/170a763eb069a3f4577b04dbeb73f3a7_245180266074223049.png',
             [newSummonee(3057)], () => ({ summon: [newSummonee(3057)], outStatus: [heroStatus(2175, [newSummonee(3057)])] })),
         new GISkill('霆雷之护', '造成{dmg}点[雷元素伤害]，本角色[附着雷元素]，生成【雷萤护罩】并[准备技能]：【霆电迸发】。', 3, 1, 3, 3, { ec: 2 },
-            '',
+            'https://patchwiki.biligame.com/images/ys/b/bb/qyleol8t4tzuujvuj3wlfk6h53icvcb.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2024/03/06/258999284/7ddbd6e73bea8f907590c964c2f88d98_2187578641261417207.png',
             [heroStatus(2170), readySkill(18)], (options: SkillOption) => {
                 const { summons = [] } = options;

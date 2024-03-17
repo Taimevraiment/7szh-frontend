@@ -336,11 +336,10 @@ type CardOption = {
     isSkill?: number,
     isExec?: boolean,
     site?: Site[],
+    esite?: Site[],
     minusDiceCard?: number,
     ehidx?: number,
     minusDiceSkill?: number[][],
-    esiteCnt?: number,
-    esummonCnt?: number,
 }
 
 type CardHandleRes = {

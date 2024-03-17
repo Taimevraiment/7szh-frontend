@@ -1,5 +1,5 @@
 <template>
-    <div class="edit-deck-container">
+    <div class="edit-deck-container" @click="cancel">
         <button class="edit-btn exit" @click.stop="exit">返回</button>
         <div v-if="editDeckIdx == -1" class="edit-deck-list">
             <div v-for="(deck, did) in decks" :key="'deckid:' + did" class="deck"
@@ -17,7 +17,7 @@
                 </div>
             </div>
         </div>
-        <div v-else class="edit-container" @click="cancel">
+        <div v-else class="edit-container">
             <button class="edit-btn exit" @click.stop="exit">返回</button>
             <button class="edit-btn save" @click.stop="saveDeck">保存</button>
             <div class="edit-deck-btn-group">
@@ -138,7 +138,7 @@
             </div>
             <button class="edit-btn filter" @click.stop="showFilter">筛选</button>
             <button class="edit-btn reset" @click="reset">重置</button>
-            <div class="filter-condition" v-if="isShowFilter">
+            <div class="filter-condition" v-if="isShowFilter" @click.stop="">
                 <div v-for="(htitle, hidx) in (currIdx == 0 ? heroFilter : cardFilter)" :key="hidx">
                     <div class="filter-title">{{ htitle.name }}</div>
                     <div class="filter-tags">
@@ -553,7 +553,7 @@ const cancel = () => {
 </script>
 
 <style scoped>
-body {
+body div {
     user-select: none;
 }
 

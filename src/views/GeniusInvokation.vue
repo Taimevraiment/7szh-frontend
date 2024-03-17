@@ -192,11 +192,11 @@
         :style="{
           backgroundColor:
             ELEMENT_COLOR[
-              client.player.heros.find((v) => v.isFront)?.element ?? 0
+              client.player.heros.find((v:Hero) => v.isFront)?.element ?? 0
             ],
         }"
         :class="{
-          forbidden: client.player.dice.every((v) =>
+          forbidden: client.player.dice.every((v:number) =>
             [0, client.player.heros[client.player.hidx].element].includes(v)
           ),
         }"
@@ -213,9 +213,14 @@
         v-if="
           (client.isShowChangeHero > 0 && client.currCard.id <= 0) ||
           (client.player.phase == 3 &&
-            client.player.heros.some((h) => h.isSelected > 0))
+            client.player.heros.some((h:Hero) => h.isSelected > 0))
         "
-        style="display: flex; flex-direction: column; align-items: center"
+        style="
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          transform: translateY(20px);
+        "
       >
         <div class="quick-action" v-if="client.isShowChangeHero == 3">
           快速行动
@@ -274,7 +279,7 @@
     >
       <div
         class="skill"
-        v-for="(skill, sidx) in client.skills.filter((sk) => sk.type < 4)"
+        v-for="(skill, sidx) in client.skills.filter((sk:Skill) => sk.type < 4)"
         :key="sidx"
       >
         <div
@@ -322,7 +327,7 @@
         </div>
         <div
           class="skill-cost"
-          v-for="(cost, cidx) in skill.cost.filter((c) => c.val > 0)"
+          v-for="(cost, cidx) in (skill as Skill).cost.filter((c) => c.val > 0)"
           :key="cidx"
           :style="{
             color:
@@ -347,8 +352,8 @@
             !canAction ||
             client.phase > 6 ||
             (client.player.heros
-              .find((h) => h.isFront)
-              ?.inStatus?.findIndex((s) => s.type.includes(14)) ?? -1) > -1
+              .find((h:Hero) => h.isFront)
+              ?.inStatus?.findIndex((s:Status) => s.type.includes(14)) ?? -1) > -1
           "
           @click.stop="useSkill(sidx, true)"
         ></div>
