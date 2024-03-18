@@ -1328,7 +1328,7 @@ export default class GeniusInvokationClient {
         if (isExec) skillres?.exec?.();
         if (skill) {
             if (skill.energyCost == 0) {
-                aHeros[hidx].energy = Math.min(aHeros[hidx].maxEnergy, aHeros[hidx].energy + 1);
+                aHeros[hidx].energy = Math.min(aHeros[hidx].maxEnergy + 1, aHeros[hidx].energy + 1);
             } else if (skill.energyCost > 0) {
                 aHeros[hidx].energy = 0;
             }
@@ -2194,10 +2194,11 @@ export default class GeniusInvokationClient {
                 }
                 smnStatus.useCnt = smn.useCnt;
             }
-            if (smn.useCnt == 0) {
+            if (smn.useCnt == 0 && (smn.isDestroy == 0 || smn.isDestroy == 1 && trigger == 'phase-end') ||
+                smn.isDestroy == 2 && trigger == 'phase-end') {
                 const ostIdx = outStatus.findIndex(ost => ost.summonId == smn.id) ?? -1;
                 if (ostIdx > -1) outStatus.splice(ostIdx, 1);
-                return smn.isDestroy > 0 && trigger != 'phase-end';
+                return false;
             }
             return true;
         });
@@ -2246,13 +2247,15 @@ export default class GeniusInvokationClient {
             elTips = new Array(aheros.length + eheros.length).fill(0).map(() => ['', 0, 0]), atriggers: atrg = new Array(aheros.length).fill(0).map(() => []),
             etriggers: etrg = new Array(eheros.length).fill(0).map(() => []) } = options;
         let resdmg = willDamage;
-        if (willDamage.length == 0) resdmg = new Array(aheros.length + eheros.length).fill(0).map(() => [-1, 0]);
-        else if (willDamage.length == eheros.length) {
-            const admg = new Array(aheros.length).fill(0).map(() => [-1, 0]);
-            if (pidx == 0) resdmg = willDamage.concat(admg);
-            else resdmg = admg.concat(willDamage);
-        } else if (pidx == 1) {
-            resdmg = willDamage.slice(eheros.length).concat(willDamage.slice(0, eheros.length));
+        if (!isWind) {
+            if (willDamage.length == 0) resdmg = new Array(aheros.length + eheros.length).fill(0).map(() => [-1, 0]);
+            else if (willDamage.length == eheros.length) {
+                const admg = new Array(aheros.length).fill(0).map(() => [-1, 0]);
+                if (pidx == 0) resdmg = willDamage.concat(admg);
+                else resdmg = admg.concat(willDamage);
+            } else if (pidx == 1) {
+                resdmg = willDamage.slice(eheros.length).concat(willDamage.slice(0, eheros.length));
+            }
         }
         let res = {
             willDamage: clone(resdmg),
@@ -2493,6 +2496,8 @@ export default class GeniusInvokationClient {
         }
         const aist: Status[] = [];
         const aost: Status[] = [];
+        const eist: Status[] = [];
+        const eost: Status[] = [];
         const doStatus = (status: Status[], isOppo: boolean, trgs: Trigger[], hi: number) => {
             const dmg = isOppo ? 'getDmg' : 'addDmgCdt';
             status.forEach(sts => {
@@ -2543,9 +2548,11 @@ export default class GeniusInvokationClient {
                         (isOppo ? res.etriggers : res.atriggers)[hi].push('after-' + trigger as Trigger);
                     }
                     if (stsres?.exec && isWindExec && !sts.type.includes(11)) {
-                        const { inStatus = [], outStatus = [], cmds = [] } = stsres.exec();
+                        const { inStatus = [], outStatus = [], inStatusOppo = [], outStatusOppo = [], cmds = [] } = stsres.exec();
                         aist.push(...inStatus);
                         aost.push(...outStatus);
+                        eist.push(...inStatusOppo);
+                        eost.push(...outStatusOppo);
                         res.elrcmds[isOppo ? 1 : 0].push(...cmds);
                     }
                 }
@@ -2568,15 +2575,16 @@ export default class GeniusInvokationClient {
         });
         if (!isWind) {
             const getdmg = res.willDamage.map(v => v[0] + v[1]);
-            const { cmds: sitecmds, siteCnt } = this._doSite(pidx, atriggers[aFrontIdx], {
+            const { cmds: sitecmds, siteCnt, minusDiceSkill: sitemds } = this._doSite(pidx, atriggers[aFrontIdx], {
                 isExec,
                 isSkill: skidx,
                 getdmg,
-                minusDiceSkill,
+                minusDiceSkill: res.minusDiceSkill,
                 heal: res.willheals,
             });
             res.elrcmds[0].push(...sitecmds);
             res.siteCnt[pidx].forEach((_, i, a) => a[i] += siteCnt[pidx][i]);
+            res.minusDiceSkill = sitemds;
             const { cmds: siteoppocmds, siteCnt: siteOppoCnt } = this._doSite(epidx, [...new Set(etriggers.flat())], {
                 isExec,
                 getdmg,
@@ -2584,41 +2592,32 @@ export default class GeniusInvokationClient {
             });
             res.elrcmds[0].push(...siteoppocmds);
             res.siteCnt[epidx].forEach((_, i, a) => a[i] += siteOppoCnt[epidx][i]);
-            const smncmds: Cmds[] = []
-            for (const trigger of [...new Set(etriggers.flat())]) {
-                const { smncmds: smncmd } = this._doSummon(epidx, trigger, { csummon: res.summon, eheros: res.aheros, isExec });
-                smncmds.push(...smncmd);
-            }
-            const { heros: smneheros } = this._doCmds(smncmds, { pidx: epidx, heros: res.eheros });
+            const { smncmds: esmncmd } = this._doSummon(epidx, [...new Set(etriggers.flat())], { csummon: res.summon, eheros: res.aheros, isExec });
+            const { heros: smneheros } = this._doCmds(esmncmd, { pidx: epidx, heros: res.eheros });
             if (smneheros) {
                 res.eheros = [...smneheros];
                 efhero = res.eheros[frontIdx];
             }
-            for (const trigger of atriggers[aFrontIdx]) {
-                const { addDmg, willheals = [], minusDiceSkill } = this._doSummon(pidx, trigger, {
-                    csummon: res.summonOppo,
-                    isDmg: true,
-                    isChargedAtk,
-                    isFallAtk,
-                    isExec,
-                    hcard: this.currCard,
-                    minusDiceSkill: res.minusDiceSkill,
-                    isUseSkill: skidx > -1,
-                });
-                if (res.willDamage[getDmgIdx][0] > 0) res.willDamage[getDmgIdx][0] += addDmg;
-                if (willheals.length > 0) {
-                    willheals.forEach((hl, hli) => {
-                        if (hl >= 0) {
-                            if (res.willheals[hli] < 0) res.willheals[hli] = hl;
-                            else res.willheals[hli] += hl;
-                        }
-                    });
+            const { addDmg, willheals = [], minusDiceSkill: smnmds } = this._doSummon(pidx, atriggers[aFrontIdx], {
+                csummon: res.summonOppo,
+                isDmg: true,
+                isChargedAtk,
+                isFallAtk,
+                isExec,
+                heros: res.aheros,
+                hcard: this.currCard,
+                minusDiceSkill: res.minusDiceSkill,
+                isSkill: skidx,
+            });
+            afhero = res.aheros[aFrontIdx];
+            if (res.willDamage[getDmgIdx][0] > 0) res.willDamage[getDmgIdx][0] += addDmg;
+            willheals.forEach((hl, hli) => {
+                if (hl >= 0) {
+                    if (res.willheals[hli] < 0) res.willheals[hli] = hl;
+                    else res.willheals[hli] += hl;
                 }
-                res.minusDiceSkill = minusDiceSkill;
-                if (trigger.startsWith('el5Reaction')) { // 召唤物形成扩散反应
-                    this._doSummon(pidx, trigger, { intvl: [100, 500, 500, 100], csummon: res.summonOppo, isUnshift: true, isExec });
-                }
-            }
+            });
+            res.minusDiceSkill = smnmds;
         }
         res.summon = this._updateSummon([], res.summon, efhero.outStatus);
         res.summonOppo = this._updateSummon([], res.summonOppo, afhero.outStatus);
@@ -2685,13 +2684,13 @@ export default class GeniusInvokationClient {
             res.aheros = nah;
         }
         for (let i = 0; i < res.aheros.length; ++i) {
-            const { nstatus, nheros } = this._updateStatus(eslotInStatus[i], res.eheros[i].inStatus, res.eheros, i);
+            const { nstatus, nheros } = this._updateStatus([...(i == frontIdx ? eist : []), ...eslotInStatus[i]], res.eheros[i].inStatus, res.eheros, i);
             if (nheros) {
                 nheros[i].inStatus = [...nstatus];
                 res.eheros = nheros;
             }
         }
-        const { nstatus: neost, nheros: neh } = this._updateStatus(eslotOutStatus, efhero.outStatus, res.eheros, frontIdx);
+        const { nstatus: neost, nheros: neh } = this._updateStatus([...eslotOutStatus, ...eost], efhero.outStatus, res.eheros, frontIdx);
         if (neh) {
             neh[frontIdx].outStatus = [...neost];
             res.eheros = neh;
@@ -2760,43 +2759,44 @@ export default class GeniusInvokationClient {
      * @param state 触发状态
      * @param time 当前时间
      * @param options intvl 间隔时间, isUnshift 是否前插入事件, csummon 当前的召唤物, isExec 是否执行召唤物攻击, isDmg 是否造成伤害, isExecTask 是否执行任务队列, hidx 当前出战角色
-     *                isChargedAtk 是否为重击, isFallAtk 是否为下落攻击, hcard 使用的牌, minusDiceSkill 用技能减骰子, isUseSkill 是否使用技能, tsummon 执行task的召唤物 
+     *                isChargedAtk 是否为重击, isFallAtk 是否为下落攻击, hcard 使用的牌, minusDiceSkill 用技能减骰子, isSkill 使用技能idx, tsummon 执行task的召唤物 
      *                players 当前玩家数组, eheros 当前敌方角色组
      * @returns smncmds 命令集, addDmg 加伤, addDiceHero 增加切换角色骰子数, changeHeroDiceCnt 改变骰子数, minusDiceSkill 用技能减骰子, willheals 将回血数
      */
     _doSummon(pidx: number, ostate: Trigger | Trigger[],
         options: {
             intvl?: number[], isUnshift?: boolean, csummon?: Summonee[], isExec?: boolean, isDmg?: boolean, isExecTask?: boolean, hidx?: number,
-            isChargedAtk?: boolean, isFallAtk?: boolean, hcard?: Card, minusDiceSkill?: number[][], isUseSkill?: boolean, tsummon?: Summonee[],
-            players?: Player[], eheros?: Hero[],
+            isChargedAtk?: boolean, isFallAtk?: boolean, hcard?: Card, minusDiceSkill?: number[][], isSkill?: number, tsummon?: Summonee[],
+            players?: Player[], heros?: Hero[], eheros?: Hero[],
         } = {}) {
         const states: Trigger[] = [];
         if (typeof ostate == 'string') states.push(ostate);
         else states.push(...ostate);
         const { intvl = [100, 700, 2000, 200], isUnshift = false, csummon, isExec = true, isDmg = false, isChargedAtk = false,
-            hidx = this.players[pidx].hidx, isFallAtk = false, hcard, isExecTask = false, isUseSkill = false, tsummon,
-            players = this.players, eheros } = options;
+            hidx = this.players[pidx].hidx, isFallAtk = false, hcard, isExecTask = false, isSkill = -1, tsummon,
+            players = this.players, heros = players[pidx].heros, eheros = players[pidx ^ 1].heros } = options;
         let { minusDiceSkill } = options;
         const p = players[pidx];
         const smncmds: Cmds[] = [];
         let addDmg = 0;
         let addDiceHero = 0;
         let changeHeroDiceCnt = 0;
-        let willheals: number[] | undefined;
+        let willheals: number[] = new Array(players.reduce((a, c) => a + c.heros.length, 0)).fill(-1);
         let task: [(() => void)[], number[]] | undefined;
         const summons: Summonee[] = tsummon ?? csummon ?? [...p.summon];
         for (const state of states) {
             for (const summon of summons) {
                 const summonres = newSummonee(summon.id).handle(summon, {
                     trigger: state,
-                    heros: p.heros,
-                    eheros: eheros ?? players[pidx ^ 1].heros,
+                    heros,
+                    eheros,
                     hidxs: [hidx],
                     isChargedAtk,
                     isFallAtk,
                     hcard,
                     isExec,
                     minusDiceSkill,
+                    isSkill,
                 });
                 if (this._hasNotTrigger(summonres?.trigger, state)) continue;
                 if (summonres?.isNotAddTask) {
@@ -2805,8 +2805,8 @@ export default class GeniusInvokationClient {
                     minusDiceSkill = summonres?.minusDiceSkill ?? minusDiceSkill;
                     if (!isExec) continue;
                     if (summonres?.exec && (!isDmg || summonres.damage == undefined)) {
-                        const { cmds = [], changeHeroDiceCnt: smnDiceCnt = 0 } = summonres?.exec?.({ summon, eheros: eheros ?? players[pidx ^ 1].heros });
-                        const { changedEl } = this._doCmds(cmds, { pidx, isExec });
+                        const { cmds = [], changeHeroDiceCnt: smnDiceCnt = 0 } = summonres?.exec?.({ summon, eheros });
+                        const { changedEl } = this._doCmds(cmds, { pidx, heros, isExec });
                         if (changedEl) summon.element = changedEl;
                         smncmds.push(...cmds);
                         changeHeroDiceCnt = smnDiceCnt;
@@ -2814,9 +2814,14 @@ export default class GeniusInvokationClient {
                     continue;
                 }
                 if (summonres?.cmds) {
-                    const { willHeals, heros } = this._doCmds(summonres.cmds, { pidx, isExec });
-                    willheals = willHeals;
-                    if (heros) p.heros = heros;
+                    const { willHeals = [], heros: nheros } = this._doCmds(summonres.cmds, { pidx, isExec });
+                    willHeals.forEach((hl, hli) => {
+                        if (hl >= 0) {
+                            if (willheals[hli] < 0) willheals[hli] = hl;
+                            else willheals[hli] += hl;
+                        }
+                    });
+                    if (nheros) p.heros = nheros;
                 }
                 if (state.startsWith('skill')) intvl[0] = 2100;
                 if (isExec) {
@@ -2948,7 +2953,7 @@ export default class GeniusInvokationClient {
                                         elTips: aElTips,
                                         smncmds: [...smnexecres.cmds, ...smncmds],
                                         playerInfo: this.players[pidx].playerInfo,
-                                        isUseSkill,
+                                        isUseSkill: isSkill > -1,
                                         flag: `_doSummon2-${summon.name}-${pidx}`,
                                     });
                                 }

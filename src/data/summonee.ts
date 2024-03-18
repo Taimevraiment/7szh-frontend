@@ -311,6 +311,7 @@ const summonTotal: SummoneeObj = {
                     if (hero?.id == 1006) {
                         const cnt = hero.talentSlot != null && trigger == 'skilltype2' ? 3 : 2
                         smn.useCnt += cnt;
+                        return { cmds: [{ cmd: 'getEnergy', cnt: -1 }] }
                     }
                     return {}
                 },
@@ -824,6 +825,24 @@ const summonTotal: SummoneeObj = {
                     if (trigger == 'action-start' && chero?.talentSlot) --chero.talentSlot.useCnt;
                     return { cmds: [{ cmd: 'attack' }] }
                 }
+            }
+        }),
+
+    3058: () => new GISummonee(3058, '赫耀多方面体', '【结束阶段：】造成{dmg}点[风元素伤害]。；【[可用次数]：{useCnt}】；【此召唤物在场时：】敌方角色受到的[风元素伤害]+1。',
+        '',
+        2, 2, 0, 1, 5, (summon: Summonee, smnOpt: SummonOption = {}) => {
+            const { trigger = '', heros = [] } = smnOpt;
+            const triggers: Trigger[] = ['wind-getdmg-oppo', 'phase-end'];
+            if (!!heros.find(h => h.id == 1409)?.talentSlot) triggers.push('phase-start');
+            return {
+                addDmgCdt: 1,
+                isNotAddTask: trigger == 'wind-getdmg-oppo',
+                trigger: triggers,
+                exec: (smnexeOpt: SummonExecOption) => {
+                    if (trigger == 'phase-end') return phaseEndAtk(smnexeOpt?.summon ?? summon);
+                    if (trigger == 'phase-start') return { cmds: [{ cmd: 'getDice', cnt: 1, element: 5 }] }
+                    return {}
+                },
             }
         }),
 

@@ -1864,11 +1864,19 @@ const allCards: CardObj = {
 
     733: new GICard(733, '镜华风姿', '[战斗行动]：我方出战角色为【神里绫人】时，装备此牌。；【神里绫人】装备此牌后，立刻使用一次【神里流·镜花】。；装备有此牌的【神里绫人】触发【泷廻鉴花】的效果时，对于生命值不多于6的敌人伤害+1。',
         'https://uploadstatic.mihoyo.com/ys-obc/2023/04/11/12109492/a222141c6f996c368c642afe39572e9f_2099787104835776248.png',
-        3, 1, 0, [6, 7], 1105, 1, talentSkill(1), { expl: talentExplain(1105, 1) }),
+        3, 1, 0, [6, 7], 1105, 1, (_card: Card, cardOpt: CardOption = {}) => talentHandle(cardOpt, 1, () => {
+            const { eheros = [], heros = [], hidxs = [] } = cardOpt;
+            const isAdd = (eheros.find(h => h.isFront)?.hp ?? 10) <= 6 && heros[hidxs[0]].inStatus.some(ist => ist.id == 2067);
+            return [() => ({}), { addDmgCdt: isCdt(isAdd, 1) }]
+        }, 'skilltype1'), { expl: talentExplain(1105, 1) }),
 
     734: new GICard(734, '荒泷第一', '[战斗行动]：我方出战角色为【荒泷一斗】时，装备此牌。；【荒泷一斗】装备此牌后，立刻使用一次【喧哗屋传说】。；装备有此牌的【荒泷一斗】每回合第2次及以后使用【喧哗屋传说】时：如果触发【乱神之怪力】，伤害额外+1。',
         'https://uploadstatic.mihoyo.com/ys-obc/2023/04/11/12109492/46588f6b5a254be9e797cc0cfe050dc7_8733062928845037185.png',
-        1, 6, 0, [6, 7], 1503, 1, talentSkill(0), { expl: talentExplain(1503, 0), anydice: 2 }),
+        1, 6, 0, [6, 7], 1503, 1, (_card: Card, cardOpt: CardOption = {}) => talentHandle(cardOpt, 0, () => {
+            const { heros = [], hidxs = [], isChargedAtk = false } = cardOpt;
+            const { inStatus, skills: [{ useCnt }] } = heros[hidxs[0]];
+            return [() => ({}), { addDmgCdt: isCdt(isChargedAtk && useCnt >= 1 && inStatus.some(ist => ist.id == 2068), 1) }]
+        }, 'skilltype1'), { expl: talentExplain(1503, 0), anydice: 2 }),
 
     735: new GICard(735, '眼识殊明', '[战斗行动]：我方出战角色为【提纳里】时，装备此牌。；【提纳里】装备此牌后，立刻使用一次【识果种雷】。；装备有此牌的【提纳里】在附属【通塞识】期间，进行[重击]时少花费1个[无色元素骰]。',
         'https://uploadstatic.mihoyo.com/ys-obc/2023/04/11/12109492/e949b69145f320ae71ce466813339573_5047924760236436750.png',
@@ -1957,11 +1965,21 @@ const allCards: CardObj = {
 
     750: new GICard(750, '最终解释权', '[战斗行动]：我方出战角色为【烟绯】时，装备此牌。；【烟绯】装备此牌后，立刻使用一次【火漆印制】。；装备有此牌的【烟绯】进行[重击]时：对生命值不多于6的敌人造成的伤害+1。；如果触发了【丹火印】，则在技能结算后摸1张牌。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/07/14/183046623/ad8a2130c54da3c3f25d094b7019cb69_4536540887547691720.png',
-        1, 2, 0, [6, 7], 1208, 1, talentSkill(0), { expl: talentExplain(1208, 0), anydice: 2 }),
+        1, 2, 0, [6, 7], 1208, 1, (_card: Card, cardOpt: CardOption = {}) => talentHandle(cardOpt, 0, () => {
+            const { isChargedAtk = false, heros = [], hidxs = [], eheros = [] } = cardOpt;
+            return [() => ({}), {
+                addDmgCdt: isCdt(isChargedAtk && (eheros.find(h => h.isFront)?.hp ?? 10) <= 6, 1),
+                execmds: isCdt(isChargedAtk && heros[hidxs[0]].inStatus.some(ist => ist.id == 2096), [{ cmd: 'getCard', cnt: 1 }])
+            }]
+        }, 'skilltype1'), { expl: talentExplain(1208, 0), anydice: 2 }),
 
     751: new GICard(751, '风物之诗咏', '[战斗行动]：我方出战角色为【枫原万叶】时，装备此牌。；【枫原万叶】装备此牌后，立刻使用一次【千早振】。；装备有此牌的【枫原万叶】引发扩散反应后：使我方角色和召唤物接下来2次所造成的的被扩散元素类型的伤害+1。(每种元素类型分别计算次数)',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/07/14/183046623/dd06fa7b0ec63f3e60534a634ebd6fd2_9125107885461849882.png',
-        3, 5, 0, [6, 7], 1405, 1, talentSkill(1), { expl: talentExplain(1405, 1) }),
+        3, 5, 0, [6, 7], 1405, 1, (_card: Card, cardOpt: CardOption = {}) => talentHandle(cardOpt, 1, () => {
+            const { trigger = '' } = cardOpt;
+            const windEl = trigger.startsWith('el5Reaction') ? Number(trigger.slice(trigger.indexOf(':') + 1)) : 5;
+            return [() => ({}), { outStatus: isCdt(windEl < 5, [heroStatus(2118 + windEl)]) }]
+        }, 'el5Reaction'), { expl: talentExplain(1405, 1) }),
 
     752: new GICard(752, '脉冲的魔女', '切换到装备有此牌的【丽莎】后：使敌方出战角色附属【引雷】。(每回合1次)',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/08/12/203927054/608b48c391745b8cbae976d971b8b8c0_2956537094434701939.png',
@@ -2161,6 +2179,23 @@ const allCards: CardObj = {
     779: new GICard(779, '雷萤浮闪', '[战斗行动]：我方出战角色为【愚人众·雷萤术士】时，装备此牌。；【愚人众·雷萤术士】装备此牌后，立刻使用一次【雾虚之召】。；装备有此牌的【愚人众·雷萤术士】在场时，我方选择行动前：如果【雷萤】的[可用次数]至少为3，则【雷萤】立刻造成1点[雷元素伤害]。(需消耗[可用次数]，每回合1次)',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/03/06/258999284/adf954bd07442eed0bc3c77847c2d727_1148348250566405252.png',
         3, 3, 0, [6, 7], 1764, 1, talentSkill(1), { pct: 1, expl: talentExplain(1764, 1) }),
+
+    780: new GICard(780, '割舍软弱之心', '[战斗行动]：我方出战角色为【久岐忍】时，装备此牌。；【久岐忍】装备此牌后，立刻使用一次【御咏鸣神刈山祭】。；装备有此牌的【久岐忍】被击倒时：角色[免于被击倒]，并治疗该角色到1点生命值。(每回合1次)；如果装备有此牌的【久岐忍】生命值不多于5，则该角色造成的伤害+1。',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_Shinobu.webp',
+        3, 3, 0, [6, 7], 1311, 1, (card: Card, cardOpt: CardOption = {}) => talentHandle(cardOpt, 2, () => {
+            const { heros = [], hidxs = [] } = cardOpt;
+            return [() => {
+                --card.perCnt;
+                return {}
+            }, {
+                addDmg: isCdt((heros[hidxs[0]]?.hp ?? 10) <= 5, 1),
+                execmds: isCdt(card.perCnt > 0, [{ cmd: 'revive', cnt: 1 }])
+            }]
+        }, isCdt(card.perCnt > 0, 'will-killed')), { pct: 1, expl: talentExplain(1311, 2), energy: 2 }),
+
+    781: new GICard(781, '妙道合真', '[战斗行动]：我方出战角色为【珐露珊】时，装备此牌。；【珐露珊】装备此牌后，立刻使用一次【抟风秘道】。；装备有此牌的【珐露珊】所召唤的【赫耀多方面体】入场时和行动阶段开始时：生成1个[风元素骰]。',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_Faruzan.webp',
+        3, 5, 0, [6, 7], 1409, 1, talentSkill(2), { expl: talentExplain(1409, 2), energy: 2 }),
 
 
     901: new GICard(901, '雷楔', '[战斗行动]：将【刻晴】切换到场上，立刻使用【星斗归位】。本次【星斗归位】会为【刻晴】附属【雷元素附魔】，但是不会再生成【雷楔】。(【刻晴】使用【星斗归位】时，如果此牌在手中：不会再生成【雷楔】，而是改为弃置此牌，并为【刻晴】附属【雷元素附魔】)',

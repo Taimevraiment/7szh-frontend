@@ -475,8 +475,8 @@ const statusTotal: StatusObj = {
             const isWeapon = hidx > -1 && [1, 2, 5].includes(heros[hidx]?.weaponType ?? 0);
             return {
                 trigger: ['skilltype1'],
-                addDmgType1: status.isTalent && isWeapon ? 1 : 0,
-                attachEl: isWeapon ? 4 : 0,
+                addDmgType1: isCdt(status.isTalent && isWeapon, 1),
+                attachEl: isCdt(isWeapon, 4),
             }
         }, { icbg: STATUS_BG_COLOR[4], isTalent }),
 
@@ -683,14 +683,14 @@ const statusTotal: StatusObj = {
 
     2058: (isTalent = false) => new GIStatus(2058, '爆裂火花', '【所附属角色进行[重击]时：】少花费1个[火元素骰]，并且伤害+1。；【[可用次数]：{useCnt}】',
         'buff5', 0, [4, 6], isTalent ? 2 : 1, 0, -1, (status: Status, options: StatusOption = {}) => {
-            const { isChargedAtk = false } = options;
-            const { minusSkillRes } = minusDiceSkillHandle(options, { skilltype1: [0, 0, 1] }, () => isChargedAtk);
+            if (!options.isChargedAtk) return {}
+            const { minusSkillRes } = minusDiceSkillHandle(options, { skilltype1: [0, 0, 1] });
             return {
                 trigger: ['skilltype1'],
-                addDmgCdt: isCdt(isChargedAtk, 1),
+                addDmgCdt: 1,
                 ...minusSkillRes,
                 exec: () => {
-                    if (isChargedAtk) --status.useCnt;
+                    --status.useCnt;
                     return {}
                 }
             }
@@ -796,6 +796,7 @@ const statusTotal: StatusObj = {
     2066: (expl?: ExplainContent[]) => new GIStatus(2066, '冷酷之心', '【所附属角色使用冰潮的涡旋时：】移除此状态，使本次伤害+3。',
         'buff4', 0, [4, 6, 10], 1, 0, -1, (status: Status) => ({
             trigger: ['skilltype2'],
+            addDmgCdt: 3,
             exec: () => {
                 --status.useCnt;
                 return {}
@@ -817,14 +818,14 @@ const statusTotal: StatusObj = {
 
     2068: () => new GIStatus(2068, '乱神之怪力', '【所附属角色进行[重击]时：】造成的伤害+1。如果[可用次数]至少为2，则还会使本技能少花费1个[无色元素骰]。；【[可用次数]：{useCnt}】(可叠加，最多叠加到3次)',
         'buff4', 0, [6], 1, 3, -1, (status: Status, options: StatusOption = {}) => {
-            const { isChargedAtk = false } = options;
-            const { minusSkillRes } = minusDiceSkillHandle(options, { skilltype1: [0, 1, 0] }, () => isChargedAtk && status.useCnt >= 2);
+            if (!options.isChargedAtk) return {}
+            const { minusSkillRes } = minusDiceSkillHandle(options, { skilltype1: [0, 1, 0] }, () => status.useCnt >= 2);
             return {
-                addDmgCdt: isCdt(isChargedAtk, 1),
+                addDmgCdt: 1,
                 ...minusSkillRes,
                 trigger: ['skilltype1'],
                 exec: () => {
-                    if (isChargedAtk && status.useCnt >= 2) --status.useCnt;
+                    --status.useCnt;
                     return {}
                 }
             }
@@ -852,11 +853,12 @@ const statusTotal: StatusObj = {
         }, { smnId: summonId }),
 
     2071: () => new GIStatus(2071, '通塞识', '【所附属角色进行[重击]时：】造成的[物理伤害]变为[草元素伤害]，并且会在技能结算后召唤【藏蕴花矢】。；【[可用次数]：{useCnt}】',
-        'buff', 0, [8], 3, 0, -1, (status: Status, options: StatusOption = {}) => {
-            const { isChargedAtk = false } = options;
+        'buff', 0, [16], 3, 0, -1, (status: Status, options: StatusOption = {}) => {
+            if (!options.isChargedAtk) return {}
             return {
-                summon: isCdt(isChargedAtk, [newSummonee(3027)]),
-                trigger: isCdt(isChargedAtk, ['skilltype1']),
+                summon: [newSummonee(3027)],
+                trigger: ['skilltype1'],
+                attachEl: 7,
                 exec: () => {
                     --status.useCnt;
                     return {}
@@ -885,11 +887,17 @@ const statusTotal: StatusObj = {
         }, { icbg: STATUS_BG_COLOR[4], pct: isTalent ? 1 : 0, isTalent }),
 
     2074: (icon = '') => new GIStatus(2074, '远程状态', '【所附属角色进行[重击]后：】目标角色附属【断流】。',
-        icon, 0, [10], -1, 0, -1, () => ({}), { icbg: STATUS_BG_COLOR[1] }),
+        icon, 0, [10], -1, 0, -1, (_status: Status, options: StatusOption = {}) => ({
+            trigger: ['skilltype1'],
+            exec: () => {
+                const { isChargedAtk = false, heros = [], hidx = -1 } = options;
+                return { inStatusOppo: isCdt(isChargedAtk, [heroStatus(2076, heros[hidx].skills[2].src)]) }
+            }
+        }), { icbg: STATUS_BG_COLOR[1] }),
 
     2075: (icon = '') => new GIStatus(2075, '近战状态', '角色造成的[物理伤害]转换为[水元素伤害]。；【角色进行[重击]后：】目标角色附属【断流】。；角色对附属有【断流】的角色造成的伤害+1;；【角色对已附属有断流的角色使用技能后：】对下一个敌方后台角色造成1点[穿透伤害]。(每回合至多2次)；【[持续回合]：{roundCnt}】',
         icon, 0, [3, 6, 8], -1, 0, 2, (status: Status, options: StatusOption = {}) => {
-            const { heros = [], eheros = [], trigger = '' } = options;
+            const { isChargedAtk, heros = [], hidx = -1, eheros = [], trigger = '' } = options;
             const efHero = eheros.find(h => h.isFront);
             const isDuanliu = efHero?.inStatus.some(ist => ist.id == 2076);
             let afterIdx = (eheros.findIndex(h => h.isFront) + 1) % eheros.length;
@@ -904,10 +912,10 @@ const statusTotal: StatusObj = {
                 attachEl: 1,
                 exec: () => {
                     if (trigger == 'phase-end' && status.roundCnt == 1) {
-                        return { inStatus: [heroStatus(2074, heros.find(h => h.id == 1106)?.skills[3].src)] }
+                        return { inStatus: [heroStatus(2074, heros[hidx].skills[3].src)] }
                     }
                     if (isPenDmg) --status.perCnt;
-                    return {}
+                    return { inStatusOppo: isCdt(isChargedAtk, [heroStatus(2076, heros[hidx].skills[2].src)]) }
                 },
             }
         }, { icbg: STATUS_BG_COLOR[1], pct: 2 }),
@@ -947,10 +955,11 @@ const statusTotal: StatusObj = {
         }, { smnId: summonId }),
 
     2078: () => new GIStatus(2078, '彼岸蝶舞', '所附属角色造成的[物理伤害]变为[火元素伤害]，且角色造成的[火元素伤害]+1。；【所附属角色进行[重击]时：】目标角色附属【血梅香】。；【[持续回合]：{roundCnt}】',
-        'buff5', 0, [8], -1, 0, 2, () => ({
+        'buff5', 0, [8], -1, 0, 2, (_status: Status, options: StatusOption = {}) => ({
             addDmg: 1,
             attachEl: 2,
             trigger: ['skill'],
+            exec: () => ({ inStatusOppo: isCdt<Status[]>(options.isChargedAtk, [heroStatus(2079)]) })
         }), { expl: [heroStatus(2079)] }),
 
     2079: () => new GIStatus(2079, '血梅香', '【结束阶段：】对所附属角色造成1点[火元素伤害]。；【[可用次数]：{useCnt}】',
@@ -1025,7 +1034,7 @@ const statusTotal: StatusObj = {
             const { isFallAtk = false, trigger = '' } = options;
             return {
                 addDmg: 1,
-                addDmgCdt: isFallAtk ? 2 : 0,
+                addDmgCdt: isCdt(isFallAtk, 2),
                 minusDiceHero: status.perCnt,
                 trigger: ['wind-dmg', 'change-from'],
                 attachEl: 5,
@@ -1149,7 +1158,7 @@ const statusTotal: StatusObj = {
                 addDmgType1: 1,
                 damage: isCdt(isDmg, 1),
                 element: 1,
-                attachEl: isWeapon ? 1 : 0,
+                attachEl: isCdt(isWeapon, 1),
                 exec: (eStatus?: Status) => {
                     const trg = ['change-from', 'after-skilltype1'].indexOf(trigger);
                     if (eStatus && trg > -1) eStatus.perCnt &= ~(1 << trg);
@@ -1159,14 +1168,17 @@ const statusTotal: StatusObj = {
         }, { icbg: STATUS_BG_COLOR[1], pct: isTalent ? 3 : 1, isTalent }),
 
     2096: () => new GIStatus(2096, '丹火印', '【角色进行[重击]时：】造成的伤害+2。；【[可用次数]：{useCnt}】(可叠加，最多叠加到2次)',
-        'buff5', 0, [6], 1, 2, -1, (status: Status, options: StatusOption = {}) => ({
-            trigger: ['skilltype1'],
-            addDmgCdt: isCdt(options?.isChargedAtk, 2),
-            exec: () => {
-                if (options?.isChargedAtk) --status.useCnt;
-                return {}
+        'buff5', 0, [6], 1, 2, -1, (status: Status, options: StatusOption = {}) => {
+            if (!options.isChargedAtk) return {}
+            return {
+                trigger: ['skilltype1'],
+                addDmgCdt: 2,
+                exec: () => {
+                    --status.useCnt;
+                    return {}
+                }
             }
-        })),
+        }),
 
     2097: (icon = '') => new GIStatus(2097, '灼灼', '【角色进行[重击]时：】少花费1个[火元素骰]。(每回合1次)；【结束阶段：】角色附属【丹火印】。；【[持续回合]：{roundCnt}】',
         icon, 0, [3, 4], -1, 0, 2, (status: Status, options: StatusOption = {}) => {
@@ -1186,14 +1198,18 @@ const statusTotal: StatusObj = {
 
     2098: (windEl = 5) => new GIStatus(2098, '乱岚拨止' + `${windEl < 5 ? '·' + ELEMENT[windEl][0] : ''}`,
         `【所附属角色进行[下落攻击]时：】造成的[物理伤害]变为[${ELEMENT[windEl]}伤害]，且伤害+1。；【角色使用技能后：】移除此效果。`,
-        'buff', 0, [6, 10], 1, 0, -1, (status: Status) => ({
-            addDmgCdt: 1,
-            trigger: ['skill'],
-            exec: () => {
-                --status.useCnt;
-                return {}
-            },
-        }), { icbg: STATUS_BG_COLOR[windEl] }),
+        'buff', 0, [6, 10, 16], 1, 0, -1, (status: Status, options: StatusOption = {}) => {
+            const { isFallAtk = false } = options;
+            return {
+                addDmgCdt: isCdt(isFallAtk, 1),
+                trigger: ['skill'],
+                attachEl: isCdt(isFallAtk, STATUS_BG_COLOR.indexOf(status.iconBg)),
+                exec: () => {
+                    --status.useCnt;
+                    return {}
+                }
+            }
+        }, { icbg: STATUS_BG_COLOR[windEl] }),
 
     2099: (expl?: ExplainContent[]) => new GIStatus(2099, '引雷', '此状态初始具有2层｢引雷｣; 重复附属时，叠加1层｢引雷｣。｢引雷｣最多可以叠加到4层。；【结束阶段：】叠加1层｢引雷｣。；【所附属角色受到苍雷伤害时：】移除此状态，每层｢引雷｣使此伤害+1。',
         'debuff', 0, [6], 2, 4, -1, (status: Status) => ({
@@ -1236,6 +1252,7 @@ const statusTotal: StatusObj = {
         'buff5', 0, [6], 2, 0, -1, (status: Status) => ({
             addDmgType1: 2,
             trigger: ['skilltype1'],
+            atkAfter: true,
             exec: () => {
                 --status.useCnt;
                 return {}
@@ -1488,12 +1505,13 @@ const statusTotal: StatusObj = {
         }, { icbg: STATUS_BG_COLOR[4], act: 2 }),
 
     2130: (act = 1) => new GIStatus(2130, '破局', '此状态初始具有1层｢破局｣; 重复附属时，叠加1层｢破局｣。｢破局｣最多可以叠加到3层。；【结束阶段：】叠加1层｢破局｣。；【所附属角色｢普通攻击｣时：】如果｢破局｣已有2层，则消耗2层｢破局｣，使造成的[物理伤害]转换为[水元素伤害]，并摸1张牌。',
-        'buff', 0, [9], 1, 3, -1, (status: Status, options: StatusOption = {}) => {
+        'buff', 0, [9, 16], 1, 3, -1, (status: Status, options: StatusOption = {}) => {
             const { trigger = '' } = options;
             const triggers: Trigger[] = ['phase-end'];
             if (status.useCnt >= 2) triggers.push('skilltype1');
             return {
                 trigger: triggers,
+                attachEl: isCdt(status.useCnt >= 2, 1),
                 exec: () => {
                     if (trigger == 'skilltype1') {
                         status.useCnt -= 2;
@@ -2060,7 +2078,51 @@ const statusTotal: StatusObj = {
                 }
                 return {}
             },
-        }), { icbg: DEBUFF_BG_COLOR, expl }),
+        }), { expl }),
+
+    2176: (icon = '') => new GIStatus(2176, '越袚草轮', '【我方切换角色后：】造成1点[雷元素伤害]，治疗我方出战角色1点。(每回合1次)；【[可用次数]：{useCnt}】',
+        icon, 1, [1], 2, 0, -1, (status: Status) => {
+            if (status.perCnt == 0) return {}
+            return {
+                damage: 1,
+                element: 3,
+                heal: 1,
+                trigger: ['change-from'],
+                exec: (eStatus?: Status) => {
+                    if (eStatus) {
+                        --eStatus.useCnt;
+                        --eStatus.perCnt;
+                    }
+                    return {}
+                }
+            }
+        }, { icbg: STATUS_BG_COLOR[3], pct: 1 }),
+
+    2177: (icon = '') => new GIStatus(2177, '疾风示现', '【所附属角色进行[重击]时：】少花费1个[无色元素骰]，造成的[物理伤害]变为[风元素伤害]，并且使敌方出战角色附属【风压坍陷】；【[可用次数]：{useCnt}】',
+        icon, 0, [4, 16], 2, 0, -1, (status: Status, options: StatusOption = {}) => {
+            if (!options.isChargedAtk) return {}
+            const { minusSkillRes } = minusDiceSkillHandle(options, { skilltype1: [0, 1, 0] });
+            return {
+                trigger: ['skilltype1'],
+                ...minusSkillRes,
+                attachEl: 5,
+                exec: () => {
+                    --status.useCnt;
+                    return { inStatusOppo: [heroStatus(2178)] }
+                }
+            }
+        }, { icbg: STATUS_BG_COLOR[5], expl: [heroStatus(2178)] }),
+
+    2178: () => new GIStatus(2178, '风压坍陷', '【结束阶段：】将附属角色切换为｢出战角色｣。；【[可用次数]：{useCnt}】；(同一方场上最多存在一个此状态)',
+        'buff3', 0, [3, 10], 1, 0, -1, (status: Status, options: StatusOption = {}) => ({
+            trigger: ['phase-end'],
+            onlyOne: true,
+            exec: () => {
+                --status.useCnt;
+                const { hidx = -1 } = options;
+                return { cmds: [{ cmd: 'switch-to-self', hidxs: [hidx], cnt: 1100 }] }
+            }
+        })),
 
 };
 
