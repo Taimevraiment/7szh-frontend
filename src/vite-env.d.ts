@@ -102,7 +102,7 @@ type Site = {
     perCnt: number, // 每回合x次
     hpCnt: number, // 回血数
     type: number, // 类型 1轮次 2收集物 3常驻
-    handle: (...args: any) => any, // 处理效果函数
+    handle: (site: Site, siteOption?: SiteOption) => SiteHandleRes, // 处理效果函数
     isSelected: boolean, // 是否被选择
     canSelect: boolean, // 能否被选择
 }
@@ -123,7 +123,7 @@ type Summonee = {
     isTalent: boolean, // 是否有天赋
     statusId: number, // 可能对应的状态 -1不存在
     addition: string[], // 额外信息
-    handle: (...args: any) => any, // 处理函数
+    handle: (summon: Summonee, smnOpt?: SummonOption) => SummonRes, // 处理函数
     descriptions: string[], // 处理后的技能描述
     isSelected: boolean, // 是否被选择
     canSelect: boolean, // 是否能被选择
@@ -186,7 +186,7 @@ type Skill = {
     energyCost: number, // 所需充能
     attachElement: number, // 附魔属性
     src: string, // 图片url
-    handle: (...args: any) => any, // 处理函数
+    handle: (options: SkillOption) => SkillHandleRes, // 处理函数
     isForbidden: boolean, // 是否禁用
     dmgChange: number, // 伤害变化
     costChange: number[], // 费用变化 [元素骰, 任意骰]
@@ -267,6 +267,25 @@ type Trigger = 'phase-start' | 'phase-end' | 'phase-dice' | 'game-start' | 'acti
 
 type ExplainContent = Skill | Status | Summonee;
 
+// skill.d.ts
+type SkillOption = {
+    hero: Hero,
+    skidx: number,
+    reset?: boolean,
+    card?: Card,
+    heros?: Hero[],
+    eheros?: Hero[],
+    hcards?: Card[],
+    summons?: Summonee[],
+    isChargedAtk?: boolean,
+    isFallAtk?: boolean,
+    isReadySkill?: boolean,
+    isExec?: boolean,
+    dmg?: number,
+    windEl?: number,
+    trigger?: Trigger,
+}
+
 type SkillHandleRes = {
     outStatus?: Status[],
     inStatus?: Status[],
@@ -276,7 +295,7 @@ type SkillHandleRes = {
     trigger?: Trigger[],
     isAttach?: boolean,
     pendamage?: number,
-    pendamageOppo?: number,
+    pendamageSelf?: number,
     addDmgCdt?: number,
     isQuickAction?: boolean,
     inStatusOppoPre?: Status[],
@@ -295,23 +314,7 @@ type SkillHandleRes = {
     exec?: () => void,
 }
 
-type SkillOption = {
-    hero: Hero,
-    skidx: number,
-    reset?: boolean,
-    card?: Card,
-    heros?: Hero[],
-    eheros?: Hero[],
-    hcards?: Card[],
-    summons?: Summonee[],
-    isChargedAtk?: boolean,
-    isFallAtk?: boolean,
-    isReadySkill?: boolean,
-    isExec?: boolean,
-    dmg?: number,
-    windEl?: number,
-}
-
+// card.d.ts
 type CardOption = {
     heros?: Hero[],
     eheros?: Hero[],
@@ -370,7 +373,7 @@ type CardHandleRes = {
     isDestroy?: boolean,
     restDmg?: number,
     isNotAddTask?: boolean,
-    exec?: (...args: any) => CardExecRes
+    exec?: () => CardExecRes
 }
 
 type CardExecRes = {
@@ -382,6 +385,7 @@ type CardExecRes = {
     changeHeroDiceCnt?: number,
 }
 
+// status.d.ts
 type StatusOption = {
     restDmg?: number,
     summon?: Summonee,
@@ -441,13 +445,14 @@ type StatusHandleRes = {
     attachEl?: number,
     isUpdateAttachEl?: boolean,
     atkAfter?: boolean,
-    exec?: (...args: any) => StatusExecRes,
+    exec?: (eStatus?: Status, exeOpt?: StatusExecOption) => StatusExecRes,
 }
 
 type StatusExecOption = {
+    hidx?: number,
     changeHeroDiceCnt?: number,
     heros?: Hero[],
-    drawEl?: number,
+    minusDiceCard?: number,
 }
 
 type StatusExecRes = {
@@ -463,6 +468,7 @@ type StatusExecRes = {
     outStatusOppo?: Status[],
 }
 
+// site.d.ts
 type SiteOption = {
     dices?: number[],
     trigger?: Trigger,
@@ -484,7 +490,7 @@ type SiteOption = {
 
 type SiteHandleRes = {
     trigger?: Trigger[],
-    exec?: (...args: any) => SiteExecRes,
+    exec?: (exeOpt: SiteExeOption) => SiteExecRes,
     minusDiceCard?: number,
     minusDiceHero?: number,
     minusDiceSkill?: number[][],
@@ -504,6 +510,7 @@ type SiteExeOption = {
     changeHeroDiceCnt?: number,
     isQuickAction?: boolean,
     summonDiffCnt?: number,
+    minusDiceCard?: number,
 }
 
 type SiteExecRes = {
@@ -513,6 +520,7 @@ type SiteExecRes = {
     outStatus?: Status[],
 }
 
+// summon.d.ts
 type SummonOption = {
     trigger?: Trigger,
     heros?: Hero[],
@@ -528,7 +536,7 @@ type SummonOption = {
     minusDiceSkill?: number[][],
 }
 
-type SummonRes = {
+type SummonHandleRes = {
     trigger?: Trigger[],
     cmds?: Cmds[],
     addDmg?: number,

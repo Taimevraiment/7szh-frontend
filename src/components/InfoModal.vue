@@ -232,6 +232,7 @@
                       :style="{ background: ist.iconBg }"
                     ></div>
                     <img
+                      v-if="ist.icon != ''"
                       :src="getPngIcon(ist.icon)"
                       :style="{
                         filter:
@@ -306,6 +307,7 @@
                       :style="{ background: ost.iconBg }"
                     ></div>
                     <img
+                      v-if="ost.icon != ''"
                       :src="getPngIcon(ost.icon)"
                       :style="{
                         filter:
@@ -450,6 +452,7 @@
                   :style="{ background: ist.iconBg }"
                 ></div>
                 <img
+                  v-if="ist.icon != ''"
                   :src="getPngIcon(ist.icon)"
                   :style="{
                     filter:
@@ -521,6 +524,7 @@
                   :style="{ background: ost.iconBg }"
                 ></div>
                 <img
+                  v-if="ost.icon != ''"
                   :src="getPngIcon(ost.icon)"
                   :style="{
                     filter:

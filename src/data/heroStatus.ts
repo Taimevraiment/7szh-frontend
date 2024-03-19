@@ -24,7 +24,7 @@ class GIStatus implements Status {
     addition: any[];
     constructor(
         id: number, name: string, description: string, icon = '', group: number, type: number[],
-        useCnt: number, maxCnt: number, roundCnt: number, handle?: (...args: any) => StatusHandleRes,
+        useCnt: number, maxCnt: number, roundCnt: number, handle?: (status: Status, options?: StatusOption) => StatusHandleRes,
         options: {
             smnId?: number, pct?: number, icbg?: string, expl?: ExplainContent[], act?: number,
             isTalent?: boolean, isReset?: boolean, add?: any[]
@@ -193,7 +193,7 @@ const statusTotal: StatusObj = {
         'buff2', 1, [4, 10], 1, 0, -1, (status: Status) => ({
             minusDiceHero: 1,
             trigger: ['change-from'],
-            exec: (_eStatus: Status, exeOpt: StatusExecOption) => {
+            exec: (_eStatus?: Status, exeOpt: StatusExecOption = {}) => {
                 let { changeHeroDiceCnt = 0 } = exeOpt;
                 if (changeHeroDiceCnt > 0) {
                     --status.useCnt;
@@ -437,7 +437,7 @@ const statusTotal: StatusObj = {
         }), { icbg: STATUS_BG_COLOR[3] }),
 
     2036: () => new GIStatus(2036, '护体岩铠', '为我方出战角色提供2点[护盾]。此[护盾]耗尽前，我方受到的[物理伤害]减半。(向上取整)',
-        '', 1, [7], 2, 0, -1, (_status: Status, options: StatusOption) => {
+        '', 1, [7], 2, 0, -1, (_status: Status, options: StatusOption = {}) => {
             const { restDmg = 0, willAttach = -1 } = options;
             if (restDmg < 2 || willAttach > 0) return { restDmg };
             return { restDmg: Math.ceil(restDmg / 2) };
@@ -675,7 +675,7 @@ const statusTotal: StatusObj = {
         'buff3', 1, [4, 10], 1, 0, -1, () => ({
             trigger: ['phase-start'],
             cmds: [{ cmd: 'getDice', cnt: 3, element: 0 }, { cmd: 'getCard', cnt: 1 }],
-            exec: (eStatus: Status) => {
+            exec: (eStatus?: Status) => {
                 if (eStatus) --eStatus.useCnt;
                 return {}
             }
@@ -1005,7 +1005,7 @@ const statusTotal: StatusObj = {
         'buff3', 1, [4], 2, 0, -1, (status: Status) => ({
             minusDiceHero: 1,
             trigger: ['change-from'],
-            exec: (_eStatus: Status, exeOpt: StatusExecOption) => {
+            exec: (_eStatus?: Status, exeOpt: StatusExecOption = {}) => {
                 const { changeHeroDiceCnt = 0 } = exeOpt;
                 if (changeHeroDiceCnt == 0) return { changeHeroDiceCnt }
                 --status.useCnt;
@@ -1021,7 +1021,7 @@ const statusTotal: StatusObj = {
             minusDiceHero: 1,
             isQuickAction: true,
             trigger: ['change-from'],
-            exec: (_eStatus: Status, exeOpt: StatusExecOption) => {
+            exec: (_eStatus?: Status, exeOpt: StatusExecOption = {}) => {
                 const { changeHeroDiceCnt = 0 } = exeOpt;
                 if (changeHeroDiceCnt == 0) return { changeHeroDiceCnt }
                 --status.useCnt;
@@ -1038,7 +1038,7 @@ const statusTotal: StatusObj = {
                 minusDiceHero: status.perCnt,
                 trigger: ['wind-dmg', 'change-from'],
                 attachEl: 5,
-                exec: (_eStatus: Status, exeOpt: StatusExecOption) => {
+                exec: (_eStatus?: Status, exeOpt: StatusExecOption = {}) => {
                     if (trigger == 'change-from' && status.perCnt > 0) {
                         const { changeHeroDiceCnt = 0 } = exeOpt;
                         if (changeHeroDiceCnt == 0) return { changeHeroDiceCnt }
@@ -2114,15 +2114,66 @@ const statusTotal: StatusObj = {
         }, { icbg: STATUS_BG_COLOR[5], expl: [heroStatus(2178)] }),
 
     2178: () => new GIStatus(2178, '风压坍陷', '【结束阶段：】将附属角色切换为｢出战角色｣。；【[可用次数]：{useCnt}】；(同一方场上最多存在一个此状态)',
-        'buff3', 0, [3, 10], 1, 0, -1, (status: Status, options: StatusOption = {}) => ({
+        'buff3', 0, [3], 1, 0, -1, (_status: Status, options: StatusOption = {}) => ({
             trigger: ['phase-end'],
             onlyOne: true,
-            exec: () => {
-                --status.useCnt;
+            exec: (eStatus?: Status) => {
+                if (eStatus) --eStatus.useCnt;
                 const { hidx = -1 } = options;
                 return { cmds: [{ cmd: 'switch-to-self', hidxs: [hidx], cnt: 1100 }] }
             }
         })),
+
+    2179: (expl?: ExplainContent[]) => new GIStatus(2179, '涟锋旋刃', '本角色将在下次行动时，直接使用技能：【涟锋旋刃】。',
+        'buff3', 0, [10, 11], 1, 0, -1, (status: Status) => ({
+            trigger: ['change-from', 'useReadySkill'],
+            skill: 19,
+            exec: () => {
+                --status.useCnt;
+                return {}
+            }
+        }), { expl }),
+
+    2180: () => new GIStatus(2180, '暗流的诅咒', '【所在阵营的角色使用｢元素战技｣或｢元素爆发｣时：】需要多花费1个元素骰。【[可用次数]：{useCnt}】',
+        'debuff', 1, [4], 2, 0, -1, (status: Status, options: StatusOption = {}) => {
+            const { minusSkillRes } = minusDiceSkillHandle(options, { skilltype2: [0, 0, -1], skilltype3: [0, 0, -1] });
+            return {
+                trigger: ['skilltype2', 'skilltype3'],
+                ...minusSkillRes,
+                exec: () => {
+                    --status.useCnt;
+                    return {}
+                },
+            }
+        }),
+
+    2181: () => new GIStatus(2181, '水之新生', '【所附属角色被击倒时：】移除此效果，使角色[免于被击倒]，并治疗该角色到4点生命值。触发此效果后，角色造成的[物理伤害]变为[水元素伤害]，且水元素伤害+1。',
+        'heal2', 0, [10, 13], 1, 0, -1, (_status: Status, options: StatusOption = {}) => ({
+            trigger: ['will-killed'],
+            cmds: [{ cmd: 'revive', cnt: 4 }],
+            exec: (eStatus?: Status) => {
+                if (eStatus) {
+                    --eStatus.useCnt;
+                    return {}
+                }
+                const { heros = [], hidx = -1 } = options;
+                if (!heros[hidx]?.talentSlot) return {}
+                heros[hidx].talentSlot = null;
+                return { inStatus: [heroStatus(2093)] }
+            }
+        })),
+
+    2182: (useCnt = 1) => new GIStatus(2182, '重甲蟹壳', '每层提供1点[护盾]，保护所附属角色。', '', 0, [7], useCnt, 100, -1),
+
+    2183: (expl?: ExplainContent[]) => new GIStatus(2183, '炽烈轰破', '本角色将在下次行动时，直接使用技能：【炽烈轰破】。',
+        'buff3', 0, [10, 11], 1, 0, -1, (status: Status) => ({
+            trigger: ['change-from', 'useReadySkill'],
+            skill: 20,
+            exec: () => {
+                --status.useCnt;
+                return {}
+            }
+        }), { expl }),
 
 };
 

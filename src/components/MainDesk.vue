@@ -347,6 +347,7 @@
               :style="{ background: ists.iconBg }"
             ></div>
             <img
+              v-if="ists.icon != ''"
               class="status-icon"
               :style="{
                 filter:
@@ -413,6 +414,7 @@
               :style="{ background: osts.iconBg }"
             ></div>
             <img
+              v-if="osts.icon != ''"
               class="status-icon"
               :style="{
                 filter:

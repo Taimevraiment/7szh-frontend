@@ -18,14 +18,14 @@ class GISummonee implements Summonee {
     isTalent: boolean;
     statusId: number;
     addition: string[];
-    handle: (summon: Summonee, smnOpt?: SummonOption) => SummonRes;
+    handle: (summon: Summonee, smnOpt?: SummonOption) => SummonHandleRes;
     descriptions: string[] = [];
     isSelected: boolean = false;
     canSelect: boolean = false;
     isWill: boolean = false;
     constructor(
         id: number, name: string, description: string, src: string, useCnt: number, maxUse: number,
-        shield: number, damage: number, element: number, handle?: (summon: Summonee, smnOpt?: SummonOption) => SummonRes,
+        shield: number, damage: number, element: number, handle?: (summon: Summonee, smnOpt?: SummonOption) => SummonHandleRes,
         options: { pct?: number, isTalent?: boolean, adt?: string[], pdmg?: number, isDestroy?: number, stsId?: number, spReset?: boolean } = {}
     ) {
         this.id = id;
@@ -44,7 +44,7 @@ class GISummonee implements Summonee {
         this.pendamage = pdmg;
         this.isDestroy = isDestroy;
         this.statusId = stsId;
-        this.handle = ((summon: Summonee, smnOpt?: SummonOption): SummonRes => {
+        this.handle = ((summon: Summonee, smnOpt?: SummonOption): SummonHandleRes => {
             const { reset = false } = smnOpt ?? {};
             if (reset) {
                 summon.perCnt = pct;
@@ -65,7 +65,7 @@ type SummoneeObj = {
     [id: string]: (...args: any) => GISummonee
 }
 
-const phaseEndAtk = (summon: Summonee, healHidxs?: number[]): SummonRes => {
+const phaseEndAtk = (summon: Summonee, healHidxs?: number[]): SummonHandleRes => {
     if (summon.isDestroy == 0) summon.useCnt = Math.max(0, summon.useCnt - 1);
     const cmds: Cmds[] = [];
     if (summon.damage > 0) cmds.push({ cmd: 'attack' });

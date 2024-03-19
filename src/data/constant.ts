@@ -34,7 +34,7 @@ export const CARD_SUBTYPE_URL = [
 
 export const SKILL_TYPE = ['', '普通攻击', '元素战技', '元素爆发', '被动技能'];
 
-export const SKILL_TYPE_ABBR = ['', '普', '技', '爆'];
+export const SKILL_TYPE_ABBR = ['', '普', '技', '爆', '被'];
 
 export const ELEMENT_ICON = ['any', 'water', 'fire', 'thunder', 'ice', 'wind', 'rock', 'grass', 'same', 'energy', 'subtype8', '', 'shield2', 'any1-dice-bg', 'any-dice-bg'];
 

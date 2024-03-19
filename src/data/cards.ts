@@ -2197,6 +2197,33 @@ const allCards: CardObj = {
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_Faruzan.webp',
         3, 5, 0, [6, 7], 1409, 1, talentSkill(2), { expl: talentExplain(1409, 2), energy: 2 }),
 
+    782: new GICard(782, '暗流涌动', '【入场时：】如果装备有此牌的【深渊使徒·激流】已触发过【水之新生】，则在对方场上生成【暗流的诅咒】。；装备有此牌的【深渊使徒·激流】被击倒或触发【水之新生】时：在对方场上生成【暗流的诅咒】。',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_InvokerHeraldWater.webp',
+        1, 1, 0, [6], 1723, 1, (_card: Card, cardOpt: CardOption = {}) => {
+            const { heros = [], hidxs = [] } = cardOpt;
+            const isTriggered = heros[hidxs[0]]?.inStatus.every(ist => ist.id != 2181);
+            return {
+                outStatusOppo: isCdt(isTriggered, [heroStatus(2180)]),
+                trigger: ['will-killed'],
+                exec: () => ({ outStatusOppo: [heroStatus(2180)] })
+            }
+        }, { expl: [heroStatus(2181)] }),
+
+    783: new GICard(783, '熔火铁甲', '【入场时：】对装备有此牌的【铁甲熔火帝皇】[附着火元素]。；我方除【重甲蟹壳】以外的[护盾]状态或[护盾]出战状态被移除后：装备有此牌的【铁甲熔火帝皇】附属2层【重甲蟹壳】。(每回合1次)',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_HermitCrabPrimo.webp',
+        1, 2, 0, [6], 1744, 1, (card: Card, cardOpt: CardOption = {}) => {
+            if (card.perCnt == 0) return {}
+            const { hidxs = [] } = cardOpt;
+            // todo 后面的效果暂时不写
+            return {
+                cmds: [{ cmd: 'attach', hidxs, element: 2 }],
+                exec: () => {
+                    --card.perCnt;
+                    return {}
+                }
+            }
+        }, { expl: [heroStatus(2182)], pct: 1 }),
+
 
     901: new GICard(901, '雷楔', '[战斗行动]：将【刻晴】切换到场上，立刻使用【星斗归位】。本次【星斗归位】会为【刻晴】附属【雷元素附魔】，但是不会再生成【雷楔】。(【刻晴】使用【星斗归位】时，如果此牌在手中：不会再生成【雷楔】，而是改为弃置此牌，并为【刻晴】附属【雷元素附魔】)',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/12/12109492/3d370650e825a27046596aaf4a53bb8d_7172676693296305743.png',

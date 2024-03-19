@@ -213,10 +213,18 @@ const readySkillTotal: { [key: number]: (...args: any) => Skill } = {
     17: () => new GISkill('衡平推裁', '(需准备1个行动轮)；造成{dmg}点[水元素伤害]，如果生命值至少为6，则对自身造成1点[穿透伤害]使伤害+1。',
         1, 2, 0, 1, { ec: -2, rdskidx: 17 }, '', '', [], (options: SkillOption) => {
             if (options.hero.hp < 6) return {}
-            return { addDmgCdt: 1, pendamageOppo: 1 }
+            return { addDmgCdt: 1, pendamageSelf: 1 }
         }),
 
     18: () => new GISkill('霆电迸发', '(需准备1个行动轮)；造成{dmg}点[雷元素伤害]。', 3, 2, 0, 3, { ec: -2, rdskidx: 18 }),
+
+    19: () => new GISkill('涟锋旋刃', '(需准备1个行动轮)；造成{dmg}点[水元素伤害]。', 2, 1, 0, 1, { ec: -2, rdskidx: 19 }),
+
+    20: () => new GISkill('炽烈轰破', '(需准备1个行动轮)；造成{dmg}点[火元素伤害]，对敌方所有后台角色造成2点[穿透伤害]。本角色每附属有2层【重甲蟹壳】，就使此技能造成的[火元素伤害]+1。',
+        3, 1, 0, 2, { ec: -2, rdskidx: 20 }, '', '', [heroStatus(2182)], (options: SkillOption) => {
+            const { hero: { inStatus } } = options;
+            return { pendamage: 2, addDmgCdt: Math.floor((inStatus.find(ist => ist.id == 2182)?.useCnt ?? 0) / 2) }
+        }),
 }
 
 const readySkill = (id: number, ...args: any) => {
@@ -758,7 +766,7 @@ const allHeros: HeroObj = {
             [newSummonee(3048), heroStatus(2132)], (options: SkillOption) => {
                 const { hero: { hp, skills: [, , skill2] } } = options;
                 return {
-                    pendamageOppo: isCdt(hp >= 6, 1),
+                    pendamageSelf: isCdt(hp >= 6, 1),
                     summon: [newSummonee(3048)],
                     inStatusOppo: [heroStatus(2132, [skill2])],
                 }
@@ -1010,7 +1018,7 @@ const allHeros: HeroObj = {
             '',
             [heroStatus(2176)], (options: SkillOption) => {
                 const { hero: { hp, skills: [, { src }] } } = options;
-                return { outStatusOppo: [heroStatus(2176, src)], pendamageOppo: isCdt(hp >= 6, 1) }
+                return { outStatusOppo: [heroStatus(2176, src)], pendamageSelf: isCdt(hp >= 6, 1) }
             }),
         new GISkill('御咏鸣神刈山祭', '造成{dmg}点[雷元素伤害]，治疗本角色2点。', 3, 4, 3, 3, { ec: 2 },
             '',
@@ -1152,7 +1160,7 @@ const allHeros: HeroObj = {
         new GISkill('呜呼流·风隐急进', '造成{dmg}点[风元素伤害]，本角色[准备技能]：【风风轮舞踢】。；如果当前技能引发了扩散，则【风风轮舞踢】将改为造成被扩散元素的伤害。', 2, 1, 3, 5, {},
             'https://patchwiki.biligame.com/images/ys/f/f1/nft00ohrbmn6j4hqssftn7kh4ha3nk5.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2024/01/25/258999284/1b3691e9a037a54d02076135237d2925_8714311620973409736.png',
-            [heroStatus(2155), readySkill(12)], (options: SkillOption) => {
+            [readySkill(12)], (options: SkillOption) => {
                 const { windEl = 0 } = options;
                 return { inStatusOppo: [heroStatus(2155, windEl, [readySkill(12)])] }
             }),
@@ -1531,6 +1539,24 @@ const allHeros: HeroObj = {
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/9bd9b0f4cad85c234146ef15518ee57e_5116572838966914686.png')
     ]),
 
+    // todo 被动触发后的加伤和附魔没做
+    1723: new GIHero(1723, '深渊使徒·激流', 0, 6, 1, 0,
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Char_Monster_InvokerHeraldWater.webp',
+        skill1('波刃锋斩'), [
+        new GISkill('洄涡锋刃', '造成{dmg}点[水元素伤害]，然后[准备技能]：【涟锋旋刃】。', 2, 2, 3, 1, {},
+            '',
+            '',
+            [readySkill(19)], () => ({ inStatusOppo: [heroStatus(2179, [readySkill(19)])] })),
+        new GISkill('激流强震', '造成{dmg}点[水元素伤害]，在对方场上生成【暗流的诅咒】。', 3, 4, 3, 1, { ec: 2 },
+            '',
+            '',
+            [heroStatus(2180)], () => ({ outStatus: [heroStatus(2179)] })),
+        new GISkill('水之新生', '战斗开始时，初始附属【水之新生】。', 4, 0, 0, 0, {},
+            '',
+            '',
+            [heroStatus(2181)], () => ({ trigger: ['game-start'], inStatus: [heroStatus(2181)] }))
+    ]),
+
     1741: new GIHero(1741, '愚人众·火之债务处理人', 8, 9, 2, 0,
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/12109492/9f134f05bb71f0ee1afb33785cf945e9_8487118119361104507.png',
         skill1('突刺'), [
@@ -1594,6 +1620,44 @@ const allHeros: HeroObj = {
                 return {
                     trigger: ['getdmg'],
                     cmds: [{ cmd: 'getEnergy', cnt: 1 }]
+                }
+            })
+    ]),
+
+    1744: new GIHero(1744, '铁甲熔火帝皇', 0, 6, 2, 0,
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Char_Monster_HermitCrabPrimo.webp',
+        skill1('重钳碎击'), [
+        new GISkill('烈焰燃绽', '造成{dmg}点[火元素伤害]; 如果本角色附属有至少7层【重甲蟹壳】，则此伤害+1。；然后，本角色附属2层【重甲蟹壳】。', 2, 1, 3, 2, {},
+            '',
+            '',
+            [heroStatus(2182)], (options: SkillOption) => {
+                const { hero: { inStatus } } = options;
+                const sts2182Cnt = inStatus.find(ist => ist.id == 2182)?.useCnt ?? 0;
+                return { addDmgCdt: isCdt(sts2182Cnt >= 7, 1), inStatusOppo: [heroStatus(2182, 2)] }
+            }),
+        new GISkill('战阵爆轰', '本角色[准备技能]：【炽烈轰破】。', 3, 0, 3, 2, { ec: 2 },
+            '',
+            '',
+            [readySkill(20)], () => ({ inStatusOppo: [heroStatus(2183, [readySkill(20)])] })),
+        new GISkill('帝王甲胄', '战斗开始时：初始附属6层【重甲蟹壳】。；【我方执行任意行动后：】如果我方场上存在【重甲蟹壳】以外的[护盾]状态或[护盾]出战状态，则将其全部移除; 每移除1个，就使角色附属2层【重甲蟹壳】。', 4, 0, 0, 0, {},
+            '',
+            '',
+            [heroStatus(2182)], (options: SkillOption) => {
+                const { heros = [], trigger = '' } = options;
+                return {
+                    trigger: ['game-start', 'action-start'],
+                    inStatus: isCdt(trigger == 'game-start', [heroStatus(2182, 6)]),
+                    exec: () => {
+                        if (trigger == 'game-start') return {}
+                        let stsCnt = 0;
+                        for (const hero of heros) {
+                            stsCnt += [...hero.inStatus, ...hero.outStatus].filter(sts => sts.type.includes(2) && sts.id != 2182).length;
+                            hero.inStatus = hero.inStatus.filter(ist => !ist.type.includes(2) || ist.id == 2182);
+                            if (hero.isFront) hero.outStatus = hero.inStatus.filter(ost => !ost.type.includes(2));
+                        }
+                        if (stsCnt == 0) return {}
+                        return { inStatus: [heroStatus(2182, stsCnt * 2)] }
+                    }
                 }
             })
     ]),
