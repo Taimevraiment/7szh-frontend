@@ -237,7 +237,7 @@ type Cmds = {
 type Cmd = 'getDice' | 'getCard' | 'getCard-oppo' | 'getEnergy' | 'heal' | 'getInStatus' | 'getOutStatus' | 'getOutStatusOppo' |
     'getInStatusOppo' | 'reroll' | 'revive' | 'switch-to-self' | 'switch-after-self' | 'switch-before-self' | 'switch-to' |
     'switch-before' | 'switch-after' | 'attach' | 'attack' | 'changeDice' | 'changeCard' | 'changeElement' | 'useSkill' |
-    'changePattern' | 'getSkill' | 'loseSkill' | '';
+    'changePattern' | 'getSkill' | 'loseSkill' | 'addCard' | '';
 
 type GameInfo = {
     artifactCnt: number, // 初始牌堆圣遗物数量
@@ -260,10 +260,10 @@ type TrgElReDmg = 'water' | 'fire' | 'thunder' | 'ice';
 type Trigger = 'phase-start' | 'phase-end' | 'phase-dice' | 'game-start' | 'action-start' | 'end-phase' | 'any-end-phase' | 'other-skill' |
     'skill' | `skilltype${TrgSkType}` | `other-skilltype${TrgSkType}` | `after-skilltype${TrgSkType}` | 'after-skill' | 'oppo-skill' |
     'change' | 'change-to' | 'change-from' | 'change-oppo' | 'card' | 'elReaction' | `el${TrgEl}Reaction` | `el5Reaction:${TrgElRe}` |
-    `other-el${TrgEl}Reaction` | 'other-elReaction' | 'ecard' |
-    `el6Reaction:${TrgElRe}` | 'get-elReaction' | `get-el${TrgEl}Reaction` | 'get-elReaction-oppo' | 'kill' | 'killed' | 'will-killed' |
-    'dmg' | `${TrgDmg}-dmg` | `${TrgElReDmg}-dmg-wind` | 'getdmg' | `${TrgDmg}-getdmg` | 'getdmg-oppo' | 'revive' | `${TrgDmg}-getdmg-oppo` |
-    'heal' | 'useReadySkill' | 'status-destroy' | 'summon-destroy' | 'slot-destroy' | 'site-destroy' | 'calc' | '';
+    `other-el${TrgEl}Reaction` | 'other-elReaction' | 'ecard' | `el6Reaction:${TrgElRe}` | 'get-elReaction' | `get-el${TrgEl}Reaction` |
+    'get-elReaction-oppo' | 'kill' | 'killed' | 'will-killed' | 'dmg' | `${TrgDmg}-dmg` | `${TrgElReDmg}-dmg-wind` | 'getdmg' | 'other-getdmg' |
+    `${TrgDmg}-getdmg` | 'getdmg-oppo' | 'revive' | `${TrgDmg}-getdmg-oppo` | 'heal' | 'eheal' | 'useReadySkill' | 'status-destroy' |
+    'summon-destroy' | 'slot-destroy' | 'site-destroy' | 'calc' | '';
 
 type ExplainContent = Skill | Status | Summonee;
 
@@ -343,6 +343,7 @@ type CardOption = {
     minusDiceCard?: number,
     ehidx?: number,
     minusDiceSkill?: number[][],
+    getdmg?: number[],
 }
 
 type CardHandleRes = {
@@ -518,6 +519,7 @@ type SiteExecRes = {
     isDestroy: boolean,
     changeHeroDiceCnt?: number,
     outStatus?: Status[],
+    summon?: Summonee[],
 }
 
 // summon.d.ts

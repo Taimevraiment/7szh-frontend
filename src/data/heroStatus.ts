@@ -937,9 +937,6 @@ const statusTotal: StatusObj = {
                         if (type12 > -1) status.type.splice(type12, 1);
                         return { cmds: [{ cmd: 'getInStatus', status: [heroStatus(2076, status.icon)], hidxs }] }
                     }
-                    if (trigger == 'phase-end') {
-                        return { cmds: [{ cmd: '' }] }
-                    }
                     return {}
                 }
             }
@@ -970,7 +967,7 @@ const statusTotal: StatusObj = {
             trigger: ['phase-end'],
             exec: (eStatus?: Status) => {
                 if (eStatus) --eStatus.useCnt;
-                return { cmds: [{ cmd: '' }] };
+                return {};
             },
         }), { icbg: DEBUFF_BG_COLOR }),
 
@@ -1374,7 +1371,7 @@ const statusTotal: StatusObj = {
             trigger: ['phase-end'],
             exec: (eStatus?: Status) => {
                 if (eStatus) --eStatus.useCnt;
-                return { cmds: [{ cmd: '' }] };
+                return {};
             },
         }), { icbg: DEBUFF_BG_COLOR }),
 
@@ -1399,16 +1396,12 @@ const statusTotal: StatusObj = {
             if (fhero.id == 1605) triggers.push('skilltype3');
             if (fhero.outStatus.some(ist => ist.id == 2113)) triggers.push('phase-start');
             const isTalent = !!heros.find(h => h.id == 1605)?.talentSlot;
-            let cmds: Cmds[] = [{ cmd: '' }];
-            if (fhero.hp < fhero.maxhp && isTalent) {
-                cmds = [{ cmd: 'getDice', cnt: 1, element: -2 }];
-            }
             return {
                 damage: 1,
                 element: 7,
                 heal: 1,
                 trigger: triggers,
-                cmds,
+                cmds: isCdt(fhero.hp < fhero.maxhp && isTalent, [{ cmd: 'getDice', cnt: 1, element: -2 }]),
             }
         }),
 
@@ -1541,7 +1534,7 @@ const statusTotal: StatusObj = {
             }
         }), { expl }),
 
-    2133: () => new GIStatus(2133, '攻袭余威', '【结束阶段：】如果角色生命值至少为6，则受到2点穿透伤害。；【[持续回合]：{roundCnt}】',
+    2133: () => new GIStatus(2133, '攻袭余威', '【结束阶段：】如果角色生命值至少为6，则受到2点[穿透伤害]。；【[持续回合]：{roundCnt}】',
         'debuff', 0, [1, 3], 1, 0, 1, (_status: Status, options: StatusOption = {}) => {
             const { heros = [], hidx = -1 } = options;
             return {
@@ -1551,7 +1544,7 @@ const statusTotal: StatusObj = {
                 isOppo: true,
                 exec: (eStatus?: Status) => {
                     if (eStatus) --eStatus.useCnt;
-                    return { cmds: [{ cmd: '' }] };
+                    return {}
                 }
             }
         }),
@@ -1598,7 +1591,7 @@ const statusTotal: StatusObj = {
             trigger: ['phase-end'],
             exec: (eStatus?: Status) => {
                 if (eStatus) --eStatus.useCnt;
-                return { cmds: [{ cmd: '' }] };
+                return {};
             },
         }), { icbg: DEBUFF_BG_COLOR, pct: -type, expl: isExpl ? [heroStatus(2137, type ^ 1, false)] : [] }),
 
@@ -1947,7 +1940,7 @@ const statusTotal: StatusObj = {
                 trigger: ['phase-end'],
                 exec: (eStatus?: Status) => {
                     if (eStatus) --eStatus.useCnt;
-                    return { cmds: [{ cmd: '' }] };
+                    return {};
                 },
             }
         }, { icbg: DEBUFF_BG_COLOR }),
@@ -2174,6 +2167,43 @@ const statusTotal: StatusObj = {
                 return {}
             }
         }), { expl }),
+
+    2184: () => new GIStatus(2184, '悠远雷暴', '【结束阶段：】对所附属角色造成2点[穿透伤害]。；【[可用次数]：{useCnt}】',
+        'debuff', 0, [1], 1, 0, -1, (_status: Status, options: StatusOption = {}) => {
+            const { hidx = -1 } = options;
+            return {
+                trigger: ['phase-end'],
+                pendamage: 2,
+                hidxs: [hidx],
+                isOppo: true,
+                exec: (eStatus?: Status) => {
+                    if (eStatus) --eStatus.useCnt;
+                    return {}
+                }
+            }
+        }),
+
+    2185: () => new GIStatus(2185, '清洁工作todo名字待定', '所附属角色下次造成的伤害+1。；【[可用次数]：{useCnt}(可叠加，最多叠加到2)】',
+        'buff5', 0, [4, 6], 1, 2, 1, (status: Status) => ({
+            trigger: ['skill'],
+            addDmg: 1,
+            exec: () => {
+                --status.useCnt;
+                return {}
+            }
+        })),
+
+    2186: () => new GIStatus(2186, '缤纷马卡龙(生效中)', '该角色接下来3次受到伤害后再治疗其1点。',
+        'heal', 0, [4], 3, 0, -1, (_status: Status, options: StatusOption = {}) => {
+            const { hidx = -1 } = options;
+            return {
+                trigger: ['getdmg'],
+                exec: (eStatus?: Status) => {
+                    if (eStatus) --eStatus.useCnt;
+                    return { cmds: [{ cmd: 'heal', cnt: 1, hidxs: [hidx] }] }
+                },
+            }
+        }),
 
 };
 

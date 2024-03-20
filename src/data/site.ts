@@ -1,6 +1,7 @@
 import { cardsTotal } from './cards';
 import { ELEMENT_ICON } from './constant';
 import { heroStatus } from './heroStatus';
+import { newSummonee } from './summonee';
 import { allHidxs, isCdt, minusDiceSkillHandle } from './utils';
 
 class GISite implements Site {
@@ -774,6 +775,48 @@ const siteTotal: SiteObj = {
             }
         }
     }),
+    // 清籁岛
+    4049: (cardId: number) => new GISite(4049, cardId, 2, 0, 1, (site: GISite, options: SiteOption = {}) => {
+        const { heal = [], trigger = '' } = options;
+        const hidxs = heal.map((hl, hli) => ({ hl, hli })).filter(v => v.hl > 0).map(v => v.hli);
+        return {
+            trigger: ['heal', 'eheal', 'phase-end'],
+            exec: () => {
+                if (trigger == 'phase-end') return { isDestroy: --site.cnt == 0 }
+                return {
+                    cmds: [{ cmd: `getInStatus${trigger == 'eheal' ? 'Oppo' : ''}`, status: [heroStatus(2184)], hidxs }],
+                    isDestroy: false,
+                }
+            }
+        }
+    }),
+    // 太郎丸
+    4050: (cardId: number) => new GISite(4050, cardId, 0, 0, 2, (site: GISite, options: SiteOption = {}) => {
+        const { card } = options;
+        if (card?.id != 902) return {}
+        return {
+            trigger: ['card'],
+            siteCnt: site.cnt < 1 ? 1 : -2,
+            exec: () => {
+                if (++site.cnt < 2) return { isDestroy: false }
+                return {
+                    summon: [newSummonee(3059)],
+                    isDestroy: true,
+                }
+            }
+        }
+    }),
+    // 白手套和渔夫
+    4051: (cardId: number) => new GISite(4051, cardId, 2, 0, 1, (site: GISite) => ({
+        trigger: ['phase-end'],
+        exec: () => {
+            --site.cnt;
+            return {
+                cmds: [{ cmd: 'addCard', cnt: 1, card: 903, hidxs: [5] }],
+                isDestroy: site.cnt == 0,
+            }
+        }
+    })),
 }
 
 export const newSite = (id: number, ...args: any) => siteTotal[id](...args);

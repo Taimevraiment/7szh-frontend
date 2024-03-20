@@ -297,7 +297,7 @@ const summonTotal: SummoneeObj = {
 
     3024: () => new GISummonee(3024, '光降之剑', '【优菈使用｢普通攻击｣或｢元素战技｣时：】此牌累积2点｢能量层数｣，但是【优菈】不会获得[充能]。；【结束阶段：】弃置此牌。造成{dmg}点[物理伤害]; 每有1点｢能量层数｣，都使次伤害+1。(影响此牌｢[可用次数]｣的效果会作用于｢能量层数｣。)',
         'https://uploadstatic.mihoyo.com/ys-obc/2023/02/04/12109492/a475346a830d9b62d189dc9267b35a7a_4963009310206732642.png',
-        0, 16, 0, 3, 0, (summon: Summonee, smnOpt: SummonOption = {}) => {
+        0, 100, 0, 3, 0, (summon: Summonee, smnOpt: SummonOption = {}) => {
             const { heros = [], trigger = '' } = smnOpt;
             return {
                 trigger: ['phase-end', 'skilltype1', 'skilltype2'],
@@ -845,6 +845,10 @@ const summonTotal: SummoneeObj = {
                 },
             }
         }),
+
+    3059: () => new GISummonee(3059, '愤怒的太郎丸', '【结束阶段：】造成{dmg}点[物理伤害]。；【[可用次数]：{useCnt}】',
+        '',
+        2, 2, 0, 2, 0),
 
 }
 

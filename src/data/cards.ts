@@ -425,6 +425,27 @@ const allCards: CardObj = {
             }
         }), { uct: 0, isResetUct: true }),
 
+    68: new GICard(68, '公义的酬报', '角色使用｢元素爆发｣造成的伤害+2。；【我方出战角色受到伤害或治疗后：】累积1点｢公义之理｣。如果此牌已累积3点｢公义之理｣，则消耗3点｢公义之理｣，使角色获得1点[充能]。',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Weapon_Gongyichoubao.webp',
+        2, 8, 0, [0], 5, 1, (card: Card, cardOpt: CardOption = {}) => {
+            const { heros = [], hidxs = [], getdmg = [], heal = [] } = cardOpt;
+            const fhidx = heros.findIndex(h => h.isFront);
+            const trigger: Trigger[] = [];
+            if (getdmg[fhidx] > 0) trigger.push('getdmg', 'other-getdmg');
+            if (heal[fhidx] > 0) trigger.push('heal');
+            const hero = heros[hidxs[0]];
+            const execmds = isCdt<Cmds[]>(card.useCnt >= 2 && hero.energy < hero.maxEnergy, [{ cmd: 'getEnergy', cnt: 1 }]);
+            return {
+                addDmgType3: 2,
+                trigger,
+                execmds,
+                exec: () => {
+                    if (++card.useCnt >= 3 && hero.energy < hero.maxEnergy) card.useCnt -= 3;
+                    return {}
+                }
+            }
+        }, { uct: 0 }),
+
     81: normalWeapon(81, '旅行剑', 1, 'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/75720734/2540a7ead6f2e957a6f25c9899ce428b_3859616323968734996.png'),
 
     82: jiliWeapon(82, '祭礼剑', 1, 'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/75720734/5dda866add6d4244a69c0ffdd2b53e51_1375735839691106206.png'),
@@ -868,6 +889,21 @@ const allCards: CardObj = {
             }
         }, { uct: 0 }),
 
+    125: new GICard(125, '紫晶的花冠', '【所附属角色为出战角色，敌方受到[草元素伤害]后：】累积1枚｢花冠水晶｣。如果｢花冠水晶｣大于等于我方手牌数，则生成1个随机基础元素骰。(每回合至多生成2个)',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Artifact_Zijinghuaguan.webp',
+        1, 8, 0, [1], 0, 1, (card: Card, cardOpt: CardOption = {}) => {
+            const { heros = [], hidxs = [], hcardsCnt = 10 } = cardOpt;
+            if (!heros[hidxs[0]]?.isFront || card.perCnt == 0) return {}
+            const execmds = isCdt<Cmds[]>(card.useCnt + 1 >= hcardsCnt, [{ cmd: 'getDice', cnt: 1, element: -1 }]);
+            return {
+                trigger: ['grass-getdmg-oppo'],
+                execmds,
+                exec: () => {
+                    if (++card.useCnt >= hcardsCnt) --card.perCnt;
+                    return {}
+                }
+            }
+        }, { uct: 0, pct: 2, isResetUct: true }),
 
     180: normalElArtifact(180, '破冰踏雪的回音', 4, 'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/75720734/65841e618f66c6cb19823657118de30e_3244206711075165707.png'),
 
@@ -968,6 +1004,10 @@ const allCards: CardObj = {
     218: new GICard(218, '梅洛彼得堡', '【我方出战角色受到伤害或治疗后：】此牌累积1点｢禁令｣。(最多累积到4点)；【行动阶段开始时：】如果此牌已有4点｢禁令｣，则消耗4点，在敌方场上生成【严格禁令】。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/03/06/258999284/41b42ed41f27f21f01858c0cdacd6286_8391561387795885599.png',
         1, 8, 1, [2], 0, 0, () => ({ site: [newSite(4047, 218)] })),
+
+    219: new GICard(219, '清籁岛', '【任意阵营的角色受到治疗后：】使该角色附属【悠远雷暴】。；[持续回合]：2',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Assist_Location_Qinglaidao.webp',
+        0, 8, 1, [2], 0, 0, () => ({ site: [newSite(4049, 219)] }), { expl: [heroStatus(2184)] }),
 
     301: new GICard(301, '派蒙', '【行动阶段开始时：】生成2点[万能元素骰]。；[可用次数]：2。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/158741257/8b291b7aa846d8e987a9c7d60af3cffb_7229054083686130166.png',
@@ -1084,6 +1124,14 @@ const allCards: CardObj = {
             }
             return { site: [newSite(4046, 323, Math.min(4, elcnt))] }
         }),
+
+    324: new GICard(324, '太郎丸', '【入场时：】生成3张【太郎丸的存款】，均匀地置入我方牌库中。；我方打出2张【太郎丸的存款】后：弃置此牌，召唤【愤怒的太郎丸】。',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Assist_NPC_Taroumaru.webp',
+        2, 0, 1, [3], 0, 0, () => ({ cmds: [{ cmd: 'addCard', cnt: 3, card: 902, element: 1 }], site: [newSite(4050, 324)] }), { expl: [newSummonee(3059)] }),
+
+    325: new GICard(325, '白手套和渔夫', '【结束阶段：】生成1张｢清洁工作｣，随机将其置入我方牌库顶部5张牌之中。；[可用次数]：2',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Assist_NPC_Baishoutao.webp',
+        2, 0, 1, [3], 0, 0, () => ({ site: [newSite(4051, 325)] })),
 
     401: new GICard(401, '参量质变仪', '【双方角色使用技能后：】如果造成了元素伤害，此牌积累1个｢质变进度｣。；此牌已累积3个｢质变进度｣时，弃置此牌并生成3个不同的基础元素骰。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/158741257/380f0bb73ffac88a2e8b60a1069a8246_3779576916894165131.png',
@@ -1401,6 +1449,10 @@ const allCards: CardObj = {
             }
         }),
 
+    529: new GICard(529, '海中寻宝', '生成6张【海底宝藏】，随机地置入我方牌库中。',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Event_Event_Xunbao.webp',
+        1, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'addCard', cnt: 6, card: 904 }] })),
+
     561: new GICard(561, '自由的新风', '【本回合中，轮到我方行动期间有对方角色被击倒时：】本次行动结束后，我方可以再连续行动一次。；【[可用次数]：】1',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/09/24/258999284/bccf12a9c926bec7203e543c469ac58d_1423280855629304603.png',
         0, 8, 2, [8], 0, 0, () => ({ outStatus: [heroStatus(2054)] })),
@@ -1662,6 +1714,13 @@ const allCards: CardObj = {
         2, 8, 2, [5], 0, 1, (_card: Card, cardOpt: CardOption = {}) => {
             const canSelectHero = (cardOpt?.heros ?? []).map(h => h.hp < h.maxhp);
             return { cmds: [{ cmd: 'heal', cnt: 2 }], inStatus: [heroStatus(2159), heroStatus(2009)], canSelectHero }
+        }),
+
+    615: new GICard(615, '缤纷马卡龙', '治疗目标角色1点，该角色接下来3次受到伤害后再治疗其1点。',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Event_Food_Macarons.webp',
+        2, 8, 2, [5], 0, 1, (_card: Card, cardOpt: CardOption = {}) => {
+            const canSelectHero = (cardOpt?.heros ?? []).map(h => h.hp < h.maxhp);
+            return { cmds: [{ cmd: 'heal', cnt: 1 }], inStatus: [heroStatus(2186), heroStatus(2009)], canSelectHero }
         }),
 
     701: new GICard(701, '唯此一心', '[战斗行动]：我方出战角色为【甘雨】时，装备此牌。；【甘雨】装备此牌后，立刻使用一次【霜华矢】。；装备有此牌的【甘雨】使用【霜华矢】时：如果此技能在本场对局中曾经被使用过，则其对敌方后台角色造成的[穿透伤害]改为3点。',
@@ -2235,6 +2294,18 @@ const allCards: CardObj = {
             if (hidx != fhidx) cmds.unshift({ cmd: 'switch-to-self', hidxs: [hidx] });
             return { trigger: ['skilltype2'], cmds }
         }, { expl: talentExplain(1303, 2) }),
+
+    902: new GICard(902, '太郎丸的存款', '生成1个[万能元素骰]。',
+        '',
+        0, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'getDice', cnt: 1, element: 0 }] })),
+
+    903: new GICard(903, '清洁工作', '摸1张牌，我方出战角色下次造成伤害+1。(可叠加，最多叠加到2)',
+        '',
+        0, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'getCard', cnt: 1 }], inStatus: [heroStatus(2185)] })),
+
+    904: new GICard(904, '海底宝藏', '治疗我方出战角色1点，生成1个随机基础元素骰。',
+        '',
+        0, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'heal', cnt: 1 }, { cmd: 'getDice', cnt: 1, element: -1 }] })),
 
 }
 
