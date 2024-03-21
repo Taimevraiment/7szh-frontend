@@ -133,7 +133,7 @@ const normalElArtifact = (id: number, name: string, element: number, src: string
                 minusDiceCard: isCardMinus ? 1 : 0,
                 trigger: ['skill', 'card'],
                 exec: () => {
-                    if (trigger == 'card' && !isCardMinus || trigger.startsWith('skilltype') && !isMinusSkill || card.perCnt <= 0) return {}
+                    if (trigger == 'card' && !isCardMinus || trigger == 'skill' && !isMinusSkill || card.perCnt <= 0) return {}
                     --card.perCnt;
                     return {}
                 }
@@ -155,7 +155,7 @@ const advancedElArtifact = (id: number, name: string, element: number, src: stri
                 element,
                 cnt: 2,
                 exec: () => {
-                    if (trigger == 'card' && !isCardMinus || trigger.startsWith('skilltype') && !isMinusSkill || card.perCnt <= 0) return {}
+                    if (trigger == 'card' && !isCardMinus || trigger == 'skill' && !isMinusSkill || card.perCnt <= 0) return {}
                     --card.perCnt;
                     return {}
                 }
@@ -390,7 +390,7 @@ const allCards: CardObj = {
             const isShieldStatus = fhero?.inStatus?.some(ist => ist.type.includes(7)) || fhero?.outStatus?.some(ost => ost.type.includes(7));
             return {
                 addDmg: 1,
-                addDmgCdt: isShieldStatus && trigger.startsWith('skilltype') ? 1 : 0,
+                addDmgCdt: isCdt(isShieldStatus && trigger == 'skill', 1),
                 trigger: ['skill', 'after-skilltype2'],
                 exec: () => {
                     if (card.perCnt == 0 || trigger != 'after-skilltype2') return {}

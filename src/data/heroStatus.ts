@@ -1246,10 +1246,10 @@ const statusTotal: StatusObj = {
         }),
 
     2102: () => new GIStatus(2102, '优风倾姿', '【所附属角色进行｢普通攻击｣时：】造成的伤害+2; 如果敌方存在后台角色，则此技能改为对下一个敌方后台角色造成伤害。；【[可用次数]：{useCnt}】',
-        'buff5', 0, [6], 2, 0, -1, (status: Status) => ({
+        'buff5', 0, [6], 2, 0, -1, (status: Status, options: StatusOption = {}) => ({
             addDmgType1: 2,
             trigger: ['skilltype1'],
-            atkAfter: true,
+            atkAfter: options.trigger == 'skilltype1',
             exec: () => {
                 --status.useCnt;
                 return {}
@@ -1257,7 +1257,7 @@ const statusTotal: StatusObj = {
         })),
 
     2103: () => new GIStatus(2103, '倾落', '下次从该角色执行｢切换角色｣行动时少花费1个元素骰，并且造成1点[风元素伤害]。；【[可用次数]：{useCnt}】',
-        'buff6', 0, [1, 4], 1, 0, -1, (status: Status) => ({
+        'buff6', 0, [1, 4], 1, 0, -1, () => ({
             trigger: ['change-from'],
             damage: 1,
             element: 5,
@@ -1266,7 +1266,6 @@ const statusTotal: StatusObj = {
                 const { changeHeroDiceCnt = -1 } = exeOpt;
                 if (changeHeroDiceCnt > -1) {
                     if (changeHeroDiceCnt == 0) return { changeHeroDiceCnt }
-                    status.type.push(1);
                     return { changeHeroDiceCnt: changeHeroDiceCnt - 1 }
                 }
                 if (eStatus) --eStatus.useCnt;
@@ -1504,7 +1503,7 @@ const statusTotal: StatusObj = {
             if (status.useCnt >= 2) triggers.push('skilltype1');
             return {
                 trigger: triggers,
-                attachEl: isCdt(status.useCnt >= 2, 1),
+                attachEl: isCdt(status.useCnt >= 2 && trigger == 'skilltype1', 1),
                 exec: () => {
                     if (trigger == 'skilltype1') {
                         status.useCnt -= 2;

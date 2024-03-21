@@ -317,7 +317,7 @@ const allHeros: HeroObj = {
                 const { hero: { talentSlot } } = options;
                 return {
                     trigger: ['change-to'],
-                    inStatusOppo: [heroStatus(2008, 4, 1, !!talentSlot ? 1 : 0)],
+                    inStatus: [heroStatus(2008, 4, 1, !!talentSlot ? 1 : 0)],
                 }
             })
     ]),
@@ -530,7 +530,7 @@ const allHeros: HeroObj = {
             'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/b32057264f488d0df6429a135d5ce3e5_4144919367463512201.png',
             [heroStatus(2074), heroStatus(2075)], (options: SkillOption) => {
                 const { hero: { skills: [, , , { src }] } } = options;
-                return { trigger: ['game-start', 'revive'], inStatusOppo: [heroStatus(2074, src)] }
+                return { trigger: ['game-start', 'revive'], inStatus: [heroStatus(2074, src)] }
             }),
     ]),
 
@@ -561,7 +561,7 @@ const allHeros: HeroObj = {
                 const { heros = [], hero: { skills: [, { src }] } } = options;
                 const hasEl1Or7Only = heros.every(h => [1, 7].includes(h.element));
                 const hasEl7 = heros.some(h => h.element == 7);
-                return { outStatusOppoPre: isCdt(hasEl1Or7Only && hasEl7, [heroStatus(2111, src)]) }
+                return { outStatusPre: isCdt(hasEl1Or7Only && hasEl7, [heroStatus(2111, src)]) }
             }),
         new GISkill('浮莲舞步·远梦聆泉', '造成{dmg}点[水元素伤害]，目标角色附属【永世流沔】。', 3, 2, 3, 1, { ec: 2 },
             'https://patchwiki.biligame.com/images/ys/e/e4/g0jxv4e1j04516p1lse7kbmq9e169o4.png',
@@ -586,7 +586,7 @@ const allHeros: HeroObj = {
         new GISkill('破局', '战斗开始时，初始附属【破局】。', 4, 0, 0, 0, {},
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/9d80088a6e6cb7f8913f3bc14e6f48ab.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/05/258999284/3d521526d51c8e9b090a046c0187ace9_6247094106411719876.png',
-            [heroStatus(2130)], () => ({ trigger: ['game-start', 'revive'], inStatusOppo: [heroStatus(2130)] }))
+            [heroStatus(2130)], () => ({ trigger: ['game-start', 'revive'], inStatus: [heroStatus(2130)] }))
     ]),
 
     1110: new GIHero(1110, '那维莱特', [5, 12], 10, 1, 4,
@@ -650,7 +650,7 @@ const allHeros: HeroObj = {
             [heroStatus(2034)], (options: SkillOption) => {
                 const { hero: { talentSlot, skills: [, , { src }] }, card } = options;
                 const isTalent = !!talentSlot || card?.id == 713;
-                return { outStatusOppoPre: [heroStatus(2034, src, isTalent)] }
+                return { outStatusPre: [heroStatus(2034, src, isTalent)] }
             })
     ]),
 
@@ -877,7 +877,7 @@ const allHeros: HeroObj = {
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/c61b597d14d7915b53d8bf462e8ad609_6351825637878214573.png',
             [heroStatus(2060)], (options: SkillOption) => ({
                 trigger: ['game-start', 'revive'],
-                inStatusOppo: [heroStatus(2060, options.hero.skills[2].src)]
+                inStatus: [heroStatus(2060, options.hero.skills[2].src)]
             }))
     ]),
 
@@ -942,7 +942,7 @@ const allHeros: HeroObj = {
                 const { hero: { skills: [, , skill2] } } = options;
                 return {
                     trigger: ['game-start', 'revive'],
-                    inStatusOppo: [heroStatus(2080, skill2.src, [skill2])]
+                    inStatus: [heroStatus(2080, skill2.src, [skill2])]
                 }
             })
     ]),
@@ -1295,7 +1295,7 @@ const allHeros: HeroObj = {
             [], (options: SkillOption) => {
                 const { hero: { talentSlot }, card } = options;
                 if (talentSlot == null && card?.id != 711) return {};
-                return { outStatusOppoPre: [heroStatus(2028)] };
+                return { outStatusPre: [heroStatus(2028)] };
             }),
         new GISkill('猫猫秘宝', '造成{dmg}点[草元素伤害]，召唤【柯里安巴】。', 3, 2, 3, 7, { ec: 2 },
             'https://patchwiki.biligame.com/images/ys/c/ca/hthhze7cs9vq6uazr06lqu2dhserw7n.png',
@@ -1325,12 +1325,12 @@ const allHeros: HeroObj = {
             [heroStatus(2088)], (options: SkillOption) => {
                 const { eheros = [], heros = [] } = options;
                 const hidxs = isCdt(eheros.find(h => h.isFront)?.inStatus.some(ist => ist.id == 2088), allHidxs(heros));
-                return { inStatusPre: [heroStatus(2088)], hidxs };
+                return { inStatusOppoPre: [heroStatus(2088)], hidxs };
             }),
         new GISkill('所闻遍计·真如', '造成{dmg}点[草元素伤害]，所有敌方角色附属【蕴种印】。', 2, 3, 5, 7, {},
             'https://patchwiki.biligame.com/images/ys/6/64/qq68p4qre9yxfhxkn97q9quvgo3qbum.png',
             'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/d30e1ee8bc69a2235f36b74ddda3832b_8853500709483692571.png',
-            [heroStatus(2088)], (options: SkillOption) => ({ inStatusPre: [heroStatus(2088)], hidxs: allHidxs(options.heros) })),
+            [heroStatus(2088)], (options: SkillOption) => ({ inStatusOppoPre: [heroStatus(2088)], hidxs: allHidxs(options.heros) })),
         new GISkill('心景幻成', '造成{dmg}点[草元素伤害]，生成【摩耶之殿】。', 3, 4, 3, 7, { ec: 2 },
             'https://patchwiki.biligame.com/images/ys/b/b2/hiqeufp1d8c37jqo8maxpkvjuiu32lq.png',
             'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/ab5d92e19144f4e483bce180409d0ecf_4393685660579955496.png',
@@ -1452,7 +1452,7 @@ const allHeros: HeroObj = {
             '',
             [heroStatus(2138)], (options: SkillOption) => ({
                 trigger: ['game-start'],
-                inStatusOppo: [heroStatus(2138, options.hero.skills[3].src)]
+                inStatus: [heroStatus(2138, options.hero.skills[3].src)]
             }))
     ]),
 
@@ -1470,7 +1470,7 @@ const allHeros: HeroObj = {
         new GISkill('冰晶核心', '战斗开始时，初始附属【冰晶核心】。', 4, 0, 0, 0, {},
             'https://patchwiki.biligame.com/images/ys/f/fd/mgyby1c37lbykdol0uuyzduyugfmb0f.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2024/01/27/258999284/5e08c69f4911a028c4a559c1de33a4d9_7840872634290634295.png',
-            [heroStatus(2157)], () => ({ trigger: ['game-start'], inStatusOppo: [heroStatus(2157)] }))
+            [heroStatus(2157)], () => ({ trigger: ['game-start'], inStatus: [heroStatus(2157)] }))
     ]),
 
     1721: new GIHero(1721, '纯水精灵·洛蒂娅', 0, 10, 1, 0,
@@ -1554,7 +1554,7 @@ const allHeros: HeroObj = {
         new GISkill('水之新生', '战斗开始时，初始附属【水之新生】。', 4, 0, 0, 0, {},
             '',
             '',
-            [heroStatus(2181)], () => ({ trigger: ['game-start'], inStatusOppo: [heroStatus(2181)] }))
+            [heroStatus(2181)], () => ({ trigger: ['game-start'], inStatus: [heroStatus(2181)] }))
     ]),
 
     1741: new GIHero(1741, '愚人众·火之债务处理人', 8, 9, 2, 0,
@@ -1574,7 +1574,7 @@ const allHeros: HeroObj = {
         new GISkill('潜行大师', '战斗开始时，初始附属【潜行】。', 4, 0, 0, 0, {},
             'https://patchwiki.biligame.com/images/ys/7/7c/13bz5tmyohu7u0xeu56llgv6lp81vlv.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/6c9ca6c9b2ecc89b7f6c4d5b6004afea_7794139484811179967.png',
-            [heroStatus(2044)], () => ({ trigger: ['game-start'], inStatusOppo: [heroStatus(2044)] }))
+            [heroStatus(2044)], () => ({ trigger: ['game-start'], inStatus: [heroStatus(2044)] }))
     ]),
 
     1742: new GIHero(1742, '深渊咏者·渊火', 0, 6, 2, 0,
@@ -1590,7 +1590,7 @@ const allHeros: HeroObj = {
         new GISkill('火之新生', '战斗开始时，初始附属【火之新生】。', 4, 0, 0, 0, {},
             'https://patchwiki.biligame.com/images/ys/f/fa/8adfhj3wss2apzgmrqqg3zz3cbi92tf.png',
             'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/24722a3923aa2362a5ecdaa248a3f37b_100670191008092035.png',
-            [heroStatus(2092)], () => ({ trigger: ['game-start'], inStatusOppo: [heroStatus(2092)] }))
+            [heroStatus(2092)], () => ({ trigger: ['game-start'], inStatus: [heroStatus(2092)] }))
     ]),
 
     1743: new GIHero(1743, '镀金旅团·炽沙叙事人', 10, 10, 2, 0,
@@ -1646,7 +1646,7 @@ const allHeros: HeroObj = {
                 const { heros = [], trigger = '' } = options;
                 return {
                     trigger: ['game-start', 'action-start'],
-                    inStatusOppo: isCdt(trigger == 'game-start', [heroStatus(2182, 6)]),
+                    inStatus: isCdt(trigger == 'game-start', [heroStatus(2182, 6)]),
                     exec: () => {
                         if (trigger == 'game-start') return {}
                         let stsCnt = 0;
@@ -1656,7 +1656,7 @@ const allHeros: HeroObj = {
                             if (hero.isFront) hero.outStatus = hero.inStatus.filter(ost => !ost.type.includes(2));
                         }
                         if (stsCnt == 0) return {}
-                        return { inStatusOppo: [heroStatus(2182, stsCnt * 2)] }
+                        return { inStatus: [heroStatus(2182, stsCnt * 2)] }
                     }
                 }
             })
@@ -1676,7 +1676,7 @@ const allHeros: HeroObj = {
         new GISkill('雷晶核心', '战斗开始时，初始附属【雷晶核心】。', 4, 0, 0, 0, {},
             'https://patchwiki.biligame.com/images/ys/1/13/4tkgv2y83mfzyyum8iifx9wqsjfj8af.png',
             'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/84c224cb71bd755ebeb0ab587bf22901_3554738173380528607.png',
-            [heroStatus(2091)], () => ({ trigger: ['game-start'], inStatusOppo: [heroStatus(2091)] }))
+            [heroStatus(2091)], () => ({ trigger: ['game-start'], inStatus: [heroStatus(2091)] }))
     ]),
 
     1762: new GIHero(1762, '雷音权现', 0, 10, 3, 0,
@@ -1698,7 +1698,7 @@ const allHeros: HeroObj = {
         new GISkill('雷霆探知', '战斗开始时，在敌方场上生成【雷霆探针】。', 4, 0, 0, 0, {},
             'https://act-webstatic.mihoyo.com/hk4e/e20200928calculate/item_skill_icon_u033pf/85101cecf76e834437a758fc19093700.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/05/258999284/eb1d94ce0af17b97f756f8c126a5863a_674902409578889354.png',
-            [heroStatus(2140)], (options: SkillOption) => ({ trigger: ['game-start'], outStatus: [heroStatus(2140, options.hero.skills[3].src)] }))
+            [heroStatus(2140)], (options: SkillOption) => ({ trigger: ['game-start'], outStatusOppo: [heroStatus(2140, options.hero.skills[3].src)] }))
     ]),
 
     1763: new GIHero(1763, '千年珍珠骏麟', 0, 8, 3, 0,
@@ -1723,7 +1723,7 @@ const allHeros: HeroObj = {
         new GISkill('明珠甲胄', '战斗开始时，本角色附属【原海明珠】。', 4, 0, 0, 0, {},
             'https://patchwiki.biligame.com/images/ys/f/fc/0v3wnltquhqgjaig2kp4o6qicrstkwl.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2024/01/17/258999284/34245e37e3d9881e1ac466ba3058fead_3899055182644035950.png',
-            [heroStatus(2158)], () => ({ trigger: ['game-start'], inStatusOppo: [heroStatus(2158)] }))
+            [heroStatus(2158)], () => ({ trigger: ['game-start'], inStatus: [heroStatus(2158)] }))
     ]),
 
     1764: new GIHero(1764, '愚人众·雷萤术士', 8, 10, 3, 0,
@@ -1806,7 +1806,7 @@ const allHeros: HeroObj = {
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/60d5501fc29ffb28bc6d2a435b463b2a_6974894146119719968.png',
             [heroStatus(2045), heroStatus(2046)], () => ({
                 trigger: ['game-start'],
-                inStatusOppo: [heroStatus(2045), heroStatus(2046)],
+                inStatus: [heroStatus(2045), heroStatus(2046)],
             }))
     ]),
 
@@ -1836,7 +1836,7 @@ const allHeros: HeroObj = {
         new GISkill('磐岩百相', '战斗开始时，初始附属【磐岩百相·元素汲取】。', 4, 0, 0, 0, {},
             'https://act-webstatic.mihoyo.com/hk4e/e20200928calculate/item_skill_icon_u084qf/c7dc740570a4a65821767e0e2ba83529.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/19/258999284/3c29d28a60d100687cf9968a3a278e4d_5040009350976601315.png',
-            [heroStatus(2153)], () => ({ trigger: ['game-start'], inStatusOppo: [heroStatus(2153, [readySkill(8), readySkill(9), readySkill(10), readySkill(11)])] }))
+            [heroStatus(2153)], () => ({ trigger: ['game-start'], inStatus: [heroStatus(2153, [readySkill(8), readySkill(9), readySkill(10), readySkill(11)])] }))
     ]),
 
     1821: new GIHero(1821, '翠翎恐蕈', 0, 10, 7, 0,
@@ -1858,7 +1858,7 @@ const allHeros: HeroObj = {
         new GISkill('活化激能', '战斗开始时，初始附属【活化激能】。', 4, 0, 0, 0, {},
             'https://patchwiki.biligame.com/images/ys/7/79/q3o61yegls3thng3z7dns2sykg2voci.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/f72847095bda0ccb92781ed3f1c1bb4e_1629774298046012918.png',
-            [heroStatus(2047)], () => ({ trigger: ['game-start', 'revive'], inStatusOppo: [heroStatus(2047)] }))
+            [heroStatus(2047)], () => ({ trigger: ['game-start', 'revive'], inStatus: [heroStatus(2047)] }))
     ]),
 
 

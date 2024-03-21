@@ -382,7 +382,7 @@ const siteTotal: SiteObj = {
             trigger: ['skill', 'card'],
             isNotAddTask: true,
             exec: () => {
-                if (isMinus && (trigger.startsWith('skilltype') && isMinusSkill || trigger == 'card' && isCard)) {
+                if (isMinus && (trigger == 'skill' && isMinusSkill || trigger == 'card' && isCard)) {
                     --site.perCnt;
                 }
                 return { isDestroy: false }
