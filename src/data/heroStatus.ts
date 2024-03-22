@@ -425,7 +425,6 @@ const statusTotal: StatusObj = {
                 trigger: ['skill', 'after-skill'],
                 addDmgCdt: fHero.hp >= 7 || status.isTalent ? 2 : 0,
                 heal: isCdt(fHero.hp <= 6 && trigger == 'after-skill', Math.min(2, fHero.maxhp - fHero.hp)),
-                hidxs: [hidx],
             }
         }, { icbg: STATUS_BG_COLOR[2], isTalent }),
 
@@ -1053,20 +1052,18 @@ const statusTotal: StatusObj = {
 
     2088: () => new GIStatus(2088, '蕴种印', '【任意具有蕴种印的所在阵营角色受到元素反应伤害后：】对所有附属角色1点[穿透伤害]。；【[可用次数]：{useCnt}】',
         'sts2088', 0, [1], 2, 0, -1, (_status: Status, options: StatusOption = {}) => {
-            const { heros = [], eheros = [] } = options;
+            const { heros = [], eheros = [], hidx = -1 } = options;
             const hidxs: number[] = [];
-            let fidx = -1;
             heros.forEach((h, hi) => {
-                if (h.inStatus.some(ist => ist.id == 2088)) {
-                    if (h.isFront) fidx = hi;
-                    else hidxs.push(hi);
+                if (h.inStatus.some(ist => ist.id == 2088) && hi != hidx) {
+                    hidxs.push(hi);
                 }
             });
             const fhero = eheros.find(h => h.isFront);
             const hasEl2 = eheros.map(h => h.talentSlot).some(slot => slot?.id == 745) &&
                 fhero?.outStatus?.some(ost => ost.id == 2089) &&
                 eheros.filter(h => h.hp > 0).some(h => h.element == 2);
-            if (!hasEl2 && fidx > -1) hidxs.push(fidx);
+            if (!hasEl2 && hidx > -1) hidxs.push(hidx);
             return {
                 damage: isCdt(hasEl2, 1),
                 element: 7,
@@ -1078,8 +1075,14 @@ const statusTotal: StatusObj = {
                     const { heros = [] } = exeOpt;
                     heros.forEach((h, hi) => {
                         if (hidxs.includes(hi)) {
-                            const ist2088 = h.inStatus.find(ist => ist.id == 2088);
-                            if (ist2088) --ist2088.useCnt;
+                            const ist2088Idx = h.inStatus.findIndex(ist => ist.id == 2088);
+                            if (ist2088Idx > -1) {
+                                const ist2088 = h.inStatus[ist2088Idx];
+                                --ist2088.useCnt;
+                                if (ist2088.useCnt == 0 && hi != hidx) {
+                                    h.inStatus.splice(ist2088Idx, 1);
+                                }
+                            }
                         }
                     });
                     if (hasEl2 && eStatus) --eStatus.useCnt;

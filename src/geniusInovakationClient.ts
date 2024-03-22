@@ -691,7 +691,7 @@ export default class GeniusInvokationClient {
         }
         if (players[this.playerIdx]?.phase != PHASE.CHOOSE_HERO ||
             !chooseInitHero && !flag.startsWith('infoHandle:getServerInfo-changeTo')) {
-            if (flag != 'endPhase-hasAddAtk') this.players = [...players];
+            if (flag != 'endPhase-hasStatusAtk') this.players = [...players];
             else this.players.forEach(p => p.status = p.status ^ 1);
         }
         if (round > 1 || this.player?.phase != PHASE.CHOOSE_HERO || changeTo == this.playerIdx) {
@@ -1338,9 +1338,7 @@ export default class GeniusInvokationClient {
                 { cmd: 'getOutStatus', status: skillres.outStatusPre },
                 { cmd: 'getOutStatusOppo', status: skillres.outStatusOppoPre },
             ];
-            console.log(clone(aHeros), clone(eaHeros));
             this._doCmds(stsprecmds, { heros: aHeros, eheros: eaHeros, ahidx: hidx, ehidx: eFrontIdx, isEffectHero: true });
-            console.log(clone(aHeros), clone(eaHeros));
             if (skillres.summonPre) aSummon = this._updateSummon(skillres.summonPre, aSummon, aHeros[isExec ? hidx : ahidx].outStatus);
             if (skillres.heal) {
                 const healHidxs = skillres.hidxs ?? [hidx];
@@ -1523,7 +1521,9 @@ export default class GeniusInvokationClient {
                     const isOppoAtk = stsres.isOppo ? 1 : 0;
                     if (this._hasNotTrigger(stsres.trigger, state)) continue;
                     if (sts.type.includes(1) && (stsres.damage || stsres.pendamage || stsres.heal)) {
-                        statusIds.push({ id: sts.id, type: stype, pidx: (this.playerIdx ^ isOppoAtk ^ isOppo), isOppo: isOppoAtk, trigger: state, isAfterSwitch });
+                        if (state.startsWith('after')) {
+                            statusIds.push({ id: sts.id, type: stype, pidx: this.playerIdx ^ isOppo, isOppo: isOppoAtk, trigger: state, isAfterSwitch });
+                        }
                         const dmg = new Array(ahlen + ehlen).fill(0).map((_, di) => bWillDamages.reduce((a, b) => a + b[di][0] + b[di][1], 0));
                         const willKill = isOppo ? dmg[(this.playerIdx ^ 1) * ehlen + ahidx] >= aHeros[ahidx].hp : dmg[this.playerIdx * ahlen + ehidx] >= eaHeros[ehidx].hp;
                         if (calcAtk(stsres, willKill ? 'die' : (['in', 'out'][stype] + 'Status'), sts.id, ahidx, ehidx, !!(isOppoAtk ^ isOppo))) continue;
@@ -2389,7 +2389,7 @@ export default class GeniusInvokationClient {
         const eost: Status[] = [];
         const doStatus = (status: Status[], isOppo: boolean, trgs: Trigger[], hi: number) => {
             const dmg = isOppo ? 'getDmg' : 'addDmgCdt';
-            status.forEach(sts => {
+            for (const sts of status) {
                 for (const trigger of trgs) {
                     const stsres = heroStatus(sts.id).handle(sts, {
                         heros: isOppo ? res.eheros : res.aheros,
@@ -2433,9 +2433,12 @@ export default class GeniusInvokationClient {
                                 res.willDamage[hi + getDmgIdxOffset][1] += stsres.pendamage ?? 0;
                             });
                         }
-                    } else if (trigger.startsWith('skill')) {
-                        (isOppo ? res.etriggers : res.atriggers)[hi].push('after-' + trigger as Trigger);
+                    } else if (isExec) {
+                        this.taskQueue.addStatusId([{ id: sts.id, type: sts.group, pidx: isOppo ? epidx : pidx, isOppo: stsres.isOppo ? 1 : 0, trigger }]);
                     }
+                    // else if (trigger.startsWith('skill')) {
+                    //     (isOppo ? res.etriggers : res.atriggers)[hi].push('after-' + trigger as Trigger);
+                    // }
                     if (stsres.exec && isWindExec && !sts.type.includes(11)) {
                         const { inStatus = [], outStatus = [], inStatusOppo = [], outStatusOppo = [], cmds = [] } = stsres.exec();
                         aist.push(...inStatus);
@@ -2445,7 +2448,7 @@ export default class GeniusInvokationClient {
                         res.elrcmds[isOppo ? 1 : 0].push(...cmds);
                     }
                 }
-            });
+            }
         }
         atriggers.forEach((t, ti) => {
             res.atriggers[ti] = [...new Set([...res.atriggers[ti], ...t])];
@@ -2456,11 +2459,11 @@ export default class GeniusInvokationClient {
         });
         res.aheros.forEach((h, hi) => {
             doStatus(h.inStatus, false, res.atriggers[hi], hi);
-            if (h.isFront) doStatus(h.outStatus, false, res.atriggers[aFrontIdx], aFrontIdx);
+            if (hi == aFrontIdx) doStatus(h.outStatus, false, res.atriggers[hi], hi);
         });
         res.eheros.forEach((h, hi) => {
             doStatus(h.inStatus, true, res.etriggers[hi], hi);
-            if (h.isFront) doStatus(h.outStatus, true, res.etriggers[hi], hi);
+            if (hi == frontIdx) doStatus(h.outStatus, true, res.etriggers[hi], hi);
         });
         if (!isWind) {
             const getdmg = res.willDamage.map(v => v[0] + v[1]);
@@ -2719,7 +2722,7 @@ export default class GeniusInvokationClient {
                         args[2] = clone(args[2]) ?? {};
                         args[2].isExecTask = true;
                         args[2].tsummon = [summon];
-                        this.taskQueue.addTask('summon', args, isUnshift);
+                        this.taskQueue.addTask('summon-' + summon.name, args, isUnshift);
                     } else {
                         let aSummon = csummon ?? [...p.summon];
                         let fIsEndAtk = true;
@@ -2796,7 +2799,7 @@ export default class GeniusInvokationClient {
                                                         });
                                                         if (stsres.trigger?.includes(trigger) && (stsres.damage || stsres.pendamage || stsres.heal)) {
                                                             const isOppo = stsres.isOppo ? 1 : 0;
-                                                            statusIdsAndPidx.push({ id: sts.id, type: sts.group, pidx: pidx ^ isOppo ^ 1, isOppo, trigger });
+                                                            statusIdsAndPidx.push({ id: sts.id, type: sts.group, pidx: pidx ^ 1, isOppo, trigger });
                                                         }
                                                     }
                                                 });
@@ -2953,7 +2956,7 @@ export default class GeniusInvokationClient {
                             args[2] = clone(args[2]) ?? {};
                             args[2].isExecTask = true;
                             args[2].csite = [site];
-                            this.taskQueue.addTask('site', args);
+                            this.taskQueue.addTask('site-' + site.card.name, args);
                         } else {
                             const curIntvl = [...intvl];
                             let siteexecres: SiteExecRes = { isDestroy: false };
@@ -3090,7 +3093,7 @@ export default class GeniusInvokationClient {
                 minusDiceHero += stsres.minusDiceHero ?? 0;
                 minusDiceCard += stsres.minusDiceCard ?? 0;
                 isInvalid ||= stsres.isInvalid ?? false;
-                if (sts.type.includes(1) && (stsres.damage || stsres.pendamage || stsres.heal) && (stsres.cmds?.length ?? 0) == 0) {
+                if (types.includes(1) && (stsres.damage || stsres.pendamage || stsres.heal) && (stsres.cmds?.length ?? 0) == 0) {
                     statusIdsAndPidx.push({
                         id: sts.id, type: group, pidx, isOppo: stsres.isOppo ? 1 : 0, trigger, hidx,
                         isQuickAction: isQuickAction == 2 || (!!card && !card.subType.includes(7)) || trigger == 'action-start', isSwitchAtk
@@ -3269,7 +3272,7 @@ export default class GeniusInvokationClient {
     /**
      * 进行额外的攻击
      */
-    _doAddAtk(stsTask: StatusTask) {
+    _doStatusAtk(stsTask: StatusTask) {
         return new Promise<boolean>(async resolve => {
             if (!this._hasNotDieChange() || !this.taskQueue.isExecuting) {
                 resolve(false);
@@ -3281,32 +3284,22 @@ export default class GeniusInvokationClient {
             let { heros: aheros, hidx: ahidx, summon: aSummon } = this.players[pidx];
             let { heros: eheros, hidx: eFrontIdx, summon: eSummon } = this.players[pidx ^ 1];
             ahidx = stype == 1 ? ahidx : ohidx;
-            const frontHero = aheros[ahidx];
+            const getAtkStatus = () => (stype == 0 ? aheros[ahidx].inStatus : aheros[ahidx].outStatus).find(sts => sts.id == sid) ?? heroStatus(sid);
             const atkedIdx = isOppo ? ahidx : eFrontIdx;
-            const handleres = stype == 0 ?
-                heroStatus(sid).handle(frontHero.inStatus
-                    .find(ist3 => ist3.id == sid) ?? heroStatus(sid), {
-                    heros: isOppo ? eheros : aheros,
-                    eheros: isOppo ? aheros : eheros,
-                    trigger,
-                    hidx: ahidx,
-                    force: true,
-                }) :
-                heroStatus(sid).handle(frontHero.outStatus
-                    .find(ost3 => ost3.id == sid) ?? heroStatus(sid), {
-                    heros: isOppo ? eheros : aheros,
-                    eheros: isOppo ? aheros : eheros,
-                    trigger,
-                    hidx: ahidx,
-                    force: true,
-                });
-            const handlereshidxs = handleres.hidxs ?? getBackHidxs(isOppo ? aheros : eheros);
+            const stsres = heroStatus(sid).handle(getAtkStatus(), {
+                heros: aheros,
+                eheros,
+                trigger,
+                hidx: ahidx,
+                force: true,
+            });
+            const stsreshidxs = stsres.hidxs ?? getBackHidxs(isOppo ? aheros : eheros);
             let { willDamage, willAttachs: willAttachs1, dmgElements, eheros: eheros1, esummon, aheros: aheros1, asummon, elrcmds, elTips }
                 = this._elementReaction(
-                    handleres.element ?? 0,
+                    stsres.element ?? 0,
                     new Array((isOppo ? aheros : eheros).length).fill(0).map((_, i) => [
-                        i == atkedIdx ? (handleres.damage ?? -1) : -1,
-                        (handlereshidxs.includes(i)) ? (handleres.pendamage ?? 0) : 0
+                        i == atkedIdx ? (stsres.damage ?? -1) : -1,
+                        (stsreshidxs.includes(i)) ? (stsres.pendamage ?? 0) : 0
                     ]),
                     atkedIdx,
                     isOppo ? aheros : eheros,
@@ -3315,62 +3308,60 @@ export default class GeniusInvokationClient {
                     isOppo ? eSummon : aSummon,
                     { pidx: pidx ^ isOppo }
                 );
-            const { cmds: execmds = [] } = handleres.exec?.((stype == 0 ?
-                (isOppo ? eheros1 : aheros1)[ahidx].inStatus :
-                (isOppo ? eheros1 : aheros1)[ahidx].outStatus)
-                .find(sts3 => sts3.id == sid)) ?? {};
+            aheros = isOppo ? eheros1 : aheros1;
+            eheros = isOppo ? aheros1 : eheros1;
+            const { cmds: execmds = [] } = stsres.exec?.(getAtkStatus(), { heros: aheros }) ?? {};
             this.willDamages = [...willDamage];
             const aWillAttach: number[][] = new Array(aheros.length + eheros.length).fill(0).map(() => []);
             for (let i = 0; i < 3; ++i) aWillAttach[i + (pidx ^ 1) * 3].push(willAttachs1[i]);
             let willHeals: number[] | undefined;
-            const cmds = [...(handleres.cmds ?? []), ...(execmds ?? [])];
+            const cmds = [...(stsres.cmds ?? []), ...(execmds ?? [])];
             let dices;
             if (cmds.length > 0) {
-                const { willHeals: cmdheal, ndices, heros } = this._doCmds(cmds, { pidx, heros: aheros1 });
+                const { willHeals: cmdheal, ndices, heros } = this._doCmds(cmds, { pidx, heros: aheros });
                 willHeals = cmdheal;
                 dices = ndices;
-                if (heros) aheros1 = heros;
+                if (heros) aheros = heros;
             }
-            if (handleres.heal) {
-                const heals = new Array(aheros1.length).fill(0).map((_, hi) => {
-                    return (handleres.hidxs ?? [ahidx]).includes(hi) ? (handleres.heal ?? 0) : -1;
+            if (stsres.heal) {
+                const heals = new Array(aheros.length).fill(0).map((_, hi) => {
+                    return (stsres.hidxs ?? [ahidx]).includes(hi) ? (stsres.heal ?? 0) : -1;
                 });
                 if (willHeals == undefined) willHeals = new Array(aheros.length + eheros.length).fill(-1);
                 for (let i = 0; i < 3; ++i) {
                     if (heals[i] < 0) continue;
                     const hlidx = i + (pidx ^ 1) * 3;
                     if (willHeals[hlidx] < 0) willHeals[hlidx] = 0;
-                    willHeals[hlidx] = Math.min(aheros1[hlidx].maxhp - aheros1[hlidx].hp, willHeals[hlidx] + heals[i]);
+                    willHeals[hlidx] = Math.min(aheros[hlidx].maxhp - aheros[hlidx].hp, willHeals[hlidx] + heals[i]);
                 }
             }
-            this._doHeal(willHeals, aheros1, { pidx });
+            this._doHeal(willHeals, aheros, { pidx });
             const statusIdsAndPidx: StatusTask[] = [];
             const triggers: Trigger[] = ['status-destroy'];
-            eheros1[eFrontIdx].outStatus.forEach(ost => {
+            eheros[eFrontIdx].outStatus.forEach(ost => {
                 if (ost.id != sid && ost.type.includes(1)) {
                     for (const trg of triggers) {
-                        const ostres = heroStatus(ost.id).handle(ost, { heros: eheros1, hidx: eFrontIdx, trigger: trg });
+                        const ostres = heroStatus(ost.id).handle(ost, { heros: eheros, hidx: eFrontIdx, trigger: trg });
                         if (ostres.trigger?.includes(trg) && (ostres.damage || ostres.pendamage || ostres.heal)) {
-                            const ostIsOppo = ostres.isOppo ? 1 : 0;
-                            statusIdsAndPidx.push({ id: ost.id, type: stype, pidx: pidx ^ ostIsOppo ^ 1, isOppo: ostIsOppo, trigger: trg });
+                            statusIdsAndPidx.push({ id: ost.id, type: stype, pidx: pidx ^ 1, isOppo: ostres.isOppo ? 1 : 0, trigger: trg });
                         }
                     }
                 }
             });
             this.taskQueue.addStatusId(statusIdsAndPidx, true);
             let isSwitchAtk = false;
-            if (elrcmds[0].some(cmds => cmds.cmd?.includes('switch') && !cmds.cmd?.includes('self'))) {
+            if (!isOppo && elrcmds[0].some(cmds => cmds.cmd?.includes('switch') && !cmds.cmd?.includes('self'))) {
                 const { statusIdsAndPidx: stpidx } = this._doStatus(pidx ^ 1, 1, 'change-from', { hidxs: [eFrontIdx] });
                 if (stpidx.length > 0) isSwitchAtk = true;
             }
             const willAttachs: number[][] = new Array(aheros.length + eheros.length).fill(0).map(() => []);
-            willAttachs[eFrontIdx + (pidx ^ 1) * 3].push(handleres.element ?? 0);
+            willAttachs[eFrontIdx + (pidx ^ 1) * 3].push(stsres.element ?? 0);
             this.socket.emit('sendToServer', {
-                statusId: [sid, stype, isOppo, ahidx, isa, isQuickAction],
+                statusId: [sid, stype, ahidx, isa, isQuickAction],
                 cpidx: pidx,
                 summonee: isOppo ? esummon : asummon,
-                heros: isOppo ? eheros1 : aheros1,
-                eheros: isOppo ? aheros1 : eheros1,
+                heros: aheros,
+                eheros,
                 esummon: isOppo ? asummon : esummon,
                 willDamage: this.willDamages,
                 willAttachs,
@@ -3381,7 +3372,7 @@ export default class GeniusInvokationClient {
                 cmds: [...elrcmds[0], ...cmds],
                 playerInfo: this.players[pidx].playerInfo,
                 isEndAtk: this.taskQueue.isTaskEmpty() && !isSwitchAtk && !isa,
-                flag: `_doAddAtk-${sid}-${pidx}`,
+                flag: `_dostatusAtk-${sid}-${pidx}`,
             });
             resolve(true);
         });
@@ -3584,7 +3575,7 @@ export default class GeniusInvokationClient {
                         args[1] = clone(args[1]) ?? {};
                         args[1].pidx = pidx;
                         args[1].taskMark = [hidx, slotIds[hidx][i][1].subType[0]];
-                        this.taskQueue.addTask('slot', args);
+                        this.taskQueue.addTask('slot-' + slotIds[hidx][i][1].name, args);
                     } else {
                         const slotHandle = [
                             () => { },
@@ -3740,7 +3731,7 @@ export default class GeniusInvokationClient {
                     });
                 }, cnt || 100);
             } else if (cmd == 'getInStatus') {
-                if (getstatus.length == 0) continue;
+                if (getstatus.length == 0 && !isEffectHero) continue;
                 if (!inStatus) inStatus = new Array(cheros.length).fill(0).map(() => []);
                 (hidxs ?? [ahidx]).forEach(fhidx => {
                     const fhero = (heros ?? cheros)[fhidx];
@@ -3756,7 +3747,7 @@ export default class GeniusInvokationClient {
                     }
                 });
             } else if (cmd == 'getOutStatus') {
-                if (getstatus.length == 0) continue;
+                if (getstatus.length == 0 && !isEffectHero) continue;
                 if (!outStatus) outStatus = [];
                 const fhero = (heros ?? cheros)[ahidx];
                 const { nstatus, nheros } = this._updateStatus(getstatus, fhero.outStatus, heros ?? cheros, ahidx);
@@ -3770,7 +3761,7 @@ export default class GeniusInvokationClient {
                     }
                 }
             } else if (cmd == 'getInStatusOppo') {
-                if (getstatus.length == 0) continue;
+                if (getstatus.length == 0 && !isEffectHero) continue;
                 if (!inStatusOppo) inStatusOppo = new Array(ceheros.length).fill(0).map(() => []);
                 (hidxs ?? [ehidx]).forEach(fhidx => {
                     const fhero = (eheros ?? ceheros)[fhidx];
@@ -3786,7 +3777,7 @@ export default class GeniusInvokationClient {
                     }
                 });
             } else if (cmd == 'getOutStatusOppo') {
-                if (getstatus.length == 0) continue;
+                if (getstatus.length == 0 && !isEffectHero) continue;
                 if (!outStatusOppo) outStatusOppo = [];
                 const fhidx = opponent.hidx;
                 const fhero = (eheros ?? ceheros)[fhidx];
@@ -4061,13 +4052,13 @@ export default class GeniusInvokationClient {
                 const [taskType, args] = this.taskQueue.getTask();
                 if (taskType == undefined || args == undefined) break;
                 let task: [(() => void)[], number[]] | undefined;
-                if (isDieChangeBack && taskType != 'addAtk') await this._delay(2300);
-                if (taskType.startsWith('status')) task = this._doStatus(...(args as [any, any, any, any])).task;
-                else if (taskType.startsWith('site')) task = this._doSite(...(args as [any, any, any])).task;
-                else if (taskType.startsWith('summon')) task = this._doSummon(...(args as [any, any, any])).task;
-                else if (taskType.startsWith('slot')) task = this._doSlot(...(args as [any, any])).task;
-                if (taskType.startsWith('addAtk')) {
-                    const isExeced = await this._doAddAtk(args as StatusTask);
+                if (isDieChangeBack && !taskType.includes('statusAtk-')) await this._delay(2300);
+                if (taskType.startsWith('status-')) task = this._doStatus(...(args as [any, any, any, any])).task;
+                else if (taskType.startsWith('site-')) task = this._doSite(...(args as [any, any, any])).task;
+                else if (taskType.startsWith('summon-')) task = this._doSummon(...(args as [any, any, any])).task;
+                else if (taskType.startsWith('slot-')) task = this._doSlot(...(args as [any, any])).task;
+                if (taskType.startsWith('statusAtk-')) {
+                    const isExeced = await this._doStatusAtk(args as StatusTask);
                     if (!isExeced) {
                         this.taskQueue.addStatusId([args as StatusTask], true);
                         break;
@@ -4164,8 +4155,9 @@ class TaskQueue {
     addStatusId(ststask: StatusTask[], isUnshift = false) {
         if (ststask.length == 0) return;
         ststask.forEach(t => {
-            if (isUnshift) this.queue.unshift(['addAtk', t]);
-            else this.queue.push(['addAtk', t]);
+            const atkname = 'statusAtk-' + heroStatus(t.id).name;
+            if (isUnshift) this.queue.unshift([atkname, t]);
+            else this.queue.push([atkname, t]);
         });
         this.statusAtk += ststask.length;
         this._emit(`${isUnshift ? 'unshift' : 'add'}StatusId(queue=[${this.queue.map(v => v[0])}])`);
