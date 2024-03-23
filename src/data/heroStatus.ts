@@ -53,7 +53,7 @@ class GIStatus implements Status {
             this.iconBg = STATUS_BG_COLOR[12];
             thandle = (status: Status, options: StatusOption = {}) => {
                 let { restDmg = 0 } = options;
-                let rest = {};
+                let rest: StatusHandleRes = {};
                 if (handle) {
                     const { restDmg: dmg = -1, ...other } = handle(status, options);
                     if (dmg > -1) restDmg = dmg;
@@ -1378,10 +1378,10 @@ const statusTotal: StatusObj = {
         }), { icbg: DEBUFF_BG_COLOR }),
 
     2113: (icon = '') => new GIStatus(2113, '脉摄宣明', '【行动阶段开始时：】生成【无欲气护盾】。；【[可用次数]：{useCnt}】',
-        icon, 1, [4], 2, 0, -1, (status: Status, options: StatusOption = {}) => ({
+        icon, 1, [4], 2, 0, -1, (_status: Status, options: StatusOption = {}) => ({
             trigger: ['phase-start'],
-            exec: () => {
-                --status.useCnt;
+            exec: (eStatus?: Status) => {
+                if (eStatus) --eStatus.useCnt;
                 const { heros = [], hidx = -1 } = options;
                 const isExist = heros[hidx]?.outStatus?.some(ost => ost.id == 2114);
                 return { outStatus: [heroStatus(2114, isExist)] }
@@ -1389,7 +1389,7 @@ const statusTotal: StatusObj = {
         }), { icbg: STATUS_BG_COLOR[7], expl: [heroStatus(2114)] }),
 
     2114: () => new GIStatus(2114, '无欲气护盾', '提供1点[护盾]，保护我方出战角色。；【此效果被移除，或被重复生成时：】造成1点[草元素伤害]，治疗我方出战角色1点。',
-        '', 1, [1, 7, 15], 1, 0, -1, (status: Status, options: StatusOption = {}) => {
+        '', 1, [1, 7], 1, 0, -1, (status: Status, options: StatusOption = {}) => {
             const { heros = [], hidx = -1 } = options;
             const fhero = heros[hidx];
             if (!fhero) throw new Error('hero not found');
