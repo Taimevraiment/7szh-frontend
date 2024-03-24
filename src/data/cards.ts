@@ -434,7 +434,7 @@ const allCards: CardObj = {
             if (getdmg[fhidx] > 0) trigger.push('getdmg', 'other-getdmg');
             if (heal[fhidx] > 0) trigger.push('heal');
             const hero = heros[hidxs[0]];
-            const execmds = isCdt<Cmds[]>(card.useCnt >= 2 && hero.energy < hero.maxEnergy, [{ cmd: 'getEnergy', cnt: 1 }]);
+            const execmds = isCdt<Cmds[]>(card.useCnt >= 2 && hero.energy < hero.maxEnergy, [{ cmd: 'getEnergy', cnt: 1, hidxs }], [{ cmd: '' }]);
             return {
                 addDmgType3: 2,
                 trigger,

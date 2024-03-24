@@ -7,6 +7,13 @@
     <button v-if="!client.isStart || isLookon > -1" class="exit" @click="exit">
       返回
     </button>
+    <button
+      v-if="client.isStart && isLookon == -1 && client.phase > 5"
+      class="exit"
+      @click="giveup"
+    >
+      投降
+    </button>
     <div class="player-info">{{ client.player?.info }}</div>
     <button
       v-if="isLookon == -1 && client.phase < 2"
@@ -333,6 +340,8 @@
             color:
               cidx < 2 && skill.costChange[cidx] > 0
                 ? CHANGE_GOOD_COLOR
+                : cidx < 2 && skill.costChange[cidx] < 0
+                ? CHANGE_BAD_COLOR
                 : 'white',
           }"
         >
@@ -376,6 +385,8 @@
   >
     {{ client.players[client.isWin % 2]?.name }}获胜！！！
   </h1>
+
+  <h1 v-if="client.error != ''" style="color: red">{{ client.error }}</h1>
 
   <div
     class="tip"
@@ -527,6 +538,13 @@ const exit = () => {
   socket.emit("exitRoom");
   if (isLookon.value > -1) router.back();
 };
+// 投降
+const giveup = () => {
+  const isConfirm = confirm("确定投降吗？");
+  if (isConfirm) {
+    client.value.giveup();
+  }
+};
 // 换卡
 const changeCard = (cidxs: number[]) => {
   client.value.changeCard(cidxs);
@@ -620,6 +638,7 @@ const devOps = (cidx = 0) => {
   let dices;
   let flag = new Set<string>();
   let cards: (number | Card)[] = [];
+  let handCards: Card[] | undefined;
   const h = (v: string) => (v == "" ? undefined : Number(v));
   for (const op of ops) {
     if (op.startsWith("&")) {
@@ -666,6 +685,10 @@ const devOps = (cidx = 0) => {
       ]);
       dices = ndices;
       flag.add("getDice");
+    } else if (op.startsWith("-")) {
+      const dcardcnt = Number(op);
+      handCards = client.value.player.handCards.slice(0, -dcardcnt);
+      flag.add("disCard");
     } else {
       const [cid = 0, cnt = 1] = op.split("*").map(h);
       if (cid == 0) {
@@ -686,6 +709,7 @@ const devOps = (cidx = 0) => {
     heros,
     dices,
     cmds: [{ cmd: "getCard", cnt: cards.length, card: cards }],
+    handCards,
     flag: "dev-" + [...flag].join("&"),
   });
 };

@@ -1181,11 +1181,12 @@ const allHeros: HeroObj = {
             '',
             '',
             [newSummonee(3058)], (options: SkillOption) => {
-                const { hero: { talentSlot }, card } = options;
+                const { hero: { talentSlot }, card, summons = [] } = options;
                 const isTalent = !!talentSlot || card?.id == 781;
+                const isExist = summons.some(smn => smn.id == 3058);
                 return {
-                    summon: [newSummonee(3058)],
-                    cmds: isCdt<Cmds[]>(isTalent, [{ cmd: 'getDice', cnt: 1, element: 5 }])
+                    summon: [newSummonee(3058, isTalent)],
+                    cmds: isCdt<Cmds[]>(isTalent && !isExist, [{ cmd: 'getDice', cnt: 1, element: 5 }])
                 }
             })
     ]),
@@ -1550,7 +1551,7 @@ const allHeros: HeroObj = {
         new GISkill('激流强震', '造成{dmg}点[水元素伤害]，在对方场上生成【暗流的诅咒】。', 3, 4, 3, 1, { ec: 2 },
             '',
             '',
-            [heroStatus(2180)], () => ({ outStatusOppo: [heroStatus(2179)] })),
+            [heroStatus(2180)], () => ({ outStatusOppo: [heroStatus(2180)] })),
         new GISkill('水之新生', '战斗开始时，初始附属【水之新生】。', 4, 0, 0, 0, {},
             '',
             '',

@@ -1802,6 +1802,8 @@ button:active {
   text-align: center;
   background-color: #a7bbdd;
   padding-top: 20px;
+  perspective: 1000px;
+  transform-style: preserve-3d;
   transform: rotate(90deg);
   animation: getcardmy 1.5s linear forwards;
 }

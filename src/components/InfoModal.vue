@@ -109,6 +109,8 @@
                       color:
                         cidx < 2 && skill.costChange[cidx] > 0
                           ? CHANGE_GOOD_COLOR
+                          : cidx < 2 && skill.costChange[cidx] < 0
+                          ? CHANGE_BAD_COLOR
                           : 'white',
                     }"
                   >
@@ -618,6 +620,7 @@ import {
   WEAPON_TYPE_URL,
   ELEMENT_URL,
   HERO_LOCAL_URL,
+  CHANGE_BAD_COLOR,
 } from "@/data/constant";
 
 const props = defineProps(["info", "isMobile"]);
@@ -797,7 +800,7 @@ watchEffect(() => {
     info.value.descriptions = info.value.description
       .split("；")
       .map((desc) => wrapDesc(desc));
-    skillExplain.value = wrapExpl(info.value.explains as Skill[]);
+    skillExplain.value = wrapExpl(info.value.explains);
   }
   if (info.value && "card" in info.value) {
     info.value.card.descriptions = info.value.card.description
@@ -830,7 +833,7 @@ watchEffect(() => {
         const isActionTalent = [6, 7].every((v) => slot.subType.includes(v));
         slot.descriptions = isActionTalent ? desc.slice(2) : desc;
         const onceDesc = slot.descriptions.findIndex((v) =>
-          v.includes("入场时")
+          v.includes("入场时：")
         );
         if (onceDesc > -1) slot.descriptions.splice(onceDesc, 1);
         slotExplain.value.push(
