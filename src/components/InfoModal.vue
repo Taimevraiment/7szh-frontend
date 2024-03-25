@@ -653,7 +653,7 @@ const wrapedIcon = (idx: number, isDice = false) => {
       : getPngIcon(ELEMENT_ICON[idx]);
   return `<img style="width:18px;transform:translateY(20%);" src="${url}"/>`;
 };
-const wrapDesc = (desc: string, obj?: Skill | Status | Summonee): string => {
+const wrapDesc = (desc: string, obj?: ExplainContent): string => {
   let res = desc
     .slice()
     .replace(/(?<!\\)【(.*?)】/g, '<span style="color:white;">$1</span>')

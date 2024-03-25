@@ -2142,8 +2142,8 @@ const statusTotal: StatusObj = {
             }
         }),
 
-    2181: () => new GIStatus(2181, '水之新生', '【所附属角色被击倒时：】移除此效果，使角色[免于被击倒]，并治疗该角色到4点生命值。触发此效果后，角色造成的[物理伤害]变为[水元素伤害]，且水元素伤害+1。',
-        'heal2', 0, [10, 13], 1, 0, -1, (_status: Status, options: StatusOption = {}) => ({
+    2181: () => new GIStatus(2181, '水之新生', '【所附属角色被击倒时：】移除此效果，使角色[免于被击倒]，并治疗该角色到4点生命值。触发此效果后，角色造成的[物理伤害]变为[水元素伤害]，且[水元素伤害]+1。',
+        'heal2', 0, [10, 13], 1, 0, -1, () => ({
             trigger: ['will-killed'],
             cmds: [{ cmd: 'revive', cnt: 4 }],
             exec: (eStatus?: Status) => {
@@ -2151,10 +2151,7 @@ const statusTotal: StatusObj = {
                     --eStatus.useCnt;
                     return {}
                 }
-                const { heros = [], hidx = -1 } = options;
-                if (!heros[hidx]?.talentSlot) return {}
-                heros[hidx].talentSlot = null;
-                return { inStatus: [heroStatus(2093)] }
+                return { inStatus: [heroStatus(2187)] }
             }
         })),
 
@@ -2206,6 +2203,9 @@ const statusTotal: StatusObj = {
                 },
             }
         }),
+
+    2187: () => new GIStatus(2187, '水之新生后续todo名字待定', '角色造成的[物理伤害]变为[水元素伤害]，且[水元素伤害]+1。',
+        'buff4', 0, [6, 8, 10], -1, 0, -1, () => ({ attchEl: 1, addDmg: 1 })),
 
 };
 

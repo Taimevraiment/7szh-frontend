@@ -797,13 +797,11 @@ const siteTotal: SiteObj = {
         return {
             trigger: ['card'],
             siteCnt: site.cnt < 1 ? 1 : -2,
+            summon: isCdt(site.cnt == 1, [newSummonee(3059)]),
             exec: () => {
-                if (++site.cnt < 2) return { isDestroy: false }
-                return {
-                    summon: [newSummonee(3059)],
-                    isDestroy: true,
-                }
-            }
+                ++site.cnt;
+                return { isDestroy: site.cnt >= 2 }
+            },
         }
     }),
     // 白手套和渔夫

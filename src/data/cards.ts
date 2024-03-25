@@ -208,6 +208,31 @@ type CardObj = {
 // id 6xx：料理
 // id 7xx：天赋
 
+const extraCards: CardObj = {
+    901: new GICard(901, '雷楔', '[战斗行动]：将【刻晴】切换到场上，立刻使用【星斗归位】。本次【星斗归位】会为【刻晴】附属【雷元素附魔】，但是不会再生成【雷楔】。(【刻晴】使用【星斗归位】时，如果此牌在手中：不会再生成【雷楔】，而是改为弃置此牌，并为【刻晴】附属【雷元素附魔】)',
+        'https://uploadstatic.mihoyo.com/ys-obc/2022/12/12/12109492/3d370650e825a27046596aaf4a53bb8d_7172676693296305743.png',
+        3, 3, 2, [7], 0, 0, (_card: Card, cardOpt: CardOption = {}) => {
+            const { heros = [] } = cardOpt;
+            const hidx = heros.findIndex(h => h.id == 1303);
+            const fhidx = heros.findIndex(h => h.isFront);
+            const cmds: Cmds[] = [{ cmd: 'useSkill', cnt: 1 }];
+            if (hidx != fhidx) cmds.unshift({ cmd: 'switch-to-self', hidxs: [hidx] });
+            return { trigger: ['skilltype2'], cmds }
+        }, { expl: talentExplain(1303, 2) }),
+
+    902: new GICard(902, '太郎丸的存款', '生成1个[万能元素骰]。',
+        '',
+        0, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'getDice', cnt: 1, element: 0 }] })),
+
+    903: new GICard(903, '清洁工作', '摸1张牌，我方出战角色下次造成伤害+1。(可叠加，最多叠加到2)',
+        '',
+        0, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'getCard', cnt: 1 }], inStatus: [heroStatus(2185)] })),
+
+    904: new GICard(904, '海底宝藏', '治疗我方出战角色1点，生成1个随机基础元素骰。',
+        '',
+        0, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'heal', cnt: 1 }, { cmd: 'getDice', cnt: 1, element: -1 }] })),
+}
+
 const allCards: CardObj = {
     0: new GICard(0, '无'),
 
@@ -894,7 +919,7 @@ const allCards: CardObj = {
         1, 8, 0, [1], 0, 1, (card: Card, cardOpt: CardOption = {}) => {
             const { heros = [], hidxs = [], hcardsCnt = 10 } = cardOpt;
             if (!heros[hidxs[0]]?.isFront || card.perCnt == 0) return {}
-            const execmds = isCdt<Cmds[]>(card.useCnt + 1 >= hcardsCnt, [{ cmd: 'getDice', cnt: 1, element: -1 }]);
+            const execmds = isCdt<Cmds[]>(card.useCnt + 1 >= hcardsCnt, [{ cmd: 'getDice', cnt: 1, element: -1 }], [{ cmd: '' }]);
             return {
                 trigger: ['grass-getdmg-oppo'],
                 execmds,
@@ -1127,7 +1152,8 @@ const allCards: CardObj = {
 
     324: new GICard(324, '太郎丸', '【入场时：】生成3张【太郎丸的存款】，均匀地置入我方牌库中。；我方打出2张【太郎丸的存款】后：弃置此牌，召唤【愤怒的太郎丸】。',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Assist_NPC_Taroumaru.webp',
-        2, 0, 1, [3], 0, 0, () => ({ cmds: [{ cmd: 'addCard', cnt: 3, card: 902, element: 1 }], site: [newSite(4050, 324)] }), { expl: [newSummonee(3059)] }),
+        2, 0, 1, [3], 0, 0, () => ({ cmds: [{ cmd: 'addCard', cnt: 3, card: 902, element: 1 }], site: [newSite(4050, 324)] }),
+        { expl: [extraCards[902], newSummonee(3059)] }),
 
     325: new GICard(325, '白手套和渔夫', '【结束阶段：】生成1张｢清洁工作｣，随机将其置入我方牌库顶部5张牌之中。；[可用次数]：2',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Assist_NPC_Baishoutao.webp',
@@ -2247,7 +2273,7 @@ const allCards: CardObj = {
                 --card.perCnt;
                 return {}
             }, {
-                addDmg: isCdt((heros[hidxs[0]]?.hp ?? 10) <= 5, 1),
+                addDmgCdt: isCdt((heros[hidxs[0]]?.hp ?? 10) <= 5, 1),
                 execmds: isCdt(card.perCnt > 0, [{ cmd: 'revive', cnt: 1 }])
             }]
         }, isCdt(card.perCnt > 0, 'will-killed')), { pct: 1, expl: talentExplain(1311, 2), energy: 2 }),
@@ -2283,29 +2309,7 @@ const allCards: CardObj = {
             }
         }, { expl: [heroStatus(2182)], pct: 1 }),
 
-
-    901: new GICard(901, '雷楔', '[战斗行动]：将【刻晴】切换到场上，立刻使用【星斗归位】。本次【星斗归位】会为【刻晴】附属【雷元素附魔】，但是不会再生成【雷楔】。(【刻晴】使用【星斗归位】时，如果此牌在手中：不会再生成【雷楔】，而是改为弃置此牌，并为【刻晴】附属【雷元素附魔】)',
-        'https://uploadstatic.mihoyo.com/ys-obc/2022/12/12/12109492/3d370650e825a27046596aaf4a53bb8d_7172676693296305743.png',
-        3, 3, 2, [7], 0, 0, (_card: Card, cardOpt: CardOption = {}) => {
-            const { heros = [] } = cardOpt;
-            const hidx = heros.findIndex(h => h.id == 1303);
-            const fhidx = heros.findIndex(h => h.isFront);
-            const cmds: Cmds[] = [{ cmd: 'useSkill', cnt: 1 }];
-            if (hidx != fhidx) cmds.unshift({ cmd: 'switch-to-self', hidxs: [hidx] });
-            return { trigger: ['skilltype2'], cmds }
-        }, { expl: talentExplain(1303, 2) }),
-
-    902: new GICard(902, '太郎丸的存款', '生成1个[万能元素骰]。',
-        '',
-        0, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'getDice', cnt: 1, element: 0 }] })),
-
-    903: new GICard(903, '清洁工作', '摸1张牌，我方出战角色下次造成伤害+1。(可叠加，最多叠加到2)',
-        '',
-        0, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'getCard', cnt: 1 }], inStatus: [heroStatus(2185)] })),
-
-    904: new GICard(904, '海底宝藏', '治疗我方出战角色1点，生成1个随机基础元素骰。',
-        '',
-        0, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'heal', cnt: 1 }, { cmd: 'getDice', cnt: 1, element: -1 }] })),
+    ...extraCards,
 
 }
 

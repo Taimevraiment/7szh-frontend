@@ -1616,8 +1616,8 @@ const allHeros: HeroObj = {
             'https://act-webstatic.mihoyo.com/hk4e/e20200928calculate/item_skill_icon_u033pf/9262db8e7ec7952af306117cb67d668d.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/12/258999284/b9854a003c9d7e5b14bed92132391e9e_754640348498205527.png',
             [], (options: SkillOption) => {
-                const { hero: { hp, skills: [, , , skill4], energy, maxEnergy }, dmg = 0 } = options;
-                if (hp - dmg > 7 || energy >= maxEnergy || skill4.isUsed) return {}
+                const { hero: { hp, skills: [, , , skill4], energy, maxEnergy }, getdmg = 0 } = options;
+                if (hp - getdmg > 7 || energy >= maxEnergy || skill4.isUsed) return {}
                 return {
                     trigger: ['getdmg'],
                     cmds: [{ cmd: 'getEnergy', cnt: 1 }]
@@ -1645,19 +1645,24 @@ const allHeros: HeroObj = {
             '',
             [heroStatus(2182)], (options: SkillOption) => {
                 const { heros = [], trigger = '' } = options;
+                let stsCnt = 0;
+                heros.forEach(hero => stsCnt += [...hero.inStatus, ...hero.outStatus].filter(sts => sts.type.includes(2) && sts.id != 2182).length);
+                if (trigger == 'game-start') stsCnt = 3;
                 return {
                     trigger: ['game-start', 'action-start'],
-                    inStatus: isCdt(trigger == 'game-start', [heroStatus(2182, 6)]),
+                    inStatus: isCdt(stsCnt > 0, [heroStatus(2182, stsCnt * 2)]),
                     exec: () => {
-                        if (trigger == 'game-start') return {}
-                        let stsCnt = 0;
+                        if (trigger == 'game-start' || stsCnt == 0) return;
                         for (const hero of heros) {
-                            stsCnt += [...hero.inStatus, ...hero.outStatus].filter(sts => sts.type.includes(2) && sts.id != 2182).length;
-                            hero.inStatus = hero.inStatus.filter(ist => !ist.type.includes(2) || ist.id == 2182);
-                            if (hero.isFront) hero.outStatus = hero.inStatus.filter(ost => !ost.type.includes(2));
+                            hero.inStatus.forEach(ist => {
+                                if (ist.type.includes(2) && ist.id != 2182) ist.useCnt = 0;
+                            });
+                            if (hero.isFront) {
+                                hero.outStatus.forEach(ost => {
+                                    if (ost.type.includes(2)) ost.useCnt = 0;
+                                });
+                            }
                         }
-                        if (stsCnt == 0) return {}
-                        return { inStatus: [heroStatus(2182, stsCnt * 2)] }
                     }
                 }
             })

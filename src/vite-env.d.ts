@@ -265,7 +265,7 @@ type Trigger = 'phase-start' | 'phase-end' | 'phase-dice' | 'game-start' | 'acti
     `${TrgDmg}-getdmg` | 'getdmg-oppo' | 'revive' | `${TrgDmg}-getdmg-oppo` | 'heal' | 'eheal' | 'useReadySkill' | 'status-destroy' |
     'summon-destroy' | 'slot-destroy' | 'site-destroy' | 'calc' | '';
 
-type ExplainContent = Skill | Status | Summonee;
+type ExplainContent = Skill | Status | Summonee | Card;
 
 // skill.d.ts
 type SkillOption = {
@@ -281,7 +281,7 @@ type SkillOption = {
     isFallAtk?: boolean,
     isReadySkill?: boolean,
     isExec?: boolean,
-    dmg?: number,
+    getdmg?: number,
     windEl?: number,
     trigger?: Trigger,
 }
@@ -467,6 +467,7 @@ type StatusExecRes = {
     immediate?: boolean,
     inStatusOppo?: Status[],
     outStatusOppo?: Status[],
+    hidxs?: number[],
 }
 
 // site.d.ts
@@ -505,6 +506,7 @@ type SiteHandleRes = {
     isNotAddTask?: boolean,
     isOrTrigger?: boolean,
     isLast?: boolean,
+    summon?: Summonee[],
 }
 
 type SiteExeOption = {
