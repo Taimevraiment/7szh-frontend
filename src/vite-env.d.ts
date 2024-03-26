@@ -30,6 +30,7 @@ type Player = {
     phase: number,
     info: string, // 右上角提示信息
     willGetCard: Card[], // 即将获得的卡
+    willAddCard: Card[], // 即将加入牌堆的卡
     pidx: number,
     hidx: number, // 出战角色索引idx
     tarhidx: number, // 受击角色索引idx
@@ -251,9 +252,9 @@ type GameInfo = {
     oppoGetElDmgType: number, // 敌方受到元素伤害的种类(用位计数)
 }
 
-type TrgElRe = '1' | '2' | '3' | '4';
-type TrgSkType = '1' | '2' | '3';
-type TrgEl = '1' | '2' | '3' | '4' | '5' | '6' | '7';
+type TrgElRe = 1 | 2 | 3 | 4;
+type TrgSkType = 1 | 2 | 3;
+type TrgEl = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 type TrgDmg = 'el' | 'pen' | 'any' | 'water' | 'fire' | 'thunder' | 'ice' | 'wind' | 'rock' | 'grass';
 type TrgElReDmg = 'water' | 'fire' | 'thunder' | 'ice';
 

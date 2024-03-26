@@ -171,12 +171,14 @@ const siteTotal: SiteObj = {
     // 群玉阁
     4010: (cardId: number) => new GISite(4010, cardId, 0, 0, 3, (_site: GISite, options: SiteOption = {}) => {
         const { hcards = [], trigger = '' } = options;
+        const triggers: Trigger[] = ['phase-dice'];
+        if (hcards.length <= 3) triggers.push('phase-start');
         return {
-            trigger: ['phase-dice', 'phase-start'],
+            trigger: triggers,
             element: -2,
             cnt: 2,
             exec: () => {
-                if (hcards.length <= 3 && trigger == 'phase-start') {
+                if (trigger == 'phase-start') {
                     return { cmds: [{ cmd: 'getDice', cnt: 1, element: 0 }], isDestroy: true }
                 }
                 return { isDestroy: false }

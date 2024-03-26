@@ -989,13 +989,13 @@ body {
   height: 150px;
   border: 2px solid black;
   border-radius: 5px;
-  background-color: #63a0e6;
 }
 
 .player-display {
   position: absolute;
   left: 10px;
   bottom: 10px;
+  background-color: #e0b97e;
 }
 
 .player-display-oppo {
@@ -1003,6 +1003,7 @@ body {
   top: 10px;
   right: 10px;
   min-height: 100px;
+  background-color: #63a0e6;
 }
 
 .rest-card {
@@ -1016,7 +1017,8 @@ body {
   position: absolute;
   bottom: 5px;
   left: 5px;
-  background-color: #5f7b9c;
+  background-color: #00000042;
+  /* background-color: #5f7b9c; */
   color: white;
 }
 

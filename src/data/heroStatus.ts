@@ -1189,7 +1189,7 @@ const statusTotal: StatusObj = {
                 trigger: ['skilltype1', 'phase-end'],
                 ...minusSkillRes,
                 exec: () => {
-                    if (trigger == 'phase-end') return { inStatus: [heroStatus(2096)], immediate: true }
+                    if (trigger == 'phase-end') return { inStatus: [heroStatus(2096)] }
                     if (trigger == 'skilltype1' && isMinus && isMinusSkill) --status.perCnt;
                     return {}
                 }

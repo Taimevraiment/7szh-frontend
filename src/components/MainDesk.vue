@@ -7,10 +7,17 @@
         </span>
         {{ opponent.pile.length }}
         <div
-          class="will-card-oppo"
+          class="will-getcard-oppo"
           :class="{ 'mobile-will-card': isMobile }"
           :style="{ left: `${cidx * 70 - 70}px` }"
           v-for="(_, cidx) in opponent.willGetCard"
+          :key="cidx"
+        ></div>
+        <div
+          class="will-addcard-oppo"
+          :class="{ 'mobile-will-card': isMobile }"
+          :style="{ left: `${cidx * 70 - 70}px` }"
+          v-for="(_, cidx) in opponent.willAddCard"
           :key="cidx"
         ></div>
       </div>
@@ -30,10 +37,25 @@
         </span>
         {{ player.pile.length }}
         <div
-          class="will-card-my"
+          class="will-getcard-my"
           :class="{ 'mobile-will-card': isMobile }"
           :style="{ left: `${cidx * 70 - 70}px` }"
           v-for="(card, cidx) in player.willGetCard"
+          :key="cidx"
+        >
+          <img
+            class="card-img"
+            :src="card.src"
+            v-if="card?.src?.length > 0"
+            :alt="card.name"
+          />
+          <span v-else>{{ card.name }}</span>
+        </div>
+        <div
+          class="will-addcard-my"
+          :class="{ 'mobile-will-card': isMobile }"
+          :style="{ left: `${cidx * 70 - 70}px` }"
+          v-for="(card, cidx) in player.willAddCard"
           :key="cidx"
         >
           <img
@@ -1793,7 +1815,7 @@ button:active {
   width: 50%;
 }
 
-.will-card-my {
+.will-getcard-my {
   position: absolute;
   width: 90px;
   height: 120px;
@@ -1802,26 +1824,57 @@ button:active {
   text-align: center;
   background-color: #a7bbdd;
   padding-top: 20px;
-  perspective: 1000px;
-  transform-style: preserve-3d;
   transform: rotate(90deg);
   animation: getcardmy 1.5s linear forwards;
 }
 
-.will-card-oppo {
+.will-getcard-oppo {
   position: absolute;
   width: 90px;
   height: 120px;
   border: 2px solid black;
   border-radius: 10px;
   background-color: #14408c;
-  background: url("@/assets/image/card-back.png");
+  background-image: url("@/assets/image/card-back.png");
+  background-size: 100% 100%;
   color: black;
   text-align: center;
   padding-top: 20px;
   transform: rotate(90deg);
   animation: getcardoppo 1.5s linear forwards;
   overflow: hidden;
+}
+
+.will-addcard-my {
+  position: absolute;
+  width: 90px;
+  height: 120px;
+  border-radius: 10px;
+  color: black;
+  text-align: center;
+  background-color: #a7bbdd;
+  padding-top: 20px;
+  transform: translate(500%, -10%);
+  animation: addcard 0.8s linear;
+  opacity: 0;
+}
+
+.will-addcard-oppo {
+  position: absolute;
+  width: 90px;
+  height: 120px;
+  border: 2px solid black;
+  border-radius: 10px;
+  background-color: #14408c;
+  background-image: url("@/assets/image/card-back.png");
+  background-size: 100% 100%;
+  color: black;
+  text-align: center;
+  padding-top: 20px;
+  transform: translate(500%, -10%);
+  animation: addcard 0.8s linear;
+  overflow: hidden;
+  opacity: 0;
 }
 
 .mobile-hero {
@@ -1937,6 +1990,18 @@ svg {
 
   100% {
     transform: translate(1300%, -80%);
+    opacity: 0;
+  }
+}
+
+@keyframes addcard {
+  0% {
+    z-index: 5;
+    opacity: 1;
+  }
+
+  100% {
+    transform: rotate(-90deg);
     opacity: 0;
   }
 }
