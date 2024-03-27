@@ -156,7 +156,7 @@
             </div>
         </div>
     </div>
-    <info-modal :info="modalInfo" :isMobile="isMobile" />
+    <InfoModal :info="modalInfo" :isMobile="isMobile" />
 </template>
 
 <script setup lang="ts">

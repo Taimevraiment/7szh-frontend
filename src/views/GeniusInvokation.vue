@@ -374,7 +374,6 @@
     v-if="client.phase > 1"
     :info="client.modalInfo"
     :isMobile="isMobile"
-    @cancel="cancel()"
     style="z-index: 10"
   />
 
@@ -435,6 +434,7 @@ import {
 } from "@/data/constant";
 import { cardTotal } from "@/data/cards";
 import { getSocket } from "@/store/socket";
+import { heroStatus } from "@/data/heroStatus";
 
 const router = useRouter();
 const route = useRoute();
@@ -687,8 +687,19 @@ const devOps = (cidx = 0) => {
       flag.add("getDice");
     } else if (op.startsWith("-")) {
       const dcardcnt = Number(op);
-      handCards = client.value.player.handCards.slice(0, -dcardcnt);
+      handCards = client.value.player.handCards.slice(0, dcardcnt);
       flag.add("disCard");
+    } else if (op.startsWith("=")) {
+      const [stsid = 0, hidx = heros.findIndex((h) => h.isFront)] = op
+        .slice(1)
+        .split(/[:：]+/)
+        .map(h);
+      if (stsid < 2000 || stsid > 3000) continue;
+      const sts = heroStatus(stsid);
+      const cmd = `get${["In", "Out"][sts.group]}Status` as Cmd;
+      const cmds: Cmds[] = [{ cmd, status: [sts], hidxs: [hidx] }];
+      client.value._doCmds(cmds, { heros, isEffectHero: true });
+      flag.add("setStatus");
     } else {
       const [cid = 0, cnt = 1] = op.split("*").map(h);
       if (cid == 0) {

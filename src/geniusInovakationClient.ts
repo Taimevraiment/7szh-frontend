@@ -392,7 +392,7 @@ export default class GeniusInvokationClient {
             if (cardcmds.length > 0) {
                 for (let i = 0; i < cardcmds.length; ++i) {
                     const { cmd = '', element = 0, hidxs: chidxs } = cardcmds[i];
-                    if (!chidxs) cardcmds[i].hidxs = [...hidxs];
+                    // if (!chidxs) cardcmds[i].hidxs = [...hidxs];
                     if (cmd == 'attach') {
                         (chidxs ?? []).forEach((hidx, hi) => {
                             const { esummon: asummon1, eheros: eheros1, asummon: esummon1, elTips: elTips1 }
@@ -430,9 +430,9 @@ export default class GeniusInvokationClient {
             player.heros = [...aHeros];
             const cardrescmds: Cmds[] = [
                 { cmd: 'getOutStatus', status: cardres.outStatus },
-                { cmd: 'getInStatus', status: cardres.inStatus, hidxs },
+                { cmd: 'getInStatus', status: cardres.inStatus, hidxs: cardres.hidxs },
                 { cmd: 'getOutStatusOppo', status: cardres.outStatusOppo },
-                { cmd: 'getInStatusOppo', status: cardres.inStatusOppo, hidxs },
+                { cmd: 'getInStatusOppo', status: cardres.inStatusOppo, hidxs: cardres.hidxs },
             ];
             this._doCmds(cardrescmds, { isEffectHero: true });
             if (isAction) this.player.canAction = false;
@@ -690,8 +690,9 @@ export default class GeniusInvokationClient {
         }
         if (players[this.playerIdx]?.phase != PHASE.CHOOSE_HERO ||
             !chooseInitHero && !flag.startsWith('infoHandle:getServerInfo-changeTo')) {
-            if (flag != 'endPhase-hasStatusAtk') this.players = [...players];
-            else this.players.forEach(p => p.status = p.status ^ 1);
+            // if (flag != 'endPhase-hasStatusAtk') this.players = [...players];
+            // else this.players.forEach(p => p.status = p.status ^ 1);
+            this.players = [...players];
         }
         if (round > 1 || this.player?.phase != PHASE.CHOOSE_HERO || changeTo == this.playerIdx) {
             if (this.players.some(p => p.heros.some(h => {

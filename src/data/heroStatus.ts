@@ -2076,7 +2076,7 @@ const statusTotal: StatusObj = {
         }), { expl }),
 
     2176: (icon = '') => new GIStatus(2176, '越袚草轮', '【我方切换角色后：】造成1点[雷元素伤害]，治疗我方出战角色1点。(每回合1次)；【[可用次数]：{useCnt}】',
-        icon, 1, [1], 2, 0, -1, (status: Status) => {
+        icon, 1, [1], 3, 0, -1, (status: Status) => {
             if (status.perCnt == 0) return {}
             return {
                 damage: 1,
@@ -2094,7 +2094,7 @@ const statusTotal: StatusObj = {
         }, { icbg: STATUS_BG_COLOR[3], pct: 1 }),
 
     2177: (icon = '') => new GIStatus(2177, '疾风示现', '【所附属角色进行[重击]时：】少花费1个[无色元素骰]，造成的[物理伤害]变为[风元素伤害]，并且使敌方出战角色附属【风压坍陷】；【[可用次数]：{useCnt}】',
-        icon, 0, [4, 16], 2, 0, -1, (status: Status, options: StatusOption = {}) => {
+        icon, 0, [4, 16], 1, 0, -1, (status: Status, options: StatusOption = {}) => {
             if (!options.isChargedAtk) return {}
             const { minusSkillRes } = minusDiceSkillHandle(options, { skilltype1: [0, 1, 0] });
             return {
@@ -2192,8 +2192,8 @@ const statusTotal: StatusObj = {
             }
         })),
 
-    2186: () => new GIStatus(2186, '缤纷马卡龙(生效中)', '该角色接下来3次受到伤害后再治疗其1点。',
-        'heal', 0, [4], 3, 0, -1, (_status: Status, options: StatusOption = {}) => {
+    2186: () => new GIStatus(2186, '缤纷马卡龙(生效中)', '该角色受到伤害后再治疗其1点。',
+        'heal', 0, [4], 4, 0, -1, (_status: Status, options: StatusOption = {}) => {
             const { hidx = -1 } = options;
             return {
                 trigger: ['getdmg'],

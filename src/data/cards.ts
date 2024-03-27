@@ -224,11 +224,15 @@ const extraCards: CardObj = {
         '',
         0, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'getDice', cnt: 1, element: 0 }] })),
 
-    903: new GICard(903, '清洁工作', '摸1张牌，我方出战角色下次造成伤害+1。(可叠加，最多叠加到2)',
+    903: new GICard(903, '清洁工作', '我方出战角色下次造成伤害+1。(可叠加，最多叠加到2)',
+        '',
+        0, 8, 2, [], 0, 0, () => ({ inStatus: [heroStatus(2185)] })),
+
+    904: new GICard(904, '清洁工作', '摸1张牌，我方出战角色下次造成伤害+1。(可叠加，最多叠加到2)',
         '',
         0, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'getCard', cnt: 1 }], inStatus: [heroStatus(2185)] })),
 
-    904: new GICard(904, '海底宝藏', '治疗我方出战角色1点，生成1个随机基础元素骰。',
+    905: new GICard(905, '海底宝藏', '治疗我方出战角色1点，生成1个随机基础元素骰。',
         '',
         0, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'heal', cnt: 1 }, { cmd: 'getDice', cnt: 1, element: -1 }] })),
 }
@@ -1032,7 +1036,7 @@ const allCards: CardObj = {
 
     219: new GICard(219, '清籁岛', '【任意阵营的角色受到治疗后：】使该角色附属【悠远雷暴】。；[持续回合]：2',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Assist_Location_Qinglaidao.webp',
-        0, 8, 1, [2], 0, 0, () => ({ site: [newSite(4049, 219)] }), { expl: [heroStatus(2184)] }),
+        1, 8, 1, [2], 0, 0, () => ({ site: [newSite(4049, 219)] }), { expl: [heroStatus(2184)] }),
 
     301: new GICard(301, '派蒙', '【行动阶段开始时：】生成2点[万能元素骰]。；[可用次数]：2。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/158741257/8b291b7aa846d8e987a9c7d60af3cffb_7229054083686130166.png',
@@ -1152,12 +1156,12 @@ const allCards: CardObj = {
 
     324: new GICard(324, '太郎丸', '【入场时：】生成3张【太郎丸的存款】，均匀地置入我方牌库中。；我方打出2张【太郎丸的存款】后：弃置此牌，召唤【愤怒的太郎丸】。',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Assist_NPC_Taroumaru.webp',
-        2, 0, 1, [3], 0, 0, () => ({ cmds: [{ cmd: 'addCard', cnt: 3, card: 902, element: 1 }], site: [newSite(4050, 324)] }),
+        1, 0, 1, [3], 0, 0, () => ({ cmds: [{ cmd: 'addCard', cnt: 3, card: 902, element: 1 }], site: [newSite(4050, 324)] }),
         { expl: [extraCards[902], newSummonee(3059)] }),
 
-    325: new GICard(325, '白手套和渔夫', '【结束阶段：】生成1张｢清洁工作｣，随机将其置入我方牌库顶部5张牌之中。；[可用次数]：2',
+    325: new GICard(325, '白手套和渔夫', '【结束阶段：】生成1张｢清洁工作｣，随机将其置入我方牌库顶部5张牌之中。；如果此牌的[可用次数]仅剩1次，则摸1张牌，｢清洁工作｣不再摸牌；[可用次数]：2',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Assist_NPC_Baishoutao.webp',
-        2, 0, 1, [3], 0, 0, () => ({ site: [newSite(4051, 325)] })),
+        0, 8, 1, [3], 0, 0, () => ({ site: [newSite(4051, 325)] })),
 
     401: new GICard(401, '参量质变仪', '【双方角色使用技能后：】如果造成了元素伤害，此牌积累1个｢质变进度｣。；此牌已累积3个｢质变进度｣时，弃置此牌并生成3个不同的基础元素骰。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/158741257/380f0bb73ffac88a2e8b60a1069a8246_3779576916894165131.png',
@@ -1477,7 +1481,7 @@ const allCards: CardObj = {
 
     529: new GICard(529, '海中寻宝', '生成6张【海底宝藏】，随机地置入我方牌库中。',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Event_Event_Xunbao.webp',
-        1, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'addCard', cnt: 6, card: 904 }] })),
+        1, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'addCard', cnt: 6, card: 905 }] })),
 
     561: new GICard(561, '自由的新风', '【本回合中，轮到我方行动期间有对方角色被击倒时：】本次行动结束后，我方可以再连续行动一次。；【[可用次数]：】1',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/09/24/258999284/bccf12a9c926bec7203e543c469ac58d_1423280855629304603.png',
@@ -1742,9 +1746,9 @@ const allCards: CardObj = {
             return { cmds: [{ cmd: 'heal', cnt: 2 }], inStatus: [heroStatus(2159), heroStatus(2009)], canSelectHero }
         }),
 
-    615: new GICard(615, '缤纷马卡龙', '治疗目标角色1点，该角色接下来3次受到伤害后再治疗其1点。',
+    615: new GICard(615, '缤纷马卡龙', '治疗目标角色1点，该角色接下来4次受到伤害后再治疗其1点。',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Event_Food_Macarons.webp',
-        2, 8, 2, [5], 0, 1, (_card: Card, cardOpt: CardOption = {}) => {
+        2, 0, 2, [5], 0, 1, (_card: Card, cardOpt: CardOption = {}) => {
             const canSelectHero = (cardOpt?.heros ?? []).map(h => h.hp < h.maxhp);
             return { cmds: [{ cmd: 'heal', cnt: 1 }], inStatus: [heroStatus(2186), heroStatus(2009)], canSelectHero }
         }),

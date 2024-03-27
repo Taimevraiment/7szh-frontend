@@ -1,5 +1,5 @@
 <template>
-  <div class="info-outer-container" @click="cancel()">
+  <div class="info-outer-container">
     <div
       class="info-container"
       :class="{ 'mobile-font': isMobile }"
@@ -624,7 +624,6 @@ import {
 } from "@/data/constant";
 
 const props = defineProps(["info", "isMobile"]);
-const emits = defineEmits(["cancel"]);
 
 let infoObj = props.info;
 const isMobile = ref<boolean>(props.isMobile);
@@ -888,11 +887,6 @@ const showRule = (...desc: string[]) => {
   isShowRule.value = !isShowRule.value;
   if (isShowRule.value) wrapRule(...desc);
 };
-
-const cancel = () => {
-  isShowRule.value = false;
-  emits("cancel");
-};
 </script>
 
 <style scoped>
@@ -904,6 +898,7 @@ const cancel = () => {
   flex-direction: row;
   align-items: flex-start;
   user-select: none;
+  pointer-events: none;
 }
 
 .info-container {
@@ -916,6 +911,7 @@ const cancel = () => {
   padding: 10px 5px;
   margin-right: 2px;
   overflow: auto;
+  pointer-events: all;
 }
 
 .name {

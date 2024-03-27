@@ -812,7 +812,7 @@ const siteTotal: SiteObj = {
         exec: () => {
             --site.cnt;
             return {
-                cmds: [{ cmd: 'addCard', cnt: 1, card: 903, hidxs: [5] }],
+                cmds: [{ cmd: 'addCard', cnt: 1, card: 903 + site.cnt, hidxs: [5] }],
                 isDestroy: site.cnt == 0,
             }
         }

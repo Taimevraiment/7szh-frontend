@@ -1013,12 +1013,12 @@ const allHeros: HeroObj = {
     1311: new GIHero(1311, '久岐忍', 3, 10, 3, 1,
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Char_Avatar_Shinobu.webp',
         skill1('忍流飞刃斩'), [
-        new GISkill('越袚雷草之轮', '造成{dmg}点[雷元素伤害]，生成【越袚草轮】。如果本角色生命值至少为6，则对自身造成1点[穿透伤害]。', 2, 1, 3, 3, {},
+        new GISkill('越袚雷草之轮', '生成【越袚草轮】。如果本角色生命值至少为6，则对自身造成2点[穿透伤害]。', 2, 1, 3, 3, {},
             '',
             '',
             [heroStatus(2176)], (options: SkillOption) => {
                 const { hero: { hp, skills: [, { src }] } } = options;
-                return { outStatus: [heroStatus(2176, src)], pendamageSelf: isCdt(hp >= 6, 1) }
+                return { outStatus: [heroStatus(2176, src)], pendamageSelf: isCdt(hp >= 6, 2) }
             }),
         new GISkill('御咏鸣神刈山祭', '造成{dmg}点[雷元素伤害]，治疗本角色2点。', 3, 4, 3, 3, { ec: 2 },
             '',
@@ -1640,17 +1640,20 @@ const allHeros: HeroObj = {
             '',
             '',
             [readySkill(20)], () => ({ inStatus: [heroStatus(2183, [readySkill(20)])] })),
-        new GISkill('帝王甲胄', '战斗开始时：初始附属6层【重甲蟹壳】。；【我方执行任意行动后：】如果我方场上存在【重甲蟹壳】以外的[护盾]状态或[护盾]出战状态，则将其全部移除; 每移除1个，就使角色附属2层【重甲蟹壳】。', 4, 0, 0, 0, {},
+        new GISkill('帝王甲胄', '战斗开始时：初始附属5层【重甲蟹壳】。；【我方执行任意行动后：】如果我方场上存在【重甲蟹壳】以外的[护盾]状态或[护盾]出战状态，则将其全部移除; 每移除1个，就使角色附属2层【重甲蟹壳】。', 4, 0, 0, 0, {},
             '',
             '',
             [heroStatus(2182)], (options: SkillOption) => {
                 const { heros = [], trigger = '' } = options;
                 let stsCnt = 0;
-                heros.forEach(hero => stsCnt += [...hero.inStatus, ...hero.outStatus].filter(sts => sts.type.includes(2) && sts.id != 2182).length);
-                if (trigger == 'game-start') stsCnt = 3;
+                if (trigger == 'game-start') stsCnt = 5;
+                else {
+                    heros.forEach(hero => stsCnt += [...hero.inStatus, ...hero.outStatus].filter(sts => sts.type.includes(2) && sts.id != 2182).length);
+                    stsCnt *= 2;
+                }
                 return {
                     trigger: ['game-start', 'action-start'],
-                    inStatus: isCdt(stsCnt > 0, [heroStatus(2182, stsCnt * 2)]),
+                    inStatus: isCdt(stsCnt > 0, [heroStatus(2182, stsCnt)]),
                     exec: () => {
                         if (trigger == 'game-start' || stsCnt == 0) return;
                         for (const hero of heros) {

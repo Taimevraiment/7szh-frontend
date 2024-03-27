@@ -830,7 +830,7 @@ const summonTotal: SummoneeObj = {
 
     3058: (isTalent = false) => new GISummonee(3058, '赫耀多方面体', '【结束阶段：】造成{dmg}点[风元素伤害]。；【[可用次数]：{useCnt}】；【此召唤物在场时：】敌方角色受到的[风元素伤害]+1。',
         '',
-        2, 2, 0, 1, 5, (summon: Summonee, smnOpt: SummonOption = {}) => {
+        3, 3, 0, 1, 5, (summon: Summonee, smnOpt: SummonOption = {}) => {
             const { trigger = '' } = smnOpt;
             const triggers: Trigger[] = ['wind-getdmg-oppo', 'phase-end'];
             if (summon.isTalent) triggers.push('phase-start');
