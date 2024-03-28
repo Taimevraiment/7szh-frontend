@@ -55,10 +55,14 @@ export default class GeniusInvokationClient {
     decks: { name: string, shareCode: string }[] = [];
     deckIdx: number; // 出战卡组id
     editDeckIdx: number; // 当前编辑卡组idx
+    countdown: Countdown = { curr: 0, limit: 0, timer: null }; // 倒计时配置
     log: string[] = []; // 当局游戏日志
     isMobile: boolean; // 是否为手机
     error: string = ''; // 服务器发生的错误信息
-    constructor(socket: Socket, userid: number, players: Player[], isMobile: boolean, decks: { name: string, shareCode: string }[], deckIdx: number, isLookon: number) {
+    constructor(
+        socket: Socket, userid: number, players: Player[], isMobile: boolean, timelimit: number,
+        decks: { name: string, shareCode: string }[], deckIdx: number, isLookon: number
+    ) {
         this.socket = socket;
         this.userid = userid;
         this.players = players;
@@ -69,6 +73,7 @@ export default class GeniusInvokationClient {
         this.decks = decks;
         this.taskQueue = new TaskQueue(socket);
         this.isMobile = isMobile;
+        this.countdown.limit = timelimit;
     }
     get player() { // 本玩家
         return this.players[this.playerIdx] ?? { ...NULL_PLAYER };
@@ -562,6 +567,7 @@ export default class GeniusInvokationClient {
         this.isStart = data.isStart ?? this.isStart;
         this.phase = data.phase ?? this.phase;
         this.canAction = this.player?.canAction ?? false;
+        this.countdown.curr = data.currCountdown ?? 0;
         if (data.taskQueueVal) {
             this.taskQueue.queue = data.taskQueueVal.queue;
             this.taskQueue.isEndAtk = data.taskQueueVal.isEndAtk;
@@ -726,7 +732,7 @@ export default class GeniusInvokationClient {
             this.taskQueue.isTaskEmpty() && this.isStart;
 
         this.round = round;
-        if ([PHASE.CHANGE_CARD, PHASE.ACTION_END].includes(this.phase) && phase == PHASE.DICE && changeTo == undefined) {
+        if ([PHASE.CHANGE_CARD, PHASE.ACTION_END, PHASE.PHASE_END].includes(this.phase) && phase == PHASE.DICE && changeTo == undefined) {
             this.phase = phase;
             this.rollCnt = 1;
             this.cancel();
@@ -809,7 +815,17 @@ export default class GeniusInvokationClient {
                     for (const [exsite, pidx] of this.exchangeSite) {
                         this.players[pidx].site.push(exsite);
                     }
-                    await this._wait(() => this.actionInfo == '', { delay: 500, freq: 100, isImmediate: false })
+                    await this._wait(() => this.actionInfo == '', { delay: 500, freq: 100, isImmediate: false });
+                    if (this.countdown.limit > 0) {
+                        this.countdown.curr = this.countdown.limit;
+                        const timer = setInterval(() => {
+                            --this.countdown.curr;
+                            if (this.countdown.curr <= 0) {
+                                clearInterval(timer);
+                                if (this.player.status == 1) this.endPhase();
+                            }
+                        }, 1000);
+                    }
                     this.socket.emit('sendToServer', {
                         roundPhase: PHASE.ACTION,
                         sites: isCdt(this.exchangeSite.length > 0, this.players.map(p => p.site)),
@@ -2437,7 +2453,13 @@ export default class GeniusInvokationClient {
                             });
                         }
                     } else if (isExec) {
-                        this.taskQueue.addStatusAtk([{ id: sts.id, type: sts.group, pidx: isOppo ? epidx : pidx, isOppo: stsres.isOppo ? 1 : 0, trigger }]);
+                        this.taskQueue.addStatusAtk([{
+                            id: sts.id,
+                            type: sts.group,
+                            pidx: isOppo ? epidx : pidx,
+                            isOppo: stsres.isOppo ? 1 : 0,
+                            trigger
+                        }], trigger == 'getdmg');
                     }
                     // else if (trigger.startsWith('skill')) {
                     //     (isOppo ? res.etriggers : res.atriggers)[hi].push('after-' + trigger as Trigger);
@@ -3043,6 +3065,7 @@ export default class GeniusInvokationClient {
             const nist: Status[] = [];
             const nost: Status[] = [];
             const nistop: Status[] = [];
+            const nostop: Status[] = [];
             for (const sts of stses) {
                 if (!sts.type.some(t => types.includes(t)) || (taskMark && (taskMark[0] != hidx || taskMark[1] != group || taskMark[2] != sts.id))) continue;
                 const stsres = heroStatus(sts.id).handle(sts, {
@@ -3080,6 +3103,7 @@ export default class GeniusInvokationClient {
                     nost.push(...(stsexecres?.outStatus ?? []));
                     nist.push(...(stsexecres?.inStatus ?? []));
                     nistop.push(...(stsexecres?.inStatusOppo ?? []));
+                    nostop.push(...(stsexecres?.outStatusOppo ?? []));
                     const stscmds = [...(stsres.cmds ?? []), ...(stsexecres?.cmds ?? [])];
                     cmds.push(...stscmds);
                     if (intvl && (!types.includes(1) || !sts.type.includes(1)) && !stsres.damage && !stsres.pendamage && !stsres.heal) {
@@ -3187,7 +3211,7 @@ export default class GeniusInvokationClient {
                     }
                 }
             }
-            return { nist, nost, nistop }
+            return { nist, nost, nistop, nostop }
         }
         for (let i = 0; i < pheros.length; ++i) {
             const hidx = (i + p.hidx) % pheros.length;
@@ -3295,7 +3319,7 @@ export default class GeniusInvokationClient {
                     if (heals[i] < 0) continue;
                     const hlidx = i + (pidx ^ 1) * 3;
                     if (willHeals[hlidx] < 0) willHeals[hlidx] = 0;
-                    willHeals[hlidx] = Math.min(aheros[hlidx].maxhp - aheros[hlidx].hp, willHeals[hlidx] + heals[i]);
+                    willHeals[hlidx] = Math.min(aheros[i].maxhp - aheros[i].hp, willHeals[hlidx] + heals[i]);
                 }
             }
             this._doHeal(willHeals, aheros, { pidx });

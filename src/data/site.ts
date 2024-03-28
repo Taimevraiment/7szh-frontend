@@ -258,7 +258,7 @@ const siteTotal: SiteObj = {
         return {
             trigger: ['card'],
             isNotAddTask: true,
-            minusDiceCard: isMinus ? 2 : 0,
+            minusDiceCard: isCdt(isMinus, 2),
             exec: () => {
                 if (isMinus) --site.perCnt;
                 return { isDestroy: false }
@@ -376,11 +376,11 @@ const siteTotal: SiteObj = {
     4024: (cardId: number) => new GISite(4024, cardId, 0, 1, 3, (site: GISite, options: SiteOption = {}) => {
         const { dices = [], hcards = [], card, trigger = '', minusDiceCard: mdc = 0 } = options;
         const isMinus = dices.length <= hcards.length && site.perCnt > 0;
-        const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(options, { skilltype: [0, 0, 1] }, () => isMinus);
+        const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(options, { skill: [0, 0, 1] }, () => isMinus);
         const isCard = card && card.subType.includes(6) && card.cost > mdc;
         return {
             ...minusSkillRes,
-            minusDiceCard: isMinus && isCard ? 1 : 0,
+            minusDiceCard: isCdt(isMinus && isCard, 1),
             trigger: ['skill', 'card'],
             isNotAddTask: true,
             exec: () => {
@@ -443,7 +443,7 @@ const siteTotal: SiteObj = {
         return {
             trigger: ['card'],
             isNotAddTask: true,
-            minusDiceCard: isMinus ? 1 : 0,
+            minusDiceCard: isCdt(isMinus, 1),
             exec: () => {
                 if (!isMinus) return { isDestroy: false }
                 --site.cnt;
@@ -471,7 +471,7 @@ const siteTotal: SiteObj = {
         const isMinus = site.cnt >= 3 && card && card.subType.some(v => v < 2) && card.cost > mdc;
         return {
             trigger: ['summon-destroy', 'card'],
-            minusDiceCard: isMinus ? 2 : 0,
+            minusDiceCard: isCdt(isMinus, 2),
             exec: (exeOpt: SiteExeOption) => {
                 let { summonDiffCnt = 0 } = exeOpt;
                 if (trigger == 'card' && isMinus) return { isDestroy: true }
@@ -495,7 +495,7 @@ const siteTotal: SiteObj = {
         return {
             trigger: ['card'],
             isNotAddTask: true,
-            minusDiceCard: isMinus ? 2 : 0,
+            minusDiceCard: isCdt(isMinus, 2),
             exec: () => {
                 if (isMinus) --site.perCnt;
                 return { isDestroy: false }
@@ -509,7 +509,7 @@ const siteTotal: SiteObj = {
         return {
             trigger: ['card'],
             isNotAddTask: true,
-            minusDiceCard: isMinus ? 1 : 0,
+            minusDiceCard: isCdt(isMinus, 1),
             exec: () => {
                 let cmds: Cmds[] | undefined;
                 if (isMinus) --site.perCnt;
@@ -541,7 +541,7 @@ const siteTotal: SiteObj = {
         return {
             trigger: ['card'],
             isNotAddTask: true,
-            minusDiceCard: isMinus ? minusCnt : 0,
+            minusDiceCard: isCdt(isMinus, minusCnt),
             exec: () => {
                 if (isMinus) --site.perCnt;
                 return { isDestroy: false }
@@ -568,7 +568,7 @@ const siteTotal: SiteObj = {
         return {
             trigger: ['card'],
             isNotAddTask: true,
-            minusDiceCard: isMinus ? minusCnt : 0,
+            minusDiceCard: isCdt(isMinus, minusCnt),
             exec: () => {
                 if (isMinus) --site.perCnt;
                 return { isDestroy: false }
@@ -603,7 +603,7 @@ const siteTotal: SiteObj = {
         return {
             trigger: ['skill', 'card'],
             isNotAddTask: true,
-            minusDiceCard: isCardMinus ? 1 : 0,
+            minusDiceCard: isCdt(isCardMinus, 1),
             ...minusSkillRes,
             exec: () => {
                 if (site.perCnt > 0 && (trigger == 'card' && isCardMinus ||
@@ -671,7 +671,7 @@ const siteTotal: SiteObj = {
         const isMinus = card && card.cost == 1 && card.type < 2 && site.perCnt > 0 && card.cost > mdc;
         return {
             trigger: ['card'],
-            minusDiceCard: isMinus ? 1 : 0,
+            minusDiceCard: isCdt(isMinus, 1),
             isNotAddTask: true,
             exec: () => {
                 if (isMinus) {
@@ -688,7 +688,7 @@ const siteTotal: SiteObj = {
         const isMinus = card && usedCardIds.includes(card.id) && card.subType.some(sbtp => sbtp < 4) && site.perCnt > 0 && card.cost > mdc;
         return {
             trigger: ['card'],
-            minusDiceCard: isMinus ? 2 : 0,
+            minusDiceCard: isCdt(isMinus, 2),
             isNotAddTask: true,
             exec: () => {
                 if (isMinus) {

@@ -3,6 +3,7 @@
     <div class="create-room-main" @click.stop="" @keyup.enter="create">
       <input type="text" placeholder="房间名(选填)" v-model="roomName" />
       <input type="text" placeholder="密码(选填)" v-model="roomPassword" />
+      <input type="number" placeholder="倒计时(秒)(选填)" v-model="countdown" />
       <button style="margin: 5% 0" @click="create">创建</button>
     </div>
   </div>
@@ -15,8 +16,10 @@ const emit = defineEmits(["create-room", "create-room-cancel"]);
 
 const roomName = ref<string>(""); // 房间名
 const roomPassword = ref<string>(""); // 房间密码
+const countdown = ref<number | string>(""); // 倒计时
 
-const create = () => emit("create-room", roomName.value, roomPassword.value);
+const create = () =>
+  emit("create-room", roomName.value, roomPassword.value, +countdown.value);
 const cancel = () => emit("create-room-cancel");
 </script>
 

@@ -268,6 +268,12 @@ type Trigger = 'phase-start' | 'phase-end' | 'phase-dice' | 'game-start' | 'acti
 
 type ExplainContent = Skill | Status | Summonee | Card;
 
+type Countdown = {
+    limit: number, // 倒计时配置
+    curr: number, // 当前倒计时
+    timer: NodeJS.Timeout | null, // 定时器
+}
+
 // skill.d.ts
 type SkillOption = {
     hero: Hero,

@@ -107,7 +107,7 @@ const summonTotal: SummoneeObj = {
             return {
                 trigger: triggers,
                 isNotAddTask: isTalent || trigger.startsWith('el5Reaction'),
-                addDmgCdt: isTalent ? 1 : 0,
+                addDmgCdt: isCdt(isTalent, 1),
                 exec: (smnexeOpt: SummonExecOption) => {
                     const { summon: smn = summon } = smnexeOpt;
                     if (trigger == 'phase-end') return phaseEndAtk(smn);
@@ -128,7 +128,7 @@ const summonTotal: SummoneeObj = {
             return {
                 trigger: ['phase-end', 'wind-dmg'],
                 isNotAddTask: trigger == 'wind-dmg',
-                addDmgCdt: isTalent ? 1 : 0,
+                addDmgCdt: isCdt(isTalent, 1),
                 exec: (smnexeOpt: SummonExecOption) => {
                     if (trigger == 'wind-dmg') return {}
                     return phaseEndAtk(smnexeOpt?.summon ?? summon);

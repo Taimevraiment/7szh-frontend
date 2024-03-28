@@ -75,21 +75,19 @@ export const funcParse = (jsonStr: string | undefined): Function | undefined => 
 
 // 处理减少技能骰子函数
 export const minusDiceSkillHandle = (options: { heros?: Hero[], hidxs?: number[], hidx?: number, isSkill?: number, minusDiceSkill?: number[][], trigger?: Trigger },
-    skills: { skill?: number[], skilltype?: number[], skilltype1?: number[], skilltype2?: number[], skilltype3?: number[] },
+    skills: { skill?: number[], skilltype1?: number[], skilltype2?: number[], skilltype3?: number[] },
     cdt: ((skill: Skill) => boolean) = (() => true)): {
         isMinusSkill: boolean,
         minusSkillRes: { minusDiceSkill: number[][], minusDiceSkills: number[][] }
     } => {
     const { heros = [], hidxs = [], hidx = -1, isSkill: skidx = -1, minusDiceSkill: mds, trigger = '' } = options;
-    const triggers: Trigger[] = Reflect.ownKeys(skills)
-        .flatMap(v => v == 'skilltype' ? ['skill'] : v) as Trigger[];
+    const triggers: Trigger[] = Reflect.ownKeys(skills) as Trigger[];
     if (!mds || ![...triggers, 'calc'].includes(trigger)) {
         return { isMinusSkill: false, minusSkillRes: { minusDiceSkill: [], minusDiceSkills: [] } }
     }
     const hero = heros[hidxs[0] ?? hidx];
-    const { skill, skilltype, skilltype1, skilltype2, skilltype3 } = skills;
+    const { skill: nskill, skilltype1, skilltype2, skilltype3 } = skills;
     const nskillstype = [skilltype1, skilltype2, skilltype3];
-    const nskill = skill ?? skilltype;
     let isMinusSkill = true;
     const minusDiceSkills: number[][] = [];
     for (let i = 0; i < hero.skills.length; ++i) {

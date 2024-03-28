@@ -1199,14 +1199,14 @@ const allHeros: HeroObj = {
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/e16efaaa1d7a4e0e50c2df84b5870ea3_8679057305261038668.png',
             [heroStatus(2027)], (options: SkillOption) => {
                 const { hero: { talentSlot }, card } = options;
-                return { outStatus: [heroStatus(2027)], addDmgCdt: talentSlot == null && card?.id == 710 ? 1 : 0 };
+                return { outStatus: [heroStatus(2027)], addDmgCdt: isCdt(talentSlot == null && card?.id == 710, 1) };
             }),
         new GISkill('天权崩玉', '造成{dmg}点[岩元素伤害]，如果【璇玑屏】在场，就使此伤害+2。', 3, 6, 3, 6, { ec: 3 },
             'https://patchwiki.biligame.com/images/ys/a/a7/3s4vt3i6mu5kopy55xern2tdvq2tl2a.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/2930a6e689cea53607ab586a8cde8c97_8943298426488751810.png',
             [heroStatus(2027)], (options: SkillOption) => {
                 const { hero: { outStatus } } = options;
-                return { addDmgCdt: outStatus.some(sts => sts.id == 2027) ? 2 : 0 };
+                return { addDmgCdt: isCdt(outStatus.some(sts => sts.id == 2027), 2) };
             })
     ]),
 

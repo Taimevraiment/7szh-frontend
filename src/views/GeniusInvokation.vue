@@ -447,7 +447,12 @@ const isMobile = ref(
 const env = process.env.NODE_ENV;
 const isDev = env == "development";
 const socket: Socket = getSocket(isDev);
-const { players: cplayers, isLookon: cisLookon, follow } = history.state;
+const {
+  players: cplayers,
+  isLookon: cisLookon,
+  countdown,
+  follow,
+} = history.state;
 
 const userid = Number(localStorage.getItem("7szh_userid") || "-1"); // 玩家id
 const roomId = route.params.roomId; // 房间id
@@ -460,6 +465,7 @@ const client = ref(
     userid,
     cplayers,
     isMobile.value,
+    countdown,
     JSON.parse(localStorage.getItem("GIdecks") || "[]"),
     Number(localStorage.getItem("GIdeckIdx") || "0"),
     isLookon.value

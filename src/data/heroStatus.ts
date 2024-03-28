@@ -423,7 +423,7 @@ const statusTotal: StatusObj = {
             const fHero = heros[hidx];
             return {
                 trigger: ['skill', 'after-skill'],
-                addDmgCdt: fHero.hp >= 7 || status.isTalent ? 2 : 0,
+                addDmgCdt: isCdt(fHero.hp >= 7 || status.isTalent, 2),
                 heal: isCdt(fHero.hp <= 6 && trigger == 'after-skill', Math.min(2, fHero.maxhp - fHero.hp)),
             }
         }, { icbg: STATUS_BG_COLOR[2], isTalent }),
@@ -522,7 +522,7 @@ const statusTotal: StatusObj = {
             if (status.isTalent) trigger.push('change-from');
             return {
                 getDmg: 1,
-                addDiceHero: status.isTalent ? 1 : 0,
+                addDiceHero: isCdt(status.isTalent, 1),
                 trigger,
                 onlyOne: true,
             }
@@ -536,7 +536,7 @@ const statusTotal: StatusObj = {
                 addDmg: 1,
                 restDmg: Math.max(0, restDmg - 1),
                 trigger: ['skill'],
-                attachEl: status.isTalent ? 2 : 0,
+                attachEl: isCdt(status.isTalent, 2),
                 exec: () => {
                     --status.useCnt;
                     return {}
@@ -559,7 +559,7 @@ const statusTotal: StatusObj = {
 
     2046: () => new GIStatus(2046, '坚岩之力', '角色造成的[物理伤害]变为[岩元素伤害]。；【每回合1次：】角色造成的伤害+1。；【角色所附属的岩盔被移除后：】也移除此状态。',
         'buff4', 0, [4, 6, 8, 10], 1, 0, -1, (status: Status) => ({
-            addDmg: status.perCnt > 0 ? 1 : 0,
+            addDmg: isCdt(status.perCnt > 0, 1),
             trigger: ['skill'],
             attachEl: 6,
             exec: () => {
@@ -600,7 +600,7 @@ const statusTotal: StatusObj = {
     2051: () => new GIStatus(2051, '重攻击(生效中)', '本回合中，当前我方出战角色下次｢普通攻击｣造成的伤害+1。；【此次｢普通攻击｣为[重击]时：】伤害额外+1。',
         'buff3', 0, [6, 10], 1, 0, 1, (status: Status, options: StatusOption = {}) => ({
             addDmgType1: 1,
-            addDmgCdt: options?.isChargedAtk ? 1 : 0,
+            addDmgCdt: isCdt(options?.isChargedAtk, 1),
             trigger: ['skilltype1'],
             exec: () => {
                 --status.useCnt;
@@ -613,7 +613,7 @@ const statusTotal: StatusObj = {
             const { card, minusDiceCard: mdc = 0 } = options;
             const isMinus = card && [0, 1].some(v => card.subType.includes(v)) && card.cost > mdc;
             return {
-                minusDiceCard: isMinus ? 1 : 0,
+                minusDiceCard: isCdt(isMinus, 1),
                 trigger: ['card'],
                 exec: () => {
                     if (isMinus) --status.useCnt;
@@ -627,7 +627,7 @@ const statusTotal: StatusObj = {
             const { card, minusDiceCard: mdc = 0 } = options;
             const isMinus = card && card.subType.includes(0) && card.cost > mdc;
             return {
-                minusDiceCard: isMinus ? 2 : 0,
+                minusDiceCard: isCdt(isMinus, 2),
                 trigger: ['card'],
                 exec: () => {
                     if (isMinus) --status.useCnt;
@@ -651,7 +651,7 @@ const statusTotal: StatusObj = {
             const { card, minusDiceCard: mdc = 0 } = options;
             const isMinus = card && card.subType.some(v => v < 2) && card.cost > mdc;
             return {
-                minusDiceCard: isMinus ? 2 : 0,
+                minusDiceCard: isCdt(isMinus, 2),
                 trigger: ['card'],
                 exec: () => {
                     if (isMinus) --status.useCnt;
@@ -714,7 +714,7 @@ const statusTotal: StatusObj = {
             return {
                 trigger: ['phase-end', 'skilltype3'],
                 addDmg: isCdt(status.useCnt >= 4, 2),
-                attachEl: isAttachEl ? 3 : 0,
+                attachEl: isCdt(isAttachEl, 3),
                 isUpdateAttachEl: isAttachEl,
                 exec: () => {
                     if (trigger == 'phase-end') ++status.useCnt;
@@ -725,14 +725,14 @@ const statusTotal: StatusObj = {
             }
         }, { icbg: STATUS_BG_COLOR[3] }),
 
-    2061: (name: string) => new GIStatus(2061, name + '(生效中)', '【角色在本回合中，下次使用｢元素战技｣或装备｢天赋｣时：】少花费2个元素骰。',
+    2061: (name: string) => new GIStatus(2061, name + '(生效中)', '【角色在本回合中，下次对角色打出｢天赋｣或使用｢元素战技｣时：】少花费2个元素骰。',
         'buff2', 0, [3, 4, 10], 1, 0, 1, (status: Status, options: StatusOption = {}) => {
             const { card, heros = [], hidx = -1, trigger = '', minusDiceCard: mdc = 0 } = options;
-            const isMinusCard = card && card.userType == heros[hidx]?.id && card.cost > mdc;
+            const isMinusCard = card && card.subType.includes(6) && card.userType == heros[hidx]?.id && card.cost > mdc;
             const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(options, { skilltype2: [0, 2, 0] });
             return {
                 ...minusSkillRes,
-                minusDiceCard: isMinusCard ? 2 : 0,
+                minusDiceCard: isCdt(isMinusCard, 2),
                 trigger: ['skilltype2', 'card'],
                 exec: () => {
                     if (trigger == 'card' && isMinusCard || trigger == 'skilltype2' && isMinusSkill) {
@@ -883,7 +883,7 @@ const statusTotal: StatusObj = {
                     return {}
                 }
             }
-        }, { icbg: STATUS_BG_COLOR[4], pct: isTalent ? 1 : 0, isTalent }),
+        }, { icbg: STATUS_BG_COLOR[4], pct: isCdt(isTalent, 1), isTalent }),
 
     2074: (icon = '') => new GIStatus(2074, '远程状态', '【所附属角色进行[重击]后：】目标角色附属【断流】。',
         icon, 0, [10], -1, 0, -1, (_status: Status, options: StatusOption = {}) => ({
@@ -1347,7 +1347,7 @@ const statusTotal: StatusObj = {
             const { card, minusDiceCard: mdc = 0 } = options;
             const isMinus = card && card.subType.includes(1) && card.cost > mdc;
             return {
-                minusDiceCard: isMinus ? 2 : 0,
+                minusDiceCard: isCdt(isMinus, 2),
                 trigger: ['card'],
                 exec: () => {
                     if (isMinus) --status.useCnt;
@@ -1782,7 +1782,7 @@ const statusTotal: StatusObj = {
 
     2152: () => new GIStatus(2152, '炸鱼薯条(生效中)', '本回合中，所附属角色下次使用技能时少花费1个元素骰。',
         'buff2', 0, [4, 10], 1, 0, 1, (status: Status, options: StatusOption = {}) => {
-            const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(options, { skilltype: [0, 0, 1] });
+            const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(options, { skill: [0, 0, 1] });
             return {
                 trigger: ['skill'],
                 ...minusSkillRes,
@@ -1903,7 +1903,7 @@ const statusTotal: StatusObj = {
             const { card, minusDiceCard: mdc = 0 } = options;
             const isMinus = card && card.type == 1 && card.cost > mdc;
             return {
-                minusDiceCard: isMinus ? 1 : 0,
+                minusDiceCard: isCdt(isMinus, 1),
                 trigger: ['card'],
                 exec: () => {
                     if (isMinus) --status.useCnt;
@@ -2193,16 +2193,14 @@ const statusTotal: StatusObj = {
         })),
 
     2186: () => new GIStatus(2186, '缤纷马卡龙(生效中)', '该角色受到伤害后再治疗其1点。',
-        'heal', 0, [4], 4, 0, -1, (_status: Status, options: StatusOption = {}) => {
-            const { hidx = -1 } = options;
-            return {
-                trigger: ['getdmg'],
-                exec: (eStatus?: Status) => {
-                    if (eStatus) --eStatus.useCnt;
-                    return { cmds: [{ cmd: 'heal', cnt: 1, hidxs: [hidx] }] }
-                },
-            }
-        }),
+        'heal', 0, [1], 4, 0, -1, () => ({
+            heal: 1,
+            trigger: ['getdmg'],
+            exec: (eStatus?: Status) => {
+                if (eStatus) --eStatus.useCnt;
+                return {}
+            },
+        })),
 
     2187: () => new GIStatus(2187, '水之新生后续todo名字待定', '角色造成的[物理伤害]变为[水元素伤害]，且[水元素伤害]+1。',
         'buff4', 0, [6, 8, 10], -1, 0, -1, () => ({ attchEl: 1, addDmg: 1 })),

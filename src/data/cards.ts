@@ -60,17 +60,13 @@ class GICard implements Card {
         if (subType?.includes(8)) this.cnt = 1;
         const { uct = -1, pct = 0, expl = [], energy = 0, anydice = 0, canSelectSummon = -1, isResetPct = true, isResetUct = false, canSelectSite = -1 } = options;
         this.handle = (card: Card, options?: CardOption): CardHandleRes => {
-            const { reset = false, summons = [], esummons = [] } = options ?? {};
+            const { reset = false } = options ?? {};
             if (reset) {
                 if (isResetPct) card.perCnt = pct;
                 if (isResetUct) card.useCnt = uct;
                 return {}
             }
             const handleRes = handle?.(card, options) ?? {};
-            (canSelectSummon == 1 ? summons : canSelectSummon == 0 ? esummons : []).forEach(smn => {
-                smn.canSelect = false;
-                smn.isSelected = false;
-            });
             return handleRes;
         }
         this.useCnt = uct;
@@ -125,12 +121,12 @@ const normalElArtifact = (id: number, name: string, element: number, src: string
     return new GICard(id, name, `【对角色打出｢天赋｣或角色使用技能时：】少花费1个[${ELEMENT[element]}骰]。(每回合1次)`, src, 2, 0, 0, [1], 0, 1,
         (card: Card, cardOpt: CardOption = {}) => {
             const { heros = [], hidxs = [], hcard, trigger = '', minusDiceCard: mdc = 0 } = cardOpt;
-            const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(cardOpt, { skilltype: [1, 0, 0] },
+            const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(cardOpt, { skill: [1, 0, 0] },
                 skill => skill?.cost[0].color == element && card.perCnt > 0);
             const isCardMinus = hcard && hcard.subType.includes(6) && hcard.userType == heros[hidxs[0]]?.id && card.perCnt > 0 && hcard.cost > mdc;
             return {
                 ...minusSkillRes,
-                minusDiceCard: isCardMinus ? 1 : 0,
+                minusDiceCard: isCdt(isCardMinus, 1),
                 trigger: ['skill', 'card'],
                 exec: () => {
                     if (trigger == 'card' && !isCardMinus || trigger == 'skill' && !isMinusSkill || card.perCnt <= 0) return {}
@@ -145,12 +141,12 @@ const advancedElArtifact = (id: number, name: string, element: number, src: stri
     return new GICard(id, name, `【对角色打出｢天赋｣或角色使用技能时：】少花费1个[${ELEMENT[element]}骰]。(每回合1次)；【投掷阶段：】2个元素骰初始总是投出[${ELEMENT[element]}骰]。`, src, 2, 8, 0, [1], 0, 1,
         (card: Card, cardOpt: CardOption = {}) => {
             const { heros = [], hidxs = [], hcard, trigger = '', minusDiceCard: mdc = 0 } = cardOpt;
-            const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(cardOpt, { skilltype: [1, 0, 0] },
+            const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(cardOpt, { skill: [1, 0, 0] },
                 skill => skill?.cost[0].color == element && card.perCnt > 0);
             const isCardMinus = hcard && hcard.subType.includes(6) && hcard.userType == heros[hidxs[0]]?.id && card.perCnt > 0 && hcard.cost > mdc;
             return {
                 ...minusSkillRes,
-                minusDiceCard: isCardMinus ? 1 : 0,
+                minusDiceCard: isCdt(isCardMinus, 1),
                 trigger: ['skill', 'card', 'phase-dice'],
                 element,
                 cnt: 2,
@@ -250,7 +246,7 @@ const allCards: CardObj = {
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/a56d5cf80b505c42a3643534d3dc2821_8758750260465224130.png',
         3, 8, 0, [0], 4, 1, (card: Card) => ({
             addDmg: 1,
-            addDmgCdt: card.perCnt > 0 ? 1 : 0,
+            addDmgCdt: isCdt(card.perCnt > 0, 1),
             trigger: ['elReaction'],
             exec: () => {
                 if (card.perCnt > 0) --card.perCnt;
@@ -330,7 +326,7 @@ const allCards: CardObj = {
             }
             return {
                 addDmg: 1,
-                addDmgCdt: skidxs.includes(isSkill) ? 2 : 0,
+                addDmgCdt: isCdt(skidxs.includes(isSkill), 2),
                 trigger: ['skill'],
                 exec: () => {
                     if (card.perCnt > 0 && skidxs.includes(isSkill)) --card.perCnt;
@@ -357,7 +353,7 @@ const allCards: CardObj = {
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/75720734/3ec60d32f7ce9f816a6dd784b8800e93_4564486285810218753.png',
         3, 8, 0, [0], 2, 1, (_card: Card, cardOpt: CardOption = {}) => {
             const { eheros = [], ehidx = -1 } = cardOpt;
-            return { trigger: ['skill'], addDmg: 1, addDmgCdt: (eheros[ehidx]?.hp ?? 10) <= 6 ? 2 : 0 }
+            return { trigger: ['skill'], addDmg: 1, addDmgCdt: isCdt((eheros[ehidx]?.hp ?? 10) <= 6, 2) }
         }),
 
     44: tiankongWeapon(44, '天空之傲', 2, 'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/7ce2f924ae1b0922ea14eef9fbd3f2bb_951683174491798888.png'),
@@ -623,7 +619,7 @@ const allCards: CardObj = {
         2, 8, 0, [1], 0, 1, (card: Card, cardOpt: CardOption = {}) => {
             const { hidxs = [], trigger = '' } = cardOpt;
             return {
-                addDmgType3: card.perCnt > 0 ? 2 : 0,
+                addDmgType3: isCdt(card.perCnt > 0, 2),
                 trigger: ['other-skilltype3', 'skilltype3'],
                 execmds: isCdt<Cmds[]>(trigger == 'other-skilltype3', [{ cmd: 'getEnergy', cnt: 1, hidxs }]),
                 exec: () => {
@@ -664,7 +660,7 @@ const allCards: CardObj = {
             const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(cardOpt, { skilltype1: [0, 0, 1] }, () => card.perCnt > 0);
             return {
                 ...minusSkillRes,
-                minusDiceCard: isMinusCard ? 1 : 0,
+                minusDiceCard: isCdt(isMinusCard, 1),
                 trigger: ['skilltype1', 'card'],
                 exec: () => {
                     if (card.perCnt > 0 && (trigger == 'card' && isMinusCard || trigger == 'skilltype1' && isMinusSkill)) {
@@ -683,7 +679,7 @@ const allCards: CardObj = {
             const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(cardOpt, { skilltype1: [0, 0, 1] }, () => card.perCnt > 0);
             return {
                 ...minusSkillRes,
-                minusDiceCard: isMinusCard ? 1 : 0,
+                minusDiceCard: isCdt(isMinusCard, 1),
                 trigger: ['skilltype1', 'card', 'change-to'],
                 execmds: isCdt<Cmds[]>(trigger == 'change-to', [{ cmd: 'getInStatus', status: [heroStatus(2072)] }]),
                 exec: () => {
@@ -703,7 +699,7 @@ const allCards: CardObj = {
             const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(cardOpt, { skilltype2: [0, 0, 1] }, () => card.perCnt > 0);
             return {
                 ...minusSkillRes,
-                minusDiceCard: isMinusCard ? 1 : 0,
+                minusDiceCard: isCdt(isMinusCard, 1),
                 trigger: ['skilltype2', 'card'],
                 exec: () => {
                     if (card.perCnt > 0 && (trigger == 'card' && isMinusCard || trigger == 'skilltype2' && isMinusSkill)) {
@@ -722,10 +718,10 @@ const allCards: CardObj = {
             const isAddDmg = (heros[hidxs[0]]?.energy ?? 0) >= 2;
             const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(cardOpt, { skilltype2: [0, 0, 1] }, () => card.perCnt > 0);
             return {
-                addDmgType1: isAddDmg ? 1 : 0,
-                addDmgType2: isAddDmg ? 1 : 0,
+                addDmgType1: isCdt(isAddDmg, 1),
+                addDmgType2: isCdt(isAddDmg, 1),
                 ...minusSkillRes,
-                minusDiceCard: isMinusCard ? 1 : 0,
+                minusDiceCard: isCdt(isMinusCard, 1),
                 trigger: ['skilltype2', 'card'],
                 exec: () => {
                     if (card.perCnt > 0 && (trigger == 'card' && isMinusCard || trigger == 'skilltype2' && isMinusSkill)) {
@@ -1780,7 +1776,7 @@ const allCards: CardObj = {
         'https://patchwiki.biligame.com/images/ys/d/de/1o1lt07ey988flsh538t7ywvnpzvzjk.png',
         3, 1, 0, [6, 7], 1103, 1, (_card: Card, cardOpt: CardOption = {}) => talentHandle(cardOpt, 2, () => {
             const { heros = [], hidxs = [] } = cardOpt;
-            return [() => ({}), { addDmgCdt: heros[hidxs[0]]?.isFront ? 2 : 0 }]
+            return [() => ({}), { addDmgCdt: isCdt(heros[hidxs[0]]?.isFront, 2) }]
         }, 'el1Reaction'), { expl: talentExplain(1103, 2), energy: 3 }),
 
     705: new GICard(705, '流火焦灼', '[战斗行动]：我方出战角色为【迪卢克】时，装备此牌。；【迪卢克】装备此牌后，立刻使用一次【逆焰之刃】。；装备有此牌的【迪卢克】每回合第2次使用【逆焰之刃】时，少花费1个[火元素骰]。',
@@ -1868,7 +1864,7 @@ const allCards: CardObj = {
                     --changeHeroDiceCnt;
                 }
                 return { changeHeroDiceCnt }
-            }, { minusDiceHero: isMinus ? 1 : 0 }]
+            }, { minusDiceHero: isCdt(isMinus, 1) }]
         }, 'change'), { pct: 1, expl: talentExplain(1101, 1) }),
 
     717: new GICard(717, '冷血之剑', '[战斗行动]：我方出战角色为【凯亚】时，装备此牌。；【凯亚】装备此牌后，立刻使用一次【霜袭】。；装备有此牌的【凯亚】使用【霜袭】后：治疗自身2点。(每回合1次)',
@@ -1940,7 +1936,7 @@ const allCards: CardObj = {
             const hero = heros.find(h => h.isFront);
             if (!hero) throw new Error('hero not found: heros=' + heros);
             const isAdd = hero.element == 3 && hero.inStatus.some(ist => ist.id == 2064);
-            return [() => ({}), { addDmgCdt: isAdd ? 1 : 0 }]
+            return [() => ({}), { addDmgCdt: isCdt(isAdd, 1) }]
         }, ['skilltype2', 'skilltype3', 'other-skilltype2', 'other-skilltype3']), { expl: talentExplain(1306, 1) }),
 
     731: new GICard(731, '匣中玉栉', '[战斗行动]：我方出战角色为【珊瑚宫心海】时，装备此牌。；【珊瑚宫心海】装备此牌后，立刻使用一次【海人化羽】。；装备有此牌的【珊瑚宫心海】使用【海人化羽】时：召唤一个[可用次数]为1的【化海月】; 如果【化海月】已在场，则改为使其[可用次数]+1。；【仪来羽衣】存在期间，【化海月】造成的伤害+1。',
@@ -2091,7 +2087,7 @@ const allCards: CardObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/08/12/82503813/d10a709aa03d497521636f9ef39ee531_3239361065263302475.png',
         3, 6, 0, [6, 7], 1505, 1, (_card: Card, cardOpt: CardOption = {}) => talentHandle(cardOpt, 1, () => {
             const { summons = [], isFallAtk = false } = cardOpt;
-            return [() => ({}), { addDmgCdt: summons.some(smn => smn.id == 3040) && isFallAtk ? 1 : 0 }]
+            return [() => ({}), { addDmgCdt: isCdt(summons.some(smn => smn.id == 3040) && isFallAtk, 1) }]
         }, ['skilltype1', 'other-skilltype1']), { expl: talentExplain(1505, 1) }),
 
     755: new GICard(755, '梦迹一风', '[战斗行动]：我方出战角色为【流浪者】时，装备此牌。；【流浪者】装备此牌后，立刻使用一次【羽画·风姿华歌】。；装备有此牌的【流浪者】在【优风倾姿】状态下进行[重击]后：下次从该角色执行｢切换角色｣行动时少花费1个元素骰，并且造成1点[风元素伤害]。',
@@ -2144,7 +2140,7 @@ const allCards: CardObj = {
             return [() => {
                 --card.perCnt;
                 return {}
-            }, { addDmgCdt: card.perCnt > 0 && heros[hidxs[0]].isFront && isAttachEl2 ? 2 : 0 }]
+            }, { addDmgCdt: isCdt(card.perCnt > 0 && heros[hidxs[0]].isFront && isAttachEl2, 2) }]
         }, ['skill']), { pct: 1, expl: talentExplain(1210, 1) }),
 
     764: new GICard(764, '如影流露的冷刃', '[战斗行动]：我方出战角色为【琳妮特】时，装备此牌。；【琳妮特】装备此牌后，立刻使用一次【谜影障身法】。；装备有此牌的【琳妮特】每回合第二次使用【谜影障身法】时：伤害+2，并强制敌方切换到前一个角色。',
@@ -2262,7 +2258,7 @@ const allCards: CardObj = {
                     --changeHeroDiceCnt;
                 }
                 return { changeHeroDiceCnt }
-            }, { minusDiceHero: isMinus ? 1 : 0 }]
+            }, { minusDiceHero: isCdt(isMinus, 1) }]
         }, 'change-from'), { pct: 1, expl: talentExplain(1607, 1) }),
 
     779: new GICard(779, '雷萤浮闪', '[战斗行动]：我方出战角色为【愚人众·雷萤术士】时，装备此牌。；【愚人众·雷萤术士】装备此牌后，立刻使用一次【雾虚之召】。；装备有此牌的【愚人众·雷萤术士】在场时，我方选择行动前：如果【雷萤】的[可用次数]至少为3，则【雷萤】立刻造成1点[雷元素伤害]。(需消耗[可用次数]，每回合1次)',
