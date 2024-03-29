@@ -587,7 +587,7 @@ export default class GeniusInvokationClient {
             willDamage, willHeals, startIdx, isUseSkill, dieChangeBack, isChangeHero,
             changeTo, resetOnly, elTips, changeFrom, taskQueueVal, execIdx, cidx,
             actionStart, heroDie, chooseInitHero = false, isSwitchAtking = false,
-            flag, error } = data;
+            startTimer, flag, error } = data;
         // console.info('server-flag:', flag);
         if (this.isLookon > -1 && this.isLookon != this.playerIdx) {
             this.players = players;
@@ -816,16 +816,6 @@ export default class GeniusInvokationClient {
                         this.players[pidx].site.push(exsite);
                     }
                     await this._wait(() => this.actionInfo == '', { delay: 500, freq: 100, isImmediate: false });
-                    if (this.countdown.limit > 0) {
-                        this.countdown.curr = this.countdown.limit;
-                        const timer = setInterval(() => {
-                            --this.countdown.curr;
-                            if (this.countdown.curr <= 0) {
-                                clearInterval(timer);
-                                if (this.player.status == 1) this.endPhase();
-                            }
-                        }, 1000);
-                    }
                     this.socket.emit('sendToServer', {
                         roundPhase: PHASE.ACTION,
                         sites: isCdt(this.exchangeSite.length > 0, this.players.map(p => p.site)),
@@ -950,6 +940,19 @@ export default class GeniusInvokationClient {
                     });
                 }
             }, 10);
+        }
+        if (startTimer) {
+            if (this.countdown.timer != null) clearInterval(this.countdown.timer);
+            this.countdown.curr = this.countdown.limit;
+            this.countdown.timer = setInterval(() => {
+                --this.countdown.curr;
+                if (this.countdown.curr <= 0 || this.phase != PHASE.ACTION) {
+                    if (this.countdown.curr <= 0 && this.player.status == 1) this.endPhase();
+                    this.countdown.curr = 0;
+                    if (this.countdown.timer != null) clearInterval(this.countdown.timer);
+                    this.countdown.timer = null;
+                }
+            }, 1000);
         }
     }
     /**
@@ -1978,7 +1981,7 @@ export default class GeniusInvokationClient {
     _getFrontHero(pidx: number = this.playerIdx): Hero {
         if (pidx == -1) pidx = this.playerIdx ^ 1;
         const player = this.players[pidx];
-        return player.heros[player.hidx];
+        return player?.heros?.[player?.hidx] ?? herosTotal(0);
     }
     /**
      * 更细状态

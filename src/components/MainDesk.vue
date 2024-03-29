@@ -21,16 +21,26 @@
           :key="cidx"
         ></div>
       </div>
-      <button
-        class="end-phase"
-        :class="{
-          forbidden:
-            player.status == 0 || !canAction || phase > 6 || isLookon > -1,
+      <div
+        class="timer"
+        :style="{
+          transition: 'background-image 1s',
+          'background-image': `conic-gradient(transparent ${currTime}%, ${
+            player.status == 0 ? '#2b6aff' : '#ffb36d'
+          } ${currTime + 5}%)`,
         }"
-        @click.stop="endPhase"
       >
-        结束
-      </button>
+        <button
+          class="end-phase"
+          :class="{
+            forbidden:
+              player.status == 0 || !canAction || phase > 6 || isLookon > -1,
+          }"
+          @click.stop="endPhase"
+        >
+          结束
+        </button>
+      </div>
       <div class="pile">
         <span>
           <div>{{ player.dice.length }}</div>
@@ -847,6 +857,12 @@ const heros = computed<Hero[]>(() => {
     return [...props.afterWinHeros[1], ...props.afterWinHeros[0]];
   return props.afterWinHeros.flat();
 });
+const currTime = computed<number>(
+  () =>
+    ((props.client.countdown.limit - props.client.countdown.curr) /
+      props.client.countdown.limit) *
+    100
+);
 
 const initCards = ref<(Card & { isSelected: boolean })[]>(
   player.value.handCards.map((c) => ({ ...c, isSelected: false }))
@@ -1933,10 +1949,22 @@ button:active {
   opacity: 0;
 }
 
-.end-phase {
-  height: 20%;
-  margin-left: 10px;
+.timer {
+  width: 90%;
+  aspect-ratio: 1;
   margin: 10px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+}
+
+.end-phase {
+  padding: 0;
+  height: 90%;
+  width: 90%;
+  border-radius: inherit;
+  font-size: 12px;
 }
 
 .cursor-point {
