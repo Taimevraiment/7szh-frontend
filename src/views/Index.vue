@@ -1,13 +1,8 @@
 <template>
   <div class="container">
-    <div :class="{ title: true, 'title-mobile': isMobile }">七圣召唤网页版</div>
+    <div :class="{ title: true, 'title-mobile': isMobile }">七圣召唤</div>
     <div v-if="isShowEditName" class="edit-name">
-      <input
-        type="text"
-        placeholder="请输入昵称"
-        v-model="inputName"
-        @keyup.enter="register"
-      />
+      <input type="text" placeholder="请输入昵称" v-model="inputName" @keyup.enter="register" />
       <button style="display: block; margin: 10px auto" @click="register">
         {{ username == "" ? "确认" : inputName == "" ? "取消" : "修改" }}
       </button>
@@ -21,12 +16,8 @@
             <span class="game-room-status">状态</span>
           </div>
           <div class="game-list">
-            <div
-              class="game-room"
-              v-for="(room, ri) in roomList"
-              :key="'roomList' + ri"
-              @click="enterRoom(room.id.toString())"
-            >
+            <div class="game-room" v-for="(room, ri) in roomList" :key="'roomList' + ri"
+              @click="enterRoom(room.id.toString())">
               <span class="game-room-id">{{ room.id }}</span>
               <span class="game-room-name">{{ room.name }}</span>
               <span class="game-room-status">
@@ -38,19 +29,11 @@
         <div class="player-list-container">
           <div class="name-self">{{ username }}</div>
           <div class="player-list">
-            <div
-              class="player-item"
-              v-for="(player, pi) in playerList.filter((p) => p.id != userid)"
-              :key="'playerList' + pi"
-            >
+            <div class="player-item" v-for="(player, pi) in playerList.filter(p => p.id != userid)"
+              :key="'playerList' + pi">
               <div class="player-name">{{ player.name }}</div>
               <div class="player-status">
-                <button
-                  v-if="player.status > 0"
-                  @click="
-                    enterRoom(player.rid.toString(), { follow: player.id })
-                  "
-                >
+                <button v-if="player.status > 0" @click=" enterRoom(player.rid.toString(), { follow: player.id })">
                   跟随
                 </button>
                 <span :style="{ color: playerStatus[player.status].color }">
@@ -69,64 +52,52 @@
       </div>
     </div>
   </div>
-  <CreateRoomModal
-    v-if="isShowCreateRoom"
-    @create-room-cancel="cancelCreateRoom"
-    @create-room="createRoom"
-  />
-  <EnterRoomModal
-    v-if="isShowEnterRoom"
-    :select-room-id="selectRoomId"
-    @enter-room-cancel="cancelEnterRoom"
-    @enter-room="enterRoom"
-  />
+  <CreateRoomModal v-if="isShowCreateRoom" @create-room-cancel="cancelCreateRoom" @create-room="createRoom" />
+  <EnterRoomModal v-if="isShowEnterRoom" :select-room-id="selectRoomId" @enter-room-cancel="cancelEnterRoom"
+    @enter-room="enterRoom" />
 </template>
 
-<script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
-import { useRouter } from "vue-router";
-import CreateRoomModal from "@/components/CreateRoomModal.vue";
-import EnterRoomModal from "@/components/EnterRoomModal.vue";
-import { getSocket } from "@/store/socket";
-import { genShareCode } from "@/data/utils";
+<script setup lang='ts'>
+import { onMounted, onUnmounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import CreateRoomModal from '@/components/CreateRoomModal.vue';
+import EnterRoomModal from '@/components/EnterRoomModal.vue';
+import { getSocket } from '@/store/socket';
+import { genShareCode } from '@/data/utils';
 
 const env = process.env.NODE_ENV;
-const isDev = env == "development";
-const isMobile = ref(
-  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    navigator.userAgent
-  )
-);
+const isDev = env == 'development';
+const isMobile = ref(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
 const socket = getSocket(isDev);
 const router = useRouter();
 
-const userid = ref<number>(Number(localStorage.getItem("7szh_userid") || "-1")); // 玩家id
-const username = ref<string>(localStorage.getItem("7szh_username") || ""); // 昵称
-const inputName = ref<string>(""); // 注册/修改昵称
+const userid = ref<number>(Number(localStorage.getItem('7szh_userid') || '-1')); // 玩家id
+const username = ref<string>(localStorage.getItem('7szh_username') || ''); // 昵称
+const inputName = ref<string>(''); // 注册/修改昵称
 const roomList = ref<RoomList>([]); // 当前房间列表
 const playerList = ref<PlayerList>([]); // 当前玩家列表
-const isShowEditName = ref<boolean>(username.value == ""); // 是否显示改名界面
+const isShowEditName = ref<boolean>(username.value == ''); // 是否显示改名界面
 const isShowCreateRoom = ref<boolean>(false); // 是否显示创建房间界面
 const isShowEnterRoom = ref<boolean>(false); // 是否显示加入房间界面
 const selectRoomId = ref<number>(-1); // 选择的房间的id
 const playerStatus = ref([
-  { name: "空闲", color: "#38b100" },
-  { name: "房间中", color: "black" },
-  { name: "游戏中", color: "#eb7e00" },
+  { name: '空闲', color: '#38b100' },
+  { name: '房间中', color: 'black' },
+  { name: '游戏中', color: '#eb7e00' },
 ]); // 玩家状态
 let followIdx: number = -1; // 跟随的玩家id
 
-if (username.value != "" && userid.value > 0) {
-  socket.emit("login", { id: userid.value, name: username.value });
+if (username.value != '' && userid.value > 0) {
+  socket.emit('login', { id: userid.value, name: username.value });
 }
 
 // 初始化卡组
-if (localStorage.getItem("GIdecks") == null) {
+if (localStorage.getItem('GIdecks') == null) {
   localStorage.setItem(
-    "GIdecks",
+    'GIdecks',
     JSON.stringify(
       new Array(16).fill(0).map(() => ({
-        name: "默认卡组",
+        name: '默认卡组',
         shareCode: genShareCode([0, 0, 0]),
       }))
     )
@@ -135,12 +106,12 @@ if (localStorage.getItem("GIdecks") == null) {
 
 // 注册昵称
 const register = () => {
-  if (inputName.value == "" && username.value == "") return alert("不能为空！");
-  if (inputName.value != "") username.value = inputName.value;
+  if (inputName.value == '' && username.value == '') return alert('不能为空！');
+  if (inputName.value != '') username.value = inputName.value;
   isShowEditName.value = false;
-  inputName.value = "";
-  localStorage.setItem("7szh_username", username.value);
-  socket.emit("login", { id: userid.value, name: username.value });
+  inputName.value = '';
+  localStorage.setItem('7szh_username', username.value);
+  socket.emit('login', { id: userid.value, name: username.value });
 };
 
 // 显示改名界面
@@ -150,13 +121,13 @@ const openRename = () => {
 
 // 查看卡组
 const enterEditDeck = () => {
-  router.push({ name: "editDeck" });
+  router.push({ name: 'editDeck' });
 };
 
 // 打开创建房间界面
 const openCreateRoom = () => {
-  if ((playerList.value.find((p) => p.id == userid.value)?.rid ?? -1) > 0) {
-    return alert("你还有正在进行的游戏！");
+  if ((playerList.value.find(p => p.id == userid.value)?.rid ?? -1) > 0) {
+    return alert('你还有正在进行的游戏！');
   }
   isShowCreateRoom.value = true;
 };
@@ -167,18 +138,14 @@ const cancelCreateRoom = () => {
 };
 
 // 创建房间
-const createRoom = (
-  roomName: string,
-  roomPassword: string,
-  countdown: number
-) => {
+const createRoom = (roomName: string, roomPassword: string, countdown: number) => {
   isShowCreateRoom.value = false;
-  socket.emit("createRoom", { roomName, roomPassword, countdown });
+  socket.emit('createRoom', { roomName, roomPassword, countdown });
 };
 
 // 打开加入房间界面
 const openEnterRoom = (rid: number = -1) => {
-  const prid = playerList.value.find((p) => p.id == userid.value)?.rid ?? -1;
+  const prid = playerList.value.find(p => p.id == userid.value)?.rid ?? -1;
   if (prid > 0) {
     enterRoom(prid.toString(), { isForce: true });
     return;
@@ -193,54 +160,38 @@ const cancelEnterRoom = () => {
 };
 
 // 加入房间
-const enterRoom = (
-  roomId: string,
-  options: { roomPassword?: string; isForce?: boolean; follow?: number } = {}
-) => {
-  const { roomPassword = "", isForce = false, follow = -1 } = options;
+const enterRoom = (roomId: string, options: { roomPassword?: string; isForce?: boolean; follow?: number } = {}) => {
+  const { roomPassword = '', isForce = false, follow = -1 } = options;
   isShowEnterRoom.value = false;
-  const room = roomList.value.find((r) => r.id == Number(roomId));
+  const room = roomList.value.find(r => r.id == Number(roomId));
   if (!room) return console.error(`room${roomId} not found`);
   if (follow > -1) followIdx = follow;
-  if (room.hasPassWord && roomPassword == "") return openEnterRoom(room.id);
-  socket.emit("enterRoom", { roomId: Number(roomId), roomPassword, isForce });
+  if (room.hasPassWord && roomPassword == '') return openEnterRoom(room.id);
+  socket.emit('enterRoom', { roomId: Number(roomId), roomPassword, isForce });
 };
 
 // 获取玩家和房间列表
-const getPlayerAndRoomList = ({
-  plist,
-  rlist,
-}: {
-  plist: Player[];
-  rlist: RoomList;
-}) => {
+const getPlayerAndRoomList = ({ plist, rlist }: { plist: Player[]; rlist: RoomList; }) => {
   roomList.value = rlist;
-  playerList.value = plist.map((p) => {
-    return {
-      ...p,
-      status:
-        p.rid < 0
-          ? 0
-          : roomList.value.find((r) => r.id == p.rid)?.isStart
-          ? 2
-          : 1,
-    };
-  });
+  playerList.value = plist.map(p => ({
+    ...p,
+    status: p.rid < 0 ? 0 : roomList.value.find(r => r.id == p.rid)?.isStart ? 2 : 1,
+  }));
 };
 onMounted(() => {
   // 获取登录pid
-  socket.on("login", ({ pid, name }) => {
+  socket.on('login', ({ pid, name }) => {
     userid.value = pid;
     username.value = name;
-    localStorage.setItem("7szh_userid", pid.toString());
+    localStorage.setItem('7szh_userid', pid.toString());
   });
-  socket.on("getPlayerAndRoomList", getPlayerAndRoomList);
+  socket.on('getPlayerAndRoomList', getPlayerAndRoomList);
   // 进入房间
-  socket.on("enterRoom", ({ roomId, isLookon, players, countdown, err }) => {
+  socket.on('enterRoom', ({ roomId, isLookon, players, countdown, err }) => {
     if (err) return alert(err);
-    if (isLookon) alert("游戏已满员！进入成为旁观者");
+    if (isLookon) alert('游戏已满员！进入成为旁观者');
     router.push({
-      name: "gameRoom",
+      name: 'gameRoom',
       params: { roomId },
       state: {
         isLookon,
@@ -252,8 +203,8 @@ onMounted(() => {
     followIdx = -1;
   });
   // 继续游戏
-  socket.on("continueGame", ({ roomId }) => {
-    socket.emit("enterRoom", {
+  socket.on('continueGame', ({ roomId }) => {
+    socket.emit('enterRoom', {
       roomId,
       isForce: true,
     });
@@ -261,10 +212,10 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  socket.off("login");
-  socket.off("getPlayerAndRoomList", getPlayerAndRoomList);
-  socket.off("enterRoom");
-  socket.off("continueGame");
+  socket.off('login');
+  socket.off('getPlayerAndRoomList', getPlayerAndRoomList);
+  socket.off('enterRoom');
+  socket.off('continueGame');
 });
 </script>
 
@@ -412,7 +363,7 @@ button:active {
   justify-content: space-between;
 }
 
-.player-status > button {
+.player-status>button {
   width: auto;
   padding: 0 3px;
   margin-right: 5px;

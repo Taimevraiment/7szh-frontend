@@ -1,163 +1,77 @@
 <template>
-  <div
-    class="container"
-    :class="{ 'mobile-container': isMobile }"
-    @click.stop="cancel"
-  >
+  <div class="container" :class="{ 'mobile-container': isMobile }" @click.stop="cancel">
     <button v-if="!client.isStart || isLookon > -1" class="exit" @click="exit">
       返回
     </button>
-    <button
-      v-if="client.isStart && isLookon == -1 && client.phase > 5"
-      class="exit"
-      @click="giveup"
-    >
+    <button v-if="client.isStart && isLookon == -1 && client.phase > 5" class="exit" @click="giveup">
       投降
     </button>
     <div class="player-info">{{ client.player?.info }}</div>
-    <button
-      v-if="isLookon == -1 && client.phase < 2"
-      class="start"
-      @click="startGame"
-    >
+    <button v-if="isLookon == -1 && client.phase < 2" class="start" @click="startGame">
       {{ client.player?.phase == 0 ? "准备开始" : "取消准备" }}
     </button>
-    <button
-      v-if="isLookon == -1 && client.player?.phase == 0"
-      class="deck-open"
-      @click="enterEditDeck"
-    >
+    <button v-if="isLookon == -1 && client.player?.phase == 0" class="deck-open" @click="enterEditDeck">
       查看卡组
     </button>
 
-    <div
-      :class="{
-        'player-display': true,
-        'curr-player':
-          client.player?.status == 1 &&
-          client.phase < 7 &&
-          client.phase > 2 &&
-          client.isWin == -1,
-        'mobile-player-display': isMobile,
-      }"
-      @click.stop="devOps()"
-    >
+    <div :class="{
+    'player-display': true,
+    'curr-player':
+      client.player?.status == 1 &&
+      client.phase < 7 &&
+      client.phase > 2 &&
+      client.isWin == -1,
+    'mobile-player-display': isMobile,
+  }" @click.stop="devOps()">
       <span v-if="isLookon > -1">旁观中......</span>
       <p>{{ client.player?.name }}</p>
-      <div
-        v-if="client.isWin > -1 || client.isStart"
-        class="rest-card"
-        :class="{ 'mobile-rest-card': isMobile }"
-      >
+      <div v-if="client.isWin > -1 || client.isStart" class="rest-card" :class="{ 'mobile-rest-card': isMobile }">
         {{ client.player?.handCards?.length ?? 0 }}
       </div>
       <img class="subtype8" :src="getDiceIcon('subtype8-empty')" />
-      <img
-        v-if="!client.player?.isUsedSubType8"
-        class="subtype8"
-        :src="getDiceIcon('subtype8')"
-      />
+      <img v-if="!client.player?.isUsedSubType8" class="subtype8" :src="getDiceIcon('subtype8')" />
     </div>
 
-    <div
-      v-if="client.opponent"
-      :class="{
-        'player-display-oppo': true,
-        'curr-player':
-          client.opponent?.status == 1 &&
-          client.phase < 7 &&
-          client.phase > 2 &&
-          client.isWin == -1,
-        'mobile-player-display': isMobile,
-      }"
-    >
+    <div v-if="client.opponent" :class="{
+    'player-display-oppo': true,
+    'curr-player':
+      client.opponent?.status == 1 &&
+      client.phase < 7 &&
+      client.phase > 2 &&
+      client.isWin == -1,
+    'mobile-player-display': isMobile,
+  }">
       <p>{{ client.opponent?.name }}</p>
-      <div
-        v-if="client.isWin > -1 || client.isStart"
-        class="rest-card"
-        :class="{ 'mobile-rest-card': isMobile }"
-      >
+      <div v-if="client.isWin > -1 || client.isStart" class="rest-card" :class="{ 'mobile-rest-card': isMobile }">
         {{ client.opponent?.handCards?.length ?? 0 }}
       </div>
-      <img
-        v-if="client.opponent?.isOffline"
-        src="@/assets/svg/offline.svg"
-        class="offline"
-        alt="断线..."
-      />
-      <img
-        v-if="isLookon > -1"
-        src="@/assets/svg/lookon.svg"
-        class="lookon"
-        alt="旁观"
-        @click="lookonTo(client.opponent?.pidx ?? -1)"
-      />
+      <img v-if="client.opponent?.isOffline" src="@/assets/svg/offline.svg" class="offline" alt="断线..." />
+      <img v-if="isLookon > -1" src="@/assets/svg/lookon.svg" class="lookon" alt="旁观"
+        @click="lookonTo(client.opponent?.pidx ?? -1)" />
       <img class="subtype8-oppo" :src="getDiceIcon('subtype8-empty')" />
-      <img
-        v-if="!client.opponent.isUsedSubType8"
-        class="subtype8-oppo"
-        :src="getDiceIcon('subtype8')"
-      />
+      <img v-if="!client.opponent.isUsedSubType8" class="subtype8-oppo" :src="getDiceIcon('subtype8')" />
     </div>
 
-    <MainDesk
-      v-if="client.phase > 1 || client.isWin > -1"
-      :isMobile="isMobile"
-      :canAction="canAction"
-      :afterWinHeros="afterWinHeros"
-      :isLookon="isLookon"
-      :client="client"
-      @select-change-card="selectChangeCard"
-      @change-card="changeCard"
-      @reroll="reroll"
-      @select-hero="selectHero"
-      @select-use-dice="selectUseDice"
-      @select-site="selectCardSite"
-      @select-summon="selectCardSummon"
-      @end-phase="endPhase"
-    />
+    <MainDesk v-if="client.phase > 1 || client.isWin > -1" :isMobile="isMobile" :canAction="canAction"
+      :afterWinHeros="afterWinHeros" :isLookon="isLookon" :client="client" @select-change-card="selectChangeCard"
+      @change-card="changeCard" @reroll="reroll" @select-hero="selectHero" @select-use-dice="selectUseDice"
+      @select-site="selectCardSite" @select-summon="selectCardSummon" @end-phase="endPhase" />
 
-    <div
-      v-if="(client.player?.phase ?? 0) > 2 || client.isWin > -1"
-      class="hand-card"
-      :class="{ 'mobile-hand-card': isMobile }"
-      :style="{
-        transform: `translateX(-${(24 * client.handCards.length) / 2}px)`,
-      }"
-    >
-      <div
-        v-for="(card, idx) in client.handCards"
-        :key="idx * 1000 + (card?.id ?? 0) + 'myhandcard'"
-        class="card"
-        :class="{ selected: card.selected, 'mobile-card': isMobile }"
-        :style="{ left: `${card.pos}px` }"
-        @click.stop="selectCard(idx)"
-        @mouseenter="mouseenter(idx)"
-        @mouseleave="mouseleave(idx)"
-      >
-        <img
-          class="card-img"
-          :src="card.src"
-          v-if="card?.src?.length > 0"
-          :alt="card.name"
-        />
-        <img
-          class="subtype8-border"
-          v-if="card.subType?.includes(8)"
-          :src="getPngIcon('subtype8-border')"
-        />
+    <div v-if="(client.player?.phase ?? 0) > 2 || client.isWin > -1" class="hand-card"
+      :class="{ 'mobile-hand-card': isMobile }" :style="{
+    transform: `translateX(-${(24 * client.handCards.length) / 2}px)`,
+  }">
+      <div v-for="(card, idx) in client.handCards" :key="idx * 1000 + (card?.id ?? 0) + 'myhandcard'" class="card"
+        :class="{ selected: card.selected, 'mobile-card': isMobile }" :style="{ left: `${card.pos}px` }"
+        @click.stop="selectCard(idx)" @mouseenter="mouseenter(idx)" @mouseleave="mouseleave(idx)">
+        <img class="card-img" :src="card.src" v-if="card?.src?.length > 0" :alt="card.name" />
+        <img class="subtype8-border" v-if="card.subType?.includes(8)" :src="getPngIcon('subtype8-border')" />
         <div class="card-content">
           <span v-if="card?.src?.length == 0">{{ card.name }}</span>
-          <div
-            class="card-cost"
-            :style="{
-              color: card.costChange > 0 ? CHANGE_GOOD_COLOR : 'white',
-            }"
-          >
-            <img
-              class="cost-img hcard"
-              :src="getDiceIcon(ELEMENT_ICON[card.costType])"
-            />
+          <div class="card-cost" :style="{
+    color: card.costChange > 0 ? CHANGE_GOOD_COLOR : 'white',
+  }">
+            <img class="cost-img hcard" :src="getDiceIcon(ELEMENT_ICON[card.costType])" />
             <span>{{ Math.max(0, card.cost - card.costChange) }}</span>
           </div>
           <div class="card-energy" v-if="card.anydice > 0">
@@ -175,244 +89,159 @@
       </div>
     </div>
 
-    <div
-      class="btn-group"
-      v-if="
-        isLookon == -1 &&
-        ((((client.player?.status == 1 && canAction) ||
-          client.player?.phase >= 9) &&
-          client.player?.phase > 4 &&
-          (client.currCard.id > 0 || client.isShowChangeHero > 0)) ||
-          client.player?.phase == 3)
-      "
-    >
-      <button
-        :class="{ forbidden: !client.isValid }"
-        v-if="!client.isReconcile && client.currCard.id > 0 && canAction"
-        @click.stop="useCard"
-      >
+    <div class="btn-group" v-if="isLookon == -1 &&
+    ((((client.player?.status == 1 && canAction) ||
+      client.player?.phase >= 9) &&
+      client.player?.phase > 4 &&
+      (client.currCard.id > 0 || client.isShowChangeHero > 0)) ||
+      client.player?.phase == 3)
+    ">
+      <button :class="{ forbidden: !client.isValid }" v-if="!client.isReconcile && client.currCard.id > 0 && canAction"
+        @click.stop="useCard">
         出牌
       </button>
-      <button
-        v-if="client.currCard.id > 0 && canAction"
-        @click.stop="reconcile(true)"
-        :style="{
-          backgroundColor:
-            ELEMENT_COLOR[
-              client.player.heros.find((v:Hero) => v.isFront)?.element ?? 0
-            ],
-        }"
-        :class="{
-          forbidden: client.player.dice.every((v:number) =>
-            [0, client.player.heros[client.player.hidx].element].includes(v)
-          ),
-        }"
-      >
+      <button v-if="client.currCard.id > 0 && canAction" @click.stop="reconcile(true)" :style="{
+    backgroundColor:
+      ELEMENT_COLOR[
+      client.player.heros.find((v: Hero) => v.isFront)?.element ?? 0
+      ],
+  }" :class="{
+    forbidden: client.player.dice.every((v: number) =>
+      [0, client.player.heros[client.player.hidx].element].includes(v)
+    ),
+  }">
         调和
       </button>
-      <button
-        v-if="client.isReconcile && client.currCard.id > 0"
-        @click.stop="reconcile(false)"
-      >
+      <button v-if="client.isReconcile && client.currCard.id > 0" @click.stop="reconcile(false)">
         取消
       </button>
-      <div
-        v-if="
-          (client.isShowChangeHero > 0 && client.currCard.id <= 0) ||
-          (client.player.phase == 3 &&
-            client.player.heros.some((h:Hero) => h.isSelected > 0))
-        "
-        style="
+      <div v-if="(client.isShowChangeHero > 0 && client.currCard.id <= 0) ||
+    (client.player.phase == 3 &&
+      client.player.heros.some((h: Hero) => h.isSelected > 0))
+    " style="
           display: flex;
           flex-direction: column;
           align-items: center;
           transform: translateY(20px);
-        "
-      >
+        ">
         <div class="quick-action" v-if="client.isShowChangeHero == 3">
           快速行动
         </div>
-        <button
-          :class="{ forbidden: !client.isValid && client.player.phase != 3 }"
-          v-if="client.isShowChangeHero < 2"
-          @click.stop="chooseHero"
-        >
+        <button :class="{ forbidden: !client.isValid && client.player.phase != 3 }" v-if="client.isShowChangeHero < 2"
+          @click.stop="chooseHero">
           {{
-            client.player.phase == 3 || client.player.phase > 8
-              ? "出战"
-              : "切换"
-          }}
+    client.player.phase == 3 || client.player.phase > 8
+      ? "出战"
+      : "切换"
+  }}
         </button>
-        <button
-          v-else
-          :class="{ forbidden: !client.isValid && client.player.phase != 3 }"
-          @click.stop="changeHero"
-        >
+        <button v-else :class="{ forbidden: !client.isValid && client.player.phase != 3 }" @click.stop="changeHero">
           确定
         </button>
-        <div
-          class="skill-cost"
-          v-if="client.player.phase == 6"
-          :style="{
-            marginTop: '10px',
-            opacity: client.isShowChangeHero >= 2 ? 1 : 0,
-          }"
-        >
+        <div class="skill-cost" v-if="client.player.phase == 6" :style="{
+    marginTop: '10px',
+    opacity: client.isShowChangeHero >= 2 ? 1 : 0,
+  }">
           <img class="cost-img" :src="getDiceIcon(ELEMENT_ICON[0])" />
-          <span
-            :style="{
-              zIndex: 1,
-              color:
-                client.heroChangeDice > 1
-                  ? CHANGE_BAD_COLOR
-                  : client.heroChangeDice < 1
-                  ? CHANGE_GOOD_COLOR
-                  : 'white',
-            }"
-          >
+          <span :style="{
+    zIndex: 1,
+    color:
+      client.heroChangeDice > 1
+        ? CHANGE_BAD_COLOR
+        : client.heroChangeDice < 1
+          ? CHANGE_GOOD_COLOR
+          : 'white',
+  }">
             {{ client.heroChangeDice }}
           </span>
         </div>
       </div>
     </div>
-    <div
-      class="skills"
-      v-else-if="
-        client.phase > 4 &&
-        client.player &&
-        client.player.phase > 4 &&
-        client.player.heros[client.player.hidx].hp > 0
-      "
-    >
-      <div
-        class="skill"
-        v-for="(skill, sidx) in client.skills.filter((sk:Skill) => sk.type < 4)"
-        :key="sidx"
-      >
-        <div
-          class="skill-btn"
-          @click.stop="useSkill(sidx, false)"
-          :style="{
-            boxShadow:
-              skill.type == 3 &&
-              client.player.heros[client.player.hidx].energy >= skill.energyCost
-                ? `0px 0px 8px 3px ${ELEMENT_COLOR[skill.dmgElement]}`
-                : '',
-          }"
-        >
-          <div
-            class="skill3-bg"
-            v-if="
-              skill.type == 3 &&
-              client.player.heros[client.player.hidx].energy < skill.energyCost
-            "
-            :style="{
-              background: `linear-gradient(to top, ${
-                ELEMENT_COLOR[skill.dmgElement]
-              } 0%, ${ELEMENT_COLOR[skill.dmgElement]} ${
-                (client.player.heros[client.player.hidx].energy /
-                  skill.energyCost) *
-                100
-              }%, transparent ${
-                (client.player.heros[client.player.hidx].energy /
-                  skill.energyCost) *
-                100
-              }%, transparent 100%)`,
-            }"
-          >
+    <div class="skills" v-else-if="client.phase > 4 &&
+    client.player &&
+    client.player.phase > 4 &&
+    client.player.heros[client.player.hidx].hp > 0
+    ">
+      <div class="skill" v-for="(skill, sidx) in client.skills.filter((sk: Skill) => sk.type < 4)" :key="sidx">
+        <div class="skill-btn" @click.stop="useSkill(sidx, false)" :style="{
+    boxShadow:
+      skill.type == 3 &&
+        client.player.heros[client.player.hidx].energy >= skill.energyCost
+        ? `0px 0px 8px 3px ${ELEMENT_COLOR[skill.dmgElement]}`
+        : '',
+  }">
+          <div class="skill3-bg" v-if="skill.type == 3 &&
+    client.player.heros[client.player.hidx].energy < skill.energyCost
+    " :style="{
+    background: `linear-gradient(to top, ${ELEMENT_COLOR[skill.dmgElement]
+      } 0%, ${ELEMENT_COLOR[skill.dmgElement]} ${(client.player.heros[client.player.hidx].energy /
+        skill.energyCost) *
+      100
+      }%, transparent ${(client.player.heros[client.player.hidx].energy /
+        skill.energyCost) *
+      100
+      }%, transparent 100%)`,
+  }">
             <div class="skill-btn" style="transform: translate(1px, 1px)"></div>
           </div>
-          <img
-            class="skill-img"
-            :src="skill.src"
-            v-if="skill.src.length > 0"
-            :alt="SKILL_TYPE_ABBR[skill.type]"
-          />
+          <img class="skill-img" :src="skill.src" v-if="skill.src.length > 0" :alt="SKILL_TYPE_ABBR[skill.type]" />
           <span v-else class="skill-img">{{
-            SKILL_TYPE_ABBR[skill.type]
-          }}</span>
+    SKILL_TYPE_ABBR[skill.type]
+  }}</span>
         </div>
-        <div
-          class="skill-cost"
-          v-for="(cost, cidx) in (skill as Skill).cost.filter((c) => c.val > 0)"
-          :key="cidx"
-          :style="{
-            color:
-              cidx < 2 && skill.costChange[cidx] > 0
-                ? CHANGE_GOOD_COLOR
-                : cidx < 2 && skill.costChange[cidx] < 0
-                ? CHANGE_BAD_COLOR
-                : 'white',
-          }"
-        >
+        <div class="skill-cost" v-for="(cost, cidx) in (skill as Skill).cost.filter(c => c.val > 0)" :key="cidx" :style="{
+    color:
+      cidx < 2 && skill.costChange[cidx] > 0
+        ? CHANGE_GOOD_COLOR
+        : cidx < 2 && skill.costChange[cidx] < 0
+          ? CHANGE_BAD_COLOR
+          : 'white',
+  }">
           <img class="cost-img" :src="getDiceIcon(ELEMENT_ICON[cost.color])" />
-          <span style="z-index: 1"
-            >{{
-              Math.max(cost.val - (cidx < 2 ? skill.costChange[cidx] : 0), 0)
-            }}
-          </span>
+          <span style="z-index: 1">{{
+    Math.max(cost.val - (cidx < 2 ? skill.costChange[cidx] : 0), 0) }} </span>
         </div>
-        <div
-          class="skill-forbidden"
-          v-if="
-            isLookon > -1 ||
-            skill.isForbidden ||
-            client.player.status == 0 ||
-            !canAction ||
-            client.phase > 6 ||
-            (client.player.heros
-              .find((h:Hero) => h.isFront)
-              ?.inStatus?.findIndex((s:Status) => s.type.includes(14)) ?? -1) > -1
-          "
-          @click.stop="useSkill(sidx, true)"
-        ></div>
+        <div class="skill-forbidden" v-if="isLookon > -1 ||
+    skill.isForbidden ||
+    client.player.status == 0 ||
+    !canAction ||
+    client.phase > 6 ||
+    (client.player.heros
+      .find((h: Hero) => h.isFront)
+      ?.inStatus?.findIndex((s: Status) => s.type.includes(14)) ?? -1) > -1
+    " @click.stop="useSkill(sidx, true)"></div>
       </div>
     </div>
   </div>
 
-  <InfoModal
-    v-if="client.phase > 1"
-    :info="client.modalInfo"
-    :isMobile="isMobile"
-    style="z-index: 10"
-  />
+  <InfoModal v-if="client.phase > 1" :info="client.modalInfo" :isMobile="isMobile" style="z-index: 10" />
 
-  <h1
-    v-if="client.isWin > 1 && client.players[client.isWin % 2]?.name"
-    class="win-banner"
-    :class="{ 'mobile-win-banner': isMobile }"
-  >
+  <h1 v-if="client.isWin > 1 && client.players[client.isWin % 2]?.name" class="win-banner"
+    :class="{ 'mobile-win-banner': isMobile }">
     {{ client.players[client.isWin % 2]?.name }}获胜！！！
   </h1>
 
   <h1 v-if="client.error != ''" style="color: red">{{ client.error }}</h1>
 
-  <div
-    class="tip"
-    :class="{
-      'tip-enter': client.tip.content != '',
-      'tip-leave': client.tip.content == '',
-    }"
-    :style="{
-      top: client.tip?.top ?? '40%',
-      color: client.tip?.color ?? 'black',
-    }"
-  >
+  <div class="tip" :class="{
+    'tip-enter': client.tip.content != '',
+    'tip-leave': client.tip.content == '',
+  }" :style="{
+    top: client.tip?.top ?? '40%',
+    color: client.tip?.color ?? 'black',
+  }">
     {{ client.tip.content }}
   </div>
 
-  <div
-    class="modal-action"
-    :class="{
-      'modal-action-my': client.player?.status == 1,
-      'modal-action-oppo': client.opponent?.status == 1,
-      'modal-action-enter-my':
-        client.player?.status == 1 && client.actionInfo != '',
-      'modal-action-enter-oppo':
-        client.opponent?.status == 1 && client.actionInfo != '',
-      'modal-action-leave': client.actionInfo == '',
-    }"
-  >
+  <div class="modal-action" :class="{
+    'modal-action-my': client.player?.status == 1,
+    'modal-action-oppo': client.opponent?.status == 1,
+    'modal-action-enter-my':
+      client.player?.status == 1 && client.actionInfo != '',
+    'modal-action-enter-oppo':
+      client.opponent?.status == 1 && client.actionInfo != '',
+    'modal-action-leave': client.actionInfo == '',
+  }">
     {{ client.actionInfo }}
   </div>
 </template>
@@ -506,7 +335,7 @@ const debounce = (fn: (...args: any[]) => any, wait: number = 100) => {
 
 watchEffect(() => {
   if (client.value.isWin < 2) {
-    afterWinHeros.value = client.value.players.map((p) => p.heros);
+    afterWinHeros.value = client.value.players.map(p => p.heros);
   }
 });
 
@@ -610,17 +439,17 @@ const lookonTo = (idx: number) => {
 };
 
 const getPlayerList = ({ plist }: { plist: Player[] }) => {
-  const me = plist.find((p) => p.id == userid);
+  const me = plist.find(p => p.id == userid);
   if (me?.rid == -1) router.back();
 };
 onMounted(() => {
   socket.emit("roomInfoUpdate", { roomId });
-  socket.on("roomInfoUpdate", (data) => {
+  socket.on("roomInfoUpdate", data => {
     const isFlag = data.isStart && !client.value.isStart;
     client.value.roomInfoUpdate({ isFlag, ...data });
   });
 
-  socket.on("getServerInfo", (data) => {
+  socket.on("getServerInfo", data => {
     client.value.getServerInfo(data);
   });
   socket.on("getPlayerAndRoomList", getPlayerList);
@@ -637,7 +466,7 @@ const devOps = (cidx = 0) => {
   if (!isDev) return;
   let ops = prompt("摸牌id/#骰子/@充能/%血量/&附着:")
     ?.split(/[,，\.\/、]+/)
-    .filter((v) => v != "");
+    .filter(v => v != "");
   if (ops == undefined) return;
   const cpidx = client.value.playerIdx ^ cidx;
   let heros = client.value.players[cpidx].heros;
@@ -649,29 +478,29 @@ const devOps = (cidx = 0) => {
   for (const op of ops) {
     if (op.startsWith("&")) {
       const isAdd = op[1] == "+";
-      const [el = 0, hidx = heros.findIndex((h) => h.isFront)] = op
+      const [el = 0, hidx = heros.findIndex(h => h.isFront)] = op
         .slice(isAdd ? 2 : 1)
         .split(/[:：]+/)
         .map(h);
       if (!isAdd || el == 0) {
-        if (hidx > 2) heros.forEach((h) => (h.attachElement = []));
+        if (hidx > 2) heros.forEach(h => (h.attachElement = []));
         else heros[hidx].attachElement = [];
       }
       if (el > 0) {
-        if (hidx > 2) heros.forEach((h) => h.attachElement.push(el));
+        if (hidx > 2) heros.forEach(h => h.attachElement.push(el));
         else heros[hidx].attachElement.push(el);
       }
       flag.add("setEl");
     } else if (op.startsWith("%")) {
-      const [hp = 10, hidx = heros.findIndex((h) => h.isFront)] = op
+      const [hp = 10, hidx = heros.findIndex(h => h.isFront)] = op
         .slice(1)
         .split(/[:：]+/)
         .map(h);
-      if (hidx > 2) heros.forEach((h) => (h.hp = hp));
+      if (hidx > 2) heros.forEach(h => (h.hp = hp));
       else heros[hidx].hp = hp;
       flag.add("setHp");
     } else if (op.startsWith("@")) {
-      const [cnt = 3, hidx = heros.findIndex((h) => h.isFront)] = op
+      const [cnt = 3, hidx = heros.findIndex(h => h.isFront)] = op
         .slice(1)
         .split(/[:：]+/)
         .map(h);
@@ -696,7 +525,7 @@ const devOps = (cidx = 0) => {
       handCards = client.value.player.handCards.slice(0, dcardcnt);
       flag.add("disCard");
     } else if (op.startsWith("=")) {
-      const [stsid = 0, hidx = heros.findIndex((h) => h.isFront)] = op
+      const [stsid = 0, hidx = heros.findIndex(h => h.isFront)] = op
         .slice(1)
         .split(/[:：]+/)
         .map(h);
@@ -711,7 +540,7 @@ const devOps = (cidx = 0) => {
       if (cid == 0) {
         cards.push(
           cardTotal.find(
-            (c) => c.userType == heros[client.value.players[cpidx].hidx].id
+            c => c.userType == heros[client.value.players[cpidx].hidx].id
           )?.id ?? 0
         );
       }
@@ -812,8 +641,8 @@ body {
   -webkit-text-stroke: 1px black;
 }
 
-.card-cost > span,
-.card-energy > span {
+.card-cost>span,
+.card-energy>span {
   position: absolute;
   left: 20px;
   top: 5px;
@@ -1060,14 +889,12 @@ body {
   position: absolute;
   height: 30px;
   width: 95%;
-  background-image: linear-gradient(
-    to left,
-    transparent 0%,
-    #ad56006c 35%,
-    #ad56006c 50%,
-    #ad56006c 65%,
-    transparent 100%
-  );
+  background-image: linear-gradient(to left,
+      transparent 0%,
+      #ad56006c 35%,
+      #ad56006c 50%,
+      #ad56006c 65%,
+      transparent 100%);
   transition: 1s;
   text-align: center;
   line-height: 30px;

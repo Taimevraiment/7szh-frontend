@@ -42,7 +42,7 @@ export default class GeniusInvokationClient {
     isSwitchAtking = false; // 是否有切换后的攻击
     isReseted = true; // 是否已重置
     taskQueue: TaskQueue;
-    round: number = 0; // 回合数
+    round: number = 1; // 回合数
     isWin: number = -1; // 胜者idx
     playerIdx: number = -1; // 该玩家序号
     modalInfo: InfoVO = { ...NULL_MODAL }; // 展示信息
@@ -567,7 +567,7 @@ export default class GeniusInvokationClient {
         this.isStart = data.isStart ?? this.isStart;
         this.phase = data.phase ?? this.phase;
         this.canAction = this.player?.canAction ?? false;
-        this.countdown.curr = data.currCountdown ?? 0;
+        this._startTimer(data.currCountdown);
         if (data.taskQueueVal) {
             this.taskQueue.queue = data.taskQueueVal.queue;
             this.taskQueue.isEndAtk = data.taskQueueVal.isEndAtk;
@@ -941,19 +941,7 @@ export default class GeniusInvokationClient {
                 }
             }, 10);
         }
-        if (startTimer) {
-            if (this.countdown.timer != null) clearInterval(this.countdown.timer);
-            this.countdown.curr = this.countdown.limit;
-            this.countdown.timer = setInterval(() => {
-                --this.countdown.curr;
-                if (this.countdown.curr <= 0 || this.phase != PHASE.ACTION) {
-                    if (this.countdown.curr <= 0 && this.player.status == 1) this.endPhase();
-                    this.countdown.curr = 0;
-                    if (this.countdown.timer != null) clearInterval(this.countdown.timer);
-                    this.countdown.timer = null;
-                }
-            }, 1000);
-        }
+        if (startTimer) this._startTimer();
     }
     /**
      * 游戏开始时换卡
@@ -1028,7 +1016,7 @@ export default class GeniusInvokationClient {
                 if (h.isSelected == 1 && idx == hidx) {
                     h.isFront = true;
                     h.isSelected = 0;
-                    this.socket.emit('sendToServer', { cpidx: this.playerIdx, hidx, isChangeHero: true, flag: 'chooseHero-' + this.playerIdx });
+                    this.socket.emit('sendToServer', { cpidx: this.playerIdx, hidx, isChangeHero: true, flag: 'chooseInitHero-' + this.playerIdx });
                 } else h.isSelected = idx == hidx ? 1 : 0;
             });
         } else {
@@ -1664,7 +1652,7 @@ export default class GeniusInvokationClient {
                 tarhidx: hidx,
                 etarhidx: eFrontIdx,
                 elTips: aElTips,
-                willDamage: isCdt(skill.damage > 0 || aWillDamages.some(d => d[0] > 0), aWillDamages),
+                willDamage: isCdt(skill.damage > 0 || aWillDamages.some(d => Math.max(0, d[0]) + d[1] > 0), aWillDamages),
                 willAttachs: aWillAttach,
                 dmgElements,
                 willHeals: isCdt(aWillHeal.some(v => v > -1), aWillHeal),
@@ -3367,7 +3355,7 @@ export default class GeniusInvokationClient {
             isExec?: boolean, getdmg?: number, isEffectHero?: boolean
         } = {}
     ) {
-        if (hidx < 0) return { isQuickAction: false, inStatus: [], heros: [] }
+        if (hidx < 0) return { isQuickAction: false, heros: [], eheros: [] }
         const { pidx = this.playerIdx, players = this.players, isExec = true, getdmg = 0, isEffectHero = true } = options;
         let { heros = players[pidx].heros, eheros = players[pidx ^ 1].heros } = options;
         const hero = heros[hidx];
@@ -4048,6 +4036,23 @@ export default class GeniusInvokationClient {
      */
     _hasNotTrigger(triggers: Trigger[] | undefined, trigger: Trigger) {
         return (triggers ?? []).every(tr => tr != trigger.split(':')[0]);
+    }
+    /**
+     * 开启倒计时
+     */
+    _startTimer(curr?: number) {
+        if (this.countdown.limit <= 0) return;
+        if (this.countdown.timer != null) clearInterval(this.countdown.timer);
+        this.countdown.curr = curr || this.countdown.limit;
+        this.countdown.timer = setInterval(() => {
+            --this.countdown.curr;
+            if (this.countdown.curr <= 0 || this.phase != PHASE.ACTION) {
+                if (this.countdown.curr <= 0 && this.player.status == 1) this.endPhase();
+                this.countdown.curr = 0;
+                if (this.countdown.timer != null) clearInterval(this.countdown.timer);
+                this.countdown.timer = null;
+            }
+        }, 1000);
     }
     /**
      * 延迟函数

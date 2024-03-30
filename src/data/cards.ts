@@ -1152,7 +1152,7 @@ const allCards: CardObj = {
 
     324: new GICard(324, '太郎丸', '【入场时：】生成3张【太郎丸的存款】，均匀地置入我方牌库中。；我方打出2张【太郎丸的存款】后：弃置此牌，召唤【愤怒的太郎丸】。',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Assist_NPC_Taroumaru.webp',
-        1, 0, 1, [3], 0, 0, () => ({ cmds: [{ cmd: 'addCard', cnt: 3, card: 902, element: 1 }], site: [newSite(4050, 324)] }),
+        1, 8, 1, [3], 0, 0, () => ({ cmds: [{ cmd: 'addCard', cnt: 3, card: 902, element: 1 }], site: [newSite(4050, 324)] }),
         { expl: [extraCards[902], newSummonee(3059)] }),
 
     325: new GICard(325, '白手套和渔夫', '【结束阶段：】生成1张｢清洁工作｣，随机将其置入我方牌库顶部5张牌之中。；如果此牌的[可用次数]仅剩1次，则摸1张牌，｢清洁工作｣不再摸牌；[可用次数]：2',

@@ -1,43 +1,25 @@
 <template>
   <div class="main-container">
     <div class="side" v-if="player.phase > 4">
+      <div class="round">
+        <img src="/src/assets/svg/round.svg" alt="回合" />
+        <span>{{ client.round }}</span>
+      </div>
       <div class="pile">
         <span>
           <div>{{ opponent.dice.length }}</div>
         </span>
         {{ opponent.pile.length }}
-        <div
-          class="will-getcard-oppo"
-          :class="{ 'mobile-will-card': isMobile }"
-          :style="{ left: `${cidx * 70 - 70}px` }"
-          v-for="(_, cidx) in opponent.willGetCard"
-          :key="cidx"
-        ></div>
-        <div
-          class="will-addcard-oppo"
-          :class="{ 'mobile-will-card': isMobile }"
-          :style="{ left: `${cidx * 70 - 70}px` }"
-          v-for="(_, cidx) in opponent.willAddCard"
-          :key="cidx"
-        ></div>
+        <div class="will-getcard-oppo" :class="{ 'mobile-will-card': isMobile }"
+          :style="{ left: `${cidx * 70 - 70}px` }" v-for="(_, cidx) in opponent.willGetCard" :key="cidx"></div>
+        <div class="will-addcard-oppo" :class="{ 'mobile-will-card': isMobile }"
+          :style="{ left: `${cidx * 70 - 70}px` }" v-for="(_, cidx) in opponent.willAddCard" :key="cidx"></div>
       </div>
-      <div
-        class="timer"
-        :style="{
-          transition: 'background-image 1s',
-          'background-image': `conic-gradient(transparent ${currTime}%, ${
-            player.status == 0 ? '#2b6aff' : '#ffb36d'
-          } ${currTime + 5}%)`,
-        }"
-      >
-        <button
-          class="end-phase"
-          :class="{
-            forbidden:
-              player.status == 0 || !canAction || phase > 6 || isLookon > -1,
-          }"
-          @click.stop="endPhase"
-        >
+      <div class="timer" :style="{
+      'background-image': `conic-gradient(transparent ${currTime}%, ${player.status == 0 ? '#2b6aff' : '#ffb36d'} ${currTime + 5}%)`
+    }">
+        <button class="end-phase" :class="{ forbidden: player.status == 0 || !canAction || phase > 6 || isLookon > -1 }"
+          @click.stop="endPhase">
           结束
         </button>
       </div>
@@ -46,110 +28,49 @@
           <div>{{ player.dice.length }}</div>
         </span>
         {{ player.pile.length }}
-        <div
-          class="will-getcard-my"
-          :class="{ 'mobile-will-card': isMobile }"
-          :style="{ left: `${cidx * 70 - 70}px` }"
-          v-for="(card, cidx) in player.willGetCard"
-          :key="cidx"
-        >
-          <img
-            class="card-img"
-            :src="card.src"
-            v-if="card?.src?.length > 0"
-            :alt="card.name"
-          />
+        <div class="will-getcard-my" :class="{ 'mobile-will-card': isMobile }" :style="{ left: `${cidx * 70 - 70}px` }"
+          v-for="(card, cidx) in player.willGetCard" :key="cidx">
+          <img class="card-img" :src="card.src" v-if="card?.src?.length > 0" :alt="card.name" />
           <span v-else>{{ card.name }}</span>
         </div>
-        <div
-          class="will-addcard-my"
-          :class="{ 'mobile-will-card': isMobile }"
-          :style="{ left: `${cidx * 70 - 70}px` }"
-          v-for="(card, cidx) in player.willAddCard"
-          :key="cidx"
-        >
-          <img
-            class="card-img"
-            :src="card.src"
-            v-if="card?.src?.length > 0"
-            :alt="card.name"
-          />
+        <div class="will-addcard-my" :class="{ 'mobile-will-card': isMobile }" :style="{ left: `${cidx * 70 - 70}px` }"
+          v-for="(card, cidx) in player.willAddCard" :key="cidx">
+          <img class="card-img" :src="card.src" v-if="card?.src?.length > 0" :alt="card.name" />
           <span v-else>{{ card.name }}</span>
         </div>
       </div>
     </div>
 
     <div class="sites self">
-      <div
-        class="site-area"
-        v-for="(siteArea, saidx) in [opponent.site, player.site]"
-        :key="saidx"
-      >
-        <div
-          class="site"
-          :class="{
-            'site-select': site.isSelected,
-            'site-can-select': site.canSelect && player.status == 1,
-          }"
-          v-for="(site, siidx) in siteArea"
-          :key="siidx"
-          @click.stop="showSiteInfo(saidx, siidx)"
-        >
+      <div class="site-area" v-for="(siteArea, saidx) in [opponent.site, player.site]" :key="saidx">
+        <div class="site" :class="{
+      'site-select': site.isSelected,
+      'site-can-select': site.canSelect && player.status == 1,
+    }" v-for="(site, siidx) in siteArea" :key="siidx" @click.stop="showSiteInfo(saidx, siidx)">
           <div class="site-img-content">
-            <img
-              class="site-img"
-              :style="{
-                top: site.card.subType.includes(3) && isMobile ? '100%' : '60%',
-              }"
-              :src="site.card.src"
-              v-if="site.card.src.length > 0"
-              :alt="site.card.name"
-            />
+            <img class="site-img" :style="{ top: site.card.subType.includes(3) && isMobile ? '100%' : '60%' }"
+              :src="site.card.src" v-if="site.card.src.length > 0" :alt="site.card.name" />
             <span v-else>{{ site.card.name }}</span>
-            <div
-              style="position: absolute; width: 100%; height: 100%"
-              :class="{ 'site-can-use': site.perCnt > 0 }"
-            ></div>
+            <div style="position: absolute; width: 100%; height: 100%" :class="{ 'site-can-use': site.perCnt > 0 }">
+            </div>
           </div>
-          <img
-            class="site-top-icon"
-            v-if="site.type < 3"
-            :src="getSvgIcon(site.type == 1 ? 'round' : 'bag')"
-          />
+          <img class="site-top-icon" v-if="site.type < 3" :src="getSvgIcon(site.type == 1 ? 'round' : 'bag')" />
           <div class="site-top-num" v-if="site.type < 3">{{ site.cnt }}</div>
-          <div
-            :class="{
-              'will-destroy': siteCnt[saidx ^ playerIdx ^ 1][siidx] < 0,
-              'will-add': siteCnt[saidx ^ playerIdx ^ 1][siidx] > 0,
-            }"
-            v-if="
-              true ||
-              (currSkill.type > 0 && siteCnt[saidx ^ playerIdx ^ 1][siidx] != 0)
-            "
-          >
-            <img
-              v-if="siteCnt[saidx ^ playerIdx ^ 1][siidx] < -site.cnt"
-              :src="getSvgIcon('die')"
-              style="height: 16px"
-            />
+          <div :class="{
+      'will-destroy': siteCnt[saidx ^ playerIdx ^ 1][siidx] < 0,
+      'will-add': siteCnt[saidx ^ playerIdx ^ 1][siidx] > 0,
+    }" v-if="true || (currSkill.type > 0 && siteCnt[saidx ^ playerIdx ^ 1][siidx] != 0)">
+            <img v-if="siteCnt[saidx ^ playerIdx ^ 1][siidx] < -site.cnt" :src="getSvgIcon('die')"
+              style="height: 16px" />
             <span>
-              {{
-                siteCnt[saidx ^ playerIdx ^ 1][siidx] > 0
-                  ? "+"
-                  : siteCnt[saidx ^ playerIdx ^ 1][siidx] >= -site.cnt
-                  ? "-"
-                  : ""
-              }}
+              {{ siteCnt[saidx ^ playerIdx ^ 1][siidx] > 0 ? "+" :
+      siteCnt[saidx ^ playerIdx ^ 1][siidx] >= -site.cnt ? "-" : "" }}
             </span>
             <span v-if="siteCnt[saidx ^ playerIdx ^ 1][siidx] >= -site.cnt">
               {{ Math.abs(siteCnt[saidx ^ playerIdx ^ 1][siidx]) }}
             </span>
           </div>
-          <img
-            class="site-bottom-icon"
-            v-if="site.hpCnt > 0"
-            :src="getSvgIcon('heal')"
-          />
+          <img class="site-bottom-icon" v-if="site.hpCnt > 0" :src="getSvgIcon('heal')" />
           <div class="site-bottom-num" v-if="site.hpCnt > 0">
             {{ site.hpCnt }}
           </div>
@@ -158,676 +79,322 @@
     </div>
 
     <div class="heros">
-      <div
-        class="hero"
-        @click.stop="selectHero(hidx < 3 ? 0 : 1, hidx % 3)"
-        :style="{
-          'background-color':
-            hero.src.length == 0 ? ELEMENT_COLOR[hero?.element ?? 0] : '',
-          animation:
-            hero?.isFront &&
-            ((hidx > 2 &&
-              player.status == 1 &&
-              player.summon.every((s:Summonee) => !s.isSelected)) ||
-              (hidx < 3 &&
-                opponent.status == 1 &&
-                opponent.summon.every((s:Summonee) => !s.isSelected))) &&
-            isShowDmg &&
-            phase < 7 &&
-            heros.every(
-              (h:Hero) =>
-                h.inStatus.every((s) => !s.isSelected) &&
-                h.outStatus.every((s) => !s.isSelected)
-            )
-              ? `attack${opponent.tarhidx - player.tarhidx + 2}-${
-                  hidx < 3 ? 0 : 1
-                } 0.8s linear`
-              : 'none',
-        }"
-        :class="{
-          'mobile-hero': isMobile,
-          my: hidx > 2,
-          'is-front-oppo':
-            hero?.isFront && player.phase > 3 && opponent.phase > 3 && hidx < 3,
-          'is-front-my': hero?.isFront && hidx > 2,
-        }"
-        v-for="(hero, hidx) in heros"
-        :key="hidx"
-      >
-        <div
-          class="hero-img-content"
-          :class="{
-            'hero-select': hero.isSelected > 0,
-            'hero-can-select': hero.canSelect && player.status == 1,
-            'hero-shield7':
-              hero.hp > 0 &&
-              [...hero.inStatus, ...hero.outStatus].some(
-                (sts) => sts.type.some((t:number) => t == 7) && sts.useCnt > 0
-              ),
-          }"
-        >
-          <img
-            class="hero-img"
-            :src="hero.src"
-            v-if="hero?.src?.length > 0"
-            :alt="hero.name"
-          />
+      <div class="hero" @click.stop="selectHero(hidx < 3 ? 0 : 1, hidx % 3)" :style="{
+      'background-color': hero.src.length == 0 ? ELEMENT_COLOR[hero?.element ?? 0] : '',
+      animation:
+        hero?.isFront &&
+          ((hidx > 2 && player.status == 1 && player.summon.every(s => !s.isSelected)) ||
+            (hidx < 3 && opponent.status == 1 && opponent.summon.every(s => !s.isSelected))) &&
+          isShowDmg && willDamages.some(d => d[0] > 0) && phase < 7 &&
+          heros.every(h => h.inStatus.every(s => !s.isSelected) && h.outStatus.every(s => !s.isSelected))
+          ? `attack${opponent.tarhidx - player.tarhidx + 2}-${hidx < 3 ? 0 : 1} 0.8s linear` : 'none',
+    }" :class="{
+      'mobile-hero': isMobile,
+      my: hidx > 2,
+      'is-front-oppo': hero?.isFront && player.phase > 3 && opponent.phase > 3 && hidx < 3,
+      'is-front-my': hero?.isFront && hidx > 2,
+    }" v-for="(hero, hidx) in heros" :key="hidx">
+        <div class="hero-img-content" :class="{
+      'hero-select': hero.isSelected > 0,
+      'hero-can-select': hero.canSelect && player.status == 1,
+      'hero-shield7': hero.hp > 0 && [...hero.inStatus, ...hero.outStatus].some(sts => sts.type.some(t => t == 7) && sts.useCnt > 0),
+    }">
+          <img class="hero-img" :src="hero.src" v-if="hero?.src?.length > 0" :alt="hero.name" />
           <div v-else class="hero-name">{{ hero?.name }}</div>
         </div>
-        <div
-          class="hero-freeze"
-          v-if="hero.hp > 0 && hero.inStatus.some((ist:Status) => ist.id == 2004)"
-        >
+        <div class="hero-freeze" v-if="hero.hp > 0 && hero.inStatus.some(ist => ist.id == 2004)">
           <img :src="getPngIcon('freeze-bg')" />
         </div>
-        <div
-          class="hero-freeze"
-          style="background-color: #716446de"
-          v-if="hero.hp > 0 && hero.inStatus.some((ist:Status) => ist.id == 2087)"
-        ></div>
-        <div
-          class="hero-shield2"
-          v-if="
-            hero.hp > 0 &&
-            (hero.inStatus.some(
-              (ist:Status) => ist.type.some((t) => t == 2) && ist.useCnt > 0
-            ) ||
-              hero.outStatus.some((ost:Status) =>
-                ost.type.some(
-                  (t) =>
-                    t == 2 &&
-                    (ost.id != 2105 || hero.id != 1209) &&
-                    ost.useCnt > 0
-                )
-              ) ||
-              (hero.talentSlot?.subType.includes(-1) &&
-                (hero.talentSlot?.useCnt ?? 0) > 0))
-          "
-        ></div>
-        <img
-          class="switch-icon"
-          v-if="willSwitch[(hidx % 3) + (playerIdx ^ (hidx > 2 ? 0 : 1)) * 3]"
-          :src="getSvgIcon('switch')"
-        />
+        <div class="hero-freeze" style="background-color: #716446de"
+          v-if="hero.hp > 0 && hero.inStatus.some(ist => ist.id == 2087)"></div>
+        <div class="hero-shield2" v-if="hero.hp > 0 &&
+      (hero.inStatus.some(ist => ist.type.some(t => t == 2) && ist.useCnt > 0) ||
+        hero.outStatus.some(ost => ost.type.some(t => t == 2 && (ost.id != 2105 || hero.id != 1209) && ost.useCnt > 0)) ||
+        (hero.talentSlot?.subType.includes(-1) &&
+          (hero.talentSlot?.useCnt ?? 0) > 0))
+      "></div>
+        <img class="switch-icon" v-if="willSwitch[(hidx % 3) + (playerIdx ^ (hidx > 2 ? 0 : 1)) * 3]"
+          :src="getSvgIcon('switch')" />
         <div class="hero-hp" v-if="hero?.hp > 0">
           <img class="hero-hp-bg" src="@/assets/image/hero-hp-bg.png" />
           <span>{{ Math.max(0, hero?.hp) }}</span>
         </div>
         <div class="hero-energys" v-if="hero?.hp > 0">
-          <img
-            v-for="(_, eidx) in hero?.maxEnergy"
-            :key="eidx"
-            class="hero-energy"
-            :class="{ 'mobile-energy': isMobile }"
-            :src="getEnergyIcon((hero?.energy ?? 0) - 1 >= eidx)"
-          />
+          <img v-for="(_, eidx) in hero?.maxEnergy" :key="eidx" class="hero-energy"
+            :class="{ 'mobile-energy': isMobile }" :src="getEnergyIcon((hero?.energy ?? 0) - 1 >= eidx)" />
         </div>
         <div class="hero-equipment">
-          <div
-            class="hero-weapon"
-            v-if="hero.weaponSlot != null"
-            :class="{ 'slot-select': hero.weaponSlot.selected }"
-          >
+          <div class="hero-weapon" v-if="hero.weaponSlot != null" :class="{ 'slot-select': hero.weaponSlot.selected }">
             <img :src="getSvgIcon('weapon')" />
-            <div
-              :style="{
-                position: 'absolute',
-                width: '100%',
-                height: `${
-                  100 /
-                  (1 + (hero.artifactSlot ? 1 : 0) + (hero.talentSlot ? 1 : 0))
-                }%`,
-                borderRadius: '50%',
-              }"
-              :class="{ 'slot-can-use': hero.weaponSlot.perCnt > 0 }"
-            ></div>
+            <div :style="{
+      position: 'absolute',
+      width: '100%',
+      height: `${100 / (1 + (hero.artifactSlot ? 1 : 0) + (hero.talentSlot ? 1 : 0))}%`,
+      borderRadius: '50%',
+    }" :class="{ 'slot-can-use': hero.weaponSlot.perCnt > 0 }"></div>
           </div>
-          <div
-            class="hero-artifact"
-            v-if="hero.artifactSlot != null"
-            :class="{ 'slot-select': hero.artifactSlot.selected }"
-          >
+          <div class="hero-artifact" v-if="hero.artifactSlot != null"
+            :class="{ 'slot-select': hero.artifactSlot.selected }">
             <img :src="getSvgIcon('artifact')" />
-            <div
-              :style="{
-                position: 'absolute',
-                width: '100%',
-                height: `${
-                  100 /
-                  (1 + (hero.weaponSlot ? 1 : 0) + (hero.talentSlot ? 1 : 0))
-                }%`,
-                borderRadius: '50%',
-              }"
-              :class="{ 'slot-can-use': hero.artifactSlot.perCnt > 0 }"
-            ></div>
+            <div :style="{
+      position: 'absolute',
+      width: '100%',
+      height: `${100 / (1 + (hero.weaponSlot ? 1 : 0) + (hero.talentSlot ? 1 : 0))}%`,
+      borderRadius: '50%',
+    }" :class="{ 'slot-can-use': hero.artifactSlot.perCnt > 0 }"></div>
           </div>
-          <div
-            class="hero-talent"
-            v-if="hero.talentSlot != null"
-            :class="{ 'slot-select': hero.talentSlot.selected }"
-          >
+          <div class="hero-talent" v-if="hero.talentSlot != null" :class="{ 'slot-select': hero.talentSlot.selected }">
             <img :src="getSvgIcon('talent')" />
-            <div
-              :style="{
-                position: 'absolute',
-                width: '100%',
-                height: `${
-                  100 /
-                  (1 + (hero.artifactSlot ? 1 : 0) + (hero.weaponSlot ? 1 : 0))
-                }%`,
-                borderRadius: '50%',
-              }"
-              :class="{ 'slot-can-use': hero.talentSlot.perCnt > 0 }"
-            ></div>
+            <div :style="{
+      position: 'absolute',
+      width: '100%',
+      height: `${100 / (1 + (hero.artifactSlot ? 1 : 0) + (hero.weaponSlot ? 1 : 0))}%`,
+      borderRadius: '50%',
+    }" :class="{ 'slot-can-use': hero.talentSlot.perCnt > 0 }"></div>
           </div>
         </div>
         <div class="attach-element">
-          <div
-            class="el-tip"
-            :class="{
-              'el-tip-enter':
-                elTips[(hidx % 3) + (playerIdx ^ (hidx > 2 ? 1 : 0)) * 3][0] !=
-                '',
-              'el-tip-leave':
-                elTips[(hidx % 3) + (playerIdx ^ (hidx > 2 ? 1 : 0)) * 3][0] ==
-                '',
-            }"
-            :style="{
-              color:
-                ELEMENT_COLOR[
-                  elTips[(hidx % 3) + (playerIdx ^ (hidx > 2 ? 1 : 0)) * 3][1]
-                ],
-              fontWeight: 'bolder',
-              '-webkit-text-stroke': `0.5px${
-                ELEMENT_COLOR[
-                  elTips[(hidx % 3) + (playerIdx ^ (hidx > 2 ? 1 : 0)) * 3][2]
-                ]
-              }`,
-            }"
-          >
+          <div class="el-tip" :class="{
+      'el-tip-enter': elTips[(hidx % 3) + (playerIdx ^ (hidx > 2 ? 1 : 0)) * 3][0] != '',
+      'el-tip-leave': elTips[(hidx % 3) + (playerIdx ^ (hidx > 2 ? 1 : 0)) * 3][0] == '',
+    }" :style="{
+      color: ELEMENT_COLOR[elTips[(hidx % 3) + (playerIdx ^ (hidx > 2 ? 1 : 0)) * 3][1]],
+      fontWeight: 'bolder',
+      '-webkit-text-stroke': `0.5px${ELEMENT_COLOR[elTips[(hidx % 3) + (playerIdx ^ (hidx > 2 ? 1 : 0)) * 3][2]]}`,
+    }">
             {{ elTips[(hidx % 3) + (playerIdx ^ (hidx > 2 ? 1 : 0)) * 3][0] }}
           </div>
-          <img
-            v-for="(el, eidx) in hero.attachElement.filter(() => hero?.hp > 0)"
-            :key="eidx"
-            :src="ELEMENT_URL[el]"
-            style="width: 20px"
-          />
-          <img
-            class="will-attach"
-            v-for="(attach, waidx) in willAttachs[playerIdx == 0 ? (hidx + 3) % 6 : hidx]
-            .filter((wa: number) => hero?.hp > 0 && wa > 0)"
-            :key="waidx"
-            :src="ELEMENT_URL[attach]"
-          />
+          <img v-for="(el, eidx) in hero.attachElement.filter(() => hero?.hp > 0)" :key="eidx" :src="ELEMENT_URL[el]"
+            style="width: 20px" />
+          <img class="will-attach" v-for="(attach, waidx) in willAttachs[playerIdx == 0 ? (hidx + 3) % 6 : hidx]
+      .filter(wa => hero?.hp > 0 && wa > 0)" :key="waidx" :src="ELEMENT_URL[attach]" />
         </div>
         <div class="instatus" v-if="phase > 3 && hero.hp > 0">
-          <div
-            :class="{
-              status: true,
-              'mobile-status': isMobile,
-              'status-select': ists.isSelected,
-            }"
-            v-for="ists in (hero.inStatus as Status[]).filter((sts, stsi) =>
-              hero.inStatus.length < 5 ? !sts.type.includes(0) : stsi < 4
-            )"
-            :key="ists.id"
-          >
-            <div
-              class="status-bg"
-              :class="{ 'mobile-status-bg': isMobile }"
-              :style="{ background: ists.iconBg }"
-            ></div>
-            <img
-              v-if="ists.icon != ''"
-              class="status-icon"
-              :style="{
-                filter:
-                  ists.icon.startsWith('https') ||
-                  ists.icon.startsWith('buff') ||
-                  ists.icon.endsWith('dice')
-                    ? `url(${getSvgIcon(
-                        'filter'
-                      )}#status-color-${STATUS_BG_COLOR.indexOf(ists.iconBg)})`
-                    : '',
-              }"
-              :src="getPngIcon(ists.icon)"
-            />
-            <div
-              :style="{
-                position: 'absolute',
-                width: '100%',
-                height: '100%',
-                borderRadius: '50%',
-              }"
-              :class="{ 'status-can-use': ists.perCnt > 0 }"
-            ></div>
-            <div
-              class="status-cnt"
-              :class="{ 'mobile-status-cnt': isMobile }"
-              v-if="
-                !ists.type.includes(10) &&
-                (ists.useCnt >= 0 || ists.roundCnt >= 0)
-              "
-            >
-              {{ ists.useCnt < 0 ? ists.roundCnt : ists.useCnt }}
+          <div :class="{ status: true, 'mobile-status': isMobile, 'status-select': ists.isSelected }"
+            v-for="ists in hero.inStatus.filter((sts, stsi) => hero.inStatus.length < 5 ? !sts.type.includes(0) : stsi < 4)"
+            :key="ists.id">
+            <div class="status-bg" :class="{ 'mobile-status-bg': isMobile }" :style="{ background: ists.iconBg }"></div>
+            <img v-if="ists.icon != ''" class="status-icon" :style="{
+      filter: ists.icon.startsWith('https') || ists.icon.startsWith('buff') || ists.icon.endsWith('dice')
+        ? `url(${getSvgIcon('filter')}#status-color-${STATUS_BG_COLOR.indexOf(ists.iconBg)})` : '',
+    }" :src="getPngIcon(ists.icon)" />
+            <div :style="{ position: 'absolute', width: '100%', height: '100%', borderRadius: '50%' }"
+              :class="{ 'status-can-use': ists.perCnt > 0 }"></div>
+            <div class="status-cnt" :class="{ 'mobile-status-cnt': isMobile }"
+              v-if="!ists.type.includes(10) && (ists.useCnt >= 0 || ists.roundCnt >= 0)">
+              {{ ists.useCnt < 0 ? ists.roundCnt : ists.useCnt }} </div>
+            </div>
+            <div v-if="hero.inStatus.length > 4" :class="{ status: true, 'mobile-status': isMobile }"
+              style="background-color: #faebd767">
+              <span>···</span>
+              <div class="status-cnt" :class="{ 'mobile-status-cnt': isMobile }">
+                {{ hero.inStatus.length - 3 }}
+              </div>
             </div>
           </div>
-          <div
-            v-if="hero.inStatus.length > 4"
-            :class="{ status: true, 'mobile-status': isMobile }"
-            style="background-color: #faebd767"
-          >
-            <span>···</span>
-            <div class="status-cnt" :class="{ 'mobile-status-cnt': isMobile }">
-              {{ hero.inStatus.length - 3 }}
+          <div class="outstatus" :class="{ 'mobile-outstatus': isMobile }" v-if="phase > 3 && hero.hp > 0">
+            <div :class="{ status: true, 'mobile-status': isMobile, 'status-select': osts.isSelected }"
+              v-for="osts in hero.outStatus.filter((sts, stsi) => hero.outStatus.length < 5 ? !sts.type.includes(0) : stsi < 3)"
+              :key="osts.id">
+              <div class="status-bg" :class="{ 'mobile-status-bg': isMobile }" :style="{ background: osts.iconBg }">
+              </div>
+              <img v-if="osts.icon != ''" class="status-icon" :style="{
+      filter:
+        osts.icon.startsWith('https') ||
+          osts.icon.startsWith('buff') ||
+          osts.icon.endsWith('dice')
+          ? `url(${getSvgIcon(
+            'filter'
+          )}#status-color-${STATUS_BG_COLOR.indexOf(osts.iconBg)})`
+          : '',
+    }" :src="getPngIcon(osts.icon)" />
+              <div :style="{
+      position: 'absolute',
+      width: '100%',
+      height: '100%',
+      borderRadius: '50%',
+    }" :class="{ 'status-can-use': osts.perCnt > 0 }"></div>
+              <div class="status-cnt" :class="{ 'mobile-status-cnt': isMobile }" v-if="!osts.type.includes(10) &&
+      (osts.useCnt >= 0 || osts.roundCnt >= 0)
+      ">
+                {{ osts.useCnt < 0 ? osts.roundCnt : osts.useCnt }} </div>
+              </div>
+              <div v-if="hero.outStatus.length > 4" :class="{ status: true, 'mobile-status': isMobile }"
+                style="background-color: #faebd767">
+                <span>···</span>
+                <div class="status-cnt" :class="{ 'mobile-status-cnt': isMobile }">
+                  {{ hero.outStatus.length - 3 }}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-        <div
-          class="outstatus"
-          :class="{ 'mobile-outstatus': isMobile }"
-          v-if="phase > 3 && hero.hp > 0"
-        >
-          <div
-            :class="{
-              status: true,
-              'mobile-status': isMobile,
-              'status-select': osts.isSelected,
-            }"
-            v-for="osts in (hero.outStatus as Status[]).filter((sts, stsi) =>
-              hero.outStatus.length < 5 ? !sts.type.includes(0) : stsi < 3
-            )"
-            :key="osts.id"
-          >
-            <div
-              class="status-bg"
-              :class="{ 'mobile-status-bg': isMobile }"
-              :style="{ background: osts.iconBg }"
-            ></div>
-            <img
-              v-if="osts.icon != ''"
-              class="status-icon"
-              :style="{
-                filter:
-                  osts.icon.startsWith('https') ||
-                  osts.icon.startsWith('buff') ||
-                  osts.icon.endsWith('dice')
-                    ? `url(${getSvgIcon(
-                        'filter'
-                      )}#status-color-${STATUS_BG_COLOR.indexOf(osts.iconBg)})`
-                    : '',
-              }"
-              :src="getPngIcon(osts.icon)"
-            />
-            <div
-              :style="{
-                position: 'absolute',
-                width: '100%',
-                height: '100%',
-                borderRadius: '50%',
-              }"
-              :class="{ 'status-can-use': osts.perCnt > 0 }"
-            ></div>
-            <div
-              class="status-cnt"
-              :class="{ 'mobile-status-cnt': isMobile }"
-              v-if="
-                !osts.type.includes(10) &&
-                (osts.useCnt >= 0 || osts.roundCnt >= 0)
-              "
-            >
-              {{ osts.useCnt < 0 ? osts.roundCnt : osts.useCnt }}
+            <div class="hero-die" v-if="hero.hp <= 0">
+              <img :src="getSvgIcon('die')" style="width: 40px" />
             </div>
-          </div>
-          <div
-            v-if="hero.outStatus.length > 4"
-            :class="{ status: true, 'mobile-status': isMobile }"
-            style="background-color: #faebd767"
-          >
-            <span>···</span>
-            <div class="status-cnt" :class="{ 'mobile-status-cnt': isMobile }">
-              {{ hero.outStatus.length - 3 }}
+            <div :class="{
+      'will-damage': (willHp[(hidx + 3 * playerIdx) % 6] ?? 0) <= 0,
+      'will-heal': (willHp[(hidx + 3 * playerIdx) % 6] ?? 0) > 0,
+    }" :style="{ paddingLeft: `${hero.hp + (willHp[(hidx + 3 * playerIdx) % 6] ?? 0) <= 0 ? '0' : '3px'}` }"
+              v-if="willHp[(hidx + 3 * playerIdx) % 6] != undefined">
+              <img v-if="(willHp[(hidx + 3 * playerIdx) % 6] ?? 0) % 1 != 0" :src="getPngIcon('heal2')"
+                style="height: 16px" />
+              <img v-else-if="hero.hp + (willHp[(hidx + 3 * playerIdx) % 6] ?? 0) <= 0" :src="getSvgIcon('die')"
+                style="height: 16px; padding-left: 3px" />
+              <span
+                :style="{ padding: `0 8px 0 ${hero.hp + (willHp[(hidx + 3 * playerIdx) % 6] ?? 0) > 0 ? '5px' : '0'}` }">
+                {{ (willHp[(hidx + 3 * playerIdx) % 6] ?? 0) > 0 ? "+" : "-" }}
+                {{ Math.abs(Math.ceil(willHp[(hidx + 3 * playerIdx) % 6] ?? 0) % 100) }}
+              </span>
+            </div>
+            <div class="damages">
+              <div class="damage"
+                :class="{ 'show-damage': isShowDmg && willDamages[(hidx + 3 * playerIdx) % 6][0] >= 0 && hero.hp >= 0 }"
+                :style="{ color: ELEMENT_COLOR[dmgElements[hidx % 3]] }">
+                -{{ willDamages[(hidx + 3 * playerIdx) % 6][0] }}
+              </div>
+              <div class="damage"
+                :class="{ 'show-damage': isShowDmg && willDamages[(hidx + 3 * playerIdx) % 6][1] > 0 && hero.hp >= 0 }"
+                :style="{ color: ELEMENT_COLOR[10] }">
+                -{{ willDamages[(hidx + 3 * playerIdx) % 6][1] }}
+              </div>
+              <div class="heal" :class="{ 'show-heal': isShowHeal && willHeals[(hidx + 3 * playerIdx) % 6] >= 0 }"
+                :style="{ color: ELEMENT_COLOR[11] }">
+                +{{ willHeals[(hidx + 3 * playerIdx) % 6] }}
+              </div>
             </div>
           </div>
         </div>
-        <div class="hero-die" v-if="hero.hp <= 0">
-          <img :src="getSvgIcon('die')" style="width: 40px" />
-        </div>
-        <div
-          :class="{
-            'will-damage': (willHp[(hidx + 3 * playerIdx) % 6] ?? 0) <= 0,
-            'will-heal': (willHp[(hidx + 3 * playerIdx) % 6] ?? 0) > 0,
-          }"
-          :style="{
-            paddingLeft: `${
-              hero.hp + (willHp[(hidx + 3 * playerIdx) % 6] ?? 0) <= 0
-                ? '0'
-                : '3px'
-            }`,
-          }"
-          v-if="willHp[(hidx + 3 * playerIdx) % 6] != undefined"
-        >
-          <img
-            v-if="(willHp[(hidx + 3 * playerIdx) % 6] ?? 0) % 1 != 0"
-            :src="getPngIcon('heal2')"
-            style="height: 16px"
-          />
-          <img
-            v-else-if="hero.hp + (willHp[(hidx + 3 * playerIdx) % 6] ?? 0) <= 0"
-            :src="getSvgIcon('die')"
-            style="height: 16px; padding-left: 3px"
-          />
-          <span
-            :style="{
-              padding: `0 8px 0 ${
-                hero.hp + (willHp[(hidx + 3 * playerIdx) % 6] ?? 0) > 0
-                  ? '5px'
-                  : '0'
-              }`,
-            }"
-          >
-            {{ (willHp[(hidx + 3 * playerIdx) % 6] ?? 0) > 0 ? "+" : "-"
-            }}{{
-              Math.abs(Math.ceil(willHp[(hidx + 3 * playerIdx) % 6] ?? 0) % 100)
-            }}
-          </span>
-        </div>
-        <div class="damages">
-          <div
-            class="damage"
-            :class="{
-              'show-damage':
-                isShowDmg &&
-                willDamages[(hidx + 3 * playerIdx) % 6][0] >= 0 &&
-                hero.hp >= 0,
-            }"
-            :style="{ color: ELEMENT_COLOR[dmgElements[hidx % 3]] }"
-          >
-            -{{ willDamages[(hidx + 3 * playerIdx) % 6][0] }}
-          </div>
-          <div
-            class="damage"
-            :class="{
-              'show-damage':
-                isShowDmg &&
-                willDamages[(hidx + 3 * playerIdx) % 6][1] > 0 &&
-                hero.hp >= 0,
-            }"
-            :style="{ color: ELEMENT_COLOR[10] }"
-          >
-            -{{ willDamages[(hidx + 3 * playerIdx) % 6][1] }}
-          </div>
-          <div
-            class="heal"
-            :class="{
-              'show-heal':
-                isShowHeal && willHeals[(hidx + 3 * playerIdx) % 6] >= 0,
-            }"
-            :style="{ color: ELEMENT_COLOR[11] }"
-          >
-            +{{ willHeals[(hidx + 3 * playerIdx) % 6] }}
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <div class="summons">
-      <div
-        class="summon-area"
-        v-for="(smnArea, saidx) in [
-          [...opponent.summon, ...willSummons[0]],
-          [...player.summon, ...willSummons[1]],
-        ]"
-        :key="saidx"
-      >
-        <div
-          class="summon"
-          :class="{
-            'will-attach': summon.isWill,
-            'summon-select': summon.isSelected,
-            'summon-can-select': summon.canSelect && player.status == 1,
-          }"
-          v-for="(summon, suidx) in smnArea"
-          :key="suidx"
-          @click.stop="selectSummon(saidx, suidx, summon.isWill)"
-        >
-          <div class="summon-img-content">
-            <img
-              class="summon-img"
-              :src="summon.src"
-              v-if="summon?.src?.length > 0"
-              :alt="summon.name"
-            />
-            <span v-else>{{ summon.name }}</span>
-            <div
-              style="position: absolute; width: 100%; height: 100%"
-              :class="{ 'summon-can-use': summon.perCnt > 0 && !summon.isWill }"
-            ></div>
-          </div>
-          <img
-            class="summon-top-icon"
-            v-if="!summon?.isWill"
-            :src="
-              getSvgIcon(
-                summon.maxUse > 10
-                  ? 'bag'
-                  : summon.shield < 0
-                  ? 'shield'
-                  : 'round'
-              )
-            "
-          />
-          <div class="summon-top-num" v-if="!summon?.isWill">
-            {{ summon.useCnt }}
-          </div>
-          <div
-            :class="{
-              'will-destroy': summonCnt[saidx ^ playerIdx ^ 1][suidx] < 0,
-              'will-add': summonCnt[saidx ^ playerIdx ^ 1][suidx] > 0,
-            }"
-            v-if="summonCnt[saidx ^ playerIdx ^ 1][suidx] != 0"
-          >
-            <img
-              v-if="
-                summonCnt[saidx ^ playerIdx ^ 1][suidx] <= -summon.useCnt &&
-                summon.isDestroy == 0
-              "
-              :src="getSvgIcon('die')"
-              style="height: 16px"
-            />
-            <span>
-              {{
-                summonCnt[saidx ^ playerIdx ^ 1][suidx] > 0
-                  ? "+"
-                  : summonCnt[saidx ^ playerIdx ^ 1][suidx] > -summon.useCnt ||
-                    summon.isDestroy > 0
-                  ? "-"
-                  : ""
-              }}
-            </span>
-            <span
-              v-if="
-                summonCnt[saidx ^ playerIdx ^ 1][suidx] > -summon.useCnt ||
-                summon.isDestroy > 0
-              "
-            >
-              {{ Math.abs(summonCnt[saidx ^ playerIdx ^ 1][suidx]) }}
-            </span>
-          </div>
-          <img
-            class="summon-bottom-icon"
-            v-if="!summon?.isWill"
-            :style="{
-              background: `radial-gradient(${ELEMENT_COLOR[11]} 30%, ${ELEMENT_COLOR[11]}19 60%, transparent 80%)`,
-            }"
-            :src="
-              summon.damage > 0
-                ? ELEMENT_URL[summon.element]
-                : getSvgIcon('heal')
-            "
-          />
-          <div class="summon-bottom-num" v-if="!summon?.isWill">
-            {{ summon.damage > 0 ? summon.damage : summon.shield
-            }}{{ summon.addition.includes("plus") ? "+" : "" }}
+        <div class="summons">
+          <div class="summon-area"
+            v-for="(smnArea, saidx) in [[...opponent.summon, ...willSummons[0]], [...player.summon, ...willSummons[1]]]"
+            :key="saidx">
+            <div class="summon" :class="{
+      'will-attach': summon.isWill,
+      'summon-select': summon.isSelected,
+      'summon-can-select': summon.canSelect && player.status == 1,
+    }" v-for="(summon, suidx) in smnArea" :key="suidx" @click.stop="selectSummon(saidx, suidx, summon.isWill)">
+              <div class="summon-img-content">
+                <img class="summon-img" :src="summon.src" v-if="summon?.src?.length > 0" :alt="summon.name" />
+                <span v-else>{{ summon.name }}</span>
+                <div style="position: absolute; width: 100%; height: 100%"
+                  :class="{ 'summon-can-use': summon.perCnt > 0 && !summon.isWill }"></div>
+              </div>
+              <img class="summon-top-icon" v-if="!summon?.isWill"
+                :src="getSvgIcon(summon.maxUse > 10 ? 'bag' : summon.shield < 0 ? 'shield' : 'round')" />
+              <div class="summon-top-num" v-if="!summon?.isWill">
+                {{ summon.useCnt }}
+              </div>
+              <div :class="{
+      'will-destroy': summonCnt[saidx ^ playerIdx ^ 1][suidx] < 0,
+      'will-add': summonCnt[saidx ^ playerIdx ^ 1][suidx] > 0,
+    }" v-if="summonCnt[saidx ^ playerIdx ^ 1][suidx] != 0">
+                <img v-if="summonCnt[saidx ^ playerIdx ^ 1][suidx] <= -summon.useCnt && summon.isDestroy == 0"
+                  :src="getSvgIcon('die')" style="height: 16px" />
+                <span>
+                  {{ summonCnt[saidx ^ playerIdx ^ 1][suidx] > 0 ? "+" : summonCnt[saidx ^ playerIdx ^ 1][suidx] >
+      -summon.useCnt || summon.isDestroy > 0 ? "-" : "" }}
+                </span>
+                <span v-if="summonCnt[saidx ^ playerIdx ^ 1][suidx] > -summon.useCnt || summon.isDestroy > 0">
+                  {{ Math.abs(summonCnt[saidx ^ playerIdx ^ 1][suidx]) }}
+                </span>
+              </div>
+              <img class="summon-bottom-icon" v-if="!summon?.isWill"
+                :style="{ background: `radial-gradient(${ELEMENT_COLOR[11]} 30%, ${ELEMENT_COLOR[11]}19 60%, transparent 80%)` }"
+                :src="summon.damage > 0 ? ELEMENT_URL[summon.element] : getSvgIcon('heal')" />
+              <div class="summon-bottom-num" v-if="!summon?.isWill">
+                {{ summon.damage > 0 ? summon.damage : summon.shield }}{{ summon.addition.includes("plus") ? "+" : "" }}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <div class="dices" :class="{ 'mobile-dices': isMobile }">
-      <div
-        class="dice-my cursor-point"
-        v-for="(dice, didx) in player.phase > 4 ? dices : []"
-        :key="didx"
-        :class="{ 'dice-select': dice.isSelected, 'mobile-dice-my': isMobile }"
-        @click.stop="selectUseDice(didx)"
-      >
-        <img
-          class="dice-change-img"
-          :src="getDiceBgIcon(ELEMENT_ICON[dice.val])"
-          style="opacity: 1"
-        />
-        <img
-          class="dice-change-el-img"
-          :src="getDiceIcon(ELEMENT_ICON[dice.val])"
-        />
-        <img
-          class="dice-change-img"
-          :src="getDiceBgIcon(ELEMENT_ICON[dice.val])"
-        />
-      </div>
-    </div>
-
-    <div
-      class="dice-change"
-      v-if="[4, 6].includes(phase) && player.phase == 4 && isLookon == -1"
-    >
-      <div class="dice-change-area">
-        <div
-          class="dice-container"
-          v-for="(dice, didx) in dices"
-          :key="didx"
-          @click.stop="selectDice(didx)"
-        >
-          <div class="dice" :class="{ 'dice-select': dice.isSelected }">
-            <img
-              class="dice-change-img"
-              :src="getDiceBgIcon(ELEMENT_ICON[dice.val])"
-              style="opacity: 1"
-            />
-            <img
-              class="dice-change-el-img"
-              :src="getDiceIcon(ELEMENT_ICON[dice.val])"
-            />
-            <img
-              class="dice-change-img"
-              :src="getDiceBgIcon(ELEMENT_ICON[dice.val])"
-            />
+        <div class="dices" :class="{ 'mobile-dices': isMobile }">
+          <div class="dice-my cursor-point" v-for="(dice, didx) in player.phase > 4 ? dices : []" :key="didx"
+            :class="{ 'dice-select': dice.isSelected, 'mobile-dice-my': isMobile }" @click.stop="selectUseDice(didx)">
+            <img class="dice-change-img" :src="getDiceBgIcon(ELEMENT_ICON[dice.val])" style="opacity: 1" />
+            <img class="dice-change-el-img" :src="getDiceIcon(ELEMENT_ICON[dice.val])" />
+            <img class="dice-change-img" :src="getDiceBgIcon(ELEMENT_ICON[dice.val])" />
           </div>
         </div>
-      </div>
-      <div
-        v-if="rollCnt > 1"
-        style="color: white; position: absolute; bottom: 35%"
-      >
-        还可重投{{ rollCnt }}轮
-      </div>
-      <button @click="reroll(dices)" :class="{ 'not-show': !showRerollBtn }">
-        {{ dices.some((d:DiceVO) => d.isSelected) ? "重掷" : "确认" }}
-      </button>
-    </div>
 
-    <div class="card-change" v-if="player.phase == 2 && isLookon == -1">
-      <div class="init-cards">
-        <div
-          class="init-card"
-          v-for="(card, cidx) in initCards"
-          :key="`${cidx}-${card.id}`"
-          @click.stop="selectChangeCard(cidx)"
-        >
-          <div class="init-card-content">
-            <img
-              class="card-img"
-              :src="card.src"
-              v-if="card?.src?.length > 0"
-              :alt="card.name"
-            />
-            <span v-else>{{ card.name }}</span>
-            <img
-              class="subtype8-border"
-              v-if="card.subType.includes(8)"
-              :src="getPngIcon('subtype8-border')"
-            />
+        <div class="dice-change" v-if="[4, 6].includes(phase) && player.phase == 4 && isLookon == -1">
+          <div class="dice-change-area">
+            <div class="dice-container" v-for="(dice, didx) in dices" :key="didx" @click.stop="selectDice(didx)">
+              <div class="dice" :class="{ 'dice-select': dice.isSelected }">
+                <img class="dice-change-img" :src="getDiceBgIcon(ELEMENT_ICON[dice.val])" style="opacity: 1" />
+                <img class="dice-change-el-img" :src="getDiceIcon(ELEMENT_ICON[dice.val])" />
+                <img class="dice-change-img" :src="getDiceBgIcon(ELEMENT_ICON[dice.val])" />
+              </div>
+            </div>
           </div>
-          <div class="init-card-cost">
-            <img
-              class="dice-img"
-              :src="getDiceBgIcon(ELEMENT_ICON[card.costType], true)"
-            />
-            <span>{{ card.cost }}</span>
+          <div v-if="rollCnt > 1" style="color: white; position: absolute; bottom: 35%">
+            还可重投{{ rollCnt }}轮
           </div>
-          <div class="init-card-energy" v-if="card.anydice > 0">
-            <img class="dice-img" :src="getDiceBgIcon(ELEMENT_ICON[0], true)" />
-            <span>{{ card.anydice }}</span>
+          <button @click="reroll(dices)" :class="{ 'not-show': !showRerollBtn }">
+            {{ dices.some(d => d.isSelected) ? "重掷" : "确认" }}
+          </button>
+        </div>
+
+        <div class="card-change" v-if="player.phase == 2 && isLookon == -1">
+          <div class="init-cards">
+            <div class="init-card" v-for="(card, cidx) in initCards" :key="`${cidx}-${card.id}`"
+              @click.stop="selectChangeCard(cidx)">
+              <div class="init-card-content">
+                <img class="card-img" :src="card.src" v-if="card?.src?.length > 0" :alt="card.name" />
+                <span v-else>{{ card.name }}</span>
+                <img class="subtype8-border" v-if="card.subType.includes(8)" :src="getPngIcon('subtype8-border')" />
+              </div>
+              <div class="init-card-cost">
+                <img class="dice-img" :src="getDiceBgIcon(ELEMENT_ICON[card.costType], true)" />
+                <span>{{ card.cost }}</span>
+              </div>
+              <div class="init-card-energy" v-if="card.anydice > 0">
+                <img class="dice-img" :src="getDiceBgIcon(ELEMENT_ICON[0], true)" />
+                <span>{{ card.anydice }}</span>
+              </div>
+              <div class="init-card-energy" v-if="card.energy > 0">
+                <img class="dice-img" :src="getDiceBgIcon(ELEMENT_ICON[9])" />
+                <span>{{ card.energy }}</span>
+              </div>
+              <div class="init-card-energy" v-if="card.subType.includes(8)">
+                <img class="dice-img" :src="getDiceBgIcon(ELEMENT_ICON[10])" />
+              </div>
+              <img src="@/assets/svg/initSelect.svg" alt="选中" v-if="card.isSelected" class="init-select" />
+            </div>
           </div>
-          <div class="init-card-energy" v-if="card.energy > 0">
-            <img class="dice-img" :src="getDiceBgIcon(ELEMENT_ICON[9])" />
-            <span>{{ card.energy }}</span>
-          </div>
-          <div class="init-card-energy" v-if="card.subType.includes(8)">
-            <img class="dice-img" :src="getDiceBgIcon(ELEMENT_ICON[10])" />
-          </div>
-          <img
-            src="@/assets/svg/initSelect.svg"
-            alt="选中"
-            v-if="card.isSelected"
-            class="init-select"
-          />
+          <button @click="changeCard" v-if="showChangeCardBtn">
+            {{ initCards.some(c => c.isSelected) ? "换牌" : "确认手牌" }}
+          </button>
         </div>
       </div>
-      <button @click="changeCard" v-if="showChangeCardBtn">
-        {{ initCards.some((c:any) => c.isSelected) ? "换牌" : "确认手牌" }}
-      </button>
-    </div>
-  </div>
 </template>
 
-<script setup lang="ts">
-import { computed, ref, watchEffect } from "vue";
-import {
-  ELEMENT_COLOR,
-  ELEMENT_ICON,
-  ELEMENT_URL,
-  STATUS_BG_COLOR,
-} from "@/data/constant";
+<script setup lang='ts'>
+import { computed, ref, watchEffect } from 'vue';
+import { ELEMENT_COLOR, ELEMENT_ICON, ELEMENT_URL, STATUS_BG_COLOR } from '@/data/constant';
 
 const props = defineProps([
-  "isMobile",
-  "canAction",
-  "isLookon",
-  "afterWinHeros",
-  "client",
+  'isMobile',
+  'canAction',
+  'isLookon',
+  'afterWinHeros',
+  'client',
 ]);
 const emits = defineEmits([
-  "selectChangeCard",
-  "changeCard",
-  "reroll",
-  "selectHero",
-  "selectUseDice",
-  "selectSummon",
-  "selectSite",
-  "endPhase",
+  'selectChangeCard',
+  'changeCard',
+  'reroll',
+  'selectHero',
+  'selectUseDice',
+  'selectSummon',
+  'selectSite',
+  'endPhase',
 ]);
 
-const playerIdx = computed<number>(() =>
-  Math.max(props.isLookon, props.client.playerIdx)
-);
+const playerIdx = computed<number>(() => Math.max(props.isLookon, props.client.playerIdx));
 const player = computed<Player>(() => props.client.players[playerIdx.value]);
 const phase = computed<number>(() => props.client.phase);
-const opponent = computed<Player>(
-  () => props.client.players[playerIdx.value ^ 1]
-);
+const opponent = computed<Player>(() => props.client.players[playerIdx.value ^ 1]);
 const currCard = computed<Card>(() => props.client.currCard);
 const currSkill = computed<Skill>(() => props.client.currSkill);
 const isMobile = computed<boolean>(() => props.isMobile);
@@ -851,38 +418,29 @@ const siteCnt = computed<number[][]>(() => props.client.siteCnt);
 const summonCnt = computed<number[][]>(() => props.client.summonCnt);
 const isLookon = computed<number>(() => props.isLookon);
 const heros = computed<Hero[]>(() => {
-  if (props.client.isWin < 2)
-    return [...opponent.value.heros, ...player.value.heros];
-  if (playerIdx.value == 0)
-    return [...props.afterWinHeros[1], ...props.afterWinHeros[0]];
+  if (props.client.isWin < 2) return [...opponent.value.heros, ...player.value.heros];
+  if (playerIdx.value == 0) return [...props.afterWinHeros[1], ...props.afterWinHeros[0]];
   return props.afterWinHeros.flat();
 });
-const currTime = computed<number>(
-  () =>
-    ((props.client.countdown.limit - props.client.countdown.curr) /
-      props.client.countdown.limit) *
-    100
-);
+const currTime = computed<number>(() => ((props.client.countdown.limit - props.client.countdown.curr) / props.client.countdown.limit) * 100);
 
 const initCards = ref<(Card & { isSelected: boolean })[]>(
-  player.value.handCards.map((c) => ({ ...c, isSelected: false }))
+  player.value.handCards.map(c => ({ ...c, isSelected: false }))
 );
 const dices = ref<DiceVO[]>(
-  player.value.dice.map((d) => ({ val: d, isSelected: false }))
+  player.value.dice.map(d => ({ val: d, isSelected: false }))
 );
 const showChangeCardBtn = ref<boolean>(true);
 
-let diceSelect: boolean[] =
-  props.client.player.diceSelect.length == 0
-    ? new Array(player.value.dice.length).fill(false)
-    : [...props.client.player.diceSelect];
+let diceSelect: boolean[] = props.client.player.diceSelect.length == 0 ? new Array(player.value.dice.length).fill(false) : [...props.client.player.diceSelect];
 const initCardSelect = new Array(5).fill(false);
 
 watchEffect(() => {
-  initCards.value = player.value.handCards.map((c, i) => ({
-    ...c,
-    isSelected: initCardSelect[i],
-  }));
+  initCards.value =
+    player.value?.handCards.map((c, i) => ({
+      ...c,
+      isSelected: initCardSelect[i],
+    })) ?? [];
   if (player.value.phase > 4) diceSelect = [...props.client.player.diceSelect];
   dices.value = player.value.dice.map((d, i) => ({
     val: d,
@@ -892,8 +450,8 @@ watchEffect(() => {
 
 // 获取png图片
 const getPngIcon = (name: string) => {
-  if (name.startsWith("http")) return name;
-  if (name.endsWith("-dice")) return getSvgIcon(name);
+  if (name.startsWith('http')) return name;
+  if (name.endsWith('-dice')) return getSvgIcon(name);
   return new URL(`/src/assets/image/${name}.png`, import.meta.url).href;
 };
 
@@ -904,7 +462,7 @@ const getSvgIcon = (name: string) => {
 
 // 获取骰子背景
 const getDiceBgIcon = (name: string, isCard = false) => {
-  if (name == "any" && !isCard) name += "1";
+  if (name == 'any' && !isCard) name += '1';
   return new URL(`/src/assets/image/${name}-dice-bg.png`, import.meta.url).href;
 };
 
@@ -915,10 +473,7 @@ const getDiceIcon = (name: string) => {
 
 // 获取充能图标
 const getEnergyIcon = (isCharged: boolean = false) => {
-  return new URL(
-    `/src/assets/image/energy-${isCharged ? "charged" : "empty"}.png`,
-    import.meta.url
-  ).href;
+  return new URL(`/src/assets/image/energy-${isCharged ? 'charged' : 'empty'}.png`, import.meta.url).href;
 };
 
 // 选择要换的卡
@@ -926,23 +481,18 @@ const selectChangeCard = (idx: number) => {
   const newVal = !initCards.value[idx].isSelected;
   initCards.value[idx].isSelected = newVal;
   initCardSelect[idx] = newVal;
-  emits("selectChangeCard", idx);
+  emits('selectChangeCard', idx);
 };
 // 换卡
 const changeCard = () => {
   initCardSelect.forEach((_, i, a) => (a[i] = false));
-  emits(
-    "changeCard",
-    initCards.value
-      .map((c, idx) => (c.isSelected ? idx : -1))
-      .filter((v) => v > -1)
-  );
+  emits('changeCard', initCards.value.map((c, idx) => (c.isSelected ? idx : -1)).filter(v => v > -1));
   showChangeCardBtn.value = false;
   setTimeout(() => (showChangeCardBtn.value = true), 3000);
 };
 // 选择角色
 const selectHero = (pidx: number, hidx: number) => {
-  emits("selectHero", pidx, hidx);
+  emits('selectHero', pidx, hidx);
 };
 // 选择骰子
 const selectDice = (didx: number) => {
@@ -953,64 +503,45 @@ const selectDice = (didx: number) => {
 // 重掷骰子
 const reroll = (dices: DiceVO[]) => {
   if (!showRerollBtn.value) return;
-  emits("reroll", dices);
+  emits('reroll', dices);
   diceSelect.forEach((_, i, a) => (a[i] = false));
 };
 // 选择要消费的骰子
 const selectUseDice = (didx: number) => {
-  if (
-    (currCard.value.id < 1 &&
-      currSkill.value.type == 0 &&
-      isShowChangeHero.value < 2) ||
-    player.value.status == 0
-  )
-    return;
-  if (
-    isReconcile.value &&
-    [0, player.value.heros[player.value.hidx].element].includes(
-      dices.value[didx].val
-    )
-  )
-    return;
+  if ((currCard.value.id < 1 && currSkill.value.type == 0 && isShowChangeHero.value < 2) || player.value.status == 0) return;
+  if (isReconcile.value && [0, player.value.heros[player.value.hidx].element].includes(dices.value[didx].val)) return;
   const newVal = !dices.value[didx].isSelected;
   dices.value[didx].isSelected = newVal;
   diceSelect[didx] = newVal;
   if (newVal) {
     let cost = 0;
-    if (currCard.value.id > 0)
-      cost =
-        currCard.value.cost +
-        currCard.value.anydice -
-        currCard.value.costChange;
-    else if (currSkill.value.type > 0) {
-      cost =
-        currSkill.value.cost[0].val -
-        currSkill.value.costChange[0] +
-        currSkill.value.cost[1].val -
-        currSkill.value.costChange[1];
+    if (currCard.value.id > 0) {
+      cost = currCard.value.cost + currCard.value.anydice - currCard.value.costChange;
+    } else if (currSkill.value.type > 0) {
+      cost = currSkill.value.cost[0].val - currSkill.value.costChange[0] + currSkill.value.cost[1].val - currSkill.value.costChange[1];
     } else if (isShowChangeHero.value > 0) cost = heroChangeDice.value;
     if (isReconcile.value) cost = 1;
     if (cost == 0) {
-      dices.value.forEach((v) => (v.isSelected = false));
-    } else if (dices.value.filter((v) => v.isSelected).length > cost) {
+      dices.value.forEach(v => (v.isSelected = false));
+    } else if (dices.value.filter(v => v.isSelected).length > cost) {
       dices.value.forEach((v, i) => (v.isSelected = i == didx));
     }
-    diceSelect = dices.value.map((v) => v.isSelected);
+    diceSelect = dices.value.map(v => v.isSelected);
   }
-  emits("selectUseDice", diceSelect);
+  emits('selectUseDice', diceSelect);
 };
 // 显示召唤物信息
 const selectSummon = (pidx: number, suidx: number, isNotShow: boolean) => {
-  emits("selectSummon", pidx, suidx, isNotShow);
+  emits('selectSummon', pidx, suidx, isNotShow);
 };
 // 显示场地信息
 const showSiteInfo = (pidx: number, siidx: number) => {
-  emits("selectSite", pidx, siidx);
+  emits('selectSite', pidx, siidx);
 };
 // 结束回合
 const endPhase = () => {
   if (player.value.status == 0 || !canAction) return;
-  emits("endPhase");
+  emits('endPhase');
 };
 </script>
 
@@ -1027,12 +558,33 @@ const endPhase = () => {
 }
 
 .side {
-  height: 95%;
+  height: 85%;
   width: min(50px, 5%);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+}
+
+.round {
+  position: relative;
+  width: 50%;
+  aspect-ratio: 1;
+  color: white;
+  font-weight: bolder;
+  -webkit-text-stroke: 1px black;
+  margin-bottom: 5px;
+}
+
+.round * {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  left: 0;
+  top: 0;
 }
 
 .pile {
@@ -1052,7 +604,7 @@ const endPhase = () => {
   align-items: center;
 }
 
-.pile > span {
+.pile>span {
   width: 55%;
   aspect-ratio: 1/1.1;
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
@@ -1062,7 +614,7 @@ const endPhase = () => {
   align-items: center;
 }
 
-.pile > span > div {
+.pile>span>div {
   width: 90%;
   height: 90%;
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
@@ -1136,7 +688,7 @@ button:active {
   font-size: medium;
 }
 
-.hero-hp > span {
+.hero-hp>span {
   color: white;
   font-weight: bolder;
   -webkit-text-stroke: black 1px;
@@ -1185,9 +737,9 @@ button:active {
   transition: 0.2s;
 }
 
-.hero-weapon > img,
-.hero-artifact > img,
-.hero-talent > img {
+.hero-weapon>img,
+.hero-artifact>img,
+.hero-talent>img {
   width: 100%;
   border-radius: 50%;
 }
@@ -1422,7 +974,7 @@ button:active {
   align-items: center;
 }
 
-.hero-freeze > img {
+.hero-freeze>img {
   width: 100%;
   height: 100%;
   border-radius: inherit;
@@ -1802,8 +1354,8 @@ button:active {
   -webkit-text-stroke: 1px black;
 }
 
-.init-card-cost > span,
-.init-card-energy > span {
+.init-card-cost>span,
+.init-card-energy>span {
   position: absolute;
   left: 5px;
   top: 0;
@@ -1851,7 +1403,7 @@ button:active {
   border: 2px solid black;
   border-radius: 10px;
   background-color: #14408c;
-  background-image: url("@/assets/image/card-back.png");
+  background-image: url('@/assets/image/card-back.png');
   background-size: 100% 100%;
   color: black;
   text-align: center;
@@ -1882,7 +1434,7 @@ button:active {
   border: 2px solid black;
   border-radius: 10px;
   background-color: #14408c;
-  background-image: url("@/assets/image/card-back.png");
+  background-image: url('@/assets/image/card-back.png');
   background-size: 100% 100%;
   color: black;
   text-align: center;

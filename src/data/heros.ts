@@ -1013,7 +1013,7 @@ const allHeros: HeroObj = {
     1311: new GIHero(1311, '久岐忍', 3, 10, 3, 1,
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Char_Avatar_Shinobu.webp',
         skill1('忍流飞刃斩'), [
-        new GISkill('越袚雷草之轮', '生成【越袚草轮】。如果本角色生命值至少为6，则对自身造成2点[穿透伤害]。', 2, 1, 3, 3, {},
+        new GISkill('越袚雷草之轮', '生成【越袚草轮】。如果本角色生命值至少为6，则对自身造成2点[穿透伤害]。', 2, 0, 3, 3, {},
             '',
             '',
             [heroStatus(2176)], (options: SkillOption) => {
