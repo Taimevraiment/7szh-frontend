@@ -16,11 +16,7 @@
 
     <div :class="{
     'player-display': true,
-    'curr-player':
-      client.player?.status == 1 &&
-      client.phase < 7 &&
-      client.phase > 2 &&
-      client.isWin == -1,
+    'curr-player': client.player?.status == 1 && client.phase < 7 && client.phase > 2 && client.isWin == -1,
     'mobile-player-display': isMobile,
   }" @click.stop="devOps()">
       <span v-if="isLookon > -1">旁观中......</span>
@@ -34,11 +30,7 @@
 
     <div v-if="client.opponent" :class="{
     'player-display-oppo': true,
-    'curr-player':
-      client.opponent?.status == 1 &&
-      client.phase < 7 &&
-      client.phase > 2 &&
-      client.isWin == -1,
+    'curr-player': client.opponent?.status == 1 && client.phase < 7 && client.phase > 2 && client.isWin == -1,
     'mobile-player-display': isMobile,
   }">
       <p>{{ client.opponent?.name }}</p>
@@ -58,9 +50,8 @@
       @select-site="selectCardSite" @select-summon="selectCardSummon" @end-phase="endPhase" />
 
     <div v-if="(client.player?.phase ?? 0) > 2 || client.isWin > -1" class="hand-card"
-      :class="{ 'mobile-hand-card': isMobile }" :style="{
-    transform: `translateX(-${(24 * client.handCards.length) / 2}px)`,
-  }">
+      :class="{ 'mobile-hand-card': isMobile }"
+      :style="{ transform: `translateX(-${(24 * client.handCards.length) / 2}px)` }">
       <div v-for="(card, idx) in client.handCards" :key="idx * 1000 + (card?.id ?? 0) + 'myhandcard'" class="card"
         :class="{ selected: card.selected, 'mobile-card': isMobile }" :style="{ left: `${card.pos}px` }"
         @click.stop="selectCard(idx)" @mouseenter="mouseenter(idx)" @mouseleave="mouseleave(idx)">
@@ -68,9 +59,7 @@
         <img class="subtype8-border" v-if="card.subType?.includes(8)" :src="getPngIcon('subtype8-border')" />
         <div class="card-content">
           <span v-if="card?.src?.length == 0">{{ card.name }}</span>
-          <div class="card-cost" :style="{
-    color: card.costChange > 0 ? CHANGE_GOOD_COLOR : 'white',
-  }">
+          <div class="card-cost" :style="{ color: card.costChange > 0 ? CHANGE_GOOD_COLOR : 'white' }">
             <img class="cost-img hcard" :src="getDiceIcon(ELEMENT_ICON[card.costType])" />
             <span>{{ Math.max(0, card.cost - card.costChange) }}</span>
           </div>
@@ -90,126 +79,65 @@
     </div>
 
     <div class="btn-group" v-if="isLookon == -1 &&
-    ((((client.player?.status == 1 && canAction) ||
-      client.player?.phase >= 9) &&
-      client.player?.phase > 4 &&
-      (client.currCard.id > 0 || client.isShowChangeHero > 0)) ||
-      client.player?.phase == 3)
+    ((((client.player?.status == 1 && canAction) || client.player?.phase >= 9) && client.player?.phase > 4 &&
+      (client.currCard.id > 0 || client.isShowChangeHero > 0)) || client.player?.phase == 3)
     ">
       <button :class="{ forbidden: !client.isValid }" v-if="!client.isReconcile && client.currCard.id > 0 && canAction"
         @click.stop="useCard">
         出牌
       </button>
-      <button v-if="client.currCard.id > 0 && canAction" @click.stop="reconcile(true)" :style="{
-    backgroundColor:
-      ELEMENT_COLOR[
-      client.player.heros.find((v: Hero) => v.isFront)?.element ?? 0
-      ],
-  }" :class="{
-    forbidden: client.player.dice.every((v: number) =>
-      [0, client.player.heros[client.player.hidx].element].includes(v)
-    ),
-  }">
+      <button v-if="client.currCard.id > 0 && canAction" @click.stop="reconcile(true)"
+        :style="{ backgroundColor: ELEMENT_COLOR[client.player.heros.find(v => v.isFront)?.element ?? 0] }"
+        :class="{ forbidden: client.player.dice.every(v => [0, client.player.heros[client.player.hidx].element].includes(v)) }">
         调和
       </button>
       <button v-if="client.isReconcile && client.currCard.id > 0" @click.stop="reconcile(false)">
         取消
       </button>
-      <div v-if="(client.isShowChangeHero > 0 && client.currCard.id <= 0) ||
-    (client.player.phase == 3 &&
-      client.player.heros.some((h: Hero) => h.isSelected > 0))
-    " style="
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          transform: translateY(20px);
-        ">
+      <div
+        v-if="(client.isShowChangeHero > 0 && client.currCard.id <= 0) || (client.player.phase == 3 && client.player.heros.some(h => h.isSelected > 0))"
+        style=" display: flex; flex-direction: column; align-items: center; transform: translateY(20px); ">
         <div class="quick-action" v-if="client.isShowChangeHero == 3">
           快速行动
         </div>
         <button :class="{ forbidden: !client.isValid && client.player.phase != 3 }" v-if="client.isShowChangeHero < 2"
           @click.stop="chooseHero">
-          {{
-    client.player.phase == 3 || client.player.phase > 8
-      ? "出战"
-      : "切换"
-  }}
+          {{ client.player.phase == 3 || client.player.phase > 8 ? "出战" : "切换" }}
         </button>
         <button v-else :class="{ forbidden: !client.isValid && client.player.phase != 3 }" @click.stop="changeHero">
           确定
         </button>
-        <div class="skill-cost" v-if="client.player.phase == 6" :style="{
-    marginTop: '10px',
-    opacity: client.isShowChangeHero >= 2 ? 1 : 0,
-  }">
+        <div class="skill-cost" v-if="client.player.phase == 6"
+          :style="{ marginTop: '10px', opacity: client.isShowChangeHero >= 2 ? 1 : 0 }">
           <img class="cost-img" :src="getDiceIcon(ELEMENT_ICON[0])" />
-          <span :style="{
-    zIndex: 1,
-    color:
-      client.heroChangeDice > 1
-        ? CHANGE_BAD_COLOR
-        : client.heroChangeDice < 1
-          ? CHANGE_GOOD_COLOR
-          : 'white',
-  }">
+          <span
+            :style="{ zIndex: 1, color: client.heroChangeDice > 1 ? CHANGE_BAD_COLOR : client.heroChangeDice < 1 ? CHANGE_GOOD_COLOR : 'white' }">
             {{ client.heroChangeDice }}
           </span>
         </div>
       </div>
     </div>
-    <div class="skills" v-else-if="client.phase > 4 &&
-    client.player &&
-    client.player.phase > 4 &&
-    client.player.heros[client.player.hidx].hp > 0
-    ">
-      <div class="skill" v-for="(skill, sidx) in client.skills.filter((sk: Skill) => sk.type < 4)" :key="sidx">
-        <div class="skill-btn" @click.stop="useSkill(sidx, false)" :style="{
-    boxShadow:
-      skill.type == 3 &&
-        client.player.heros[client.player.hidx].energy >= skill.energyCost
-        ? `0px 0px 8px 3px ${ELEMENT_COLOR[skill.dmgElement]}`
-        : '',
-  }">
-          <div class="skill3-bg" v-if="skill.type == 3 &&
-    client.player.heros[client.player.hidx].energy < skill.energyCost
-    " :style="{
-    background: `linear-gradient(to top, ${ELEMENT_COLOR[skill.dmgElement]
-      } 0%, ${ELEMENT_COLOR[skill.dmgElement]} ${(client.player.heros[client.player.hidx].energy /
-        skill.energyCost) *
-      100
-      }%, transparent ${(client.player.heros[client.player.hidx].energy /
-        skill.energyCost) *
-      100
-      }%, transparent 100%)`,
-  }">
+    <div class="skills"
+      v-else-if="client.phase > 4 && client.player && client.player.phase > 4 && client.player.heros[client.player.hidx].hp > 0">
+      <div class="skill" v-for="(skill, sidx) in client.skills.filter(sk => sk.type < 4)" :key="sidx">
+        <div class="skill-btn" @click.stop="useSkill(sidx, false)"
+          :style="{ boxShadow: skill.type == 3 && client.player.heros[client.player.hidx].energy >= skill.energyCost ? `0px 0px 8px 3px ${ELEMENT_COLOR[skill.dmgElement]}` : '' }">
+          <div class="skill3-bg"
+            v-if="skill.type == 3 && client.player.heros[client.player.hidx].energy < skill.energyCost"
+            :style="{ background: `linear-gradient(to top, ${ELEMENT_COLOR[skill.dmgElement]} 0%, ${ELEMENT_COLOR[skill.dmgElement]} ${(client.player.heros[client.player.hidx].energy / skill.energyCost) * 100}%, transparent ${(client.player.heros[client.player.hidx].energy / skill.energyCost) * 100}%, transparent 100%)` }">
             <div class="skill-btn" style="transform: translate(1px, 1px)"></div>
           </div>
           <img class="skill-img" :src="skill.src" v-if="skill.src.length > 0" :alt="SKILL_TYPE_ABBR[skill.type]" />
-          <span v-else class="skill-img">{{
-    SKILL_TYPE_ABBR[skill.type]
-  }}</span>
+          <span v-else class="skill-img">{{ SKILL_TYPE_ABBR[skill.type] }}</span>
         </div>
-        <div class="skill-cost" v-for="(cost, cidx) in (skill as Skill).cost.filter(c => c.val > 0)" :key="cidx" :style="{
-    color:
-      cidx < 2 && skill.costChange[cidx] > 0
-        ? CHANGE_GOOD_COLOR
-        : cidx < 2 && skill.costChange[cidx] < 0
-          ? CHANGE_BAD_COLOR
-          : 'white',
-  }">
+        <div class="skill-cost" v-for="(cost, cidx) in skill.cost.filter(c => c.val > 0)" :key="cidx"
+          :style="{ color: cidx < 2 && skill.costChange[cidx] > 0 ? CHANGE_GOOD_COLOR : cidx < 2 && skill.costChange[cidx] < 0 ? CHANGE_BAD_COLOR : 'white' }">
           <img class="cost-img" :src="getDiceIcon(ELEMENT_ICON[cost.color])" />
-          <span style="z-index: 1">{{
-    Math.max(cost.val - (cidx < 2 ? skill.costChange[cidx] : 0), 0) }} </span>
+          <span style="z-index: 1">{{ Math.max(cost.val - (cidx < 2 ? skill.costChange[cidx] : 0), 0) }} </span>
         </div>
-        <div class="skill-forbidden" v-if="isLookon > -1 ||
-    skill.isForbidden ||
-    client.player.status == 0 ||
-    !canAction ||
-    client.phase > 6 ||
-    (client.player.heros
-      .find((h: Hero) => h.isFront)
-      ?.inStatus?.findIndex((s: Status) => s.type.includes(14)) ?? -1) > -1
-    " @click.stop="useSkill(sidx, true)"></div>
+        <div class="skill-forbidden" v-if="isLookon > -1 || skill.isForbidden || client.player.status == 0 || !canAction || client.phase > 6 ||
+    (client.player.heros.find(h => h.isFront)?.inStatus?.findIndex(s => s.type.includes(14)) ?? -1) > -1"
+          @click.stop="useSkill(sidx, true)"></div>
       </div>
     </div>
   </div>
@@ -223,91 +151,53 @@
 
   <h1 v-if="client.error != ''" style="color: red">{{ client.error }}</h1>
 
-  <div class="tip" :class="{
-    'tip-enter': client.tip.content != '',
-    'tip-leave': client.tip.content == '',
-  }" :style="{
-    top: client.tip?.top ?? '40%',
-    color: client.tip?.color ?? 'black',
-  }">
+  <div class="tip" :class="{ 'tip-enter': client.tip.content != '', 'tip-leave': client.tip.content == '' }"
+    :style="{ top: client.tip?.top ?? '40%', color: client.tip?.color ?? 'black' }">
     {{ client.tip.content }}
   </div>
 
   <div class="modal-action" :class="{
     'modal-action-my': client.player?.status == 1,
     'modal-action-oppo': client.opponent?.status == 1,
-    'modal-action-enter-my':
-      client.player?.status == 1 && client.actionInfo != '',
-    'modal-action-enter-oppo':
-      client.opponent?.status == 1 && client.actionInfo != '',
+    'modal-action-enter-my': client.player?.status == 1 && client.actionInfo != '',
+    'modal-action-enter-oppo': client.opponent?.status == 1 && client.actionInfo != '',
     'modal-action-leave': client.actionInfo == '',
   }">
     {{ client.actionInfo }}
   </div>
 </template>
 
-<script setup lang="ts">
-import { computed, ref, watchEffect, onUnmounted, onMounted } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import type { Socket } from "socket.io-client";
+<script setup lang='ts'>
+import { computed, ref, watchEffect, onUnmounted, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import type { Socket } from 'socket.io-client';
 
-import InfoModal from "@/components/InfoModal.vue";
-import MainDesk from "@/components/MainDesk.vue";
-import GeniusInvokationClient from "@/geniusInovakationClient";
-import {
-  ELEMENT_COLOR,
-  SKILL_TYPE_ABBR,
-  CHANGE_GOOD_COLOR,
-  ELEMENT_ICON,
-  CHANGE_BAD_COLOR,
-} from "@/data/constant";
-import { cardTotal } from "@/data/cards";
-import { getSocket } from "@/store/socket";
-import { heroStatus } from "@/data/heroStatus";
+import InfoModal from '@/components/InfoModal.vue';
+import MainDesk from '@/components/MainDesk.vue';
+import GeniusInvokationClient from '@/geniusInovakationClient';
+import { ELEMENT_COLOR, SKILL_TYPE_ABBR, CHANGE_GOOD_COLOR, ELEMENT_ICON, CHANGE_BAD_COLOR } from '@/data/constant';
+import { cardTotal } from '@/data/cards';
+import { getSocket } from '@/store/socket';
+import { heroStatus } from '@/data/heroStatus';
 
 const router = useRouter();
 const route = useRoute();
 
-const isMobile = ref(
-  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    navigator.userAgent
-  )
-);
+const isMobile = ref(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
 const env = process.env.NODE_ENV;
-const isDev = env == "development";
+const isDev = env == 'development';
 const socket: Socket = getSocket(isDev);
-const {
-  players: cplayers,
-  isLookon: cisLookon,
-  countdown,
-  follow,
-} = history.state;
+const { players: cplayers, isLookon: cisLookon, countdown, follow } = history.state;
 
-const userid = Number(localStorage.getItem("7szh_userid") || "-1"); // 玩家id
+const userid = Number(localStorage.getItem('7szh_userid') || '-1'); // 玩家id
 const roomId = route.params.roomId; // 房间id
 const isLookon = ref<number>(
   cisLookon ? follow ?? Math.floor(Math.random() * 2) : -1
 ); // 是否旁观
-const client = ref(
-  new GeniusInvokationClient(
-    socket,
-    userid,
-    cplayers,
-    isMobile.value,
-    countdown,
-    JSON.parse(localStorage.getItem("GIdecks") || "[]"),
-    Number(localStorage.getItem("GIdeckIdx") || "0"),
-    isLookon.value
-  )
-);
+const client = ref(new GeniusInvokationClient(socket, userid, cplayers, isMobile.value, countdown,
+  JSON.parse(localStorage.getItem('GIdecks') || '[]'), Number(localStorage.getItem('GIdeckIdx') || '0'), isLookon.value));
 
-const canAction = computed<boolean>(
-  () =>
-    client.value.canAction &&
-    client.value.tip.content == "" &&
-    client.value.actionInfo == "" &&
-    !client.value.taskQueue.isExecuting
-); // 是否可以操作
+const canAction = computed<boolean>(() => client.value.canAction && client.value.tip.content == '' && client.value.actionInfo == '' && !client.value.taskQueue.isExecuting); // 是否可以操作
 const afterWinHeros = ref<Hero[][]>([]); // 游戏结束后显示的角色信息
 
 // 获取骰子背景
@@ -317,7 +207,7 @@ const getDiceIcon = (name: string) => {
 
 // 获取png图片
 const getPngIcon = (name: string) => {
-  if (name.startsWith("http")) return name;
+  if (name.startsWith('http')) return name;
   return new URL(`/src/assets/image/${name}.png`, import.meta.url).href;
 };
 
@@ -366,16 +256,16 @@ const startGame = () => {
 };
 // 查看卡组
 const enterEditDeck = () => {
-  router.push({ name: "editDeck" });
+  router.push({ name: 'editDeck' });
 };
 // 返回
 const exit = () => {
-  socket.emit("exitRoom");
+  socket.emit('exitRoom');
   if (isLookon.value > -1) router.back();
 };
 // 投降
 const giveup = () => {
-  const isConfirm = confirm("确定投降吗？");
+  const isConfirm = confirm('确定投降吗？');
   if (isConfirm) {
     client.value.giveup();
   }
@@ -443,30 +333,26 @@ const getPlayerList = ({ plist }: { plist: Player[] }) => {
   if (me?.rid == -1) router.back();
 };
 onMounted(() => {
-  socket.emit("roomInfoUpdate", { roomId });
-  socket.on("roomInfoUpdate", data => {
+  socket.emit('roomInfoUpdate', { roomId });
+  socket.on('roomInfoUpdate', data => {
     const isFlag = data.isStart && !client.value.isStart;
     client.value.roomInfoUpdate({ isFlag, ...data });
   });
 
-  socket.on("getServerInfo", data => {
-    client.value.getServerInfo(data);
-  });
-  socket.on("getPlayerAndRoomList", getPlayerList);
+  socket.on('getServerInfo', data => client.value.getServerInfo(data));
+  socket.on('getPlayerAndRoomList', getPlayerList);
 });
 
 onUnmounted(() => {
-  socket.off("roomInfoUpdate");
-  socket.off("getServerInfo");
-  socket.off("getPlayerAndRoomList", getPlayerList);
+  socket.off('roomInfoUpdate');
+  socket.off('getServerInfo');
+  socket.off('getPlayerAndRoomList', getPlayerList);
 });
 
 // dev
 const devOps = (cidx = 0) => {
   if (!isDev) return;
-  let ops = prompt("摸牌id/#骰子/@充能/%血量/&附着:")
-    ?.split(/[,，\.\/、]+/)
-    .filter(v => v != "");
+  let ops = prompt('摸牌id/#骰子/@充能/%血量/&附着:')?.split(/[,，\.\/、]+/).filter(v => v != '');
   if (ops == undefined) return;
   const cpidx = client.value.playerIdx ^ cidx;
   let heros = client.value.players[cpidx].heros;
@@ -474,14 +360,11 @@ const devOps = (cidx = 0) => {
   let flag = new Set<string>();
   let cards: (number | Card)[] = [];
   let handCards: Card[] | undefined;
-  const h = (v: string) => (v == "" ? undefined : Number(v));
+  const h = (v: string) => (v == '' ? undefined : Number(v));
   for (const op of ops) {
-    if (op.startsWith("&")) {
-      const isAdd = op[1] == "+";
-      const [el = 0, hidx = heros.findIndex(h => h.isFront)] = op
-        .slice(isAdd ? 2 : 1)
-        .split(/[:：]+/)
-        .map(h);
+    if (op.startsWith('&')) { // 附着
+      const isAdd = op[1] == '+';
+      const [el = 0, hidx = heros.findIndex(h => h.isFront)] = op.slice(isAdd ? 2 : 1).split(/[:：]+/).map(h);
       if (!isAdd || el == 0) {
         if (hidx > 2) heros.forEach(h => (h.attachElement = []));
         else heros[hidx].attachElement = [];
@@ -490,73 +373,51 @@ const devOps = (cidx = 0) => {
         if (hidx > 2) heros.forEach(h => h.attachElement.push(el));
         else heros[hidx].attachElement.push(el);
       }
-      flag.add("setEl");
-    } else if (op.startsWith("%")) {
-      const [hp = 10, hidx = heros.findIndex(h => h.isFront)] = op
-        .slice(1)
-        .split(/[:：]+/)
-        .map(h);
+      flag.add('setEl');
+    } else if (op.startsWith('%')) { // 血量
+      const [hp = 10, hidx = heros.findIndex(h => h.isFront)] = op.slice(1).split(/[:：]+/).map(h);
       if (hidx > 2) heros.forEach(h => (h.hp = hp));
       else heros[hidx].hp = hp;
-      flag.add("setHp");
-    } else if (op.startsWith("@")) {
-      const [cnt = 3, hidx = heros.findIndex(h => h.isFront)] = op
-        .slice(1)
-        .split(/[:：]+/)
-        .map(h);
-      const { heros: nheros } = client.value._doCmds(
-        [{ cmd: "getEnergy", cnt, hidxs: hidx > 2 ? [0, 1, 2] : [hidx] }],
-        { heros }
-      );
+      flag.add('setHp');
+    } else if (op.startsWith('@')) { // 充能
+      const [cnt = 3, hidx = heros.findIndex(h => h.isFront)] = op.slice(1).split(/[:：]+/).map(h);
+      const { heros: nheros } = client.value._doCmds([{ cmd: 'getEnergy', cnt, hidxs: hidx > 2 ? [0, 1, 2] : [hidx] }], { heros });
       if (nheros) heros = nheros;
-      flag.add("setEnergy");
-    } else if (op.startsWith("#")) {
-      const [cnt = 16, el = 0] = op
-        .slice(1)
-        .split(/[:：]+/)
-        .map(h);
-      const { ndices } = client.value._doCmds([
-        { cmd: "getDice", cnt, element: el },
-      ]);
+      flag.add('setEnergy');
+    } else if (op.startsWith('#')) { // 骰子
+      const [cnt = 16, el = 0] = op.slice(1).split(/[:：]+/).map(h);
+      const { ndices } = client.value._doCmds([{ cmd: 'getDice', cnt, element: el }]);
       dices = ndices;
-      flag.add("getDice");
-    } else if (op.startsWith("-")) {
+      flag.add('getDice');
+    } else if (op.startsWith('-')) { // 弃牌
       const dcardcnt = Number(op);
       handCards = client.value.player.handCards.slice(0, dcardcnt);
-      flag.add("disCard");
-    } else if (op.startsWith("=")) {
-      const [stsid = 0, hidx = heros.findIndex(h => h.isFront)] = op
-        .slice(1)
-        .split(/[:：]+/)
-        .map(h);
+      flag.add('disCard');
+    } else if (op.startsWith('=')) { // 状态
+      const [stsid = 0, hidx = heros.findIndex(h => h.isFront)] = op.slice(1).split(/[:：]+/).map(h);
       if (stsid < 2000 || stsid > 3000) continue;
       const sts = heroStatus(stsid);
-      const cmd = `get${["In", "Out"][sts.group]}Status` as Cmd;
+      const cmd = `get${['In', 'Out'][sts.group]}Status` as Cmd;
       const cmds: Cmds[] = [{ cmd, status: [sts], hidxs: [hidx] }];
       client.value._doCmds(cmds, { heros, isEffectHero: true });
-      flag.add("setStatus");
-    } else {
-      const [cid = 0, cnt = 1] = op.split("*").map(h);
+      flag.add('setStatus');
+    } else { // 摸牌
+      const [cid = 0, cnt = 1] = op.split('*').map(h);
       if (cid == 0) {
-        cards.push(
-          cardTotal.find(
-            c => c.userType == heros[client.value.players[cpidx].hidx].id
-          )?.id ?? 0
-        );
+        cards.push(cardTotal.find(c => c.userType == heros[client.value.players[cpidx].hidx].id)?.id ?? 0);
       }
       if (cid > 0) cards.push(...new Array(cnt).fill(cid));
-      cards = client.value._doCmds([{ cmd: "getCard", cnt, card: cards }])
-        .cmds?.[0].card as Card[];
-      flag.add("getCard");
+      cards = client.value._doCmds([{ cmd: 'getCard', cnt, card: cards }]).cmds?.[0].card as Card[];
+      flag.add('getCard');
     }
   }
-  socket.emit("sendToServer", {
+  socket.emit('sendToServer', {
     cpidx,
     heros,
     dices,
-    cmds: [{ cmd: "getCard", cnt: cards.length, card: cards }],
+    cmds: [{ cmd: 'getCard', cnt: cards.length, card: cards }],
     handCards,
-    flag: "dev-" + [...flag].join("&"),
+    flag: 'dev-' + [...flag].join('&'),
   });
 };
 </script>
@@ -827,7 +688,7 @@ body {
   border: 5px inset orange;
 }
 
-[class*="player-display"] {
+[class*='player-display'] {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1004,7 +865,7 @@ body {
     transform: rotateZ(90deg) translateY(-100%);
   }
 
-  [class*="player-display"] {
+  [class*='player-display'] {
     width: 70px;
     height: 100px;
   }

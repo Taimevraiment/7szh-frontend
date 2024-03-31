@@ -9,18 +9,17 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import { ref } from "vue";
+<script setup lang='ts'>
+import { ref } from 'vue';
 
-const emit = defineEmits(["create-room", "create-room-cancel"]);
+const emit = defineEmits(['create-room', 'create-room-cancel']);
 
-const roomName = ref<string>(""); // 房间名
-const roomPassword = ref<string>(""); // 房间密码
-const countdown = ref<number | string>(""); // 倒计时
+const roomName = ref<string>(''); // 房间名
+const roomPassword = ref<string>(''); // 房间密码
+const countdown = ref<number | string>(''); // 倒计时
 
-const create = () =>
-  emit("create-room", roomName.value, roomPassword.value, +countdown.value);
-const cancel = () => emit("create-room-cancel");
+const create = () => emit('create-room', roomName.value, roomPassword.value, +countdown.value);
+const cancel = () => emit('create-room-cancel');
 </script>
 
 <style scoped>

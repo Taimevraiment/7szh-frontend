@@ -18,7 +18,7 @@
           </div>
         </div>
         <div class="info-card-type">{{ CARD_TYPE[(info as Card).type] }}</div>
-        <div class="info-card-type sub" v-for="(subtype, suidx) in (info as Card).subType.filter((v: number) => v > -1)"
+        <div class="info-card-type sub" v-for="(subtype, suidx) in (info as Card).subType.filter(v => v > -1)"
           :key="suidx">
           {{ CARD_SUBTYPE[subtype] }}
         </div>
@@ -107,8 +107,8 @@
           </div>
           <div v-if="(info as Hero).inStatus.length > 0" class="info-status">
             <div class="title">- 角色状态 -</div>
-            <div v-for="(ist, idx) in (info as Hero).inStatus.filter((sts: Status) => !sts.type.includes(0))"
-              :key="ist.id" class="status">
+            <div v-for="(ist, idx) in (info as Hero).inStatus.filter(sts => !sts.type.includes(0))" :key="ist.id"
+              class="status">
               <div class="status-title" @click.stop="showDesc(isInStatus, idx)">
                 <span class="status-title-left">
                   <div class="status-icon">
@@ -134,8 +134,8 @@
           </div>
           <div v-if="(info as Hero).outStatus.length > 0" class="info-status">
             <div class="title">- 阵营出战状态 -</div>
-            <div v-for="(ost, idx) in (info as Hero).outStatus.filter((sts: Status) => !sts.type.includes(0))"
-              :key="ost.id" class="status">
+            <div v-for="(ost, idx) in (info as Hero).outStatus.filter(sts => !sts.type.includes(0))" :key="ost.id"
+              class="status">
               <div class="status-title" @click.stop="showDesc(isOutStatus, idx)">
                 <span class="status-title-left">
                   <div class="status-icon">
@@ -201,7 +201,7 @@
       </div>
       <div v-if="(info as Hero).inStatus.length > 0" class="info-status">
         <div class="title">- 角色状态 -</div>
-        <div v-for="(ist, idx) in (info as Hero).inStatus.filter((sts: Status) => !sts.type.includes(0))" :key="ist.id"
+        <div v-for="(ist, idx) in (info as Hero).inStatus.filter(sts => !sts.type.includes(0))" :key="ist.id"
           class="status">
           <div class="status-title" @click.stop="showDesc(isInStatus, idx)">
             <span class="status-title-left">
@@ -228,7 +228,7 @@
       </div>
       <div v-if="(info as Hero).outStatus.length > 0" class="info-status">
         <div class="title">- 阵营出战状态 -</div>
-        <div v-for="(ost, idx) in (info as Hero).outStatus.filter((sts: Status) => !sts.type.includes(0))" :key="ost.id"
+        <div v-for="(ost, idx) in (info as Hero).outStatus.filter(sts => !sts.type.includes(0))" :key="ost.id"
           class="status">
           <div class="status-title" @click.stop="showDesc(isOutStatus, idx)">
             <span class="status-title-left">
@@ -347,7 +347,7 @@ const wrapExpl = (expls: ExplainContent[]): string[][] => {
   for (const expl of expls) {
     const explains: string[] = [];
     explains.push(`<span style='font-weight:bold;color:white;'>${expl.name}</span>`);
-    explains.push(...expl.description.split('；').map((desc: string) => wrapDesc(desc, expl)));
+    explains.push(...expl.description.split('；').map(desc => wrapDesc(desc, expl)));
     container.push(explains);
   }
   return container;

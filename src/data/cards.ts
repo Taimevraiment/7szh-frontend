@@ -34,7 +34,7 @@ class GICard implements Card {
         userType: number = 0, canSelectHero?: number, handle?: (card: Card, options?: CardOption) => CardHandleRes,
         options: {
             uct?: number, pct?: number, expl?: ExplainContent[], energy?: number, anydice?: number, canSelectSummon?: number,
-            isResetUct?: boolean, isResetPct?: boolean, canSelectSite?: number
+            isResetUct?: boolean, isResetPct?: boolean, spReset?: boolean, canSelectSite?: number
         } = {}
     ) {
         this.id = id;
@@ -58,13 +58,14 @@ class GICard implements Card {
         this.userType = userType;
         this.canSelectHero = canSelectHero ?? 0;
         if (subType?.includes(8)) this.cnt = 1;
-        const { uct = -1, pct = 0, expl = [], energy = 0, anydice = 0, canSelectSummon = -1, isResetPct = true, isResetUct = false, canSelectSite = -1 } = options;
+        const { uct = -1, pct = 0, expl = [], energy = 0, anydice = 0, canSelectSummon = -1,
+            isResetPct = true, isResetUct = false, spReset = false, canSelectSite = -1 } = options;
         this.handle = (card: Card, options?: CardOption): CardHandleRes => {
             const { reset = false } = options ?? {};
             if (reset) {
                 if (isResetPct) card.perCnt = pct;
                 if (isResetUct) card.useCnt = uct;
-                return {}
+                if (!spReset) return {}
             }
             const handleRes = handle?.(card, options) ?? {};
             return handleRes;
@@ -168,8 +169,8 @@ const talentSkill = (skidx: number): () => ({ trigger: Trigger[], cmds: Cmds[] }
     return () => ({ trigger: ['skill'], cmds: [{ cmd: 'useSkill', cnt: skidx }] });
 }
 
-const talentHandle = (cardOpt: CardOption, skidx: number, nexec: () => [() => CardExecRes, CardHandleRes?], ntrigger: Trigger | Trigger[] = 'skill') => {
-    const { trigger = '' } = cardOpt;
+const talentHandle = (cardOpt: CardOption, skidx: number, nexec: () => [(() => CardExecRes)?, CardHandleRes?], ntrigger: Trigger | Trigger[] = 'skill') => {
+    const { reset = false, trigger = '' } = cardOpt;
     const { trigger: talTrg, cmds: talCmds } = talentSkill(skidx)();
     const cmds: Cmds[] = [...talCmds];
     if (typeof ntrigger == 'string') {
@@ -178,7 +179,8 @@ const talentHandle = (cardOpt: CardOption, skidx: number, nexec: () => [() => Ca
     }
     const isTrigger = ntrigger.length == 0 || [...ntrigger, 'calc'].some(tr => tr == trigger.split(':')[0]);
     if (isTrigger && ntrigger.length > 0) cmds.length = 0;
-    const [nexecf, hdres = {}] = nexec();
+    const [nexecf = () => ({}), hdres = {}] = nexec();
+    if (reset) return hdres;
     const exec = () => isTrigger ? nexecf() : ({});
     const triggers: Trigger[] = ntrigger.some(tr => talTrg.includes(tr)) ? talTrg : ntrigger;
     return {
@@ -2267,16 +2269,24 @@ const allCards: CardObj = {
 
     780: new GICard(780, '割舍软弱之心', '[战斗行动]：我方出战角色为【久岐忍】时，装备此牌。；【久岐忍】装备此牌后，立刻使用一次【御咏鸣神刈山祭】。；装备有此牌的【久岐忍】被击倒时：角色[免于被击倒]，并治疗该角色到1点生命值。(每回合1次)；如果装备有此牌的【久岐忍】生命值不多于5，则该角色造成的伤害+1。',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_Shinobu.webp',
-        3, 3, 0, [6, 7], 1311, 1, (card: Card, cardOpt: CardOption = {}) => talentHandle(cardOpt, 2, () => {
-            const { heros = [], hidxs = [] } = cardOpt;
+        3, 3, 0, [6, 7, -4], 1311, 1, (card: Card, cardOpt: CardOption = {}) => talentHandle(cardOpt, 2, () => {
+            const { heros = [], hidxs = [], trigger = '', reset = false } = cardOpt;
+            if (reset) {
+                if (!card.subType.includes(-4)) card.subType.push(-4);
+                return []
+            }
             return [() => {
-                --card.perCnt;
+                if (trigger == 'will-killed') {
+                    --card.perCnt;
+                    card.subType.pop();
+                }
                 return {}
             }, {
                 addDmgCdt: isCdt((heros[hidxs[0]]?.hp ?? 10) <= 5, 1),
-                execmds: isCdt(card.perCnt > 0, [{ cmd: 'revive', cnt: 1 }])
+                execmds: isCdt(card.perCnt > 0 && trigger == 'will-killed', [{ cmd: 'revive', cnt: 1 }])
             }]
-        }, isCdt(card.perCnt > 0, 'will-killed')), { pct: 1, expl: talentExplain(1311, 2), energy: 2 }),
+        }, [...((cardOpt.trigger == 'skill' ? ['skill'] : []) as Trigger[]), ...((card.perCnt > 0 ? ['will-killed'] : []) as Trigger[])]),
+        { pct: 1, expl: talentExplain(1311, 2), energy: 2, spReset: true }),
 
     781: new GICard(781, '妙道合真', '[战斗行动]：我方出战角色为【珐露珊】时，装备此牌。；【珐露珊】装备此牌后，立刻使用一次【抟风秘道】。；装备有此牌的【珐露珊】所召唤的【赫耀多方面体】入场时和行动阶段开始时：生成1个[风元素骰]。',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_Faruzan.webp',

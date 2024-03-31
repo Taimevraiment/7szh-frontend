@@ -1652,7 +1652,7 @@ const allHeros: HeroObj = {
                     stsCnt *= 2;
                 }
                 return {
-                    trigger: ['game-start', 'action-start'],
+                    trigger: ['game-start', 'action-after'],
                     inStatus: isCdt(stsCnt > 0, [heroStatus(2182, stsCnt)]),
                     exec: () => {
                         if (trigger == 'game-start' || stsCnt == 0) return;

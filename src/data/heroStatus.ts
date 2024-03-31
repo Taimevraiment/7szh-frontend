@@ -2129,7 +2129,7 @@ const statusTotal: StatusObj = {
             }
         }), { expl }),
 
-    2180: () => new GIStatus(2180, '暗流的诅咒', '【所在阵营的角色使用｢元素战技｣或｢元素爆发｣时：】需要多花费1个元素骰。【[可用次数]：{useCnt}】',
+    2180: () => new GIStatus(2180, '暗流的诅咒', '【所在阵营的角色使用｢元素战技｣或｢元素爆发｣时：】需要多花费1个元素骰。；【[可用次数]：{useCnt}】',
         'debuff', 1, [4], 2, 0, -1, (status: Status, options: StatusOption = {}) => {
             const { minusSkillRes } = minusDiceSkillHandle(options, { skilltype2: [0, 0, -1], skilltype3: [0, 0, -1] });
             return {
@@ -2151,7 +2151,7 @@ const statusTotal: StatusObj = {
                     --eStatus.useCnt;
                     return {}
                 }
-                return { inStatus: [heroStatus(2187)] }
+                return { cmds: [{ cmd: 'getInStatus', status: [heroStatus(2187)] }] }
             }
         })),
 
@@ -2203,7 +2203,7 @@ const statusTotal: StatusObj = {
         })),
 
     2187: () => new GIStatus(2187, '水之新生后续todo名字待定', '角色造成的[物理伤害]变为[水元素伤害]，且[水元素伤害]+1。',
-        'buff4', 0, [6, 8, 10], -1, 0, -1, () => ({ attchEl: 1, addDmg: 1 })),
+        'buff4', 0, [6, 8, 10], 1, 0, -1, () => ({ attachEl: 1, addDmg: 1 })),
 
 };
 

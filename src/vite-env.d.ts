@@ -73,7 +73,7 @@ type Card = {
     costChange: number, // 费用变化
     costType: number, // 费用类型  0无色 1水 2火 3雷 4冰 5风 6岩 7草 8同色
     type: number, // 牌类型：0装备 1支援 2事件
-    subType: number[], // 副类型：0武器 1圣遗物 2场地 3伙伴 4道具 5料理 6天赋 7战斗行动 8秘传 9元素共鸣 -1减伤 -2复苏料理 -3所属共鸣
+    subType: number[], // 副类型：0武器 1圣遗物 2场地 3伙伴 4道具 5料理 6天赋 7战斗行动 8秘传 9元素共鸣 -1减伤 -2复苏料理 -3所属共鸣 -4免击倒
     userType: number, // 使用人类型匹配：0全匹配 匹配武器Hero.weaponType 匹配天赋Hero.id
     useCnt: number, // 累积点数
     perCnt: number, // 每回合的效果使用次数
@@ -258,8 +258,8 @@ type TrgEl = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 type TrgDmg = 'el' | 'pen' | 'any' | 'water' | 'fire' | 'thunder' | 'ice' | 'wind' | 'rock' | 'grass';
 type TrgElReDmg = 'water' | 'fire' | 'thunder' | 'ice';
 
-type Trigger = 'phase-start' | 'phase-end' | 'phase-dice' | 'game-start' | 'action-start' | 'end-phase' | 'any-end-phase' | 'other-skill' |
-    'skill' | `skilltype${TrgSkType}` | `other-skilltype${TrgSkType}` | `after-skilltype${TrgSkType}` | 'after-skill' | 'oppo-skill' |
+type Trigger = 'phase-start' | 'phase-end' | 'phase-dice' | 'game-start' | 'action-start' | 'action-after' | 'end-phase' | 'any-end-phase' |
+    'skill' | `skilltype${TrgSkType}` | `other-skilltype${TrgSkType}` | `after-skilltype${TrgSkType}` | 'after-skill' | 'oppo-skill' | 'other-skill' |
     'change' | 'change-to' | 'change-from' | 'change-oppo' | 'card' | 'elReaction' | `el${TrgEl}Reaction` | `el5Reaction:${TrgElRe}` |
     `other-el${TrgEl}Reaction` | 'other-elReaction' | 'ecard' | `el6Reaction:${TrgElRe}` | 'get-elReaction' | `get-el${TrgEl}Reaction` |
     'get-elReaction-oppo' | 'kill' | 'killed' | 'will-killed' | 'dmg' | `${TrgDmg}-dmg` | `${TrgElReDmg}-dmg-wind` | 'getdmg' | 'other-getdmg' |

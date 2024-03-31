@@ -81,13 +81,12 @@
     <div class="heros">
       <div class="hero" @click.stop="selectHero(hidx < 3 ? 0 : 1, hidx % 3)" :style="{
       'background-color': hero.src.length == 0 ? ELEMENT_COLOR[hero?.element ?? 0] : '',
-      animation:
-        hero?.isFront &&
-          ((hidx > 2 && player.status == 1 && player.summon.every(s => !s.isSelected)) ||
-            (hidx < 3 && opponent.status == 1 && opponent.summon.every(s => !s.isSelected))) &&
-          isShowDmg && willDamages.some(d => d[0] > 0) && phase < 7 &&
-          heros.every(h => h.inStatus.every(s => !s.isSelected) && h.outStatus.every(s => !s.isSelected))
-          ? `attack${opponent.tarhidx - player.tarhidx + 2}-${hidx < 3 ? 0 : 1} 0.8s linear` : 'none',
+      animation: hero?.isFront &&
+        ((hidx > 2 && player.status == 1 && player.summon.every(s => !s.isSelected)) ||
+          (hidx < 3 && opponent.status == 1 && opponent.summon.every(s => !s.isSelected))) &&
+        isShowDmg && willDamages.some(d => d[0] > 0) && phase < 7 &&
+        heros.every(h => h.inStatus.every(s => !s.isSelected) && h.outStatus.every(s => !s.isSelected))
+        ? `attack${opponent.tarhidx - player.tarhidx + 2}-${hidx < 3 ? 0 : 1} 0.8s linear` : 'none',
     }" :class="{
       'mobile-hero': isMobile,
       my: hidx > 2,
@@ -241,8 +240,8 @@
                 style="height: 16px; padding-left: 3px" />
               <span
                 :style="{ padding: `0 8px 0 ${hero.hp + (willHp[(hidx + 3 * playerIdx) % 6] ?? 0) > 0 ? '5px' : '0'}` }">
-                {{ (willHp[(hidx + 3 * playerIdx) % 6] ?? 0) > 0 ? "+" : "-" }}
-                {{ Math.abs(Math.ceil(willHp[(hidx + 3 * playerIdx) % 6] ?? 0) % 100) }}
+                {{ (willHp[(hidx + 3 * playerIdx) % 6] ?? 0) > 0 ? "+" : "-" }}{{ Math.abs(Math.ceil(willHp[(hidx + 3 *
+      playerIdx) % 6] ?? 0) % 100) }}
               </span>
             </div>
             <div class="damages">
@@ -373,23 +372,8 @@
 import { computed, ref, watchEffect } from 'vue';
 import { ELEMENT_COLOR, ELEMENT_ICON, ELEMENT_URL, STATUS_BG_COLOR } from '@/data/constant';
 
-const props = defineProps([
-  'isMobile',
-  'canAction',
-  'isLookon',
-  'afterWinHeros',
-  'client',
-]);
-const emits = defineEmits([
-  'selectChangeCard',
-  'changeCard',
-  'reroll',
-  'selectHero',
-  'selectUseDice',
-  'selectSummon',
-  'selectSite',
-  'endPhase',
-]);
+const props = defineProps(['isMobile', 'canAction', 'isLookon', 'afterWinHeros', 'client']);
+const emits = defineEmits(['selectChangeCard', 'changeCard', 'reroll', 'selectHero', 'selectUseDice', 'selectSummon', 'selectSite', 'endPhase']);
 
 const playerIdx = computed<number>(() => Math.max(props.isLookon, props.client.playerIdx));
 const player = computed<Player>(() => props.client.players[playerIdx.value]);
