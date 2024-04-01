@@ -455,10 +455,10 @@ const siteTotal: SiteObj = {
     // 化城郭
     4028: (cardId: number) => new GISite(4028, cardId, 3, 1, 2, (site: GISite, options: SiteOption = {}) => {
         const { dices = [] } = options;
+        if (site.perCnt == 0 || dices.length > 0) return {}
         return {
             trigger: ['action-start'],
             exec: () => {
-                if (site.perCnt == 0 || dices.length > 0) return { isDestroy: false }
                 --site.cnt;
                 --site.perCnt;
                 return { cmds: [{ cmd: 'getDice', cnt: 1, element: 0 }], isDestroy: site.cnt == 0 }
@@ -551,10 +551,10 @@ const siteTotal: SiteObj = {
     // 塞塔蕾
     4035: (cardId: number) => new GISite(4035, cardId, 3, 0, 2, (site: GISite, options: SiteOption = {}) => {
         const { hcards } = options;
+        if ((hcards?.length ?? 1) > 0) return {}
         return {
-            trigger: ['action-start'],
+            trigger: ['action-after'],
             exec: () => {
-                if ((hcards?.length ?? 1) > 0) return { isDestroy: false }
                 --site.cnt;
                 return { cmds: [{ cmd: 'getCard', cnt: 1 }], isDestroy: site.cnt == 0 }
             }

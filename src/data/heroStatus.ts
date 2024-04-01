@@ -729,7 +729,7 @@ const statusTotal: StatusObj = {
         'buff2', 0, [3, 4, 10], 1, 0, 1, (status: Status, options: StatusOption = {}) => {
             const { card, heros = [], hidx = -1, trigger = '', minusDiceCard: mdc = 0 } = options;
             const isMinusCard = card && card.subType.includes(6) && card.userType == heros[hidx]?.id && card.cost > mdc;
-            const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(options, { skilltype2: [0, 2, 0] });
+            const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(options, { skilltype2: [0, 0, 2] });
             return {
                 ...minusSkillRes,
                 minusDiceCard: isCdt(isMinusCard, 2),

@@ -84,7 +84,7 @@
       animation: hero?.isFront &&
         ((hidx > 2 && player.status == 1 && player.summon.every(s => !s.isSelected)) ||
           (hidx < 3 && opponent.status == 1 && opponent.summon.every(s => !s.isSelected))) &&
-        isShowDmg && willDamages.some(d => d[0] > 0) && phase < 7 &&
+        isShowDmg && willDamages.some(d => d[0] >= 0) && phase < 7 &&
         heros.every(h => h.inStatus.every(s => !s.isSelected) && h.outStatus.every(s => !s.isSelected))
         ? `attack${opponent.tarhidx - player.tarhidx + 2}-${hidx < 3 ? 0 : 1} 0.8s linear` : 'none',
     }" :class="{

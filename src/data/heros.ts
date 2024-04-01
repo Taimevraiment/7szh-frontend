@@ -1647,10 +1647,7 @@ const allHeros: HeroObj = {
                 const { heros = [], trigger = '' } = options;
                 let stsCnt = 0;
                 if (trigger == 'game-start') stsCnt = 5;
-                else {
-                    heros.forEach(hero => stsCnt += [...hero.inStatus, ...hero.outStatus].filter(sts => sts.type.includes(2) && sts.id != 2182).length);
-                    stsCnt *= 2;
-                }
+                else heros.forEach(hero => stsCnt += [...hero.inStatus, ...hero.outStatus].filter(sts => sts.type.includes(7) && sts.id != 2182).length * 2);
                 return {
                     trigger: ['game-start', 'action-after'],
                     inStatus: isCdt(stsCnt > 0, [heroStatus(2182, stsCnt)]),
@@ -1658,11 +1655,11 @@ const allHeros: HeroObj = {
                         if (trigger == 'game-start' || stsCnt == 0) return;
                         for (const hero of heros) {
                             hero.inStatus.forEach(ist => {
-                                if (ist.type.includes(2) && ist.id != 2182) ist.useCnt = 0;
+                                if (ist.type.includes(7) && ist.id != 2182) ist.useCnt = 0;
                             });
                             if (hero.isFront) {
                                 hero.outStatus.forEach(ost => {
-                                    if (ost.type.includes(2)) ost.useCnt = 0;
+                                    if (ost.type.includes(7)) ost.useCnt = 0;
                                 });
                             }
                         }
