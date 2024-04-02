@@ -82,7 +82,7 @@ type Card = {
     anydice: number, // 除了元素骰以外需要的任意骰
     selected: boolean, // 是否被选择
     pos: number, // 牌的偏移位置
-    handle: (card: Card, options?: CardOption) => CardHandleRes, // 卡牌发动的效果函数
+    handle: (card: Card, event: CardHandleEvent) => CardHandleRes, // 卡牌发动的效果函数
     descriptions: string[], // 处理后的技能描述
     canSelectHero: number, // 能选择角色的数量
     canSelectSummon: number, // 能选择的召唤物 -1不能选择 0能选择敌方 1能选择我方
@@ -103,7 +103,7 @@ type Site = {
     perCnt: number, // 每回合x次
     hpCnt: number, // 回血数
     type: number, // 类型 1轮次 2收集物 3常驻
-    handle: (site: Site, siteOption?: SiteOption) => SiteHandleRes, // 处理效果函数
+    handle: (site: Site, event: SiteHandleEvent) => SiteHandleRes, // 处理效果函数
     isSelected: boolean, // 是否被选择
     canSelect: boolean, // 能否被选择
 }
@@ -124,7 +124,7 @@ type Summonee = {
     isTalent: boolean, // 是否有天赋
     statusId: number, // 可能对应的状态 -1不存在
     addition: string[], // 额外信息
-    handle: (summon: Summonee, smnOpt?: SummonOption) => SummonRes, // 处理函数
+    handle: (summon: Summonee, event: SummonHandleEvent) => SummonHandleRes, // 处理函数
     descriptions: string[], // 处理后的技能描述
     isSelected: boolean, // 是否被选择
     canSelect: boolean, // 是否能被选择
@@ -144,7 +144,7 @@ type Status = {
     perCnt: number, // 每回合使用次数
     roundCnt: number, // 剩余轮次数: -1为无轮次限制
     isTalent: boolean, // 是否有天赋
-    handle: (status: Status, options?: StatusOption) => StatusHandleRes, // 处理函数
+    handle: (status: Status, event: StatusHandleEvent) => StatusHandleRes, // 处理函数
     summonId: number, // 可能对应的召唤物 -1不存在
     iconBg: string, // 图标背景
     descriptions: string[], // 处理后的技能描述
@@ -159,7 +159,7 @@ type Hero = {
     local: number[], // 所属：0魔物 1蒙德 2璃月 3稻妻 4须弥 5枫丹 6纳塔 7至冬 8愚人众 9丘丘人 10镀金旅团 11始基力:荒性 12始基力:芒性
     maxhp: number, // 最大血量
     hp: number, // 当前血量
-    element: number, // 角色元素：0未附着 1水 2火 3雷 4冰 5风 6岩 7草
+    element: number, // 角色元素：0物理 1水 2火 3雷 4冰 5风 6岩 7草
     weaponType: number, // 武器类型：0无 1单手剑 2双手剑 3弓 4法器 5长柄
     maxEnergy: number, // 最大充能
     energy: number, // 当前充能
@@ -187,7 +187,7 @@ type Skill = {
     energyCost: number, // 所需充能
     attachElement: number, // 附魔属性
     src: string, // 图片url
-    handle: (options: SkillOption) => SkillHandleRes, // 处理函数
+    handle: (event: SkillHandleEvent) => SkillHandleRes, // 处理函数
     isForbidden: boolean, // 是否禁用
     dmgChange: number, // 伤害变化
     costChange: number[], // 费用变化 [元素骰, 任意骰]
@@ -275,7 +275,7 @@ type Countdown = {
 }
 
 // skill.d.ts
-type SkillOption = {
+type SkillHandleEvent = {
     hero: Hero,
     skidx: number,
     reset?: boolean,
@@ -322,7 +322,7 @@ type SkillHandleRes = {
 }
 
 // card.d.ts
-type CardOption = {
+type CardHandleEvent = {
     heros?: Hero[],
     eheros?: Hero[],
     hidxs?: number[],
@@ -335,7 +335,6 @@ type CardOption = {
     hcardsCnt?: number,
     ehcardsCnt?: number,
     heal?: number[],
-    dices?: number[],
     ephase?: number,
     isChargedAtk?: boolean,
     isFallAtk?: boolean,
@@ -394,7 +393,7 @@ type CardExecRes = {
 }
 
 // status.d.ts
-type StatusOption = {
+type StatusHandleEvent = {
     restDmg?: number,
     summon?: Summonee,
     hidx?: number,
@@ -453,10 +452,10 @@ type StatusHandleRes = {
     attachEl?: number,
     isUpdateAttachEl?: boolean,
     atkAfter?: boolean,
-    exec?: (eStatus?: Status, exeOpt?: StatusExecOption) => StatusExecRes,
+    exec?: (eStatus?: Status, event?: StatusExecEvent) => StatusExecRes,
 }
 
-type StatusExecOption = {
+type StatusExecEvent = {
     hidx?: number,
     changeHeroDiceCnt?: number,
     heros?: Hero[],
@@ -478,7 +477,7 @@ type StatusExecRes = {
 }
 
 // site.d.ts
-type SiteOption = {
+type SiteHandleEvent = {
     dices?: number[],
     trigger?: Trigger,
     eheros?: Hero[],
@@ -499,7 +498,7 @@ type SiteOption = {
 
 type SiteHandleRes = {
     trigger?: Trigger[],
-    exec?: (exeOpt: SiteExeOption) => SiteExecRes,
+    exec?: (event: SiteExeEvent) => SiteExecRes,
     minusDiceCard?: number,
     minusDiceHero?: number,
     minusDiceSkill?: number[][],
@@ -516,7 +515,7 @@ type SiteHandleRes = {
     summon?: Summonee[],
 }
 
-type SiteExeOption = {
+type SiteExecEvent = {
     changeHeroDiceCnt?: number,
     isQuickAction?: boolean,
     summonDiffCnt?: number,
@@ -532,7 +531,7 @@ type SiteExecRes = {
 }
 
 // summon.d.ts
-type SummonOption = {
+type SummonHandleEvent = {
     trigger?: Trigger,
     heros?: Hero[],
     eheros?: Hero[],
@@ -563,10 +562,10 @@ type SummonHandleRes = {
     minusDiceCard?: number,
     minusDiceSkill?: number[][],
     minusDiceSkills?: number[][],
-    exec?: (smnexeOpt: SummonExecOption) => SummonExecRes,
+    exec?: (event: SummonExecEvent) => SummonExecRes,
 }
 
-type SummonExecOption = {
+type SummonExecEvent = {
     summon?: Summonee,
     heros?: Hero[],
     eheros?: Hero[],

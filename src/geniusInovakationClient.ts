@@ -162,16 +162,6 @@ export default class GeniusInvokationClient {
                         info: card,
                     }
                 } else {
-                    // this.modalInfo = { ...NULL_MODAL };
-                    // this.currCard = { ...NULL_CARD };
-                    // this.player.site.forEach(s => {
-                    //     s.isSelected = false;
-                    //     s.canSelect = false;
-                    // });
-                    // this.player.summon.forEach(s => {
-                    //     s.canSelect = false;
-                    //     s.isSelected = false;
-                    // });
                     this.cancel();
                 }
                 if (this.isMobile) {
@@ -227,8 +217,8 @@ export default class GeniusInvokationClient {
             heros,
             hidxs: [hidx],
             ephase: this.opponent.phase,
-            dices: dice,
             round: this.round,
+            dicesCnt: dice.length,
             hcardsCnt: this.handCards.length,
             ehcardsCnt: this.opponent.handCards.length,
             esite: this.opponent.site,
@@ -659,6 +649,7 @@ export default class GeniusInvokationClient {
             }
         }
         if (this.playerIdx == execIdx && dieChangeBack == undefined) {
+            // if (dieChangeBack == undefined) {
             this._execTask();
         }
         const siteDiffCnt = this.player.site.length - players[this.playerIdx].site.length - this.exchangeSite.length;
@@ -810,6 +801,7 @@ export default class GeniusInvokationClient {
             }, 1000);
         }
         if (this.phase == PHASE.ACTION && phase == PHASE.ACTION_END && this.playerIdx == execIdx) { // 结束阶段
+            // if (this.phase == PHASE.ACTION && phase == PHASE.ACTION_END) { // 结束阶段
             await this._sendTip('结束阶段');
             setTimeout(async () => {
                 this._doSlot('phase-end', { pidx: startIdx, hidxs: allHidxs(players[startIdx].heros, { isAll: true }) });
@@ -2968,7 +2960,7 @@ export default class GeniusInvokationClient {
                             args[2] = clone(args[2]) ?? {};
                             args[2].isExecTask = true;
                             args[2].csite = [site];
-                            this.taskQueue.addTask('site-' + site.card.name, args);
+                            this.taskQueue.addTask('site-' + site.card.name + site.sid, args);
                         } else {
                             const curIntvl = [...intvl];
                             let siteexecres: SiteExecRes = { isDestroy: false };
@@ -4025,10 +4017,10 @@ export default class GeniusInvokationClient {
                 if (taskType == undefined || args == undefined) break;
                 let task: [(() => void)[], number[]] | undefined;
                 if (isDieChangeBack && !taskType.includes('statusAtk-')) await this._delay(2300);
-                if (taskType.startsWith('status-')) task = this._doStatus(...(args as [any, any, any, any])).task;
-                else if (taskType.startsWith('site-')) task = this._doSite(...(args as [any, any, any])).task;
-                else if (taskType.startsWith('summon-')) task = this._doSummon(...(args as [any, any, any])).task;
-                else if (taskType.startsWith('slot-')) task = this._doSlot(...(args as [any, any])).task;
+                if (taskType.startsWith('status-')) task = this._doStatus(...(args as Parameters<typeof this._doStatus>)).task;
+                else if (taskType.startsWith('site-')) task = this._doSite(...(args as Parameters<typeof this._doSite>)).task;
+                else if (taskType.startsWith('summon-')) task = this._doSummon(...(args as Parameters<typeof this._doSummon>)).task;
+                else if (taskType.startsWith('slot-')) task = this._doSlot(...(args as Parameters<typeof this._doSlot>)).task;
                 if (taskType.startsWith('statusAtk-')) {
                     const isExeced = await this._doStatusAtk(args as StatusTask);
                     if (!isExeced) {
@@ -4117,6 +4109,7 @@ class TaskQueue {
         this.socket = socket;
     }
     addTask(taskType: string, args: any[], isUnshift = false) {
+        if (this.queue.some(([tpn]) => tpn == taskType)) return;
         if (isUnshift) this.queue.unshift([taskType, args]);
         else this.queue.push([taskType, args]);
         this._emit((isUnshift ? 'unshift' : 'add') + 'Task-' + taskType + `(queue=[${this.queue.map(v => v[0])}])`);
@@ -4145,11 +4138,12 @@ class TaskQueue {
     }
     addStatusAtk(ststask: StatusTask[], isUnshift = false) {
         if (ststask.length == 0) return;
-        ststask.forEach(t => {
+        for (const t of ststask) {
             const atkname = 'statusAtk-' + heroStatus(t.id).name;
+            if (this.queue.some(([tpn]) => tpn == atkname)) continue;
             if (isUnshift) this.queue.unshift([atkname, t]);
             else this.queue.push([atkname, t]);
-        });
+        }
         this.statusAtk += ststask.length;
         this._emit(`${isUnshift ? 'unshift' : 'add'}StatusAtk(queue=[${this.queue.map(v => v[0])}])`);
     }

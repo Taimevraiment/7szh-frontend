@@ -67,26 +67,26 @@ class GISkill implements Skill {
     isUsed: boolean = false;
     descriptions: string[] = [];
     rdskidx: number = -1;
-    handle: (options: SkillOption) => SkillHandleRes = () => ({});
+    handle: (event: SkillHandleEvent) => SkillHandleRes = () => ({});
     constructor(
         name: string, description: string, type: number, damage: number, cost: number,
-        costElement: number, options: { ac?: number, ec?: number, de?: number, rdskidx?: number } = {},
-        src?: string, src2?: string, explains?: ExplainContent[], handle?: (hoptions: SkillOption) => SkillHandleRes
+        costElement: number, event: { ac?: number, ec?: number, de?: number, rdskidx?: number } = {},
+        src?: string, src2?: string, explains?: ExplainContent[], handle?: (hevent: SkillHandleEvent) => SkillHandleRes
     ) {
         this.name = name;
         this.description = description;
         this.type = type;
         this.damage = damage;
-        const { ac = 0, ec = 0, de = costElement % 8, rdskidx = -1 } = options;
+        const { ac = 0, ec = 0, de = costElement % 8, rdskidx = -1 } = event;
         this.energyCost = ec;
         this.dmgElement = de;
         this.rdskidx = rdskidx;
         this.cost = [{ val: cost, color: costElement }, { val: ac, color: 0 }, { val: ec, color: 9 }];
         this.src = (src || src2) ?? '';
         this.explains = explains ?? [];
-        this.handle = (hoptions: SkillOption) => {
-            const { reset = false, hero, skidx, isReadySkill = false } = hoptions;
-            const handleres = handle?.(hoptions) ?? {};
+        this.handle = hevent => {
+            const { reset = false, hero, skidx, isReadySkill = false } = hevent;
+            const handleres = handle?.(hevent) ?? {};
             if (isReadySkill) return handleres;
             const curskill = hero.skills[skidx];
             if (reset) {
@@ -96,7 +96,7 @@ class GISkill implements Skill {
             let dmgElement = handleres.dmgElement;
             let atkAfter = handleres.atkAfter;
             for (const ist of hero.inStatus) {
-                const stsres = heroStatus(ist.id).handle(ist, hoptions);
+                const stsres = heroStatus(ist.id).handle(ist, hevent);
                 if (ist.type.includes(16) && stsres.attachEl && stsres.attachEl > 0 && (dmgElement ?? 0) == 0) {
                     dmgElement = stsres.attachEl;
                 }
@@ -116,7 +116,7 @@ class GISkill implements Skill {
     }
 }
 
-const skill1 = (name: string, weaponType?: number, handle?: (options: SkillOption) => SkillHandleRes,
+const skill1 = (name: string, weaponType?: number, handle?: (event: SkillHandleEvent) => SkillHandleRes,
     description: string = '', explains: ExplainContent[] = []) => {
     return (costElement: number, weaponType2: number) => {
         const wptype = weaponType ?? weaponType2;
@@ -183,22 +183,22 @@ const readySkillTotal: { [key: number]: (...args: any) => Skill } = {
     8: () => new GISkill('洪流重斥', '造成{dmg}点[水元素伤害]，此角色附属【磐岩百相·元素凝晶】。', 2, 3, 3, 1, { rdskidx: 8 },
         'https://act-webstatic.mihoyo.com/hk4e/e20200928calculate/item_skill_icon_u084qf/45a7f8c8f26f921fce5bb8738bf1bec0.png',
         '',
-        [heroStatus(2145)], (options: SkillOption) => ({ inStatus: [heroStatus(2145, options.hero.skills[1].src)] })),
+        [heroStatus(2145)], event => ({ inStatus: [heroStatus(2145, event.hero.skills[1].src)] })),
 
     9: () => new GISkill('炽焰重斥', '造成{dmg}点[火元素伤害]，此角色附属【磐岩百相·元素凝晶】。', 2, 3, 3, 2, { rdskidx: 9 },
         'https://act-webstatic.mihoyo.com/hk4e/e20200928calculate/item_skill_icon_u084qf/160f02ee2bfde3fcfdc558c78a168899.png',
         '',
-        [heroStatus(2145)], (options: SkillOption) => ({ inStatus: [heroStatus(2145, options.hero.skills[1].src)] })),
+        [heroStatus(2145)], event => ({ inStatus: [heroStatus(2145, event.hero.skills[1].src)] })),
 
     10: () => new GISkill('霆雷破袭', '造成{dmg}点[雷元素伤害]，此角色附属【磐岩百相·元素凝晶】。', 2, 3, 3, 3, { rdskidx: 10 },
         'https://act-webstatic.mihoyo.com/hk4e/e20200928calculate/item_skill_icon_u084qf/466e63dcff914eaaa05c7710346033f1.png',
         '',
-        [heroStatus(2145)], (options: SkillOption) => ({ inStatus: [heroStatus(2145, options.hero.skills[1].src)] })),
+        [heroStatus(2145)], event => ({ inStatus: [heroStatus(2145, event.hero.skills[1].src)] })),
 
     11: () => new GISkill('霜刺破袭', '造成{dmg}点[冰元素伤害]，此角色附属【磐岩百相·元素凝晶】。', 2, 3, 3, 4, { rdskidx: 11 },
         'https://act-webstatic.mihoyo.com/hk4e/e20200928calculate/item_skill_icon_u084qf/ac22f83f25890eca87720581f6b06408.png',
         '',
-        [heroStatus(2145)], (options: SkillOption) => ({ inStatus: [heroStatus(2145, options.hero.skills[1].src)] })),
+        [heroStatus(2145)], event => ({ inStatus: [heroStatus(2145, event.hero.skills[1].src)] })),
 
     12: () => new GISkill('风风轮舞踢', '(需准备1个行动轮)；造成{dmg}点[风元素伤害](或被扩散元素的伤害)。', 2, 2, 0, 5, { ec: -2, rdskidx: 12 }),
 
@@ -211,8 +211,8 @@ const readySkillTotal: { [key: number]: (...args: any) => Skill } = {
     16: () => new GISkill('风风轮舞踢', '(需准备1个行动轮)；造成{dmg}点[冰元素伤害]。', 2, 2, 0, 4, { ec: -2, rdskidx: 16 }),
 
     17: () => new GISkill('衡平推裁', '(需准备1个行动轮)；造成{dmg}点[水元素伤害]，如果生命值至少为6，则对自身造成1点[穿透伤害]使伤害+1。',
-        1, 2, 0, 1, { ec: -2, rdskidx: 17 }, '', '', [], (options: SkillOption) => {
-            if (options.hero.hp < 6) return {}
+        1, 2, 0, 1, { ec: -2, rdskidx: 17 }, '', '', [], event => {
+            if (event.hero.hp < 6) return {}
             return { addDmgCdt: 1, pendamageSelf: 1 }
         }),
 
@@ -221,8 +221,8 @@ const readySkillTotal: { [key: number]: (...args: any) => Skill } = {
     19: () => new GISkill('涟锋旋刃', '(需准备1个行动轮)；造成{dmg}点[水元素伤害]。', 2, 1, 0, 1, { ec: -2, rdskidx: 19 }),
 
     20: () => new GISkill('炽烈轰破', '(需准备1个行动轮)；造成{dmg}点[火元素伤害]，对敌方所有后台角色造成2点[穿透伤害]。本角色每附属有2层【重甲蟹壳】，就使此技能造成的[火元素伤害]+1。',
-        3, 1, 0, 2, { ec: -2, rdskidx: 20 }, '', '', [heroStatus(2182)], (options: SkillOption) => {
-            const { hero: { inStatus } } = options;
+        3, 1, 0, 2, { ec: -2, rdskidx: 20 }, '', '', [heroStatus(2182)], event => {
+            const { hero: { inStatus } } = event;
             return { pendamage: 2, addDmgCdt: Math.floor((inStatus.find(ist => ist.id == 2182)?.useCnt ?? 0) / 2) }
         }),
 }
@@ -244,8 +244,8 @@ const allHeros: HeroObj = {
         new GISkill('霜华矢', '造成{dmg}点[冰元素伤害]，对所有敌方后台角色造成2点[穿透伤害]。', 1, 2, 5, 4, {},
             'https://patchwiki.biligame.com/images/ys/d/de/d7vartodjuo8s7k0fkp6qsl09brzcvy.png',
             'https://act-upload.mihoyo.com/ys-obc/2023/05/24/183046623/a4c1f60fc2461f2853edb4e765ba4262_6013693059397455292.png',
-            [], (options: SkillOption) => {
-                const { hero: { skills, talentSlot }, card } = options;
+            [], event => {
+                const { hero: { skills, talentSlot }, card } = event;
                 const isTalent = skills[2].isUsed && (!!talentSlot || card?.id == 701);
                 return { pendamage: isTalent ? 3 : 2 }
             }),
@@ -261,8 +261,8 @@ const allHeros: HeroObj = {
         new GISkill('猫爪冻冻', '造成{dmg}点[冰元素伤害]，生成【猫爪护盾】。', 2, 2, 3, 4, {},
             'https://patchwiki.biligame.com/images/ys/1/1e/293bqkk7gcer933p14viqh445sdwqzf.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/24/195563531/fc7cc8ae1d95bc094e69b8f3c1c270f8_1908586115904037757.png',
-            [heroStatus(2033)], (options: SkillOption) => {
-                const { hero: { talentSlot }, card } = options;
+            [heroStatus(2033)], event => {
+                const { hero: { talentSlot }, card } = event;
                 const useCnt = talentSlot != null || card?.id == 712 ? 2 : 1;
                 return { outStatus: [heroStatus(2033, useCnt)] };
             }),
@@ -281,7 +281,7 @@ const allHeros: HeroObj = {
         new GISkill('凛冽轮舞', '造成{dmg}点[冰元素伤害]，生成【寒冰之棱】。', 3, 1, 4, 4, { ec: 2 },
             'https://patchwiki.biligame.com/images/ys/b/b0/ozcnrn13ft9p6pe7tsamhik8lnp1dbk.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/26/12109492/250999f269669660e4fd24bdf510a507_2074342926999471449.png',
-            [heroStatus(2038)], (options: SkillOption) => ({ outStatus: [heroStatus(2038, options.hero.skills[2].src)] })),
+            [heroStatus(2038)], event => ({ outStatus: [heroStatus(2038, event.hero.skills[2].src)] })),
     ]),
 
     1004: new GIHero(1004, '重云', 2, 10, 4, 2,
@@ -290,8 +290,8 @@ const allHeros: HeroObj = {
         new GISkill('重华叠霜', '造成{dmg}点[冰元素伤害]，生成【重华叠霜领域】。', 2, 3, 3, 4, {},
             'https://patchwiki.biligame.com/images/ys/9/95/l37dvsmjc6w2vpeue8xlpasuxwvdqga.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/26/12109492/90fe50a43ea7905773df4433d385e4d9_8501818730448316824.png',
-            [heroStatus(2039)], (options: SkillOption) => {
-                const { hero: { talentSlot }, card } = options;
+            [heroStatus(2039)], event => {
+                const { hero: { talentSlot }, card } = event;
                 const isTalent = !!talentSlot || card?.id == 718;
                 return { outStatus: [heroStatus(2039, isTalent)] }
             }),
@@ -313,8 +313,8 @@ const allHeros: HeroObj = {
         new GISkill('神里流·霰步', '此角色被切换为\\｢出战角色｣时，附属【冰元素附魔】。', 4, 0, 0, 0, {},
             'https://patchwiki.biligame.com/images/ys/b/bf/35ci2ri2f4j1n844qgcfu6mltipvy6o.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/26/12109492/0e41ec30bd552ebdca2caf26a53ff3c4_7388012937739952914.png',
-            [heroStatus(2008, 4, 1)], (options: SkillOption) => {
-                const { hero: { talentSlot } } = options;
+            [heroStatus(2008, 4, 1)], event => {
+                const { hero: { talentSlot } } = event;
                 return {
                     trigger: ['change-to'],
                     inStatus: [heroStatus(2008, 4, 1, !!talentSlot ? 1 : 0)],
@@ -328,8 +328,8 @@ const allHeros: HeroObj = {
         new GISkill('冰潮的涡旋', '造成{dmg}点[冰元素伤害]，如果角色未附属【冷酷之心】，则使其附属【冷酷之心】。', 2, 2, 3, 4, {},
             'https://patchwiki.biligame.com/images/ys/8/8a/q921jjp73rov2uov6hzuhh1ncxzluew.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2023/02/04/12109492/7cd81d9357655d9c620f961bb8d80b59_6750120717511006729.png',
-            [heroStatus(2066)], (options: SkillOption) => {
-                const { hero: { inStatus, skills: [, skill1] } } = options;
+            [heroStatus(2066)], event => {
+                const { hero: { inStatus, skills: [, skill1] } } = event;
                 const isExist = inStatus?.some(ist => ist.id == 2066);
                 return { inStatus: isCdt(!isExist, [heroStatus(2066, [skill1])]) }
             }),
@@ -345,8 +345,8 @@ const allHeros: HeroObj = {
         new GISkill('仰灵威召将役咒', '造成{dmg}点[冰元素伤害]，生成【冰翎】。', 2, 2, 3, 4, {},
             'https://patchwiki.biligame.com/images/ys/7/73/7826w7dfmnl3bypl1liwuqcu3907s7l.png',
             'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/c7750c7dbf76e9e3dffa7df162028a4d_5325191736377199101.png',
-            [heroStatus(2073)], (options: SkillOption) => {
-                const { hero: { talentSlot }, card } = options;
+            [heroStatus(2073)], event => {
+                const { hero: { talentSlot }, card } = event;
                 const isTalent = !!talentSlot || card?.id == 736;
                 return { outStatus: [heroStatus(2073, isTalent)] }
             }),
@@ -366,8 +366,8 @@ const allHeros: HeroObj = {
         new GISkill('仙法·救苦度厄', '造成{dmg}点[冰元素伤害]，生成【度厄真符】。', 3, 3, 3, 4, { ec: 3 },
             'https://patchwiki.biligame.com/images/ys/6/6c/p0xq33l7riqu49e0oryu8p1pjg6vzyb.png',
             'https://act-upload.mihoyo.com/ys-obc/2023/08/12/258999284/fbf260ac04da9e7eafa3967cd9bed42c_824806426983130530.jpg',
-            [heroStatus(2100)], (options: SkillOption) => {
-                const { hero: { skills: [, , { src }], talentSlot }, card, heros = [] } = options;
+            [heroStatus(2100)], event => {
+                const { hero: { skills: [, , { src }], talentSlot }, card, heros = [] } = event;
                 const isTalent = !!talentSlot || card?.id == 753;
                 const talent = talentSlot ?? card;
                 const hidxs = allHidxs(heros, { isDie: true });
@@ -385,9 +385,7 @@ const allHeros: HeroObj = {
         new GISkill('垂裳端凝之夜', '生成【安眠帷幕护盾】和【飞星】。', 2, 0, 3, 4, {},
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/f4992b1b1ccc7488e72d044a689add90.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/12/258999284/752935b8ac76b044a14e788b146542d9_8202062186002160885.png',
-            [heroStatus(2128), heroStatus(2129)], (options: SkillOption) => ({
-                outStatus: [heroStatus(2128), heroStatus(2129, options.hero.skills[1].src)]
-            })),
+            [heroStatus(2128), heroStatus(2129)], event => ({ outStatus: [heroStatus(2128), heroStatus(2129, event.hero.skills[1].src)] })),
         new GISkill('星流摇床之梦', '造成{dmg}点[冰元素伤害]，召唤【饰梦天球】。', 3, 3, 3, 4, { ec: 2 },
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/890bd4e04afaa53a01d52fc1087c8da7.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/12/258999284/e419e8855adc7d838639a2dacb3be165_5717426653880544475.png',
@@ -404,7 +402,7 @@ const allHeros: HeroObj = {
         new GISkill('定格·全方位确证', '造成{dmg}点[冰元素伤害]，治疗我方所有角色1点，召唤【临事场域】。', 3, 1, 3, 4, { ec: 2 },
             'https://patchwiki.biligame.com/images/ys/0/06/sg317tpcyew82aovprl39dfxavasbd4.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2024/03/06/258999284/e1d95cabb132d11c4fc412719e026aa6_3660966934155106231.png',
-            [newSummonee(3056)], (options: SkillOption) => ({ heal: 1, hidxs: allHidxs(options.heros), summon: [newSummonee(3056)] }))
+            [newSummonee(3056)], event => ({ heal: 1, hidxs: allHidxs(event.heros), summon: [newSummonee(3056)] }))
     ]),
 
     1101: new GIHero(1101, '芭芭拉', 1, 10, 1, 4,
@@ -417,7 +415,7 @@ const allHeros: HeroObj = {
         new GISkill('闪耀奇迹', '治疗我方所有角色4点。', 3, 0, 3, 1, { ec: 3 },
             'https://patchwiki.biligame.com/images/ys/1/1f/mje4jhrya5ok36js3z6f5l8z2sfjg1n.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/26/12109492/03122bb05df17906af5f686ef8a6f2ba_4670328861321191920.png',
-            [], (options: SkillOption) => ({ heal: 4, hidxs: allHidxs(options.heros) }))
+            [], event => ({ heal: 4, hidxs: allHidxs(event.heros) }))
     ]),
 
     1102: new GIHero(1102, '行秋', 2, 10, 1, 1,
@@ -426,8 +424,8 @@ const allHeros: HeroObj = {
         new GISkill('画雨笼山', '造成{dmg}点[水元素伤害]，本角色[附着水元素]，生成【雨帘剑】。', 2, 2, 3, 1, {},
             'https://patchwiki.biligame.com/images/ys/9/9f/n2lo8l7ov8w0bx2jwh5qcvmmflm8wbs.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/26/12109492/6ebbfb60e7eee60282022e0c935672dd_2463677033991737689.png',
-            [heroStatus(2002)], (options: SkillOption) => {
-                const { hero: { talentSlot }, card } = options;
+            [heroStatus(2002)], event => {
+                const { hero: { talentSlot }, card } = event;
                 const isTalent = !!talentSlot || card?.id == 703;
                 return {
                     outStatus: [heroStatus(2002, isTalent)],
@@ -437,8 +435,8 @@ const allHeros: HeroObj = {
         new GISkill('裁雨留虹', '造成{dmg}点[水元素伤害]，本角色[附着水元素]，生成【虹剑势】。', 3, 2, 3, 1, { ec: 2 },
             'https://patchwiki.biligame.com/images/ys/f/fb/rj85t7tm68l6y8yyuvryh2hagcz1g3b.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/26/12109492/c8eb10016106e63120b6b5c92fcb2a5e_1562905905897327561.png',
-            [heroStatus(2003)], (options: SkillOption) => ({
-                outStatus: [heroStatus(2003, options.hero.skills[2].src)],
+            [heroStatus(2003)], event => ({
+                outStatus: [heroStatus(2003, event.hero.skills[2].src)],
                 isAttach: true,
             }))
     ]),
@@ -453,12 +451,12 @@ const allHeros: HeroObj = {
         new GISkill('星命定轨', '造成{dmg}点[水元素伤害]，生成【泡影】。', 3, 4, 3, 1, { ec: 3 },
             'https://patchwiki.biligame.com/images/ys/e/e7/lhrcsp8l0nalp24l55335y1b8pazt8b.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/26/12109492/9cd333219d9081547d9c8f3d16a5b7c3_530937262031086854.png',
-            [heroStatus(2012)], (options: SkillOption) => ({ outStatus: [heroStatus(2012, options.hero.skills[2].src)] })),
+            [heroStatus(2012)], event => ({ outStatus: [heroStatus(2012, event.hero.skills[2].src)] })),
         new GISkill('虚实流动', '【此角色为出战角色，我方执行｢切换角色｣行动时：】将此次切换视为｢[快速行动]｣而非｢[战斗行动]｣。(每回合1次)', 4, 0, 0, 0, {},
             'https://patchwiki.biligame.com/images/ys/1/12/j3lyz5vb4rhxspzbh9sl9toglxhk5d6.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/bc5c12ac6eb36b8d24f03864bf281b87_4261814317325062178.png',
-            [], (options: SkillOption) => {
-                const { hero: { skills: [, , , { useCnt = 1 }] } } = options;
+            [], event => {
+                const { hero: { skills: [, , , { useCnt = 1 }] } } = event;
                 return {
                     trigger: ['change-from'],
                     isQuickAction: useCnt == 0,
@@ -476,8 +474,8 @@ const allHeros: HeroObj = {
         new GISkill('海人化羽', '造成{dmg}点[水元素伤害]，治疗我方所有角色1点，本角色附属【仪来羽衣】。', 3, 2, 3, 1, { ec: 2 },
             'https://patchwiki.biligame.com/images/ys/7/7a/a5apmahnio46pxnjy2ejzd7hgts9a7i.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2023/02/04/12109492/c9160408f2b03a1b2cedb046aa09f3be_3291666669631292065.png',
-            [heroStatus(2065)], (options: SkillOption) => {
-                const { hero: { skills: [, , { src }], talentSlot }, card, summons = [], heros = [] } = options;
+            [heroStatus(2065)], event => {
+                const { hero: { skills: [, , { src }], talentSlot }, card, summons = [], heros = [] } = event;
                 const smn3023 = summons.find(smn => smn.id == 3023);
                 const isTalent = !!talentSlot || card?.id == 731;
                 const summon = isCdt(isTalent && !smn3023, [newSummonee(3023, 1)]);
@@ -505,8 +503,8 @@ const allHeros: HeroObj = {
         new GISkill('魔王武装·狂澜', '切换为【近战状态】，然后造成{dmg}点[水元素伤害]，并使目标角色附属【断流】。', 2, 2, 3, 1, {},
             'https://patchwiki.biligame.com/images/ys/c/ca/0jufd7tgnwppqkiwkkspioz1efhafbh.png',
             'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/393b86b2158acd396af9fe09f9cd887c_8219782349327935117.png',
-            [heroStatus(2075), heroStatus(2076)], (options: SkillOption) => {
-                const { hero: { inStatus, skills: [, { src: src1 }, { src: src2 }] } } = options;
+            [heroStatus(2075), heroStatus(2076)], event => {
+                const { hero: { inStatus, skills: [, { src: src1 }, { src: src2 }] } } = event;
                 const sts2074 = inStatus.findIndex(ist => ist.id == 2074);
                 return {
                     inStatus: [heroStatus(2075, src1)],
@@ -519,8 +517,8 @@ const allHeros: HeroObj = {
         new GISkill('极恶技·尽灭闪', '依据【达达利亚】当前所处状态，进行不同的攻击：；【远程状态·魔弹一闪】：造成{dmg}点[水元素伤害]，返还2点[充能]，目标角色附属【断流】。；【近战状态·尽灭水光】：造成{dmg+2}点[水元素伤害]。', 3, 5, 3, 1, { ec: 3 },
             'https://patchwiki.biligame.com/images/ys/3/3f/s2ril7y96ghgom0365u65uu1iq3hdoe.png',
             'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/de5fd6fc3f4530233cba1774deea0706_8854785564582245062.png',
-            [heroStatus(2076)], (options: SkillOption) => {
-                const { hero: { inStatus, skills: [, , { src }] } } = options;
+            [heroStatus(2076)], event => {
+                const { hero: { inStatus, skills: [, , { src }] } } = event;
                 const bStatus = inStatus.some(ist => ist.id == 2074);
                 if (!bStatus) return { addDmgCdt: 2 }
                 return { inStatusOppo: [heroStatus(2076, src)], cmds: [{ cmd: 'getEnergy', cnt: 2 }] }
@@ -528,8 +526,8 @@ const allHeros: HeroObj = {
         new GISkill('遏浪', '战斗开始时，初始附属【远程状态】。；角色所附属的【近战状态】效果结束时，重新附属【远程状态】。', 4, 0, 0, 0, {},
             'https://patchwiki.biligame.com/images/ys/e/e6/s9urw8i8oidze3t6kgeivc054cg3ued.png',
             'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/b32057264f488d0df6429a135d5ce3e5_4144919367463512201.png',
-            [heroStatus(2074), heroStatus(2075)], (options: SkillOption) => {
-                const { hero: { skills: [, , , { src }] } } = options;
+            [heroStatus(2074), heroStatus(2075)], event => {
+                const { hero: { skills: [, , , { src }] } } = event;
                 return { trigger: ['game-start', 'revive'], inStatus: [heroStatus(2074, src)] }
             }),
     ]),
@@ -544,8 +542,8 @@ const allHeros: HeroObj = {
         new GISkill('圣仪·灰鸰衒潮', '造成{dmg}点[水元素伤害]，生成【赤冕祝祷】。', 3, 2, 3, 1, { ec: 2 },
             'https://patchwiki.biligame.com/images/ys/f/fc/ipi3ncx8dl44m9og51z6g72pu1mux41.png',
             'https://act-upload.mihoyo.com/ys-obc/2023/07/07/183046623/65b29af9633d647a90b9ff0acd90d750_1308512450439952516.png',
-            [heroStatus(2095)], (options: SkillOption) => {
-                const { hero: { talentSlot, skills: [, , { src }] }, card } = options;
+            [heroStatus(2095)], event => {
+                const { hero: { talentSlot, skills: [, , { src }] }, card } = event;
                 const isTalent = talentSlot != null || card?.id == 749;
                 return { outStatus: [heroStatus(2095, src, isTalent)] }
             })
@@ -557,8 +555,8 @@ const allHeros: HeroObj = {
         new GISkill('七域舞步', '造成{dmg}点[水元素伤害]，如果队伍中包含‹1水元素角色›和‹7草元素角色›且不包含其他元素的角色，就生成【金杯的丰馈】。', 2, 3, 3, 1, {},
             'https://patchwiki.biligame.com/images/ys/7/70/eou9puc088y2tptuyz5obaecxu4mlwe.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/11/04/258999284/dda23813ac8a901419da3fcfe5fdcdd3_1625330009471386599.png',
-            [heroStatus(2111), newSummonee(3043)], (options: SkillOption) => {
-                const { heros = [], hero: { skills: [, { src }] } } = options;
+            [heroStatus(2111), newSummonee(3043)], event => {
+                const { heros = [], hero: { skills: [, { src }] } } = event;
                 const hasEl1Or7Only = heros.every(h => [1, 7].includes(h.element));
                 const hasEl7 = heros.some(h => h.element == 7);
                 return { outStatusPre: isCdt(hasEl1Or7Only && hasEl7, [heroStatus(2111, src)]) }
@@ -566,8 +564,8 @@ const allHeros: HeroObj = {
         new GISkill('浮莲舞步·远梦聆泉', '造成{dmg}点[水元素伤害]，目标角色附属【永世流沔】。', 3, 2, 3, 1, { ec: 2 },
             'https://patchwiki.biligame.com/images/ys/e/e4/g0jxv4e1j04516p1lse7kbmq9e169o4.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/11/04/258999284/d90ebd60eb4eb78a42d0f2f95cab33fc_4581262526420283887.png',
-            [heroStatus(2112)], (options: SkillOption) => {
-                const { hero: { skills: [, , { src }] } } = options;
+            [heroStatus(2112)], event => {
+                const { hero: { skills: [, , { src }] } } = event;
                 return { inStatusOppo: [heroStatus(2112, src)] }
             })
     ]),
@@ -582,7 +580,7 @@ const allHeros: HeroObj = {
         new GISkill('渊图玲珑骰', '造成{dmg}点[水元素伤害]，生成【玄掷玲珑】。', 3, 1, 3, 1, { ec: 3 },
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/b77306b0f53c2bfc141ccb93f866374d.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/05/258999284/8ef70a485219c07361bcfa62d01198a3_6128235753822442226.png',
-            [heroStatus(2131)], (options: SkillOption) => ({ outStatus: [heroStatus(2131, options.hero.skills[2].src)] })),
+            [heroStatus(2131)], event => ({ outStatus: [heroStatus(2131, event.hero.skills[2].src)] })),
         new GISkill('破局', '战斗开始时，初始附属【破局】。', 4, 0, 0, 0, {},
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/9d80088a6e6cb7f8913f3bc14e6f48ab.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/05/258999284/3d521526d51c8e9b090a046c0187ace9_6247094106411719876.png',
@@ -608,8 +606,8 @@ const allHeros: HeroObj = {
         new GISkill('逆焰之刃', '造成{dmg}点[火元素伤害]。每回合第三次使用本技能时，伤害+2。', 2, 3, 3, 2, {},
             'https://patchwiki.biligame.com/images/ys/e/ef/e4f6sb7ammsholnhufv95kmtfozj9fs.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/7651d152d160362e7c75ce224f92298c_5143713055633145888.png',
-            [], (options: SkillOption) => {
-                const { hero: { skills: [, { useCnt }] } } = options;
+            [], event => {
+                const { hero: { skills: [, { useCnt }] } } = event;
                 return { addDmgCdt: isCdt(useCnt == 2, 2) }
             }),
         new GISkill('黎明', '造成{dmg}点[火元素伤害]，本角色附属【火元素附魔】。', 3, 8, 4, 2, { ec: 3 },
@@ -624,8 +622,8 @@ const allHeros: HeroObj = {
         new GISkill('锅巴出击', '召唤【锅巴】。', 2, 0, 3, 2, {},
             'https://patchwiki.biligame.com/images/ys/e/e0/ioytpg3b208mckx76izeidcojyybs0g.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/eff41796c703a21e367766cd96ccfefc_4096903365398601995.png',
-            [newSummonee(3007)], (options: SkillOption) => {
-                const { hero: { talentSlot }, card } = options;
+            [newSummonee(3007)], event => {
+                const { hero: { talentSlot }, card } = event;
                 const isTalent = !!talentSlot || card?.id == 708;
                 return {
                     summon: [newSummonee(3007)],
@@ -635,7 +633,7 @@ const allHeros: HeroObj = {
         new GISkill('旋火轮', '造成{dmg}点[火元素伤害]，生成【旋火轮】。', 3, 3, 4, 2, { ec: 2 },
             'https://patchwiki.biligame.com/images/ys/8/8f/abxrclvx2nuyo4rsvbq1rxlcb2vcqh6.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/c324cd014801eaea70ee05529d9ba3ff_2574087438784210727.png',
-            [heroStatus(2020)], (options: SkillOption) => ({ outStatus: [heroStatus(2020, options.hero.skills[2].src)] }))
+            [heroStatus(2020)], event => ({ outStatus: [heroStatus(2020, event.hero.skills[2].src)] }))
     ]),
 
     1203: new GIHero(1203, '班尼特', 1, 10, 2, 1,
@@ -647,8 +645,8 @@ const allHeros: HeroObj = {
         new GISkill('美妙旅程', '造成{dmg}点[火元素伤害]，生成【鼓舞领域】。', 3, 2, 4, 2, { ec: 2 },
             'https://patchwiki.biligame.com/images/ys/1/13/avxfgtbz3r8qu7zk71dcr8kk3e949zi.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/6cdff59fc3701119002ab7cb38157a2c_8058649649755407178.png',
-            [heroStatus(2034)], (options: SkillOption) => {
-                const { hero: { talentSlot, skills: [, , { src }] }, card } = options;
+            [heroStatus(2034)], event => {
+                const { hero: { talentSlot, skills: [, , { src }] }, card } = event;
                 const isTalent = !!talentSlot || card?.id == 713;
                 return { outStatusPre: [heroStatus(2034, src, isTalent)] }
             })
@@ -660,15 +658,15 @@ const allHeros: HeroObj = {
         new GISkill('焰硝庭火舞', '本角色附属【庭火焰硝】。(此技能不产生[充能])', 2, 0, 1, 2, { ec: -1 },
             'https://patchwiki.biligame.com/images/ys/4/4d/nxz4yj425tcxv3bevn05eu33wrqv2jr.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/cec17a1d299dd83a96a4e2e791a21da4_3223499260532391975.png',
-            [heroStatus(2040)], (options: SkillOption) => {
-                const { hero: { talentSlot }, card } = options;
+            [heroStatus(2040)], event => {
+                const { hero: { talentSlot }, card } = event;
                 const isTalent = !!talentSlot || card?.id == 719;
                 return { inStatus: [heroStatus(2040, isTalent)] }
             }),
         new GISkill('琉金云间草', '造成{dmg}点[火元素伤害]，生成【琉金火光】。', 3, 3, 3, 2, { ec: 3 },
             'https://patchwiki.biligame.com/images/ys/2/22/p14o20u95t6u0b4hngqf8hhku0r1krx.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/938ac8f32d0998f3c896b862d0791b56_7334292135415645740.png',
-            [heroStatus(2041)], (options: SkillOption) => ({ outStatus: [heroStatus(2041, options.hero.skills[2].src)] }))
+            [heroStatus(2041)], event => ({ outStatus: [heroStatus(2041, event.hero.skills[2].src)] }))
     ]),
 
     1205: new GIHero(1205, '可莉', 1, 10, 2, 4,
@@ -677,15 +675,15 @@ const allHeros: HeroObj = {
         new GISkill('蹦蹦炸弹', '造成{dmg}点[火元素伤害]，本角色附属【爆裂火花】。', 2, 3, 3, 2, {},
             'https://patchwiki.biligame.com/images/ys/9/99/eqni0xudmuxvbflx6kviz8l793fju23.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/12/09/12109492/4409746db70c242861fb0a6addafd850_1072795968508012901.png',
-            [heroStatus(2058)], (options: SkillOption) => {
-                const { hero: { talentSlot }, card } = options;
+            [heroStatus(2058)], event => {
+                const { hero: { talentSlot }, card } = event;
                 const isTalent = !!talentSlot || card?.id == 727;
                 return { inStatus: [heroStatus(2058, isTalent)] }
             }),
         new GISkill('轰轰火花', '造成{dmg}点[火元素伤害]，在对方场上生成【轰轰火花】。', 3, 3, 3, 2, { ec: 3 },
             'https://patchwiki.biligame.com/images/ys/2/28/s88qf6z943kpscss1oye99kmccz2y10.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2023/01/18/12109492/3f4f659ff99b2435aa3662f4d17d537d_4727800863330247216.png',
-            [heroStatus(2059)], (options: SkillOption) => ({ outStatusOppo: [heroStatus(2059, options.hero.skills[2].src)] }))
+            [heroStatus(2059)], event => ({ outStatusOppo: [heroStatus(2059, event.hero.skills[2].src)] }))
     ]),
 
     1206: new GIHero(1206, '安柏', 1, 10, 2, 3,
@@ -711,8 +709,8 @@ const allHeros: HeroObj = {
         new GISkill('安神秘法', '造成{dmg}点[火元素伤害]，治疗自身2点。如果本角色生命值不多于6，则造成的伤害和治疗各+1。', 3, 4, 3, 2, { ec: 3 },
             'https://patchwiki.biligame.com/images/ys/b/b0/cpmmff7d7wctcaepp47ix06vprvpsrs.png',
             'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/e2a7845bb7627390caddc5aebee27b65_4410957076093902563.png',
-            [], (options: SkillOption) => {
-                const { hero: { hp } } = options;
+            [], event => {
+                const { hero: { hp } } = event;
                 const isHp6 = hp <= 6;
                 return { heal: isHp6 ? 3 : 2, addDmgCdt: isCdt(isHp6, 1) }
             })
@@ -728,8 +726,8 @@ const allHeros: HeroObj = {
         new GISkill('凭此结契', '造成{dmg}点[火元素伤害]，本角色附属【丹火印】和【灼灼】。', 3, 3, 3, 2, { ec: 2 },
             'https://patchwiki.biligame.com/images/ys/b/b0/iike33982frep1bmhcdj0juxpcidqey.png',
             'https://act-upload.mihoyo.com/ys-obc/2023/07/07/183046623/d135e7fc5ac836105a3f8bfb22ef346e_6469409230143043569.png',
-            [heroStatus(2096), heroStatus(2097)], (options: SkillOption) => {
-                const { hero: { skills: [, , { src }] } } = options;
+            [heroStatus(2096), heroStatus(2097)], event => {
+                const { hero: { skills: [, , { src }] } } = event;
                 return { inStatus: [heroStatus(2096), heroStatus(2097, src)] }
             })
     ]),
@@ -740,8 +738,8 @@ const allHeros: HeroObj = {
         new GISkill('熔铁流狱', '召唤【净焰剑狱领域】; 如果已存在【净焰剑狱领域】，就先造成{dmg+1}点[火元素伤害]。', 2, 0, 3, 2, {},
             'https://patchwiki.biligame.com/images/ys/8/8c/k583v0pci7akj1fbcin40ogho11mxzr.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/09/22/258999284/b590f6bfaf00c68987b204aa33e937aa_4421699992460567189.png',
-            [newSummonee(3041)], (options: SkillOption) => {
-                const { summons = [] } = options;
+            [newSummonee(3041)], event => {
+                const { summons = [] } = event;
                 const isSmned = summons.some(smn => smn.id == 3041);
                 return {
                     summon: [newSummonee(3041)],
@@ -751,8 +749,8 @@ const allHeros: HeroObj = {
         new GISkill('炎啸狮子咬', '造成{dmg}点[火元素伤害]，然后[准备技能]：【焚落踢】。', 3, 3, 4, 2, { ec: 2 },
             'https://patchwiki.biligame.com/images/ys/7/7f/ap84alhaz0b3jc9uh4e2nl84at46do1.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/09/22/258999284/d4af1c58efe84398677b12a796a10091_49820199465503907.png',
-            [readySkill(5)], (options: SkillOption) => {
-                const { hero: { skills: [, , { src }] } } = options;
+            [readySkill(5)], event => {
+                const { hero: { skills: [, , { src }] } } = event;
                 return { inStatus: [heroStatus(2123, src, [readySkill(5)])] }
             })
     ]),
@@ -763,8 +761,8 @@ const allHeros: HeroObj = {
         new GISkill('隐具魔术箭', '造成{dmg}点[火元素伤害]，召唤【怪笑猫猫帽】，累积1层【隐具余数】。；如果本角色生命值至少为6，则对自身造成1点[穿透伤害]。', 1, 2, 3, 2, {},
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/1d65a51c36eca7169247316ff7e14a89.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/19/258999284/5e46c170e7ce41c20bf76c27c4a16d89_689217131128119675.png',
-            [newSummonee(3048), heroStatus(2132)], (options: SkillOption) => {
-                const { hero: { hp, skills: [, , skill2] } } = options;
+            [newSummonee(3048), heroStatus(2132)], event => {
+                const { hero: { hp, skills: [, , skill2] } } = event;
                 return {
                     pendamageSelf: isCdt(hp >= 6, 1),
                     summon: [newSummonee(3048)],
@@ -777,8 +775,8 @@ const allHeros: HeroObj = {
         new GISkill('大魔术·灵迹巡游', '造成{dmg}点[火元素伤害]，召唤【怪笑猫猫帽】，累积1层【隐具余数】。', 3, 3, 3, 2, { ec: 2 },
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/9859ed5f65f53d9fb21c11b2a6df50d8.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/19/258999284/6d91a8911290da444b67711806a75a56_5602716403383894799.png',
-            [newSummonee(3048), heroStatus(2132)], (options: SkillOption) => {
-                return { summon: [newSummonee(3048)], inStatus: [heroStatus(2132, [options.hero.skills[2]])] }
+            [newSummonee(3048), heroStatus(2132)], event => {
+                return { summon: [newSummonee(3048)], inStatus: [heroStatus(2132, [event.hero.skills[2]])] }
             })
     ]),
 
@@ -792,8 +790,8 @@ const allHeros: HeroObj = {
         new GISkill('真红炽火之大铠', '造成{dmg}点[火元素伤害]，生成【烈烧佑命护盾】和【炽火大铠】。', 3, 2, 3, 2, { ec: 2 },
             'https://patchwiki.biligame.com/images/ys/2/21/a47iyqyy205fi0kyn38tmakcinh281j.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2024/01/17/258999284/7d6cb477d20cd8b75925ce62d3b73e8e_5295401799072493605.png',
-            [heroStatus(2106), heroStatus(2154)], (options: SkillOption) => {
-                const { hero: { talentSlot, skills: [, , { src }] }, card } = options;
+            [heroStatus(2106), heroStatus(2154)], event => {
+                const { hero: { talentSlot, skills: [, , { src }] }, card } = event;
                 const isTalent = !!talentSlot || card?.id == 772;
                 return { outStatus: [heroStatus(2106), heroStatus(2154, src, isTalent)] }
             })
@@ -805,8 +803,8 @@ const allHeros: HeroObj = {
         new GISkill('夜巡影翼', '造成{dmg}点[雷元素伤害]，召唤【奥兹】。', 2, 1, 3, 3, {},
             'https://patchwiki.biligame.com/images/ys/2/29/9ikuan4r5rhgza5nlxl86m718d3zmtt.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/4ab444ac20da8ea0990ff891600596ed_358383106993654545.png',
-            [newSummonee(3008)], (options: SkillOption) => {
-                const { hero: { talentSlot }, card } = options;
+            [newSummonee(3008)], event => {
+                const { hero: { talentSlot }, card } = event;
                 const isTalent = !!talentSlot || card?.id == 709;
                 return { summon: [newSummonee(3008, isTalent)] }
             }),
@@ -825,7 +823,7 @@ const allHeros: HeroObj = {
         new GISkill('雷牙', '造成{dmg}点[雷元素伤害]，本角色附属【雷狼】。', 3, 3, 3, 3, { ec: 2 },
             'https://patchwiki.biligame.com/images/ys/0/04/o12dwfbbsokckmhk1rmuj9i5fekwenv.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/2fcead6f24aba2d2595e98615756f175_4684225450339126121.png',
-            [heroStatus(2035)], (options: SkillOption) => ({ inStatus: [heroStatus(2035, options.hero.skills[2].src)] }))
+            [heroStatus(2035)], event => ({ inStatus: [heroStatus(2035, event.hero.skills[2].src)] }))
     ]),
 
     1303: new GIHero(1303, '刻晴', 2, 10, 3, 1,
@@ -834,8 +832,8 @@ const allHeros: HeroObj = {
         new GISkill('星斗归位', '造成{dmg}点[雷元素伤害]，生成手牌【雷楔】', 2, 3, 3, 3, {},
             'https://patchwiki.biligame.com/images/ys/5/58/8ajyn7zzhal0dopp6vi3lnryq12gq28.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/c351b44d3163278214f6f9db09c020fd_3304441541356399096.png',
-            [], (options: SkillOption) => {
-                const { hero: { talentSlot }, card, hcards = [], isExec = false } = options;
+            [], event => {
+                const { hero: { talentSlot }, card, hcards = [], isExec = false } = event;
                 if (!isExec) return {}
                 const isTalent = (!!talentSlot || card?.id == 720) ? 1 : 0;
                 const inStatus: Status[] = [];
@@ -862,8 +860,8 @@ const allHeros: HeroObj = {
         new GISkill('秘仪·律渊渡魂', '造成{dmg}点[雷元素伤害]。', 2, 3, 3, 3, {},
             'https://patchwiki.biligame.com/images/ys/4/4e/07nlgs0ws704oq4zbisr6ocw66qiyxh.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/4158f2729a2812dd54941af53f348acc_440344287585392498.png',
-            [], (options: SkillOption) => {
-                const { hero: { talentSlot, inStatus }, card } = options;
+            [], event => {
+                const { hero: { talentSlot, inStatus }, card } = event;
                 const isTalent = !!talentSlot || card?.id == 728;
                 const sts2060cnt = inStatus.find(ist => ist.id == 2060)?.useCnt ?? -1;
                 return { addDmgCdt: isCdt(isTalent && sts2060cnt % 2 == 0, 1) }
@@ -875,9 +873,9 @@ const allHeros: HeroObj = {
         new GISkill('行度誓惩', '战斗开始时，初始附属【启途誓使】。', 4, 0, 0, 0, {},
             'https://patchwiki.biligame.com/images/ys/7/71/7jaouwue7o0q82ndc0f2da0sw5nxc4d.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/c61b597d14d7915b53d8bf462e8ad609_6351825637878214573.png',
-            [heroStatus(2060)], (options: SkillOption) => ({
+            [heroStatus(2060)], event => ({
                 trigger: ['game-start', 'revive'],
-                inStatus: [heroStatus(2060, options.hero.skills[2].src)]
+                inStatus: [heroStatus(2060, event.hero.skills[2].src)]
             }))
     ]),
 
@@ -887,8 +885,8 @@ const allHeros: HeroObj = {
         new GISkill('捉浪', '本角色附属【捉浪·涛拥之守】，并[准备技能]：【踏潮】。', 2, 0, 3, 3, {},
             'https://patchwiki.biligame.com/images/ys/e/e5/k9meeap7ei7ox3q9yx4b6803v79m6om.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/12/09/12109492/ab87d12b9075094e4ddc0637d3d938ba_5680751413245970029.png',
-            [heroStatus(2062), readySkill(1)], (options: SkillOption) => {
-                const { hero: { talentSlot }, card } = options;
+            [heroStatus(2062), readySkill(1)], event => {
+                const { hero: { talentSlot }, card } = event;
                 const inStatus = [heroStatus(2062, [readySkill(1)])];
                 if (!!talentSlot || card?.id == 729) inStatus.push(heroStatus(2107));
                 return { inStatus }
@@ -896,7 +894,7 @@ const allHeros: HeroObj = {
         new GISkill('斫雷', '造成{dmg}点[雷元素伤害]，生成【雷兽之盾】。', 3, 2, 3, 3, { ec: 3 },
             'https://patchwiki.biligame.com/images/ys/e/e8/738iv8ypner8eho40gwxipqfr6hzfdg.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/12/09/12109492/de30554b41553d6c58e6922c47937862_5183453852325935866.png',
-            [heroStatus(2063)], (options: SkillOption) => ({ outStatus: [heroStatus(2063, options.hero.skills[2].src)] }))
+            [heroStatus(2063)], event => ({ outStatus: [heroStatus(2063, event.hero.skills[2].src)] }))
     ]),
 
     1306: new GIHero(1306, '九条裟罗', 3, 10, 3, 3,
@@ -922,8 +920,8 @@ const allHeros: HeroObj = {
         new GISkill('奥义·梦想真说', '造成{dmg}点[雷元素伤害]，其他我方角色获得2点[充能]。', 3, 3, 4, 3, { ec: 2 },
             'https://patchwiki.biligame.com/images/ys/8/84/3elwfz4r3jrizlpe5zx9f0vhqzc7aef.png',
             'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/e32265b2715186774b8d4bcf3d918880_1471851977626289486.png',
-            [], (options: SkillOption) => {
-                const { heros = [], card, hero: { talentSlot, inStatus } } = options;
+            [], event => {
+                const { heros = [], card, hero: { talentSlot, inStatus } } = event;
                 const hidxs: number[] = [];
                 heros.forEach((h, hi) => {
                     if (!h.isFront) hidxs.push(hi);
@@ -938,8 +936,8 @@ const allHeros: HeroObj = {
         new GISkill('诸愿百眼之轮', '战斗开始时，初始附属【诸愿百眼之轮】。', 4, 0, 0, 0, {},
             'https://patchwiki.biligame.com/images/ys/0/0f/5ardhper4s2i541lmywmazv31hfn0q9.png',
             'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/2df2771f98519d3d46ad0551977ca99a_7788585308123167206.png',
-            [heroStatus(2080)], (options: SkillOption) => {
-                const { hero: { skills: [, , skill2] } } = options;
+            [heroStatus(2080)], event => {
+                const { hero: { skills: [, , skill2] } } = event;
                 return {
                     trigger: ['game-start', 'revive'],
                     inStatus: [heroStatus(2080, skill2.src, [skill2])]
@@ -957,8 +955,8 @@ const allHeros: HeroObj = {
         new GISkill('大密法·天狐显真', '造成{dmg}点[雷元素伤害]; 如果我方场上存在【杀生樱】，则将其消灭，然后生成【天狐霆雷】。', 3, 4, 3, 3, { ec: 2 },
             'https://patchwiki.biligame.com/images/ys/e/ea/8y36keriq61eszpx5mm5ph7fvwa07ad.png',
             'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/b5ebdd77cfd7a6e12d1326c08e8f9214_6239158387266355120.png',
-            [newSummonee(3031), heroStatus(2081)], (options: SkillOption) => {
-                const { hero: { talentSlot, skills: [, skill1, { src }] }, card, summons = [] } = options;
+            [newSummonee(3031), heroStatus(2081)], event => {
+                const { hero: { talentSlot, skills: [, skill1, { src }] }, card, summons = [] } = event;
                 const status3031Idx = summons.findIndex(smn => smn.id == 3031);
                 let outStatus: Status[] | undefined;
                 let inStatus: Status[] | undefined;
@@ -973,15 +971,15 @@ const allHeros: HeroObj = {
 
     1309: new GIHero(1309, '丽莎', 1, 10, 3, 4,
         'https://act-upload.mihoyo.com/ys-obc/2023/08/12/203927054/129fe37de1bed078b49b9bc79ef2e757_1437470149833493317.png',
-        skill1('指尖雷暴', undefined, (options: SkillOption) => {
-            const { isChargedAtk = false, hero: { skills: [, skill1] } } = options;
+        skill1('指尖雷暴', undefined, event => {
+            const { isChargedAtk = false, hero: { skills: [, skill1] } } = event;
             return { inStatusOppo: isCdt(isChargedAtk, [heroStatus(2099, [skill1])]) }
         }, '；如果此技能为[重击]，则使敌方出战角色附属【引雷】。', [heroStatus(2099)]), [
         new GISkill('苍雷', '造成{dmg}点[雷元素伤害]; 如果敌方出战角色未附属【引雷】，则使其附属【引雷】。', 2, 2, 3, 3, {},
             'https://patchwiki.biligame.com/images/ys/1/13/1tkxwb0js8qxi9yi8bm6tpub8f9ba19.png',
             'https://act-upload.mihoyo.com/ys-obc/2023/08/03/203927054/bb9487283d20c857804988ace8572ebc_971397791433710881.png',
-            [heroStatus(2099)], (options: SkillOption) => {
-                const { eheros = [], hero: { skills: [skill1] } } = options;
+            [heroStatus(2099)], event => {
+                const { eheros = [], hero: { skills: [skill1] } } = event;
                 const status2099 = eheros.find(h => h.isFront)?.inStatus?.find(ist => ist.id == 2099);
                 const addDmgCdt = isCdt(!!status2099, status2099?.useCnt ?? 0);
                 if (status2099) status2099.useCnt = 0;
@@ -1003,8 +1001,8 @@ const allHeros: HeroObj = {
         new GISkill('卡萨扎莱宫的无微不至', '造成{dmg}点[雷元素伤害]，召唤【灯中幽精】。', 3, 1, 3, 3, { ec: 2 },
             'https://patchwiki.biligame.com/images/ys/b/b7/pzuxl8ukf3do834omkdzx5p8yfape0u.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/11/04/258999284/a1870db7855c7037f700f74152d1f28e_1635879084262346523.png',
-            [newSummonee(3045)], (options: SkillOption) => {
-                const { hero: { talentSlot }, card } = options;
+            [newSummonee(3045)], event => {
+                const { hero: { talentSlot }, card } = event;
                 const isTalent = talentSlot != null || card?.id == 759;
                 return { summon: [newSummonee(3045, isTalent)] }
             })
@@ -1016,8 +1014,8 @@ const allHeros: HeroObj = {
         new GISkill('越袚雷草之轮', '生成【越袚草轮】。如果本角色生命值至少为6，则对自身造成2点[穿透伤害]。', 2, 0, 3, 3, {},
             '',
             '',
-            [heroStatus(2176)], (options: SkillOption) => {
-                const { hero: { hp, skills: [, { src }] } } = options;
+            [heroStatus(2176)], event => {
+                const { hero: { hp, skills: [, { src }] } } = event;
                 return { outStatus: [heroStatus(2176, src)], pendamageSelf: isCdt(hp >= 6, 2) }
             }),
         new GISkill('御咏鸣神刈山祭', '造成{dmg}点[雷元素伤害]，治疗本角色2点。', 3, 4, 3, 3, { ec: 2 },
@@ -1036,8 +1034,8 @@ const allHeros: HeroObj = {
         new GISkill('禁·风灵作成·柒伍同构贰型', '造成{dmg}点[风元素伤害]，召唤【大型风灵】。', 3, 1, 3, 5, { ec: 2 },
             'https://patchwiki.biligame.com/images/ys/8/8b/mfq7sbev9evjdy9lxkfsp96np5fockl.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/2f7e7dededadbb4bec6cd5a1e3b8714a_8254714025319039539.png',
-            [newSummonee(3005)], (options: SkillOption) => {
-                const { hero: { talentSlot }, card } = options;
+            [newSummonee(3005)], event => {
+                const { hero: { talentSlot }, card } = event;
                 const isTalent = !!talentSlot || card?.id == 706;
                 return { summonPre: [newSummonee(3005, isTalent)] }
             })
@@ -1053,8 +1051,8 @@ const allHeros: HeroObj = {
         new GISkill('蒲公英之风', '治疗我方所有角色2点，召唤【蒲公英领域】。', 3, 0, 4, 5, { ec: 2 },
             'https://patchwiki.biligame.com/images/ys/2/23/gqtjyn7ckzz3g0zbtmska8ws1ry1dqj.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/e4d3dd465a4f6026ba923619c1827c94_3960747061292563787.png',
-            [newSummonee(3006)], (options: SkillOption) => {
-                const { heros = [] } = options;
+            [newSummonee(3006)], event => {
+                const { heros = [] } = event;
                 return { summon: [newSummonee(3006)], heal: 2, hidxs: allHidxs(heros) }
             })
     ]),
@@ -1065,8 +1063,8 @@ const allHeros: HeroObj = {
         new GISkill('高天之歌', '造成{dmg}点[风元素伤害]，生成【风域】。', 2, 2, 3, 5, {},
             'https://patchwiki.biligame.com/images/ys/f/fe/hhb16pe3sq5duv4cu299atxbi78k7ae.png',
             'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/73d15303525e2658bf60d8336109d92e_404486790465744082.png',
-            [heroStatus(2082)], (options: SkillOption) => {
-                const { hero: { talentSlot }, card } = options;
+            [heroStatus(2082)], event => {
+                const { hero: { talentSlot }, card } = event;
                 const isTalent = talentSlot || card?.id == 742;
                 return { outStatus: [heroStatus(2082, isTalent)] }
             }),
@@ -1085,8 +1083,8 @@ const allHeros: HeroObj = {
         new GISkill('靖妖傩舞', '造成{dmg}点[风元素伤害]，本角色附属【夜叉傩面】。', 3, 4, 3, 5, { ec: 2 },
             'https://patchwiki.biligame.com/images/ys/9/9f/7dxxr4z59ch7bsg0xaoxxi38meuaeff.png',
             'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/081c165d08ff75ec2f15215cfc892056_2221900956718137863.png',
-            [heroStatus(2085)], (options: SkillOption) => {
-                const { hero: { talentSlot, skills: [, skill1, { src }] }, card } = options;
+            [heroStatus(2085)], event => {
+                const { hero: { talentSlot, skills: [, skill1, { src }] }, card } = event;
                 const inStatus = [heroStatus(2085, src)];
                 if (!!talentSlot || card?.id == 743) inStatus.push(heroStatus(2115, [skill1, heroStatus(2085)]));
                 return { inStatus }
@@ -1099,8 +1097,8 @@ const allHeros: HeroObj = {
         new GISkill('千早振', '造成{dmg}点[风元素伤害]，本角色附属【乱岚拨止】。；如果此技能引发了扩散，则将【乱岚拨止】转换为被扩散的元素。；【此技能结算后：】我方切换到后一个角色。', 2, 3, 3, 5, {},
             'https://patchwiki.biligame.com/images/ys/2/29/f7rwj3qb9kffejm2kt2oq7ltl843nrk.png',
             'https://act-upload.mihoyo.com/ys-obc/2023/07/07/183046623/c492b46c71485b1377cf8c9f3f5dd6e8_6376046014259793309.png',
-            [heroStatus(2098)], (options: SkillOption) => ({
-                inStatus: [heroStatus(2098, options.windEl)],
+            [heroStatus(2098)], event => ({
+                inStatus: [heroStatus(2098, event.windEl)],
                 cmds: [{ cmd: 'switch-after-self', cnt: 2500 }],
             })),
         new GISkill('万叶之一刀', '造成{dmg}点[风元素伤害]，召唤【流风秋野】。', 3, 3, 3, 5, { ec: 2 },
@@ -1119,8 +1117,8 @@ const allHeros: HeroObj = {
         new GISkill('狂言·式乐五番', '造成{dmg}点[风元素伤害]; 如果角色附属有【优风倾姿】，则将其移除并使此伤害+1。', 3, 7, 3, 5, { ec: 3 },
             'https://patchwiki.biligame.com/images/ys/3/31/jq8wshhifimtmgedysk1xlscepp9d6l.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/09/24/258999284/9b7fa91d73564e2cb0cbbbc0d1b75cb3_8357319180909129225.png',
-            [heroStatus(2102)], (options: SkillOption) => {
-                const { hero: { inStatus } } = options;
+            [heroStatus(2102)], event => {
+                const { hero: { inStatus } } = event;
                 const sts2102 = inStatus.find(ist => ist.id == 2102);
                 return {
                     addDmgCdt: isCdt(!!sts2102, 1),
@@ -1137,8 +1135,8 @@ const allHeros: HeroObj = {
         new GISkill('谜影障身法', '造成{dmg}点[风元素伤害]，本回合第一次使用此技能、且自身生命值不多于8时，治疗自身2点，但是附属【攻袭余威】。', 2, 3, 3, 5, {},
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/b2ba9e68ed4a405e54b4786ecac7c3e3.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/19/258999284/2d696e8b97e9fe9fb4572a81786780d6_2735599059161740228.png',
-            [heroStatus(2133)], (options: SkillOption) => {
-                const { hero: { talentSlot, hp, skills: [, { useCnt }] }, card } = options;
+            [heroStatus(2133)], event => {
+                const { hero: { talentSlot, hp, skills: [, { useCnt }] }, card } = event;
                 const cdt = hp <= 8 && useCnt == 0;
                 const isTalent = (!!talentSlot || card?.id == 764) && useCnt == 1;
                 return {
@@ -1160,8 +1158,8 @@ const allHeros: HeroObj = {
         new GISkill('呜呼流·风隐急进', '造成{dmg}点[风元素伤害]，本角色[准备技能]：【风风轮舞踢】。；如果当前技能引发了扩散，则【风风轮舞踢】将改为造成被扩散元素的伤害。', 2, 1, 3, 5, {},
             'https://patchwiki.biligame.com/images/ys/f/f1/nft00ohrbmn6j4hqssftn7kh4ha3nk5.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2024/01/25/258999284/1b3691e9a037a54d02076135237d2925_8714311620973409736.png',
-            [readySkill(12)], (options: SkillOption) => {
-                const { windEl = 0 } = options;
+            [readySkill(12)], event => {
+                const { windEl = 0 } = event;
                 return { inStatus: [heroStatus(2155, windEl, [readySkill(12)])] }
             }),
         new GISkill('呜呼流·影貉缭乱', '造成{dmg}点[风元素伤害]，召唤【不倒貉貉】。', 3, 1, 3, 5, { ec: 2 },
@@ -1176,12 +1174,12 @@ const allHeros: HeroObj = {
         new GISkill('非想风天', '造成{dmg}点[风元素伤害]，本角色附属【疾风示现】。', 2, 2, 3, 5, {},
             '',
             '',
-            [heroStatus(2177), heroStatus(2178)], (options: SkillOption) => ({ inStatus: [heroStatus(2177, options.hero.skills[1].src)] })),
+            [heroStatus(2177), heroStatus(2178)], event => ({ inStatus: [heroStatus(2177, event.hero.skills[1].src)] })),
         new GISkill('抟风秘道', '造成{dmg}点[风元素伤害]，召唤【赫耀多方面体】。', 3, 2, 3, 5, { ec: 2 },
             '',
             '',
-            [newSummonee(3058)], (options: SkillOption) => {
-                const { hero: { talentSlot }, card, summons = [] } = options;
+            [newSummonee(3058)], event => {
+                const { hero: { talentSlot }, card, summons = [] } = event;
                 const isTalent = !!talentSlot || card?.id == 781;
                 const isExist = summons.some(smn => smn.id == 3058);
                 return {
@@ -1197,15 +1195,15 @@ const allHeros: HeroObj = {
         new GISkill('璇玑屏', '造成{dmg}点[岩元素伤害]，生成【璇玑屏】。', 2, 2, 3, 6, {},
             'https://patchwiki.biligame.com/images/ys/c/c7/fhhajrw49bck487xgc9tm832v1lydan.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/e16efaaa1d7a4e0e50c2df84b5870ea3_8679057305261038668.png',
-            [heroStatus(2027)], (options: SkillOption) => {
-                const { hero: { talentSlot }, card } = options;
+            [heroStatus(2027)], event => {
+                const { hero: { talentSlot }, card } = event;
                 return { outStatus: [heroStatus(2027)], addDmgCdt: isCdt(talentSlot == null && card?.id == 710, 1) };
             }),
         new GISkill('天权崩玉', '造成{dmg}点[岩元素伤害]，如果【璇玑屏】在场，就使此伤害+2。', 3, 6, 3, 6, { ec: 3 },
             'https://patchwiki.biligame.com/images/ys/a/a7/3s4vt3i6mu5kopy55xern2tdvq2tl2a.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/2930a6e689cea53607ab586a8cde8c97_8943298426488751810.png',
-            [heroStatus(2027)], (options: SkillOption) => {
-                const { hero: { outStatus } } = options;
+            [heroStatus(2027)], event => {
+                const { hero: { outStatus } } = event;
                 return { addDmgCdt: isCdt(outStatus.some(sts => sts.id == 2027), 2) };
             })
     ]),
@@ -1220,7 +1218,7 @@ const allHeros: HeroObj = {
         new GISkill('大扫除', '造成{dmg}点[岩元素伤害]，本角色附属【大扫除】。', 3, 4, 4, 6, { ec: 2 },
             'https://patchwiki.biligame.com/images/ys/6/62/5drxd3veuo8k8peke518xe7kyfxl4yr.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/e3847d4db2fd91fcd97388ab950598fd_6553932389060621914.png',
-            [heroStatus(2037)], (options: SkillOption) => ({ inStatus: [heroStatus(2037, options.hero.skills[2].src)] }))
+            [heroStatus(2037)], event => ({ inStatus: [heroStatus(2037, event.hero.skills[2].src)] }))
     ]),
 
     1503: new GIHero(1503, '荒泷一斗', 3, 10, 6, 2,
@@ -1236,7 +1234,7 @@ const allHeros: HeroObj = {
         new GISkill('最恶鬼王·一斗轰临！！', '造成{dmg}点[岩元素伤害]，本角色附属【怒目鬼王】。', 3, 4, 3, 6, { ec: 3 },
             'https://patchwiki.biligame.com/images/ys/0/08/al3ofu1w19zdogu1bf0pqvj7qjx9nc4.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2023/03/28/12109492/ba4c88cde04f2cd06944ddcda99c5475_7502957554265579801.png',
-            [heroStatus(2069), heroStatus(2068)], (options: SkillOption) => ({ inStatus: [heroStatus(2069, options.hero.skills[2].src)] }))
+            [heroStatus(2069), heroStatus(2068)], event => ({ inStatus: [heroStatus(2069, event.hero.skills[2].src)] }))
     ]),
 
     1504: new GIHero(1504, '钟离', 2, 10, 6, 5,
@@ -1253,7 +1251,7 @@ const allHeros: HeroObj = {
         new GISkill('天星', '造成{dmg}点[岩元素伤害]，目标角色附属【石化】。', 3, 4, 3, 6, { ec: 3 },
             'https://patchwiki.biligame.com/images/ys/a/a3/isu08rwkjyir4rbkc3rk2bk15ko8y7a.png',
             'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/03c6245c3468e7d518e1292ac0f22c5a_8147918389515243613.png',
-            [heroStatus(2087)], (options: SkillOption) => ({ inStatusOppo: [heroStatus(2087, options.hero.skills[3].src)] }))
+            [heroStatus(2087)], event => ({ inStatusOppo: [heroStatus(2087, event.hero.skills[3].src)] }))
     ]),
 
     1505: new GIHero(1505, '阿贝多', 1, 10, 6, 1,
@@ -1266,8 +1264,8 @@ const allHeros: HeroObj = {
         new GISkill('诞生式·大地之潮', '造成{dmg}点[岩元素伤害]。如果【阳华】在场，就使此伤害+2。', 3, 4, 3, 6, { ec: 2 },
             'https://patchwiki.biligame.com/images/ys/b/b7/jtvi7qufpjdnlob7t4vj8afpbqxi9w8.png',
             'https://act-upload.mihoyo.com/ys-obc/2023/08/02/82503813/75d7ab3b57d9db6cee911be55e21a4a0_3851331594331778687.png',
-            [newSummonee(3040)], (options: SkillOption) => {
-                const { summons = [] } = options;
+            [newSummonee(3040)], event => {
+                const { summons = [] } = event;
                 return { addDmgCdt: isCdt(summons.some(smn => smn.id == 3040), 2) };
             })
     ]),
@@ -1278,12 +1276,12 @@ const allHeros: HeroObj = {
         new GISkill('犬坂吠吠方圆阵', '造成{dmg}点[岩元素伤害]，生成【大将旗指物】。', 2, 2, 3, 6, {},
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/82cfdcfa18c2ac51c7d7c80ad271b850.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/19/258999284/3d25c8d7ea6541f2b0873f0dad5892a0_8644416094552727288.png',
-            [heroStatus(2135)], (options: SkillOption) => ({ outStatus: [heroStatus(2135, options.hero.skills[1].src)] })),
+            [heroStatus(2135)], event => ({ outStatus: [heroStatus(2135, event.hero.skills[1].src)] })),
         new GISkill('兽牙逐突形胜战法', '造成{dmg}点[岩元素伤害]，生成【大将旗指物】，召唤【大将威仪】。', 3, 2, 3, 6, { ec: 2 },
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/0d85c76bf3b545043bed5237d3713569.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/19/258999284/44d2af6450e8e7b56f1108e96609754c_6106169218939314736.png',
-            [heroStatus(2135), newSummonee(3050)], (options: SkillOption) => {
-                return { outStatus: [heroStatus(2135, options.hero.skills[1].src)], summon: [newSummonee(3050)] }
+            [heroStatus(2135), newSummonee(3050)], event => {
+                return { outStatus: [heroStatus(2135, event.hero.skills[1].src)], summon: [newSummonee(3050)] }
             })
     ]),
 
@@ -1293,8 +1291,8 @@ const allHeros: HeroObj = {
         new GISkill('拂花偈叶', '造成{dmg}点[草元素伤害]。', 2, 3, 3, 7, {},
             'https://patchwiki.biligame.com/images/ys/1/17/pr0uli0a3fs8r3qiotnnx0ikaeudmw4.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/1bfdd645a02ea655cf3d4fa34d468a36_6197207334476477244.png',
-            [], (options: SkillOption) => {
-                const { hero: { talentSlot }, card } = options;
+            [], event => {
+                const { hero: { talentSlot }, card } = event;
                 if (talentSlot == null && card?.id != 711) return {};
                 return { outStatusPre: [heroStatus(2028)] };
             }),
@@ -1323,20 +1321,20 @@ const allHeros: HeroObj = {
         new GISkill('所闻遍计', '造成{dmg}点[草元素伤害]，目标角色附属【蕴种印】; 如果在附属前目标角色已附属有【蕴种印】，就改为对所有敌方角色附属【蕴种印】。', 2, 2, 3, 7, {},
             'https://patchwiki.biligame.com/images/ys/8/8b/hfb5j6xnze5j5e5tmixhieq59y78fwn.png',
             'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/ca47312e3d57bc47516b703e9a7d5615_6453606035541146217.png',
-            [heroStatus(2088)], (options: SkillOption) => {
-                const { eheros = [], heros = [] } = options;
+            [heroStatus(2088)], event => {
+                const { eheros = [], heros = [] } = event;
                 const hidxs = isCdt(eheros.find(h => h.isFront)?.inStatus.some(ist => ist.id == 2088), allHidxs(heros));
                 return { inStatusOppoPre: [heroStatus(2088)], hidxs };
             }),
         new GISkill('所闻遍计·真如', '造成{dmg}点[草元素伤害]，所有敌方角色附属【蕴种印】。', 2, 3, 5, 7, {},
             'https://patchwiki.biligame.com/images/ys/6/64/qq68p4qre9yxfhxkn97q9quvgo3qbum.png',
             'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/d30e1ee8bc69a2235f36b74ddda3832b_8853500709483692571.png',
-            [heroStatus(2088)], (options: SkillOption) => ({ inStatusOppoPre: [heroStatus(2088)], hidxs: allHidxs(options.heros) })),
+            [heroStatus(2088)], event => ({ inStatusOppoPre: [heroStatus(2088)], hidxs: allHidxs(event.heros) })),
         new GISkill('心景幻成', '造成{dmg}点[草元素伤害]，生成【摩耶之殿】。', 3, 4, 3, 7, { ec: 2 },
             'https://patchwiki.biligame.com/images/ys/b/b2/hiqeufp1d8c37jqo8maxpkvjuiu32lq.png',
             'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/ab5d92e19144f4e483bce180409d0ecf_4393685660579955496.png',
-            [heroStatus(2089)], (options: SkillOption) => {
-                const { hero: { talentSlot, skills: [, , , { src }], inStatus }, card, heros = [], eheros = [] } = options;
+            [heroStatus(2089)], event => {
+                const { hero: { talentSlot, skills: [, , , { src }], inStatus }, card, heros = [], eheros = [] } = event;
                 const isTalent = talentSlot != null || card?.id == 745;
                 const elements = heros.filter(h => h.hp > 0).map(h => h.element);
                 if (elements.includes(3) && isTalent && inStatus.every(ist => ist.id != 2089)) {
@@ -1355,15 +1353,15 @@ const allHeros: HeroObj = {
         new GISkill('云台团团降芦菔', '召唤【月桂·抛掷型】。', 2, 0, 3, 7, {},
             'https://patchwiki.biligame.com/images/ys/b/b9/1kp0f3qy6c5glhcphgbxi3nze2nq695.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/09/24/258999284/73c9611548f96cbcaaa820548576ff81_266542015961172436.png',
-            [newSummonee(3042)], (options: SkillOption) => {
-                const { hero: { talentSlot }, card } = options;
+            [newSummonee(3042)], event => {
+                const { hero: { talentSlot }, card } = event;
                 const isTalent = talentSlot != null || card?.id == 757;
                 return { summon: [newSummonee(3042, isTalent)] }
             }),
         new GISkill('云颗珊珊月中落', '造成{dmg}点[草元素伤害]，生成【桂子仙机】。', 3, 1, 4, 7, { ec: 2 },
             'https://patchwiki.biligame.com/images/ys/6/6e/34fahwmjls4qg1gnq2ew4v0mdxa2hqg.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/09/24/258999284/f364530033902093e271b5b3b26c0018_6031597060341810921.png',
-            [heroStatus(2104)], (options: SkillOption) => ({ outStatus: [heroStatus(2104, options.hero.skills[2].src)] }))
+            [heroStatus(2104)], event => ({ outStatus: [heroStatus(2104, event.hero.skills[2].src)] }))
     ]),
 
     1605: new GIHero(1605, '白术', 2, 10, 7, 4,
@@ -1376,8 +1374,8 @@ const allHeros: HeroObj = {
         new GISkill('愈气全形论', '生成【脉摄宣明】和【无欲气护盾】。', 3, 0, 4, 7, { ec: 2 },
             'https://patchwiki.biligame.com/images/ys/b/b9/6hkbfzw7gp37q857d9cz779lqrctziz.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/11/04/258999284/1cd096e52394a3e30c8617e8025e23f4_7844475516100755523.png',
-            [heroStatus(2113), heroStatus(2114)], (options: SkillOption) => {
-                return { outStatus: [heroStatus(2113, options.hero.skills[2].src), heroStatus(2114)] }
+            [heroStatus(2113), heroStatus(2114)], event => {
+                return { outStatus: [heroStatus(2113, event.hero.skills[2].src), heroStatus(2114)] }
             })
     ]),
 
@@ -1387,17 +1385,17 @@ const allHeros: HeroObj = {
         new GISkill('共相·理式摹写', '造成{dmg}点[草元素伤害]，本角色附属【琢光镜】。', 2, 2, 3, 7, {},
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/02a567f5717fcd6351cb861142722369.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/05/258999284/66d0bbacd89e3b8c5ffe2ffb8bd88fb8_8269978882036661533.png',
-            [heroStatus(2136)], (options: SkillOption) => ({ inStatus: [heroStatus(2136, options.hero.skills[2].src)] })),
+            [heroStatus(2136)], event => ({ inStatus: [heroStatus(2136, event.hero.skills[2].src)] })),
         new GISkill('殊境·显象缚结', '造成{dmg}点[草元素伤害]。消耗【琢光镜】，此伤害提升所消耗【琢光镜】的持续回合值。如果消耗【琢光镜】的持续回合为0/1/2，则为角色附属持续回合为3/2/1的【琢光镜】。', 3, 4, 3, 7, { ec: 2 },
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/7d8db8835772773ef227796ba9955c31.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/05/258999284/3e3c04e07682dde6272b8569f39e7359_862983076929139931.png',
-            [heroStatus(2136)], (options: SkillOption) => {
-                const { hero: { inStatus, talentSlot }, card } = options;
+            [heroStatus(2136)], event => {
+                const { hero: { inStatus, talentSlot }, card } = event;
                 const sts2136 = inStatus.find(ist => ist.id == 2136);
                 const isTalent = (!!talentSlot || card?.id == 766) && !!sts2136;
                 const rcnt = sts2136?.roundCnt ?? 0;
                 return {
-                    inStatus: isCdt(!sts2136, [heroStatus(2136, options.hero.skills[2].src, 3 - (isTalent ? 0 : rcnt))]),
+                    inStatus: isCdt(!sts2136, [heroStatus(2136, event.hero.skills[2].src, 3 - (isTalent ? 0 : rcnt))]),
                     addDmgCdt: rcnt,
                     cmds: isCdt(isTalent, [{ cmd: 'getCard', cnt: 1 }]),
                     exec: () => {
@@ -1413,11 +1411,11 @@ const allHeros: HeroObj = {
         new GISkill('呜喵町飞足', '生成【猫箱急件】和【安全运输护盾】。', 2, 0, 3, 7, {},
             'https://patchwiki.biligame.com/images/ys/e/e6/t5pihmh5sg8ccu6nm7stvb71maxxz9x.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2024/02/28/258999284/f19df62c04e80071c2278ae5ef2f21ff_8786745388682460864.png',
-            [heroStatus(2167), heroStatus(2168)], (options: SkillOption) => ({ outStatus: [heroStatus(2167, options.hero.skills[1].src), heroStatus(2168)] })),
+            [heroStatus(2167), heroStatus(2168)], event => ({ outStatus: [heroStatus(2167, event.hero.skills[1].src), heroStatus(2168)] })),
         new GISkill('秘法·惊喜特派', '造成{dmg}点[草元素伤害]，在敌方场上生成【猫草豆蔻】。', 3, 4, 3, 7, { ec: 2 },
             'https://patchwiki.biligame.com/images/ys/9/9a/dbkhj9brr5xbkjgx56nabv1dgk7gxio.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2024/02/28/258999284/562bc0909575afbc29f1971ae2c4b24d_5181008040290623097.png',
-            [heroStatus(2169)], (options: SkillOption) => ({ outStatusOppo: [heroStatus(2169, options.hero.skills[2].src)] }))
+            [heroStatus(2169)], event => ({ outStatusOppo: [heroStatus(2169, event.hero.skills[2].src)] }))
     ]),
 
     1701: new GIHero(1701, '愚人众·冰萤术士', 8, 10, 4, 0,
@@ -1430,8 +1428,8 @@ const allHeros: HeroObj = {
         new GISkill('冰枝白花', '造成{dmg}点[冰元素伤害]，本角色[附着冰元素]，生成【流萤护罩】。', 3, 5, 3, 4, { ec: 3 },
             'https://patchwiki.biligame.com/images/ys/5/54/1wmf5ct2ccet6bltjvkqs03jusibbrs.png',
             'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/1368416ac693a1e50e703e92d93d2043_1088350178906732314.png',
-            [heroStatus(2090)], (options: SkillOption) => {
-                const { summons = [] } = options;
+            [heroStatus(2090)], event => {
+                const { summons = [] } = event;
                 const useCnt = summons.find(smn => smn.id == 3034)?.useCnt ?? 0;
                 return { isAttach: true, outStatus: [heroStatus(2090, useCnt)] }
             })
@@ -1451,9 +1449,9 @@ const allHeros: HeroObj = {
         new GISkill('邪眼之威', '战斗开始时，初始附属【冰封的炽炎魔女】。', 4, 0, 0, 0, {},
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/ed9acfc03544bd410106bc9bd50f3c49.png',
             '',
-            [heroStatus(2138)], (options: SkillOption) => ({
+            [heroStatus(2138)], event => ({
                 trigger: ['game-start'],
-                inStatus: [heroStatus(2138, options.hero.skills[3].src)]
+                inStatus: [heroStatus(2138, event.hero.skills[3].src)]
             }))
     ]),
 
@@ -1481,8 +1479,8 @@ const allHeros: HeroObj = {
             'https://patchwiki.biligame.com/images/ys/9/94/fh1ril80gsejz0l84u6siiq6lz6tlkr.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/3e2457b116526a30a834120f8c438ca6_2477510128488129478.png',
             [newSummonee(3016), newSummonee(3017), newSummonee(3018)],
-            (options: SkillOption) => {
-                const { summons = [] } = options;
+            event => {
+                const { summons = [] } = event;
                 const pools = [3016, 3017, 3018].filter(smnid => summons.every(smn => smn.id != smnid));
                 if (pools.length == 1) {
                     pools.length = 0;
@@ -1495,8 +1493,8 @@ const allHeros: HeroObj = {
             'https://patchwiki.biligame.com/images/ys/c/c6/bci7cin5911l7uqva01dft0ak44a1jo.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/6924bae6c836d2b494b5a172da6cfd70_4019717338422727435.png',
             [newSummonee(3016), newSummonee(3017), newSummonee(3018)],
-            (options: SkillOption) => {
-                const { summons = [] } = options;
+            event => {
+                const { summons = [] } = event;
                 const pools = [3016, 3017, 3018].filter(smnid => summons.every(smn => smn.id != smnid));
                 if (pools.length == 1) {
                     pools.length = 0;
@@ -1517,8 +1515,8 @@ const allHeros: HeroObj = {
         new GISkill('潮涌与激流', '造成{dmg}点[水元素伤害]; 我方每有1个召唤物，再使此伤害+1。', 3, 4, 3, 1, { ec: 3 },
             'https://patchwiki.biligame.com/images/ys/3/3b/8nz5w00ylo8dxpa8gt93f4d6ldjs5d2.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/37dedea23dfa78e8fb4e356bb4a4bed4_1738280724029210097.png',
-            [], (options: SkillOption) => {
-                const { hero: { talentSlot }, card, summons = [] } = options;
+            [], event => {
+                const { hero: { talentSlot }, card, summons = [] } = event;
                 if (!!talentSlot || card?.id == 721) summons.forEach(smn => ++smn.useCnt);
                 return { addDmgCdt: summons.length }
             })
@@ -1530,8 +1528,8 @@ const allHeros: HeroObj = {
         new GISkill('潋波绽破', '造成{dmg}点[水元素伤害]，目标角色附属【水光破镜】。', 2, 2, 3, 1, {},
             'https://patchwiki.biligame.com/images/ys/b/bb/ejgc07c2acyw7emun013j336cvmksvt.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/72eb60be8d1a88f12671264e29101ad4_5912821621104766081.png',
-            [heroStatus(2043)], (options: SkillOption) => {
-                const { hero: { talentSlot }, card } = options;
+            [heroStatus(2043)], event => {
+                const { hero: { talentSlot }, card } = event;
                 const isTalent = !!talentSlot || card?.id == 722;
                 return { inStatusOppo: [heroStatus(2043, isTalent)] }
             }),
@@ -1564,8 +1562,8 @@ const allHeros: HeroObj = {
         new GISkill('伺机而动', '造成{dmg}点[火元素伤害]，本角色附属【潜行】。', 2, 1, 3, 2, {},
             'https://patchwiki.biligame.com/images/ys/3/36/rr6eiuoeleum3em795e7r1x687ielwb.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/3903202fe02b486f479ba7f8d32d8658_8665610180849380821.png',
-            [heroStatus(2044)], (options: SkillOption) => {
-                const { hero: { talentSlot }, card } = options;
+            [heroStatus(2044)], event => {
+                const { hero: { talentSlot }, card } = event;
                 const isTalent = !!talentSlot || card?.id == 723;
                 return { inStatus: [heroStatus(2044, isTalent)] }
             }),
@@ -1603,8 +1601,8 @@ const allHeros: HeroObj = {
         new GISkill('厄灵苏醒·炎之魔蝎', '造成{dmg}点[火元素伤害]，召唤【厄灵·炎之魔蝎】。', 3, 2, 3, 2, { ec: 2 },
             'https://act-webstatic.mihoyo.com/hk4e/e20200928calculate/item_skill_icon_u033pf/637396968147be2805479aebcbe5b825.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/12/258999284/84274abeb2c38f6f46c94dd2953323db_4939077374255699145.png',
-            [newSummonee(3051)], (options: SkillOption) => {
-                const { hero: { talentSlot }, card, summons = [] } = options;
+            [newSummonee(3051)], event => {
+                const { hero: { talentSlot }, card, summons = [] } = event;
                 const isTalent = !!talentSlot || card?.id == 768;
                 const isSmned = summons.some(smn => smn.id == 3051);
                 return {
@@ -1615,8 +1613,8 @@ const allHeros: HeroObj = {
         new GISkill('厄灵之能', '【此角色受到伤害后：】如果此角色生命值不多于7，则获得1点[充能]。（整场牌局限制1次）。', 4, 0, 0, 0, {},
             'https://act-webstatic.mihoyo.com/hk4e/e20200928calculate/item_skill_icon_u033pf/9262db8e7ec7952af306117cb67d668d.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/12/258999284/b9854a003c9d7e5b14bed92132391e9e_754640348498205527.png',
-            [], (options: SkillOption) => {
-                const { hero: { hp, skills: [, , , skill4], energy, maxEnergy }, getdmg = 0 } = options;
+            [], event => {
+                const { hero: { hp, skills: [, , , skill4], energy, maxEnergy }, getdmg = 0 } = event;
                 if (hp - getdmg > 7 || energy >= maxEnergy || skill4.isUsed) return {}
                 return {
                     trigger: ['getdmg'],
@@ -1631,8 +1629,8 @@ const allHeros: HeroObj = {
         new GISkill('烈焰燃绽', '造成{dmg}点[火元素伤害]; 如果本角色附属有至少7层【重甲蟹壳】，则此伤害+1。；然后，本角色附属2层【重甲蟹壳】。', 2, 1, 3, 2, {},
             '',
             '',
-            [heroStatus(2182)], (options: SkillOption) => {
-                const { hero: { inStatus } } = options;
+            [heroStatus(2182)], event => {
+                const { hero: { inStatus } } = event;
                 const sts2182Cnt = inStatus.find(ist => ist.id == 2182)?.useCnt ?? 0;
                 return { addDmgCdt: isCdt(sts2182Cnt >= 7, 1), inStatus: [heroStatus(2182, 2)] }
             }),
@@ -1643,8 +1641,8 @@ const allHeros: HeroObj = {
         new GISkill('帝王甲胄', '战斗开始时：初始附属5层【重甲蟹壳】。；【我方执行任意行动后：】如果我方场上存在【重甲蟹壳】以外的[护盾]状态或[护盾]出战状态，则将其全部移除; 每移除1个，就使角色附属2层【重甲蟹壳】。', 4, 0, 0, 0, {},
             '',
             '',
-            [heroStatus(2182)], (options: SkillOption) => {
-                const { heros = [], trigger = '' } = options;
+            [heroStatus(2182)], event => {
+                const { heros = [], trigger = '' } = event;
                 let stsCnt = 0;
                 if (trigger == 'game-start') stsCnt = 5;
                 else heros.forEach(hero => stsCnt += [...hero.inStatus, ...hero.outStatus].filter(sts => sts.type.includes(7) && sts.id != 2182).length * 2);
@@ -1691,8 +1689,8 @@ const allHeros: HeroObj = {
         new GISkill('雷墙倾轧', '对附属有【雷鸣探知】的敌方角色造成{dmg}点[雷元素伤害]。(如果敌方不存在符合条件角色，则改为对出战角色造成伤害)', 2, 3, 3, 3, {},
             'https://act-webstatic.mihoyo.com/hk4e/e20200928calculate/item_skill_icon_u033pf/1f1b73b917fc25ea3c71c08583037cb1.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/05/258999284/ca84fd08636d380d57da96f9a37e9e7f_7121937516609130674.png',
-            [heroStatus(2141)], (options: SkillOption) => {
-                const { eheros = [] } = options;
+            [heroStatus(2141)], event => {
+                const { eheros = [] } = event;
                 const sts2141 = eheros.findIndex(h => h.inStatus.some(ist => ist.id === 2141));
                 if (sts2141 == -1) return {}
                 return { atkTo: sts2141 }
@@ -1704,7 +1702,7 @@ const allHeros: HeroObj = {
         new GISkill('雷霆探知', '战斗开始时，在敌方场上生成【雷霆探针】。', 4, 0, 0, 0, {},
             'https://act-webstatic.mihoyo.com/hk4e/e20200928calculate/item_skill_icon_u033pf/85101cecf76e834437a758fc19093700.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/05/258999284/eb1d94ce0af17b97f756f8c126a5863a_674902409578889354.png',
-            [heroStatus(2140)], (options: SkillOption) => ({ trigger: ['game-start'], outStatusOppo: [heroStatus(2140, options.hero.skills[3].src)] }))
+            [heroStatus(2140)], event => ({ trigger: ['game-start'], outStatusOppo: [heroStatus(2140, event.hero.skills[3].src)] }))
     ]),
 
     1763: new GIHero(1763, '千年珍珠骏麟', 0, 8, 3, 0,
@@ -1713,8 +1711,8 @@ const allHeros: HeroObj = {
         new GISkill('霞舞鱼群', '造成{dmg}点[雷元素伤害]。；【每回合1次：】如果本角色已附属【原海明珠】，则使其[可用次数]+1。', 2, 3, 3, 3, {},
             'https://patchwiki.biligame.com/images/ys/3/3a/fej2c9u7kria1j2btaxy7f9o9k7uuyg.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2024/01/17/258999284/ba6b95e623fd861b69316a6f649d150c_90481026227323793.png',
-            [heroStatus(2158)], (options: SkillOption) => {
-                const { hero: { inStatus } } = options;
+            [heroStatus(2158)], event => {
+                const { hero: { inStatus } } = event;
                 return {
                     exec: () => {
                         const sts2158 = inStatus.find(ist => ist.id == 2158);
@@ -1742,8 +1740,8 @@ const allHeros: HeroObj = {
         new GISkill('霆雷之护', '造成{dmg}点[雷元素伤害]，本角色[附着雷元素]，生成【雷萤护罩】并[准备技能]：【霆电迸发】。', 3, 1, 3, 3, { ec: 2 },
             'https://patchwiki.biligame.com/images/ys/b/bb/qyleol8t4tzuujvuj3wlfk6h53icvcb.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2024/03/06/258999284/7ddbd6e73bea8f907590c964c2f88d98_2187578641261417207.png',
-            [heroStatus(2170), readySkill(18)], (options: SkillOption) => {
-                const { summons = [] } = options;
+            [heroStatus(2170), readySkill(18)], event => {
+                const { summons = [] } = event;
                 const useCnt = summons.find(smn => smn.id == 3057)?.useCnt ?? 0;
                 return {
                     isAttach: true,
@@ -1759,16 +1757,16 @@ const allHeros: HeroObj = {
         new GISkill('孤风刀势', '召唤【剑影·孤风】。', 2, 0, 3, 5, {},
             'https://patchwiki.biligame.com/images/ys/f/f2/gucxzyumx6uaumg6r6ms4czbw32v3gt.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/a72086131fbe3e03201926a46dac48f3_7155522304163694322.png',
-            [newSummonee(3019)], (options: SkillOption) => {
-                const { hero: { talentSlot }, card } = options;
+            [newSummonee(3019)], event => {
+                const { hero: { talentSlot }, card } = event;
                 const cmds = isCdt<Cmds[]>(!!talentSlot || card?.id == 724, [{ cmd: 'switch-after-self', cnt: 2500 }]);
                 return { summon: [newSummonee(3019)], cmds }
             }),
         new GISkill('霜驰影突', '召唤【剑影·霜驰】。', 2, 0, 3, 4, {},
             'https://patchwiki.biligame.com/images/ys/1/17/a8qboxl35nar8vuaho1cewppy0fp43t.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/6df8766388e62c6a97f9898605fb45e2_6047730151662669218.png',
-            [newSummonee(3020)], (options: SkillOption) => {
-                const { hero: { talentSlot }, card } = options;
+            [newSummonee(3020)], event => {
+                const { hero: { talentSlot }, card } = event;
                 const cmds = isCdt<Cmds[]>(!!talentSlot || card?.id == 724, [{ cmd: 'switch-before-self', cnt: 2500 }]);
                 return { summon: [newSummonee(3020)], cmds }
             }),
@@ -1791,8 +1789,8 @@ const allHeros: HeroObj = {
         new GISkill('终天闭幕曲', '造成{dmg}点[风元素伤害]，所有敌方后台角色附属【坍毁】。', 3, 5, 4, 5, { ec: 2 },
             'https://act-webstatic.mihoyo.com/hk4e/e20200928calculate/item_skill_icon_u084qf/dc176e73075e38839e1557815da53cc8.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/19/258999284/ea18fc2d49dac1d270821cc0f318aa9e_7299667602196853258.png',
-            [heroStatus(2142)], (options: SkillOption) => {
-                const { eheros = [] } = options;
+            [heroStatus(2142)], event => {
+                const { eheros = [] } = event;
                 const hidxs = eheros.map((h, hi) => ({ hi, f: !h.isFront, hp: h.hp })).filter(v => v.f && v.hp > 0).map(v => v.hi);
                 return { inStatusOppo: [heroStatus(2142)], hidxs }
             })
@@ -1826,8 +1824,8 @@ const allHeros: HeroObj = {
         new GISkill('磅礴之气', '造成{dmg}点[岩元素伤害]，如果发生了结晶反应，则角色[汲取对应元素的力量]。；如果本技能中角色未汲取元素的力量，则附属【磐岩百相·元素凝晶】。', 2, 3, 3, 6, {},
             'https://act-webstatic.mihoyo.com/hk4e/e20200928calculate/item_skill_icon_u084qf/5ab059679b08fba559b68f7d361a64be.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/19/258999284/b49c1863d6b6a61ec13501c27d8204bf_1566255463657696734.png',
-            [heroStatus(2145)], (options: SkillOption) => {
-                const { eheros = [], hero: { id, skills: [, { src }], inStatus }, heros, isExec = false } = options;
+            [heroStatus(2145)], event => {
+                const { eheros = [], hero: { id, skills: [, { src }], inStatus }, heros, isExec = false } = event;
                 if (!isExec) return {}
                 const rockEl = eheros.find(h => h.isFront)?.attachElement?.find(el => el > 0 && el < 5) ?? 6;
                 if (rockEl == 6) return { inStatus: [heroStatus(2145, src)] }
@@ -1838,7 +1836,7 @@ const allHeros: HeroObj = {
         new GISkill('山崩毁阵', '造成{dmg}点[岩元素伤害]，每汲取过一种元素此伤害+1。', 3, 4, 3, 6, { ec: 2 },
             'https://act-webstatic.mihoyo.com/hk4e/e20200928calculate/item_skill_icon_u084qf/3eea73a1f50aaa9ab8f03546a0db4483.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/19/258999284/eeb2325a52556c0f9259eb3d47807c45_994928579787374692.png',
-            [], (options: SkillOption) => ({ addDmgCdt: options.hero.inStatus.find(ist => ist.id == 2153)?.useCnt ?? 0 })),
+            [], event => ({ addDmgCdt: event.hero.inStatus.find(ist => ist.id == 2153)?.useCnt ?? 0 })),
         new GISkill('磐岩百相', '战斗开始时，初始附属【磐岩百相·元素汲取】。', 4, 0, 0, 0, {},
             'https://act-webstatic.mihoyo.com/hk4e/e20200928calculate/item_skill_icon_u084qf/c7dc740570a4a65821767e0e2ba83529.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/19/258999284/3c29d28a60d100687cf9968a3a278e4d_5040009350976601315.png',
@@ -1854,8 +1852,8 @@ const allHeros: HeroObj = {
         new GISkill('尾羽豪放', '造成{dmg}点[草元素伤害]，消耗所有｢活化激能｣层数，每层使本伤害+1。', 3, 4, 3, 7, { ec: 2 },
             'https://patchwiki.biligame.com/images/ys/3/36/gyhrz87493bups3avpelhusplml11gw.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/34525ada2f131e99da075f32283db903_3717723304434052962.png',
-            [heroStatus(2047)], (options: SkillOption) => {
-                const { hero: { inStatus } } = options;
+            [heroStatus(2047)], event => {
+                const { hero: { inStatus } } = event;
                 const sts2047 = inStatus.find(ist => ist.id == 2047);
                 const addDmgCdt = sts2047?.useCnt ?? 0;
                 if (sts2047) sts2047.useCnt = -1;

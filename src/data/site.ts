@@ -12,10 +12,10 @@ class GISite implements Site {
     perCnt: number;
     hpCnt: number;
     type: number;
-    handle: (site: Site, siteOption?: SiteOption) => SiteHandleRes;
+    handle: (site: Site, event?: SiteHandleEvent) => SiteHandleRes;
     isSelected: boolean = false;
     canSelect: boolean = false;
-    constructor(id: number, cardId: number, cnt: number, perCnt: number, type: number, handle: (site: Site, siteOption?: SiteOption) => SiteHandleRes, hpCnt = 0) {
+    constructor(id: number, cardId: number, cnt: number, perCnt: number, type: number, handle: (site: Site, event?: SiteHandleEvent) => SiteHandleRes, hpCnt = 0) {
         this.id = id;
         this.sid = Math.floor(Math.random() * 1000);
         this.card = cardsTotal(cardId);
@@ -23,13 +23,13 @@ class GISite implements Site {
         this.perCnt = perCnt;
         this.type = type;
         this.hpCnt = hpCnt;
-        this.handle = (site: Site, siteOption?: SiteOption): SiteHandleRes => {
-            const { reset = false } = siteOption ?? {};
+        this.handle = (site, event = {}) => {
+            const { reset = false } = event;
             if (reset && perCnt > 0) {
                 site.perCnt = perCnt;
                 return {}
             }
-            return handle(site, siteOption);
+            return handle(site, event);
         };
     }
 }
@@ -40,7 +40,7 @@ type SiteObj = {
 
 const siteTotal: SiteObj = {
     // 派蒙
-    4001: (cardId: number) => new GISite(4001, cardId, 2, 0, 1, (site: GISite) => ({
+    4001: (cardId: number) => new GISite(4001, cardId, 2, 0, 1, site => ({
         trigger: ['phase-start'],
         exec: () => {
             --site.cnt;
@@ -48,8 +48,8 @@ const siteTotal: SiteObj = {
         }
     })),
     // 参量质变仪
-    4002: (cardId: number) => new GISite(4002, cardId, 0, 0, 2, (site: GISite, options: SiteOption = {}) => {
-        const { isSkill = -1 } = options;
+    4002: (cardId: number) => new GISite(4002, cardId, 0, 0, 2, (site, event = {}) => {
+        const { isSkill = -1 } = event;
         if (isSkill == -1) return {}
         return {
             trigger: ['el-dmg', 'el-getdmg'],
@@ -62,7 +62,7 @@ const siteTotal: SiteObj = {
         }
     }),
     // 璃月港口
-    4003: (cardId: number) => new GISite(4003, cardId, 2, 0, 1, (site: GISite) => ({
+    4003: (cardId: number) => new GISite(4003, cardId, 2, 0, 1, site => ({
         trigger: ['phase-end'],
         exec: () => {
             --site.cnt;
@@ -70,8 +70,8 @@ const siteTotal: SiteObj = {
         }
     })),
     // 常九爷
-    4004: (cardId: number) => new GISite(4004, cardId, 0, 0, 2, (site: GISite, options: SiteOption = {}) => {
-        const { isSkill = -1 } = options;
+    4004: (cardId: number) => new GISite(4004, cardId, 0, 0, 2, (site, event = {}) => {
+        const { isSkill = -1 } = event;
         if (isSkill == -1) return {}
         return {
             trigger: ['any-dmg', 'any-getdmg', 'pen-dmg', 'pen-getdmg', 'elReaction', 'get-elReaction'],
@@ -84,8 +84,8 @@ const siteTotal: SiteObj = {
         }
     }),
     // 立本
-    4005: (cardId: number) => new GISite(4005, cardId, 0, 0, 2, (site: GISite, options: SiteOption = {}) => {
-        const { dices = [], trigger } = options;
+    4005: (cardId: number) => new GISite(4005, cardId, 0, 0, 2, (site, event = {}) => {
+        const { dices = [], trigger } = event;
         return {
             trigger: ['phase-end', 'phase-start'],
             exec: () => {
@@ -112,8 +112,8 @@ const siteTotal: SiteObj = {
         }
     }),
     // 望舒客栈
-    4006: (cardId: number) => new GISite(4006, cardId, 2, 0, 1, (site: GISite, options: SiteOption = {}) => {
-        const { heros = [] } = options;
+    4006: (cardId: number) => new GISite(4006, cardId, 2, 0, 1, (site, event = {}) => {
+        const { heros = [] } = event;
         return {
             trigger: ['phase-end'],
             exec: () => {
@@ -134,8 +134,8 @@ const siteTotal: SiteObj = {
         }
     }, 2),
     // 西风大教堂
-    4007: (cardId: number) => new GISite(4007, cardId, 2, 0, 1, (site: GISite, options: SiteOption = {}) => {
-        const { heros = [] } = options;
+    4007: (cardId: number) => new GISite(4007, cardId, 2, 0, 1, (site, event = {}) => {
+        const { heros = [] } = event;
         return {
             trigger: ['phase-end'],
             exec: () => {
@@ -150,12 +150,12 @@ const siteTotal: SiteObj = {
     }, 2),
 
     // 晨曦酒庄
-    4008: (cardId: number) => new GISite(4008, cardId, 0, 1, 3, (site: GISite) => ({
+    4008: (cardId: number) => new GISite(4008, cardId, 0, 1, 3, site => ({
         trigger: ['change'],
         isNotAddTask: true,
         minusDiceHero: site.perCnt,
-        exec: (exeOpt: SiteExeOption) => {
-            let { changeHeroDiceCnt = 0 } = exeOpt;
+        exec: execEvent => {
+            let { changeHeroDiceCnt = 0 } = execEvent;
             if (site.perCnt > 0 && changeHeroDiceCnt > 0) {
                 --site.perCnt;
                 --changeHeroDiceCnt;
@@ -169,8 +169,8 @@ const siteTotal: SiteObj = {
         addRollCnt: 1,
     })),
     // 群玉阁
-    4010: (cardId: number) => new GISite(4010, cardId, 0, 0, 3, (_site: GISite, options: SiteOption = {}) => {
-        const { hcards = [], trigger = '' } = options;
+    4010: (cardId: number) => new GISite(4010, cardId, 0, 0, 3, (_site, event = {}) => {
+        const { hcards = [], trigger = '' } = event;
         const triggers: Trigger[] = ['phase-dice'];
         if (hcards.length <= 3) triggers.push('phase-start');
         return {
@@ -186,18 +186,18 @@ const siteTotal: SiteObj = {
         }
     }),
     // 凯瑟琳
-    4011: (cardId: number) => new GISite(4011, cardId, 0, 1, 3, (site: GISite) => ({
+    4011: (cardId: number) => new GISite(4011, cardId, 0, 1, 3, site => ({
         trigger: ['change'],
         isNotAddTask: true,
         isQuickAction: site.perCnt == 1,
-        exec: (exeOpt: SiteExeOption) => {
-            if (site.perCnt > 0 && exeOpt?.isQuickAction) --site.perCnt;
+        exec: execEvent => {
+            if (site.perCnt > 0 && execEvent?.isQuickAction) --site.perCnt;
             return { isDestroy: false }
         }
     })),
     // 蒂玛乌斯
-    4012: (cardId: number) => new GISite(4012, cardId, 2, 1, 2, (site: GISite, options: SiteOption = {}) => {
-        const { card, trigger = '', minusDiceCard: mdc = 0 } = options;
+    4012: (cardId: number) => new GISite(4012, cardId, 2, 1, 2, (site, event = {}) => {
+        const { card, trigger = '', minusDiceCard: mdc = 0 } = event;
         const isMinus = site.perCnt > 0 && card && card.subType.includes(1) && card.cost > mdc && site.cnt >= card.cost - mdc;
         return {
             trigger: ['phase-end', 'card'],
@@ -215,8 +215,8 @@ const siteTotal: SiteObj = {
         }
     }),
     // 瓦格纳
-    4013: (cardId: number) => new GISite(4013, cardId, 2, 1, 2, (site: GISite, options: SiteOption = {}) => {
-        const { card, trigger = '', minusDiceCard: mdc = 0 } = options;
+    4013: (cardId: number) => new GISite(4013, cardId, 2, 1, 2, (site, event = {}) => {
+        const { card, trigger = '', minusDiceCard: mdc = 0 } = event;
         const isMinus = site.perCnt > 0 && card && card.subType.includes(0) && card.cost > mdc && site.cnt >= card.cost - mdc;
         return {
             trigger: ['phase-end', 'card'],
@@ -234,8 +234,8 @@ const siteTotal: SiteObj = {
         }
     }),
     // 卯师傅
-    4014: (cardId: number) => new GISite(4014, cardId, 1, 1, 3, (site: GISite, options: SiteOption = {}) => {
-        const { card } = options;
+    4014: (cardId: number) => new GISite(4014, cardId, 1, 1, 3, (site, event = {}) => {
+        const { card } = event;
         return {
             trigger: ['card'],
             isNotAddTask: true,
@@ -252,8 +252,8 @@ const siteTotal: SiteObj = {
         }
     }),
     // 阿圆
-    4015: (cardId: number) => new GISite(4015, cardId, 0, 1, 3, (site: GISite, options: SiteOption = {}) => {
-        const { card, minusDiceCard: mdc = 0 } = options;
+    4015: (cardId: number) => new GISite(4015, cardId, 0, 1, 3, (site, event = {}) => {
+        const { card, minusDiceCard: mdc = 0 } = event;
         const isMinus = site.perCnt > 0 && card && card.subType.includes(2) && card.cost > mdc;
         return {
             trigger: ['card'],
@@ -266,7 +266,7 @@ const siteTotal: SiteObj = {
         }
     }),
     // 提米
-    4016: (cardId: number) => new GISite(4016, cardId, 1, 0, 2, (site: GISite) => ({
+    4016: (cardId: number) => new GISite(4016, cardId, 1, 0, 2, site => ({
         trigger: ['phase-start'],
         exec: () => {
             if (++site.cnt < 3) return { isDestroy: false }
@@ -277,8 +277,8 @@ const siteTotal: SiteObj = {
         }
     })),
     // 艾琳
-    4017: (cardId: number) => new GISite(4017, cardId, 0, 1, 3, (site: GISite, options: SiteOption = {}) => {
-        const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(options, { skill: [0, 0, 1] },
+    4017: (cardId: number) => new GISite(4017, cardId, 0, 1, 3, (site, event = {}) => {
+        const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(event, { skill: [0, 0, 1] },
             skill => (skill?.useCnt ?? 0) > 0 && site.perCnt > 0);
         return {
             trigger: ['skill'],
@@ -293,8 +293,8 @@ const siteTotal: SiteObj = {
         }
     }),
     // 田铁嘴
-    4018: (cardId: number) => new GISite(4018, cardId, 2, 0, 1, (site: GISite, options: SiteOption = {}) => {
-        const { heros = [] } = options;
+    4018: (cardId: number) => new GISite(4018, cardId, 2, 0, 1, (site, event = {}) => {
+        const { heros = [] } = event;
         const hidxs: number[] = [];
         const frontHeroIdx = heros.findIndex(h => h.isFront);
         if (frontHeroIdx > -1 && heros[frontHeroIdx].energy < heros[frontHeroIdx].maxEnergy) {
@@ -313,8 +313,8 @@ const siteTotal: SiteObj = {
         }
     }),
     // 刘苏
-    4019: (cardId: number) => new GISite(4019, cardId, 2, 1, 2, (site: GISite, options: SiteOption = {}) => {
-        const { heros = [], hidx = -1 } = options;
+    4019: (cardId: number) => new GISite(4019, cardId, 2, 1, 2, (site, event = {}) => {
+        const { heros = [], hidx = -1 } = event;
         if (hidx == -1) return {}
         return {
             trigger: ['change'],
@@ -327,8 +327,8 @@ const siteTotal: SiteObj = {
         }
     }),
     // 便携营养袋
-    4020: (cardId: number) => new GISite(4020, cardId, 0, 1, 3, (site: GISite, options: SiteOption = {}) => {
-        const { card } = options;
+    4020: (cardId: number) => new GISite(4020, cardId, 0, 1, 3, (site, event = {}) => {
+        const { card } = event;
         return {
             trigger: ['card'],
             isNotAddTask: true,
@@ -341,8 +341,8 @@ const siteTotal: SiteObj = {
     }),
     // 天守阁
     4021: (cardId: number) => new GISite(4021, cardId, 0, 0, 3,
-        (_site: GISite, options: SiteOption = {}) => {
-            const { dices = [] } = options;
+        (_site, event = {}) => {
+            const { dices = [] } = event;
             return {
                 trigger: ['phase-start'],
                 exec: () => {
@@ -355,7 +355,7 @@ const siteTotal: SiteObj = {
             }
         }),
     // 鸣神大社
-    4022: (cardId: number) => new GISite(4022, cardId, 2, 0, 1, (site: GISite) => ({
+    4022: (cardId: number) => new GISite(4022, cardId, 2, 0, 1, site => ({
         trigger: ['phase-start'],
         exec: () => {
             --site.cnt;
@@ -363,20 +363,20 @@ const siteTotal: SiteObj = {
         }
     })),
     // 珊瑚宫
-    4023: (cardId: number) => new GISite(4023, cardId, 2, 0, 1, (site: GISite, options: SiteOption = {}) => ({
+    4023: (cardId: number) => new GISite(4023, cardId, 2, 0, 1, (site, event = {}) => ({
         trigger: ['phase-end'],
         exec: () => {
-            const { heros = [] } = options;
+            const { heros = [] } = event;
             if (heros.every(h => h.hp == h.maxhp)) return { isDestroy: false }
             --site.cnt;
-            return { cmds: [{ cmd: 'heal', cnt: 1, hidxs: allHidxs(options.heros) }], isDestroy: site.cnt == 0 }
+            return { cmds: [{ cmd: 'heal', cnt: 1, hidxs: allHidxs(event.heros) }], isDestroy: site.cnt == 0 }
         }
     })),
     // 须弥城
-    4024: (cardId: number) => new GISite(4024, cardId, 0, 1, 3, (site: GISite, options: SiteOption = {}) => {
-        const { dices = [], hcards = [], card, trigger = '', minusDiceCard: mdc = 0 } = options;
+    4024: (cardId: number) => new GISite(4024, cardId, 0, 1, 3, (site, event = {}) => {
+        const { dices = [], hcards = [], card, trigger = '', minusDiceCard: mdc = 0 } = event;
         const isMinus = dices.length <= hcards.length && site.perCnt > 0;
-        const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(options, { skill: [0, 0, 1] }, () => isMinus);
+        const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(event, { skill: [0, 0, 1] }, () => isMinus);
         const isCard = card && card.subType.includes(6) && card.cost > mdc;
         return {
             ...minusSkillRes,
@@ -392,8 +392,8 @@ const siteTotal: SiteObj = {
         }
     }),
     // 桓那兰那
-    4025: (cardId: number) => new GISite(4025, cardId, 0, 0, 2, (site: GISite, options: SiteOption = {}) => {
-        const { dices = [], trigger } = options;
+    4025: (cardId: number) => new GISite(4025, cardId, 0, 0, 2, (site, event = {}) => {
+        const { dices = [], trigger } = event;
         return {
             trigger: ['phase-end', 'phase-start'],
             exec: () => {
@@ -422,8 +422,8 @@ const siteTotal: SiteObj = {
         }
     }),
     // 镇守之森
-    4026: (cardId: number) => new GISite(4026, cardId, 3, 0, 1, (site: GISite, options: SiteOption = {}) => {
-        const { isFirst = true } = options;
+    4026: (cardId: number) => new GISite(4026, cardId, 3, 0, 1, (site, event = {}) => {
+        const { isFirst = true } = event;
         return {
             trigger: ['phase-start'],
             exec: () => {
@@ -437,8 +437,8 @@ const siteTotal: SiteObj = {
         }
     }),
     // 黄金屋
-    4027: (cardId: number) => new GISite(4027, cardId, 2, 1, 2, (site: GISite, options: SiteOption = {}) => {
-        const { card, minusDiceCard: mdc = 0 } = options;
+    4027: (cardId: number) => new GISite(4027, cardId, 2, 1, 2, (site, event = {}) => {
+        const { card, minusDiceCard: mdc = 0 } = event;
         const isMinus = site.perCnt > 0 && card && card.cost >= 3 && card.subType.some(v => v < 2) && card.cost > mdc;
         return {
             trigger: ['card'],
@@ -453,8 +453,8 @@ const siteTotal: SiteObj = {
         }
     }),
     // 化城郭
-    4028: (cardId: number) => new GISite(4028, cardId, 3, 1, 2, (site: GISite, options: SiteOption = {}) => {
-        const { dices = [] } = options;
+    4028: (cardId: number) => new GISite(4028, cardId, 3, 1, 2, (site, event = {}) => {
+        const { dices = [] } = event;
         if (site.perCnt == 0 || dices.length > 0) return {}
         return {
             trigger: ['action-start'],
@@ -466,14 +466,14 @@ const siteTotal: SiteObj = {
         }
     }),
     // 花散里
-    4029: (cardId: number) => new GISite(4029, cardId, 0, 0, 2, (site: GISite, options: SiteOption = {}) => {
-        const { card, trigger = '', minusDiceCard: mdc = 0 } = options;
+    4029: (cardId: number) => new GISite(4029, cardId, 0, 0, 2, (site, event = {}) => {
+        const { card, trigger = '', minusDiceCard: mdc = 0 } = event;
         const isMinus = site.cnt >= 3 && card && card.subType.some(v => v < 2) && card.cost > mdc;
         return {
             trigger: ['summon-destroy', 'card'],
             minusDiceCard: isCdt(isMinus, 2),
-            exec: (exeOpt: SiteExeOption) => {
-                let { summonDiffCnt = 0 } = exeOpt;
+            exec: execEvent => {
+                let { summonDiffCnt = 0 } = execEvent;
                 if (trigger == 'card' && isMinus) return { isDestroy: true }
                 if (trigger == 'summon-destroy' && site.cnt < 3) {
                     site.cnt = Math.min(3, site.cnt + summonDiffCnt);
@@ -489,8 +489,8 @@ const siteTotal: SiteObj = {
         exec: () => ({ cmds: [{ cmd: 'getDice', cnt: 1, element: 0 }], isDestroy: true })
     })),
     // 旭东
-    4031: (cardId: number) => new GISite(4031, cardId, 0, 1, 3, (site: GISite, options: SiteOption = {}) => {
-        const { card, minusDiceCard: mdc = 0 } = options;
+    4031: (cardId: number) => new GISite(4031, cardId, 0, 1, 3, (site, event = {}) => {
+        const { card, minusDiceCard: mdc = 0 } = event;
         const isMinus = card && card.subType.includes(5) && card.cost > mdc && site.perCnt > 0;
         return {
             trigger: ['card'],
@@ -503,8 +503,8 @@ const siteTotal: SiteObj = {
         }
     }),
     // 迪娜泽黛
-    4032: (cardId: number) => new GISite(4032, cardId, -1, 1, 3, (site: GISite, options: SiteOption = {}) => {
-        const { card, minusDiceCard: mdc = 0 } = options;
+    4032: (cardId: number) => new GISite(4032, cardId, -1, 1, 3, (site, event = {}) => {
+        const { card, minusDiceCard: mdc = 0 } = event;
         const isMinus = card && card.subType.includes(3) && card.cost > mdc && site.perCnt > 0;
         return {
             trigger: ['card'],
@@ -522,7 +522,7 @@ const siteTotal: SiteObj = {
         }
     }),
     // 拉娜
-    4033: (cardId: number) => new GISite(4033, cardId, 0, 1, 3, (site: GISite) => ({
+    4033: (cardId: number) => new GISite(4033, cardId, 0, 1, 3, site => ({
         trigger: ['skilltype2'],
         exec: () => {
             if (site.perCnt == 0) return { isDestroy: false }
@@ -534,8 +534,8 @@ const siteTotal: SiteObj = {
         }
     })),
     // 老章
-    4034: (cardId: number) => new GISite(4034, cardId, 0, 1, 3, (site: GISite, options: SiteOption = {}) => {
-        const { card, heros = [], minusDiceCard: mdc = 0 } = options;
+    4034: (cardId: number) => new GISite(4034, cardId, 0, 1, 3, (site, event = {}) => {
+        const { card, heros = [], minusDiceCard: mdc = 0 } = event;
         const isMinus = card && card.subType.includes(0) && card.cost > mdc && site.perCnt > 0;
         const minusCnt = 1 + heros.filter(h => h.weaponSlot != null).length;
         return {
@@ -549,8 +549,8 @@ const siteTotal: SiteObj = {
         }
     }),
     // 塞塔蕾
-    4035: (cardId: number) => new GISite(4035, cardId, 3, 0, 2, (site: GISite, options: SiteOption = {}) => {
-        const { hcards } = options;
+    4035: (cardId: number) => new GISite(4035, cardId, 3, 0, 2, (site, event = {}) => {
+        const { hcards } = event;
         if ((hcards?.length ?? 1) > 0) return {}
         return {
             trigger: ['action-after'],
@@ -561,8 +561,8 @@ const siteTotal: SiteObj = {
         }
     }),
     // 弥生七月
-    4036: (cardId: number) => new GISite(4036, cardId, 0, 1, 3, (site: GISite, options: SiteOption = {}) => {
-        const { card, heros = [], minusDiceCard: mdc = 0 } = options;
+    4036: (cardId: number) => new GISite(4036, cardId, 0, 1, 3, (site, event = {}) => {
+        const { card, heros = [], minusDiceCard: mdc = 0 } = event;
         const isMinus = card && card.subType.includes(1) && card.cost > mdc && site.perCnt > 0;
         const minusCnt = 1 + heros.filter(h => h.artifactSlot != null).length;
         return {
@@ -576,7 +576,7 @@ const siteTotal: SiteObj = {
         }
     }),
     // 红羽团扇
-    4037: (cardId: number) => new GISite(4037, cardId, 0, 1, 3, (site: GISite) => ({
+    4037: (cardId: number) => new GISite(4037, cardId, 0, 1, 3, site => ({
         trigger: ['change'],
         isNotAddTask: true,
         exec: () => {
@@ -586,7 +586,7 @@ const siteTotal: SiteObj = {
         }
     })),
     // 寻宝仙灵
-    4038: (cardId: number) => new GISite(4038, cardId, 0, 0, 2, (site: GISite) => ({
+    4038: (cardId: number) => new GISite(4038, cardId, 0, 0, 2, site => ({
         trigger: ['skill'],
         siteCnt: site.cnt < 2 ? 1 : -3,
         exec: () => {
@@ -595,10 +595,10 @@ const siteTotal: SiteObj = {
         }
     })),
     // 风龙废墟
-    4039: (cardId: number) => new GISite(4039, cardId, 3, 1, 2, (site: GISite, options: SiteOption = {}) => {
-        const { card, trigger = '', minusDiceCard: mdc = 0 } = options;
+    4039: (cardId: number) => new GISite(4039, cardId, 3, 1, 2, (site, event = {}) => {
+        const { card, trigger = '', minusDiceCard: mdc = 0 } = event;
         const isCardMinus = card && card.subType.includes(6) && card.cost > mdc && site.perCnt > 0;
-        const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(options, { skill: [0, 0, 1] },
+        const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(event, { skill: [0, 0, 1] },
             skill => site.perCnt > 0 && skill.cost.toString().padStart(2, '0').split('').reduce((a, c) => a + Number(c), 0) >= 4)
         return {
             trigger: ['skill', 'card'],
@@ -616,8 +616,8 @@ const siteTotal: SiteObj = {
         }
     }),
     // 湖中垂柳
-    4040: (cardId: number) => new GISite(4040, cardId, 2, 0, 1, (site: GISite, options: SiteOption = {}) => {
-        const { hcards = [] } = options;
+    4040: (cardId: number) => new GISite(4040, cardId, 2, 0, 1, (site, event = {}) => {
+        const { hcards = [] } = event;
         return {
             trigger: hcards.length <= 2 ? ['phase-end'] : [],
             exec: () => {
@@ -627,8 +627,8 @@ const siteTotal: SiteObj = {
         }
     }),
     // 欧庇克莱歌剧院
-    4041: (cardId: number) => new GISite(4041, cardId, 3, 1, 2, (site: GISite, options: SiteOption = {}) => {
-        const { heros = [], eheros = [] } = options;
+    4041: (cardId: number) => new GISite(4041, cardId, 3, 1, 2, (site, event = {}) => {
+        const { heros = [], eheros = [] } = event;
         const slotCost = heros.flatMap(h => [h.talentSlot, h.artifactSlot, h.weaponSlot])
             .filter(slot => slot != null).reduce((a, b) => a + (b?.cost ?? 0) + (b?.anydice ?? 0), 0);
         const eslotCost = eheros.flatMap(h => [h.talentSlot, h.artifactSlot, h.weaponSlot])
@@ -643,8 +643,8 @@ const siteTotal: SiteObj = {
         }
     }),
     // 玛梅赫
-    4042: (cardId: number) => new GISite(4042, cardId, 3, 1, 2, (site: GISite, options: SiteOption = {}) => {
-        const { card } = options;
+    4042: (cardId: number) => new GISite(4042, cardId, 3, 1, 2, (site, event = {}) => {
+        const { card } = event;
         const isUse = card?.id != 321 && site.perCnt > 0 && card?.subType.some(st => [2, 3, 4, 5].includes(st));
         return {
             trigger: isUse ? ['card'] : [],
@@ -666,8 +666,8 @@ const siteTotal: SiteObj = {
         }
     }),
     // 化种匣
-    4043: (cardId: number) => new GISite(4043, cardId, 2, 1, 2, (site: GISite, options: SiteOption = {}) => {
-        const { card, minusDiceCard: mdc = 0 } = options;
+    4043: (cardId: number) => new GISite(4043, cardId, 2, 1, 2, (site, event = {}) => {
+        const { card, minusDiceCard: mdc = 0 } = event;
         const isMinus = card && card.cost == 1 && card.type < 2 && site.perCnt > 0 && card.cost > mdc;
         return {
             trigger: ['card'],
@@ -683,8 +683,8 @@ const siteTotal: SiteObj = {
         }
     }),
     // 留念镜
-    4044: (cardId: number) => new GISite(4044, cardId, 2, 1, 2, (site: GISite, options: SiteOption = {}) => {
-        const { card, playerInfo: { usedCardIds = [] } = {}, minusDiceCard: mdc = 0 } = options;
+    4044: (cardId: number) => new GISite(4044, cardId, 2, 1, 2, (site, event = {}) => {
+        const { card, playerInfo: { usedCardIds = [] } = {}, minusDiceCard: mdc = 0 } = event;
         const isMinus = card && usedCardIds.includes(card.id) && card.subType.some(sbtp => sbtp < 4) && site.perCnt > 0 && card.cost > mdc;
         return {
             trigger: ['card'],
@@ -700,8 +700,8 @@ const siteTotal: SiteObj = {
         }
     }),
     // 婕德
-    4045: (cardId: number, cnt: number) => new GISite(4045, cardId, cnt, 0, 2, (site: GISite, options: SiteOption = {}) => {
-        const { trigger = '', playerInfo: { destroyedSite = 0 } = {} } = options;
+    4045: (cardId: number, cnt: number) => new GISite(4045, cardId, cnt, 0, 2, (site, event = {}) => {
+        const { trigger = '', playerInfo: { destroyedSite = 0 } = {} } = event;
         return {
             trigger: ['site-destroy', 'skilltype3'],
             exec: () => {
@@ -716,8 +716,8 @@ const siteTotal: SiteObj = {
         }
     }),
     // 西尔弗和迈勒斯
-    4046: (cardId: number, cnt: number) => new GISite(4046, cardId, cnt, 0, 2, (site: GISite, options: SiteOption = {}) => {
-        const { trigger = '', playerInfo: { oppoGetElDmgType = 0 } = {} } = options;
+    4046: (cardId: number, cnt: number) => new GISite(4046, cardId, cnt, 0, 2, (site, event = {}) => {
+        const { trigger = '', playerInfo: { oppoGetElDmgType = 0 } = {} } = event;
         const triggers: Trigger[] = [1, 2, 3, 4, 5, 6, 7].map(v => ELEMENT_ICON[v] + '-getdmg-oppo') as Trigger[];
         if (site.cnt >= 3) triggers.push('phase-end');
         return {
@@ -741,8 +741,8 @@ const siteTotal: SiteObj = {
         }
     }),
     // 梅洛彼得堡
-    4047: (cardId: number) => new GISite(4047, cardId, 0, 0, 2, (site: GISite, options: SiteOption = {}) => {
-        const { hidxs = [], getdmg = [], heal = [], trigger = '' } = options;
+    4047: (cardId: number) => new GISite(4047, cardId, 0, 0, 2, (site, event = {}) => {
+        const { hidxs = [], getdmg = [], heal = [], trigger = '' } = event;
         const triggers: Trigger[] = [];
         if (trigger == 'getdmg' && getdmg[hidxs[0]] > 0 && site.cnt < 4) triggers.push('getdmg');
         if (trigger == 'heal' && heal[hidxs[0]] > 0 && site.cnt < 4) triggers.push('heal');
@@ -762,7 +762,7 @@ const siteTotal: SiteObj = {
         }
     }),
     // 流明石触媒
-    4048: (cardId: number) => new GISite(4048, cardId, 3, 3, 2, (site: GISite) => {
+    4048: (cardId: number) => new GISite(4048, cardId, 3, 3, 2, site => {
         const triggers: Trigger[] = [];
         if (site.perCnt > 0) triggers.push('card');
         return {
@@ -778,8 +778,8 @@ const siteTotal: SiteObj = {
         }
     }),
     // 清籁岛
-    4049: (cardId: number) => new GISite(4049, cardId, 2, 0, 1, (site: GISite, options: SiteOption = {}) => {
-        const { heal = [], trigger = '' } = options;
+    4049: (cardId: number) => new GISite(4049, cardId, 2, 0, 1, (site, event = {}) => {
+        const { heal = [], trigger = '' } = event;
         const hidxs = heal.map((hl, hli) => ({ hl, hli })).filter(v => v.hl > 0).map(v => v.hli);
         return {
             trigger: ['heal', 'eheal', 'phase-end'],
@@ -793,8 +793,8 @@ const siteTotal: SiteObj = {
         }
     }),
     // 太郎丸
-    4050: (cardId: number) => new GISite(4050, cardId, 0, 0, 2, (site: GISite, options: SiteOption = {}) => {
-        const { card } = options;
+    4050: (cardId: number) => new GISite(4050, cardId, 0, 0, 2, (site, event = {}) => {
+        const { card } = event;
         if (card?.id != 902) return {}
         return {
             trigger: ['card'],
@@ -807,7 +807,7 @@ const siteTotal: SiteObj = {
         }
     }),
     // 白手套和渔夫
-    4051: (cardId: number) => new GISite(4051, cardId, 2, 0, 1, (site: GISite) => ({
+    4051: (cardId: number) => new GISite(4051, cardId, 2, 0, 1, site => ({
         trigger: ['phase-end'],
         exec: () => {
             --site.cnt;
