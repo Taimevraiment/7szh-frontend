@@ -182,9 +182,8 @@ type Skill = {
     description: string, // 技能描述
     type: number, // 技能类型：1普通攻击 2元素战技 3元素爆发 4被动技能
     damage: number, // 伤害量
-    dmgElement: number, // 伤害元素：-1穿透 0未附着 1水 2火 3雷 4冰 5风 6岩 7草
+    dmgElement: number, // 伤害元素：-1穿透 0物理 1水 2火 3雷 4冰 5风 6岩 7草
     cost: { val: number, color: number }[], // 费用列表 [元素骰, 任意骰, 充能]
-    energyCost: number, // 所需充能
     attachElement: number, // 附魔属性
     src: string, // 图片url
     handle: (event: SkillHandleEvent) => SkillHandleRes, // 处理函数
