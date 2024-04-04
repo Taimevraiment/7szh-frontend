@@ -576,7 +576,7 @@ export default class GeniusInvokationClient {
         const { players, winnerIdx, phase, round, log, isSendActionInfo, dmgElements,
             willDamage, willHeals, startIdx, isUseSkill, dieChangeBack, isChangeHero,
             changeTo, resetOnly, elTips, changeFrom, taskQueueVal, execIdx, cidx,
-            actionStart, heroDie, chooseInitHero = false, isSwitchAtking = false,
+            actionStart, heroDie, chooseInitHero, isSwitchAtking,
             actionAfter, startTimer, flag, error } = data;
         // console.info('server-flag:', flag);
         if (this.isLookon > -1 && this.isLookon != this.playerIdx) {
@@ -648,8 +648,8 @@ export default class GeniusInvokationClient {
                 await this._sendTip('等待对方选择出战角色');
             }
         }
-        // if (this.playerIdx == execIdx && dieChangeBack == undefined) {
-        if (dieChangeBack == undefined) {
+        if (this.playerIdx == execIdx && dieChangeBack == undefined) {
+            // if (dieChangeBack == undefined) {
             this._execTask();
         }
         const siteDiffCnt = this.player.site.length - players[this.playerIdx].site.length - this.exchangeSite.length;
@@ -760,48 +760,48 @@ export default class GeniusInvokationClient {
                     resetOnly: true,
                     flag: 'getServerInfo-phase-start-reset-' + this.playerIdx,
                 });
-                // if (this.playerIdx == execIdx) {
-                await this._wait(() => this.isReseted, { delay: 0 });
-                this._doSlot('phase-start', { pidx: startIdx, hidxs: allHidxs(players[startIdx].heros, { isAll: true }) });
-                await this._execTask(true);
-                this._doStatus(startIdx, [1, 4], 'phase-start', { intvl: [100, 500, 1000, 100] });
-                await this._execTask(true);
-                this._doSummon(startIdx, 'phase-start');
-                await this._execTask(true);
-                const { exchangeSite: ecs1 } = this._doSite(startIdx, 'phase-start', { firstPlayer: startIdx });
-                this.exchangeSite.push(...ecs1);
-                for (const [exsite, pidx] of ecs1) {
-                    this.players[pidx].site.push(exsite);
+                if (this.playerIdx == execIdx) {
+                    await this._wait(() => this.isReseted, { delay: 0 });
+                    this._doSlot('phase-start', { pidx: startIdx, hidxs: allHidxs(players[startIdx].heros, { isAll: true }) });
+                    await this._execTask(true);
+                    this._doStatus(startIdx, [1, 4], 'phase-start', { intvl: [100, 500, 1000, 100] });
+                    await this._execTask(true);
+                    this._doSummon(startIdx, 'phase-start');
+                    await this._execTask(true);
+                    const { exchangeSite: ecs1 } = this._doSite(startIdx, 'phase-start', { firstPlayer: startIdx });
+                    this.exchangeSite.push(...ecs1);
+                    for (const [exsite, pidx] of ecs1) {
+                        this.players[pidx].site.push(exsite);
+                    }
+                    await this._execTask(true);
+                    this._doSlot('phase-start', { pidx: startIdx ^ 1, hidxs: allHidxs(players[startIdx ^ 1].heros, { isAll: true }) });
+                    await this._execTask(true);
+                    this._doStatus(startIdx ^ 1, [1, 4], 'phase-start', { intvl: [100, 500, 1000, 100] });
+                    await this._execTask(true);
+                    this._doSummon(startIdx ^ 1, 'phase-start');
+                    await this._execTask(true);
+                    const { exchangeSite: ecs2 } = this._doSite(startIdx ^ 1, 'phase-start', { firstPlayer: startIdx });
+                    this.exchangeSite.push(...ecs2);
+                    for (const [exsite, pidx] of ecs2) {
+                        this.players[pidx].site.push(exsite);
+                    }
+                    await this._execTask(true);
+                    await this._delay(200);
+                    for (const [exsite, pidx] of this.exchangeSite) {
+                        this.players[pidx].site.push(exsite);
+                    }
+                    await this._wait(() => this.actionInfo == '', { delay: 500, freq: 100, isImmediate: false });
+                    this.socket.emit('sendToServer', {
+                        roundPhase: PHASE.ACTION,
+                        sites: isCdt(this.exchangeSite.length > 0, this.players.map(p => p.site)),
+                        flag: 'getServerInfo-phase-start-changePhase-' + execIdx,
+                    });
+                    this.exchangeSite = [];
                 }
-                await this._execTask(true);
-                this._doSlot('phase-start', { pidx: startIdx ^ 1, hidxs: allHidxs(players[startIdx ^ 1].heros, { isAll: true }) });
-                await this._execTask(true);
-                this._doStatus(startIdx ^ 1, [1, 4], 'phase-start', { intvl: [100, 500, 1000, 100] });
-                await this._execTask(true);
-                this._doSummon(startIdx ^ 1, 'phase-start');
-                await this._execTask(true);
-                const { exchangeSite: ecs2 } = this._doSite(startIdx ^ 1, 'phase-start', { firstPlayer: startIdx });
-                this.exchangeSite.push(...ecs2);
-                for (const [exsite, pidx] of ecs2) {
-                    this.players[pidx].site.push(exsite);
-                }
-                await this._execTask(true);
-                await this._delay(200);
-                for (const [exsite, pidx] of this.exchangeSite) {
-                    this.players[pidx].site.push(exsite);
-                }
-                await this._wait(() => this.actionInfo == '', { delay: 500, freq: 100, isImmediate: false });
-                this.socket.emit('sendToServer', {
-                    roundPhase: PHASE.ACTION,
-                    sites: isCdt(this.exchangeSite.length > 0, this.players.map(p => p.site)),
-                    flag: 'getServerInfo-phase-start-changePhase-' + execIdx,
-                });
-                this.exchangeSite = [];
-                // }
             }, 1000);
         }
-        // if (this.phase == PHASE.ACTION && phase == PHASE.ACTION_END && this.playerIdx == execIdx) { // 结束阶段
-        if (this.phase == PHASE.ACTION && phase == PHASE.ACTION_END) { // 结束阶段
+        if (this.phase == PHASE.ACTION && phase == PHASE.ACTION_END && this.playerIdx == execIdx) { // 结束阶段
+            // if (this.phase == PHASE.ACTION && phase == PHASE.ACTION_END) { // 结束阶段
             await this._sendTip('结束阶段');
             setTimeout(async () => {
                 this._doSlot('phase-end', { pidx: startIdx, hidxs: allHidxs(players[startIdx].heros, { isAll: true }) });
@@ -2788,7 +2788,7 @@ export default class GeniusInvokationClient {
                                                     summon.element,
                                                     new Array(eheros.length).fill(0).map((_, i) => [
                                                         i == eFrontIdx ? ((cnt ?? summon.damage) || -1) : -1,
-                                                        bhidxs.includes(i) ? summon.pendamage : 0
+                                                        bhidxs.includes(i) ? summon.pendamage : 0,
                                                     ]),
                                                     eFrontIdx,
                                                     eheros, esummon,
@@ -2832,7 +2832,7 @@ export default class GeniusInvokationClient {
                                     }
                                     const willAttachs: number[][] = new Array(aheros.length + eheros.length).fill(0).map(() => []);
                                     willAttachs[eFrontIdx + (pidx ^ 1) * 3].push(summon.element);
-                                    fIsEndAtk = this.taskQueue.isTaskEmpty(true) && !isSwitchAtk;
+                                    fIsEndAtk = this.taskQueue.isTaskEmpty() && !isSwitchAtk;
                                     this.socket.emit('sendToServer', {
                                         cpidx: pidx,
                                         currSummon,
@@ -3212,7 +3212,7 @@ export default class GeniusInvokationClient {
                                         elTips,
                                         dices: ndices,
                                         playerInfo: this.players[pidx].playerInfo,
-                                        isEndAtk: this.taskQueue.isTaskEmpty(true),
+                                        isEndAtk: this.taskQueue.isTaskEmpty(),
                                         step: 1,
                                         flag: `_doStatus-${group == 0 ? 'in' : 'out'}Status-task-${curStatus.name}-${pidx}`,
                                     });
@@ -3363,7 +3363,7 @@ export default class GeniusInvokationClient {
                 dices,
                 cmds: [...elrcmds[0], ...cmds],
                 playerInfo: this.players[pidx].playerInfo,
-                isEndAtk: this.taskQueue.isTaskEmpty(true) && !isSwitchAtk && !isa,
+                isEndAtk: this.taskQueue.isTaskEmpty() && !isSwitchAtk && !isa,
                 step: 1,
                 flag: `_dostatusAtk-${sid}-${pidx}`,
             });
@@ -4012,8 +4012,8 @@ export default class GeniusInvokationClient {
         return new Promise<void>(async resolve => {
             let isDieChangeBack = false;
             while (this._hasNotDieChange() && !this.taskQueue.isTaskEmpty() && this.taskQueue.isExecuting) {
-                await this._wait(() => this.actionInfo == '', { delay: 400, freq: 200, isImmediate: false });
-                if (this.taskQueue.isTaskEmpty()) break;
+                await this._wait(() => this.actionInfo == '', { delay: 0, freq: 200, isImmediate: false });
+                // if (this.taskQueue.isTaskEmpty()) break;
                 const [taskType, args] = this.taskQueue.getTask();
                 if (taskType == undefined || args == undefined) break;
                 let task: [(() => void)[], number[]] | undefined;
@@ -4025,7 +4025,7 @@ export default class GeniusInvokationClient {
                 if (taskType.startsWith('statusAtk-')) {
                     const isExeced = await this._doStatusAtk(args as StatusTask);
                     if (!isExeced) {
-                        // this.taskQueue.addStatusAtk([args as StatusTask], true);
+                        this.taskQueue.addStatusAtk([args as StatusTask], true);
                         break;
                     }
                     await this._delay(500);
@@ -4118,7 +4118,7 @@ class TaskQueue {
     execTask(funcs: (() => void)[], intvl: number[]) {
         return new Promise<void>(async resolve => {
             for (let i = 0; i < funcs.length; ++i) {
-                const isEndAtk = this.isTaskEmpty(true);
+                const isEndAtk = this.isTaskEmpty();
                 await this._delay(funcs[i], intvl[i], isEndAtk);
                 this.isExecuting = true;
                 this.isEndAtk = isEndAtk;
@@ -4128,14 +4128,14 @@ class TaskQueue {
         });
     }
     getTask() {
-        // const res = this.queue.shift() ?? ['', [], -1];
-        const [res] = this.queue;
+        const res = this.queue.shift() ?? ['', [], -1];
+        // const [res] = this.queue;
         if (res[0].startsWith('statusAtk-')) --this.statusAtk;
         this._emit(`getTask:${res[0]}(queue=[${this.queue.map(v => v[0])}])`);
         return res;
     }
-    isTaskEmpty(isTask = false) {
-        return this.queue.length - +isTask == 0;
+    isTaskEmpty() {
+        return this.queue.length == 0;
     }
     addStatusAtk(ststask: StatusTask[], isUnshift = false) {
         if (ststask.length == 0) return;
@@ -4144,8 +4144,8 @@ class TaskQueue {
             if (this.queue.some(([tpn]) => tpn == atkname)) continue;
             if (isUnshift) this.queue.unshift([atkname, t]);
             else this.queue.push([atkname, t]);
+            ++this.statusAtk;
         }
-        this.statusAtk += ststask.length;
         this._emit(`${isUnshift ? 'unshift' : 'add'}StatusAtk(queue=[${this.queue.map(v => v[0])}])`);
     }
     hasStatusAtk() {

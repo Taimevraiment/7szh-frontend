@@ -1152,9 +1152,9 @@ const allCards: CardObj = {
             return { site: [newSite(4046, 323, Math.min(4, elcnt))] }
         }),
 
-    324: new GICard(324, '太郎丸', '【入场时：】生成3张【太郎丸的存款】，均匀地置入我方牌库中。；我方打出2张【太郎丸的存款】后：弃置此牌，召唤【愤怒的太郎丸】。',
+    324: new GICard(324, '太郎丸', '【入场时：】生成4张【太郎丸的存款】，均匀地置入我方牌库中。；我方打出2张【太郎丸的存款】后：弃置此牌，召唤【愤怒的太郎丸】。',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Assist_NPC_Taroumaru.webp',
-        1, 8, 1, [3], 0, 0, () => ({ cmds: [{ cmd: 'addCard', cnt: 3, card: 902, element: 1 }], site: [newSite(4050, 324)] }),
+        1, 8, 1, [3], 0, 0, () => ({ cmds: [{ cmd: 'addCard', cnt: 4, card: 902, element: 1 }], site: [newSite(4050, 324)] }),
         { expl: [extraCards[902], newSummonee(3059)] }),
 
     325: new GICard(325, '白手套和渔夫', '【结束阶段：】生成1张｢清洁工作｣，随机将其置入我方牌库顶部5张牌之中。；如果此牌的[可用次数]仅剩1次，则摸1张牌，｢清洁工作｣不再摸牌；[可用次数]：2',
@@ -2306,17 +2306,9 @@ const allCards: CardObj = {
 
     783: new GICard(783, '熔火铁甲', '【入场时：】对装备有此牌的【铁甲熔火帝皇】[附着火元素]。；我方除【重甲蟹壳】以外的[护盾]状态或[护盾]出战状态被移除后：装备有此牌的【铁甲熔火帝皇】附属2层【重甲蟹壳】。(每回合1次)',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_HermitCrabPrimo.webp',
-        1, 2, 0, [6], 1744, 1, (card, event) => {
-            if (card.perCnt == 0) return {}
+        1, 2, 0, [6], 1744, 1, (_card, event) => {
             const { hidxs = [] } = event;
-            // todo 后面的效果暂时不写
-            return {
-                cmds: [{ cmd: 'attach', hidxs, element: 2 }],
-                exec: () => {
-                    --card.perCnt;
-                    return {}
-                }
-            }
+            return { cmds: [{ cmd: 'attach', hidxs, element: 2 }] }
         }, { expl: [heroStatus(2182)], pct: 1 }),
 
     ...extraCards,

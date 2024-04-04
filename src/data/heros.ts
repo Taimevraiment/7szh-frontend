@@ -1636,10 +1636,13 @@ const allHeros: HeroObj = {
             '',
             '',
         ], [heroStatus(2182)], event => {
-            const { heros = [], trigger = '' } = event;
+            const { hero, heros = [], trigger = '' } = event;
             let stsCnt = 0;
             if (trigger == 'game-start') stsCnt = 5;
-            else heros.forEach(hero => stsCnt += [...hero.inStatus, ...hero.outStatus].filter(sts => sts.type.includes(7) && sts.id != 2182).length * 2);
+            else if (trigger == 'action-after') {
+                heros.forEach(hero => stsCnt += [...hero.inStatus, ...hero.outStatus].filter(sts => sts.type.includes(7) && sts.id != 2182).length * 2);
+                if (stsCnt > 0 && (hero.talentSlot?.perCnt ?? 0) > 0) stsCnt += 2;
+            }
             return {
                 trigger: ['game-start', 'action-after'],
                 inStatus: isCdt(stsCnt > 0, [heroStatus(2182, stsCnt)]),
@@ -1655,6 +1658,7 @@ const allHeros: HeroObj = {
                             });
                         }
                     }
+                    if (stsCnt > 0 && hero.talentSlot && hero.talentSlot.perCnt > 0) --hero.talentSlot.perCnt;
                 }
             }
         })

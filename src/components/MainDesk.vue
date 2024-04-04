@@ -1,6 +1,6 @@
 <template>
   <div class="main-container">
-    <div class="side" v-if="player.phase > 4">
+    <div class="side" :style="{ opacity: player.phase > 4 ? 1 : 0 }">
       <div class="round">
         <img src="/src/assets/svg/round.svg" alt="回合" />
         <span>{{ client.round }}</span>

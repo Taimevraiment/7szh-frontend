@@ -121,10 +121,10 @@
       v-else-if="client.phase > 4 && client.player && client.player.phase > 4 && client.player.heros[client.player.hidx].hp > 0">
       <div class="skill" v-for="(skill, sidx) in client.skills.filter(sk => sk.type < 4)" :key="sidx">
         <div class="skill-btn" @click.stop="useSkill(sidx, false)"
-          :style="{ boxShadow: skill.type == 3 && client.player.heros[client.player.hidx].energy >= skill.energyCost ? `0px 0px 8px 3px ${ELEMENT_COLOR[skill.dmgElement]}` : '' }">
+          :style="{ boxShadow: skill.type == 3 && client.player.heros[client.player.hidx].energy >= skill.cost[2].val ? `0px 0px 8px 3px ${ELEMENT_COLOR[skill.dmgElement]}` : '' }">
           <div class="skill3-bg"
-            v-if="skill.type == 3 && client.player.heros[client.player.hidx].energy < skill.energyCost"
-            :style="{ background: `linear-gradient(to top, ${ELEMENT_COLOR[skill.dmgElement]} 0%, ${ELEMENT_COLOR[skill.dmgElement]} ${(client.player.heros[client.player.hidx].energy / skill.energyCost) * 100}%, transparent ${(client.player.heros[client.player.hidx].energy / skill.energyCost) * 100}%, transparent 100%)` }">
+            v-if="skill.type == 3 && client.player.heros[client.player.hidx].energy < skill.cost[2].val"
+            :style="{ background: `linear-gradient(to top, ${ELEMENT_COLOR[skill.dmgElement]} 0%, ${ELEMENT_COLOR[skill.dmgElement]} ${(client.player.heros[client.player.hidx].energy / skill.cost[2].val) * 100}%, transparent ${(client.player.heros[client.player.hidx].energy / skill.cost[2].val) * 100}%, transparent 100%)` }">
             <div class="skill-btn" style="transform: translate(1px, 1px)"></div>
           </div>
           <img class="skill-img" :src="skill.src" v-if="skill.src.length > 0" :alt="SKILL_TYPE_ABBR[skill.type]" />
@@ -338,7 +338,6 @@ onMounted(() => {
     const isFlag = data.isStart && !client.value.isStart;
     client.value.roomInfoUpdate({ isFlag, ...data });
   });
-
   socket.on('getServerInfo', data => client.value.getServerInfo(data));
   socket.on('getPlayerAndRoomList', getPlayerList);
 });
