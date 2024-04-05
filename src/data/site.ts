@@ -704,6 +704,7 @@ const siteTotal: SiteObj = {
         const { trigger = '', playerInfo: { destroyedSite = 0 } = {} } = event;
         return {
             trigger: ['site-destroy', 'skilltype3'],
+            siteCnt: isCdt(trigger == 'skilltype3' && site.cnt >= 5, -site.cnt - 1),
             exec: () => {
                 if (trigger == 'skilltype3' && site.cnt >= 5) {
                     return { cmds: [{ cmd: 'getDice', element: 0, cnt: site.cnt - 2 }], isDestroy: true }
@@ -798,7 +799,7 @@ const siteTotal: SiteObj = {
         if (card?.id != 902) return {}
         return {
             trigger: ['card'],
-            siteCnt: site.cnt < 1 ? 1 : -2,
+            siteCnt: site.cnt < 1 ? 1 : -site.cnt - 1,
             summon: isCdt(site.cnt == 1, [newSummonee(3059)]),
             exec: () => {
                 ++site.cnt;

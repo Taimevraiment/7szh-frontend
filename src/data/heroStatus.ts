@@ -2193,7 +2193,7 @@ const statusTotal: StatusObj = {
         })),
 
     2186: () => new GIStatus(2186, '缤纷马卡龙(生效中)', '该角色受到伤害后再治疗其1点。',
-        'heal', 0, [1], 4, 0, -1, () => ({
+        'heal', 0, [1], 3, 0, -1, () => ({
             heal: 1,
             trigger: ['getdmg'],
             exec: eStatus => {

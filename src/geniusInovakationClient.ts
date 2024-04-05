@@ -259,8 +259,8 @@ export default class GeniusInvokationClient {
                 if (canSelectSummon == -1) smn.isSelected = false;
             });
             p.site.forEach(st => {
-                st.canSelect = canSelectSite > -1 && (p.pidx ^ canSelectSite) != this.playerIdx;
-                if (canSelectSite == -1) st.isSelected = false;
+                if (type != 1 || p.site.length < 4) st.canSelect = canSelectSite > -1 && (p.pidx ^ canSelectSite) != this.playerIdx;
+                if (canSelectSite == -1 && p.site.length < 4) st.isSelected = false;
             });
         });
         if (this.isReconcile) [cost, costType] = [1, 0];
@@ -419,7 +419,7 @@ export default class GeniusInvokationClient {
                 site.push(...cardres.site);
             }
             if (oSiteCnt - player.site.length > 0) isSiteDestroy = true;
-            if (isSiteDestroy) this._doSite(this.playerIdx, 'site-destroy', { csite: site });
+            if (isSiteDestroy) this._doSite(this.playerIdx, 'site-destroy', { csite: site, isQuickAction: true });
             aSummon = this._updateSummon(cardres.summon ?? [], aSummon, aHeros[player.hidx].outStatus);
             esummon = this._updateSummon([], esummon, opponent.heros[opponent.hidx].outStatus);
             player.heros = [...aHeros];
@@ -437,6 +437,7 @@ export default class GeniusInvokationClient {
             }
             currCard.selected = false;
             currCard.costChange = 0;
+            this.cancel();
             this.socket.emit('sendToServer', {
                 handCards,
                 currCard,
@@ -1821,7 +1822,6 @@ export default class GeniusInvokationClient {
         const tmpDice: [number, number][] = new Array(8).fill(0).map((_, i) => [i, 0]);
         const scnt = dices?.filter(d => !d.isSelected).length ?? 0;
         let diceLen = 8;
-        // let diceLen = 14; // 骰子测试
         const player = this.players[pidx];
         if (dices != undefined) {
             dices.forEach(d => {
@@ -1856,8 +1856,8 @@ export default class GeniusInvokationClient {
         const isDone = dices != undefined && --this.rollCnt == 0;
         if (isDone) this.showRerollBtn = false;
         for (let i = 0; i < diceLen - scnt; ++i) {
-            // ++tmpDice[Math.floor(Math.random() * 8)][1];
-            ++tmpDice[0][1]; // 骰子测试
+            if (process.env.NODE_ENV == 'development') ++tmpDice[0][1];
+            else ++tmpDice[Math.floor(Math.random() * 8)][1];
         }
         const weight = (h: Hero) => Number(player.heros.findIndex(v => v.id == h.id) != frontIdx);
         const heroEle = [...player.heros]
@@ -1905,16 +1905,19 @@ export default class GeniusInvokationClient {
     }
     /**
      * 展示场地信息
-     * @param pidx 玩家idx
+     * @param pidx 0敌方 1我方
      * @param siidx 场地idx
      */
     showSiteInfo(pidx: number, siidx: number) {
-        if (!this.player.site.some(s => s.canSelect) || pidx == 0) this.cancel();
-        const sites = [this.opponent.site, this.player.site];
-        this.modalInfo = {
-            isShow: true,
-            type: 5,
-            info: sites[pidx][siidx].card,
+        if (this.player.site.some(s => s.canSelect)) {
+            this.modalInfo = { ...NULL_MODAL };
+        } else {
+            const sites = [this.opponent.site, this.player.site];
+            this.modalInfo = {
+                isShow: true,
+                type: 5,
+                info: sites[pidx][siidx].card,
+            }
         }
     }
     /**
@@ -3684,7 +3687,7 @@ export default class GeniusInvokationClient {
                     } else {
                         nhidx = livehidxs[(heros.findIndex(h => h.isFront) + sdir + hLen) % hLen];
                     }
-                    this.willSwitch[cpidx * 3 + nhidx] = true;
+                    this.willSwitch[cpidx * ceheros.length + nhidx] = true;
                     if (!cmd.endsWith('self')) isSwitchOppo = nhidx;
                     else if (isSwitch == -1) isSwitch = nhidx;
                     else if (!cmds.some(cmds => cmds.cmd == 'useSkill')) this.useSkill(-1, { isOnlyRead: true, otriggers: 'change-from' });
@@ -3943,7 +3946,7 @@ export default class GeniusInvokationClient {
                 stses.forEach(sts => {
                     costChange[ci] += heroStatus(sts.id).handle(sts, {
                         heros: player.heros,
-                        hidx: hi < 3 ? hi : player.hidx,
+                        hidx: hi < player.heros.length ? hi : player.hidx,
                         card: c,
                         minusDiceCard: costChange[ci],
                     })?.minusDiceCard ?? 0;
