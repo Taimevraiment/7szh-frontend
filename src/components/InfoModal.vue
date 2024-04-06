@@ -36,12 +36,12 @@
           <span>{{ ELEMENT[(info as Hero).element] }}</span>
           <span>{{ WEAPON_TYPE[(info as Hero).weaponType] }}</span>
           <span v-for="(local, lidx) in (info as Hero).local" :key="lidx">{{
-      HERO_LOCAL[local]
-    }}</span>
+            HERO_LOCAL[local]
+            }}</span>
         </div>
         <div class="info-hero-skill" v-for="(skill, sidx) in (skills as Skill[]).filter(
-      (_, i) => type == 4 || i == type
-    )" :key="sidx">
+          (_, i) => type == 4 || i == type
+        )" :key="sidx">
           <div class="info-hero-skill-title" @click.stop="showDesc(isShowSkill, sidx)">
             <div style="display: flex; flex-direction: row; align-items: center">
               <img class="skill-img" :src="skill.src" v-if="skill.src.length > 0" :alt="SKILL_TYPE_ABBR[skill.type]" />

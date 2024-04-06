@@ -16,8 +16,8 @@
           :style="{ left: `${cidx * 70 - 70}px` }" v-for="(_, cidx) in opponent.willAddCard" :key="cidx"></div>
       </div>
       <div class="timer" :style="{
-      'background-image': `conic-gradient(transparent ${currTime}%, ${player.status == 0 ? '#2b6aff' : '#ffb36d'} ${currTime + 5}%)`
-    }">
+        'background-image': `conic-gradient(transparent ${currTime}%, ${player.status == 0 ? '#2b6aff' : '#ffb36d'} ${currTime + 5}%)`
+      }">
         <button class="end-phase" :class="{ forbidden: player.status == 0 || !canAction || phase > 6 || isLookon > -1 }"
           @click.stop="endPhase">
           结束
@@ -44,9 +44,9 @@
     <div class="sites self">
       <div class="site-area" v-for="(siteArea, saidx) in [opponent.site, player.site]" :key="saidx">
         <div class="site" :class="{
-      'site-select': site.isSelected,
-      'site-can-select': site.canSelect && player.status == 1,
-    }" v-for="(site, siidx) in siteArea" :key="siidx" @click.stop="showSiteInfo(saidx, siidx)">
+          'site-select': site.isSelected,
+          'site-can-select': site.canSelect && player.status == 1,
+        }" v-for="(site, siidx) in siteArea" :key="siidx" @click.stop="showSiteInfo(saidx, siidx)">
           <div class="site-img-content">
             <img class="site-img" :style="{ top: site.card.subType.includes(3) && isMobile ? '100%' : '60%' }"
               :src="site.card.src" v-if="site.card.src.length > 0" :alt="site.card.name" />
@@ -57,14 +57,14 @@
           <img class="site-top-icon" v-if="site.type < 3" :src="getSvgIcon(site.type == 1 ? 'round' : 'bag')" />
           <div class="site-top-num" v-if="site.type < 3">{{ site.cnt }}</div>
           <div :class="{
-      'will-destroy': siteCnt[saidx ^ playerIdx ^ 1][siidx] < 0,
-      'will-add': siteCnt[saidx ^ playerIdx ^ 1][siidx] > 0,
-    }" v-if="true || (currSkill.type > 0 && siteCnt[saidx ^ playerIdx ^ 1][siidx] != 0)">
+            'will-destroy': siteCnt[saidx ^ playerIdx ^ 1][siidx] < 0,
+            'will-add': siteCnt[saidx ^ playerIdx ^ 1][siidx] > 0,
+          }" v-if="true || (currSkill.type > 0 && siteCnt[saidx ^ playerIdx ^ 1][siidx] != 0)">
             <img v-if="siteCnt[saidx ^ playerIdx ^ 1][siidx] < -site.cnt" :src="getSvgIcon('die')"
               style="height: 16px" />
             <span>
               {{ siteCnt[saidx ^ playerIdx ^ 1][siidx] > 0 ? "+" :
-      siteCnt[saidx ^ playerIdx ^ 1][siidx] >= -site.cnt ? "-" : "" }}
+                siteCnt[saidx ^ playerIdx ^ 1][siidx] >= -site.cnt ? "-" : "" }}
             </span>
             <span v-if="siteCnt[saidx ^ playerIdx ^ 1][siidx] >= -site.cnt">
               {{ Math.abs(siteCnt[saidx ^ playerIdx ^ 1][siidx]) }}
@@ -80,24 +80,24 @@
 
     <div class="heros">
       <div class="hero" @click.stop="selectHero(hidx < 3 ? 0 : 1, hidx % 3)" :style="{
-      'background-color': hero.src.length == 0 ? ELEMENT_COLOR[hero?.element ?? 0] : '',
-      animation: hero?.isFront &&
-        ((hidx > 2 && player.status == 1 && player.summon.every(s => !s.isSelected)) ||
-          (hidx < 3 && opponent.status == 1 && opponent.summon.every(s => !s.isSelected))) &&
-        isShowDmg && willDamages.some(d => d[0] >= 0) && phase < 7 &&
-        heros.every(h => h.inStatus.every(s => !s.isSelected) && h.outStatus.every(s => !s.isSelected))
-        ? `attack${opponent.tarhidx - player.tarhidx + 2}-${hidx < 3 ? 0 : 1} 0.8s linear` : 'none',
-    }" :class="{
-      'mobile-hero': isMobile,
-      my: hidx > 2,
-      'is-front-oppo': hero?.isFront && player.phase > 3 && opponent.phase > 3 && hidx < 3,
-      'is-front-my': hero?.isFront && hidx > 2,
-    }" v-for="(hero, hidx) in heros" :key="hidx">
+        'background-color': hero.src.length == 0 ? ELEMENT_COLOR[hero?.element ?? 0] : '',
+        animation: hero?.isFront &&
+          ((hidx > 2 && player.status == 1 && player.summon.every(s => !s.isSelected)) ||
+            (hidx < 3 && opponent.status == 1 && opponent.summon.every(s => !s.isSelected))) &&
+          isShowDmg && willDamages.some(d => d[0] >= 0) && phase < 7 &&
+          heros.every(h => h.inStatus.every(s => !s.isSelected) && h.outStatus.every(s => !s.isSelected))
+          ? `attack${opponent.tarhidx - player.tarhidx + 2}-${hidx < 3 ? 0 : 1} 0.8s linear` : 'none',
+      }" :class="{
+        'mobile-hero': isMobile,
+        my: hidx > 2,
+        'is-front-oppo': hero?.isFront && player.phase > 3 && opponent.phase > 3 && hidx < 3,
+        'is-front-my': hero?.isFront && hidx > 2,
+      }" v-for="(hero, hidx) in heros" :key="hidx">
         <div class="hero-img-content" :class="{
-      'hero-select': hero.isSelected > 0,
-      'hero-can-select': hero.canSelect && player.status == 1,
-      'hero-shield7': hero.hp > 0 && [...hero.inStatus, ...hero.outStatus].some(sts => sts.type.some(t => t == 7) && sts.useCnt > 0),
-    }">
+          'hero-select': hero.isSelected > 0,
+          'hero-can-select': hero.canSelect && player.status == 1,
+          'hero-shield7': hero.hp > 0 && [...hero.inStatus, ...hero.outStatus].some(sts => sts.type.some(t => t == 7) && sts.useCnt > 0),
+        }">
           <img class="hero-img" :src="hero.src" v-if="hero?.src?.length > 0" :alt="hero.name" />
           <div v-else class="hero-name">{{ hero?.name }}</div>
         </div>
@@ -107,11 +107,10 @@
         <div class="hero-freeze" style="background-color: #716446de"
           v-if="hero.hp > 0 && hero.inStatus.some(ist => ist.id == 2087)"></div>
         <div class="hero-shield2" v-if="hero.hp > 0 &&
-      (hero.inStatus.some(ist => ist.type.some(t => t == 2) && ist.useCnt > 0) ||
-        hero.outStatus.some(ost => ost.type.some(t => t == 2 && (ost.id != 2105 || hero.id != 1209) && ost.useCnt > 0)) ||
-        (hero.talentSlot?.subType.includes(-1) &&
-          (hero.talentSlot?.useCnt ?? 0) > 0))
-      "></div>
+          (hero.inStatus.some(ist => ist.type.some(t => t == 2) && ist.useCnt > 0) ||
+            hero.outStatus.some(ost => ost.type.some(t => t == 2 && (ost.id != 2105 || hero.id != 1209) && ost.useCnt > 0)) ||
+            (hero.talentSlot?.subType.includes(-1) && (hero.talentSlot?.useCnt ?? 0) > 0))">
+        </div>
         <img class="switch-icon" v-if="willSwitch[(hidx % 3) + (playerIdx ^ (hidx > 2 ? 0 : 1)) * 3]"
           :src="getSvgIcon('switch')" />
         <div class="hero-hp" v-if="hero?.hp > 0">
@@ -126,47 +125,47 @@
           <div class="hero-weapon" v-if="hero.weaponSlot != null" :class="{ 'slot-select': hero.weaponSlot.selected }">
             <img :src="getSvgIcon('weapon')" />
             <div :style="{
-      position: 'absolute',
-      width: '100%',
-      height: `${100 / (1 + (hero.artifactSlot ? 1 : 0) + (hero.talentSlot ? 1 : 0))}%`,
-      borderRadius: '50%',
-    }" :class="{ 'slot-can-use': hero.weaponSlot.perCnt > 0 }"></div>
+              position: 'absolute',
+              width: '100%',
+              height: `${100 / (1 + (hero.artifactSlot ? 1 : 0) + (hero.talentSlot ? 1 : 0))}%`,
+              borderRadius: '50%',
+            }" :class="{ 'slot-can-use': hero.weaponSlot.perCnt > 0 }"></div>
           </div>
           <div class="hero-artifact" v-if="hero.artifactSlot != null"
             :class="{ 'slot-select': hero.artifactSlot.selected }">
             <img :src="getSvgIcon('artifact')" />
             <div :style="{
-      position: 'absolute',
-      width: '100%',
-      height: `${100 / (1 + (hero.weaponSlot ? 1 : 0) + (hero.talentSlot ? 1 : 0))}%`,
-      borderRadius: '50%',
-    }" :class="{ 'slot-can-use': hero.artifactSlot.perCnt > 0 }"></div>
+              position: 'absolute',
+              width: '100%',
+              height: `${100 / (1 + (hero.weaponSlot ? 1 : 0) + (hero.talentSlot ? 1 : 0))}%`,
+              borderRadius: '50%',
+            }" :class="{ 'slot-can-use': hero.artifactSlot.perCnt > 0 }"></div>
           </div>
           <div class="hero-talent" v-if="hero.talentSlot != null" :class="{ 'slot-select': hero.talentSlot.selected }">
             <img :src="getSvgIcon('talent')" />
             <div :style="{
-      position: 'absolute',
-      width: '100%',
-      height: `${100 / (1 + (hero.artifactSlot ? 1 : 0) + (hero.weaponSlot ? 1 : 0))}%`,
-      borderRadius: '50%',
-    }" :class="{ 'slot-can-use': hero.talentSlot.perCnt > 0 }"></div>
+              position: 'absolute',
+              width: '100%',
+              height: `${100 / (1 + (hero.artifactSlot ? 1 : 0) + (hero.weaponSlot ? 1 : 0))}%`,
+              borderRadius: '50%',
+            }" :class="{ 'slot-can-use': hero.talentSlot.perCnt > 0 }"></div>
           </div>
         </div>
         <div class="attach-element">
           <div class="el-tip" :class="{
-      'el-tip-enter': elTips[(hidx % 3) + (playerIdx ^ (hidx > 2 ? 1 : 0)) * 3][0] != '',
-      'el-tip-leave': elTips[(hidx % 3) + (playerIdx ^ (hidx > 2 ? 1 : 0)) * 3][0] == '',
-    }" :style="{
-      color: ELEMENT_COLOR[elTips[(hidx % 3) + (playerIdx ^ (hidx > 2 ? 1 : 0)) * 3][1]],
-      fontWeight: 'bolder',
-      '-webkit-text-stroke': `0.5px${ELEMENT_COLOR[elTips[(hidx % 3) + (playerIdx ^ (hidx > 2 ? 1 : 0)) * 3][2]]}`,
-    }">
+            'el-tip-enter': elTips[(hidx % 3) + (playerIdx ^ (hidx > 2 ? 1 : 0)) * 3][0] != '',
+            'el-tip-leave': elTips[(hidx % 3) + (playerIdx ^ (hidx > 2 ? 1 : 0)) * 3][0] == '',
+          }" :style="{
+            color: ELEMENT_COLOR[elTips[(hidx % 3) + (playerIdx ^ (hidx > 2 ? 1 : 0)) * 3][1]],
+            fontWeight: 'bolder',
+            '-webkit-text-stroke': `0.5px${ELEMENT_COLOR[elTips[(hidx % 3) + (playerIdx ^ (hidx > 2 ? 1 : 0)) * 3][2]]}`,
+          }">
             {{ elTips[(hidx % 3) + (playerIdx ^ (hidx > 2 ? 1 : 0)) * 3][0] }}
           </div>
           <img v-for="(el, eidx) in hero.attachElement.filter(() => hero?.hp > 0)" :key="eidx" :src="ELEMENT_URL[el]"
             style="width: 20px" />
           <img class="will-attach" v-for="(attach, waidx) in willAttachs[playerIdx == 0 ? (hidx + 3) % 6 : hidx]
-      .filter(wa => hero?.hp > 0 && wa > 0)" :key="waidx" :src="ELEMENT_URL[attach]" />
+            .filter(wa => hero?.hp > 0 && wa > 0)" :key="waidx" :src="ELEMENT_URL[attach]" />
         </div>
         <div class="instatus" v-if="phase > 3 && hero.hp > 0">
           <div :class="{ status: true, 'mobile-status': isMobile, 'status-select': ists.isSelected }"
@@ -174,9 +173,9 @@
             :key="ists.id">
             <div class="status-bg" :class="{ 'mobile-status-bg': isMobile }" :style="{ background: ists.iconBg }"></div>
             <img v-if="ists.icon != ''" class="status-icon" :style="{
-      filter: ists.icon.startsWith('https') || ists.icon.startsWith('buff') || ists.icon.endsWith('dice')
-        ? `url(${getSvgIcon('filter')}#status-color-${STATUS_BG_COLOR.indexOf(ists.iconBg)})` : '',
-    }" :src="getPngIcon(ists.icon)" />
+              filter: ists.icon.startsWith('https') || ists.icon.startsWith('buff') || ists.icon.endsWith('dice')
+                ? `url(${getSvgIcon('filter')}#status-color-${STATUS_BG_COLOR.indexOf(ists.iconBg)})` : '',
+            }" :src="getPngIcon(ists.icon)" />
             <div :style="{ position: 'absolute', width: '100%', height: '100%', borderRadius: '50%' }"
               :class="{ 'status-can-use': ists.perCnt > 0 }"></div>
             <div class="status-cnt" :class="{ 'mobile-status-cnt': isMobile }"
@@ -198,24 +197,19 @@
               <div class="status-bg" :class="{ 'mobile-status-bg': isMobile }" :style="{ background: osts.iconBg }">
               </div>
               <img v-if="osts.icon != ''" class="status-icon" :style="{
-      filter:
-        osts.icon.startsWith('https') ||
-          osts.icon.startsWith('buff') ||
-          osts.icon.endsWith('dice')
-          ? `url(${getSvgIcon(
-            'filter'
-          )}#status-color-${STATUS_BG_COLOR.indexOf(osts.iconBg)})`
-          : '',
-    }" :src="getPngIcon(osts.icon)" />
+                filter:
+                  osts.icon.startsWith('https') ||
+                    osts.icon.startsWith('buff') ||
+                    osts.icon.endsWith('dice') ? `url(${getSvgIcon('filter')}#status-color-${STATUS_BG_COLOR.indexOf(osts.iconBg)})` : '',
+              }" :src="getPngIcon(osts.icon)" />
               <div :style="{
-      position: 'absolute',
-      width: '100%',
-      height: '100%',
-      borderRadius: '50%',
-    }" :class="{ 'status-can-use': osts.perCnt > 0 }"></div>
-              <div class="status-cnt" :class="{ 'mobile-status-cnt': isMobile }" v-if="!osts.type.includes(10) &&
-      (osts.useCnt >= 0 || osts.roundCnt >= 0)
-      ">
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                borderRadius: '50%',
+              }" :class="{ 'status-can-use': osts.perCnt > 0 }"></div>
+              <div class="status-cnt" :class="{ 'mobile-status-cnt': isMobile }"
+                v-if="!osts.type.includes(10) && (osts.useCnt >= 0 || osts.roundCnt >= 0)">
                 {{ osts.useCnt < 0 ? osts.roundCnt : osts.useCnt }} </div>
               </div>
               <div v-if="hero.outStatus.length > 4" :class="{ status: true, 'mobile-status': isMobile }"
@@ -230,9 +224,9 @@
               <img :src="getSvgIcon('die')" style="width: 40px" />
             </div>
             <div :class="{
-      'will-damage': (willHp[(hidx + 3 * playerIdx) % 6] ?? 0) <= 0,
-      'will-heal': (willHp[(hidx + 3 * playerIdx) % 6] ?? 0) > 0,
-    }" :style="{ paddingLeft: `${hero.hp + (willHp[(hidx + 3 * playerIdx) % 6] ?? 0) <= 0 ? '0' : '3px'}` }"
+              'will-damage': (willHp[(hidx + 3 * playerIdx) % 6] ?? 0) <= 0,
+              'will-heal': (willHp[(hidx + 3 * playerIdx) % 6] ?? 0) > 0,
+            }" :style="{ paddingLeft: `${hero.hp + (willHp[(hidx + 3 * playerIdx) % 6] ?? 0) <= 0 ? '0' : '3px'}` }"
               v-if="willHp[(hidx + 3 * playerIdx) % 6] != undefined">
               <img v-if="(willHp[(hidx + 3 * playerIdx) % 6] ?? 0) % 1 != 0" :src="getPngIcon('heal2')"
                 style="height: 16px" />
@@ -241,7 +235,7 @@
               <span
                 :style="{ padding: `0 8px 0 ${hero.hp + (willHp[(hidx + 3 * playerIdx) % 6] ?? 0) > 0 ? '5px' : '0'}` }">
                 {{ (willHp[(hidx + 3 * playerIdx) % 6] ?? 0) > 0 ? "+" : "-" }}{{ Math.abs(Math.ceil(willHp[(hidx + 3 *
-      playerIdx) % 6] ?? 0) % 100) }}
+                  playerIdx) % 6] ?? 0) % 100) }}
               </span>
             </div>
             <div class="damages">
@@ -268,10 +262,10 @@
             v-for="(smnArea, saidx) in [[...opponent.summon, ...willSummons[0]], [...player.summon, ...willSummons[1]]]"
             :key="saidx">
             <div class="summon" :class="{
-      'will-attach': summon.isWill,
-      'summon-select': summon.isSelected,
-      'summon-can-select': summon.canSelect && player.status == 1,
-    }" v-for="(summon, suidx) in smnArea" :key="suidx" @click.stop="selectSummon(saidx, suidx, summon.isWill)">
+              'will-attach': summon.isWill,
+              'summon-select': summon.isSelected,
+              'summon-can-select': summon.canSelect && player.status == 1,
+            }" v-for="(summon, suidx) in smnArea" :key="suidx" @click.stop="selectSummon(saidx, suidx, summon.isWill)">
               <div class="summon-img-content">
                 <img class="summon-img" :src="summon.src" v-if="summon?.src?.length > 0" :alt="summon.name" />
                 <span v-else>{{ summon.name }}</span>
@@ -284,14 +278,14 @@
                 {{ summon.useCnt }}
               </div>
               <div :class="{
-      'will-destroy': summonCnt[saidx ^ playerIdx ^ 1][suidx] < 0,
-      'will-add': summonCnt[saidx ^ playerIdx ^ 1][suidx] > 0,
-    }" v-if="summonCnt[saidx ^ playerIdx ^ 1][suidx] != 0">
+                'will-destroy': summonCnt[saidx ^ playerIdx ^ 1][suidx] < 0,
+                'will-add': summonCnt[saidx ^ playerIdx ^ 1][suidx] > 0,
+              }" v-if="summonCnt[saidx ^ playerIdx ^ 1][suidx] != 0">
                 <img v-if="summonCnt[saidx ^ playerIdx ^ 1][suidx] <= -summon.useCnt && summon.isDestroy == 0"
                   :src="getSvgIcon('die')" style="height: 16px" />
                 <span>
                   {{ summonCnt[saidx ^ playerIdx ^ 1][suidx] > 0 ? "+" : summonCnt[saidx ^ playerIdx ^ 1][suidx] >
-      -summon.useCnt || summon.isDestroy > 0 ? "-" : "" }}
+                    -summon.useCnt || summon.isDestroy > 0 ? "-" : "" }}
                 </span>
                 <span v-if="summonCnt[saidx ^ playerIdx ^ 1][suidx] > -summon.useCnt || summon.isDestroy > 0">
                   {{ Math.abs(summonCnt[saidx ^ playerIdx ^ 1][suidx]) }}

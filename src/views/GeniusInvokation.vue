@@ -3,6 +3,7 @@
     <button v-if="!client.isStart || isLookon > -1" class="exit" @click="exit">
       返回
     </button>
+    <div style="position: absolute;left: 60px;">房间号{{ roomId }}</div>
     <button v-if="client.isStart && isLookon == -1 && client.phase > 5" class="exit" @click="giveup">
       投降
     </button>
@@ -15,10 +16,10 @@
     </button>
 
     <div :class="{
-    'player-display': true,
-    'curr-player': client.player?.status == 1 && client.phase < 7 && client.phase > 2 && client.isWin == -1,
-    'mobile-player-display': isMobile,
-  }" @click.stop="devOps()">
+      'player-display': true,
+      'curr-player': client.player?.status == 1 && client.phase < 7 && client.phase > 2 && client.isWin == -1,
+      'mobile-player-display': isMobile,
+    }" @click.stop="devOps()">
       <span v-if="isLookon > -1">旁观中......</span>
       <p>{{ client.player?.name }}</p>
       <div v-if="client.isWin > -1 || client.isStart" class="rest-card" :class="{ 'mobile-rest-card': isMobile }">
@@ -29,10 +30,10 @@
     </div>
 
     <div v-if="client.opponent" :class="{
-    'player-display-oppo': true,
-    'curr-player': client.opponent?.status == 1 && client.phase < 7 && client.phase > 2 && client.isWin == -1,
-    'mobile-player-display': isMobile,
-  }">
+      'player-display-oppo': true,
+      'curr-player': client.opponent?.status == 1 && client.phase < 7 && client.phase > 2 && client.isWin == -1,
+      'mobile-player-display': isMobile,
+    }">
       <p>{{ client.opponent?.name }}</p>
       <div v-if="client.isWin > -1 || client.isStart" class="rest-card" :class="{ 'mobile-rest-card': isMobile }">
         {{ client.opponent?.handCards?.length ?? 0 }}
@@ -79,8 +80,8 @@
     </div>
 
     <div class="btn-group" v-if="isLookon == -1 &&
-    ((((client.player?.status == 1 && canAction) || client.player?.phase >= 9) && client.player?.phase > 4 &&
-      (client.currCard.id > 0 || client.isShowChangeHero > 0)) || client.player?.phase == 3)
+      ((((client.player?.status == 1 && canAction) || client.player?.phase >= 9) && client.player?.phase > 4 &&
+        (client.currCard.id > 0 || client.isShowChangeHero > 0)) || client.player?.phase == 3)
     ">
       <button :class="{ forbidden: !client.isValid }" v-if="!client.isReconcile && client.currCard.id > 0 && canAction"
         @click.stop="useCard">
@@ -136,7 +137,7 @@
           <span style="z-index: 1">{{ Math.max(cost.val - (cidx < 2 ? skill.costChange[cidx] : 0), 0) }} </span>
         </div>
         <div class="skill-forbidden" v-if="isLookon > -1 || skill.isForbidden || client.player.status == 0 || !canAction || client.phase > 6 ||
-    (client.player.heros.find(h => h.isFront)?.inStatus?.findIndex(s => s.type.includes(14)) ?? -1) > -1"
+          (client.player.heros.find(h => h.isFront)?.inStatus?.findIndex(s => s.type.includes(14)) ?? -1) > -1"
           @click.stop="useSkill(sidx, true)"></div>
       </div>
     </div>
@@ -184,8 +185,7 @@ const router = useRouter();
 const route = useRoute();
 
 const isMobile = ref(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
-const env = process.env.NODE_ENV;
-const isDev = env == 'development';
+const isDev = process.env.NODE_ENV == 'development';
 const socket: Socket = getSocket(isDev);
 const { players: cplayers, isLookon: cisLookon, countdown, follow } = history.state;
 

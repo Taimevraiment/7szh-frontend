@@ -65,8 +65,7 @@ import EnterRoomModal from '@/components/EnterRoomModal.vue';
 import { getSocket } from '@/store/socket';
 import { genShareCode } from '@/data/utils';
 
-const env = process.env.NODE_ENV;
-const isDev = env == 'development';
+const isDev = process.env.NODE_ENV == 'development';
 const isMobile = ref(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
 const socket = getSocket(isDev);
 const router = useRouter();
@@ -178,6 +177,17 @@ const getPlayerAndRoomList = ({ plist, rlist }: { plist: Player[]; rlist: RoomLi
     status: p.rid < 0 ? 0 : roomList.value.find(r => r.id == p.rid)?.isStart ? 2 : 1,
   }));
 };
+// 只能打开一个标签
+const singlePageHandle = () => {
+  const broadcastChannel = new BroadcastChannel('single-tab-app');
+  broadcastChannel.onmessage = (messageEvent) => {
+    console.log(messageEvent.data.from);
+    if (messageEvent.data.from == 'main-page') {
+      window.close();
+    }
+  };
+  broadcastChannel.postMessage({ from: 'main-page' });
+}
 onMounted(() => {
   // 获取登录pid
   socket.on('login', ({ pid, name }) => {
@@ -209,6 +219,8 @@ onMounted(() => {
       isForce: true,
     });
   });
+  // 只能打开一个标签
+  window.addEventListener('DOMContentLoaded', singlePageHandle);
 });
 
 onUnmounted(() => {
@@ -216,6 +228,7 @@ onUnmounted(() => {
   socket.off('getPlayerAndRoomList', getPlayerAndRoomList);
   socket.off('enterRoom');
   socket.off('continueGame');
+  window.removeEventListener('DOMContentLoaded', singlePageHandle);
 });
 </script>
 
