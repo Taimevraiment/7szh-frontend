@@ -342,13 +342,7 @@ const summonTotal: SummoneeObj = {
                     if (trigger == 'phase-end') return phaseEndAtk(smn);
                     if (smn.perCnt <= 0 || trigger != 'getdmg' || hidx == -1) return {}
                     --smn.perCnt;
-                    return {
-                        cmds: [{
-                            cmd: 'getInStatus',
-                            status: [heroStatus(2068)],
-                            hidxs: [hidx],
-                        }]
-                    }
+                    return { cmds: [{ cmd: 'getInStatus', status: [heroStatus(2068)], hidxs: [hidx] }] }
                 },
             }
         }, { pct: 1, isDestroy: 2, stsId: 2070 }),

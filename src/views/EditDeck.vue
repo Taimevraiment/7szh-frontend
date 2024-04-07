@@ -7,7 +7,7 @@
                 {{ deck.name }}
                 <div v-for="(hero, hidx) in deck.heroIds" :key="hidx" class="deck-hero"
                     :style="{ backgroundColor: ELEMENT_COLOR[hero?.element ?? 0] }">
-                    {{ hero?.name ?? '无' }}
+                    {{ hero?.name || '无' }}
                 </div>
                 <div class="edit-btn-group">
                     <span v-for="( icon, cidx ) in deckListEditIcon" :key="cidx" class="edit-list-icon"
@@ -52,9 +52,9 @@
                     <div class="hero-total" :class="{ 'mobile-hero-deck': isMobile }" v-for="dthero in herosTotal"
                         :key="dthero.id" :style="{ color: ELEMENT_COLOR[dthero.element] }"
                         @click.stop="showHeroInfo(dthero.id)">
+                        <span class="hero-img">{{ dthero.name }}</span>
                         <img class="hero-img" :src="dthero.src" v-if="dthero?.src?.length > 0" :alt="dthero.name"
                             draggable="false" />
-                        <span v-else class="hero-img">{{ dthero.name }}</span>
                         <div class="icon-group" v-if="!dthero.isSelected">
                             <span v-for="(icon, cidx) in heroSelectIcon" :key="cidx" class="edit-icon"
                                 @click.stop="icon.handle(dthero.id)">
@@ -71,9 +71,9 @@
                     <div class="card-deck" :class="{ 'mobile-card-deck': isMobile }" v-for="(dcard, dcidx) in cardsDeck"
                         :key="dcidx" @click.stop="showCardInfo(dcard.id)">
                         <div class="card-img-content">
+                            <span class="card-img">{{ dcard.name }}</span>
                             <img class="card-img" :src="dcard.src" v-if="dcard?.src?.length > 0" :alt="dcard.name"
                                 draggable="false" />
-                            <span v-else class="card-img">{{ dcard.name }}</span>
                             <img class="subtype8-border" v-if="dcard.subType.includes(8)"
                                 :src="getPngIcon('subtype8-border')" />
                         </div>
@@ -103,9 +103,9 @@
                     <div class="card-total" :class="{ 'mobile-card-deck': isMobile }"
                         v-for="(dtcard, dtcidx) in cardsTotal" :key="dtcidx" @click.stop="showCardInfo(dtcard.id)">
                         <div class="card-img-content">
+                            <span class="card-img">{{ dtcard.name }}</span>
                             <img class="card-img" :src="dtcard.src" v-if="dtcard?.src?.length > 0" :alt="dtcard.name"
                                 draggable="false" />
-                            <span v-else class="card-img">{{ dtcard.name }}</span>
                             <img class="subtype8-border" v-if="dtcard.subType.includes(8)"
                                 :src="getPngIcon('subtype8-border')" />
                         </div>

@@ -412,7 +412,6 @@ type StatusHandleEvent = {
     isSkill?: number,
     dmgSource?: number,
     dmgElement?: number,
-    isSummon?: number,
     minusDiceCard?: number,
     minusDiceSkill?: number[][],
     heal?: number[],
@@ -518,7 +517,6 @@ type SiteExecEvent = {
     changeHeroDiceCnt?: number,
     isQuickAction?: boolean,
     summonDiffCnt?: number,
-    minusDiceCard?: number,
 }
 
 type SiteExecRes = {
@@ -534,7 +532,7 @@ type SummonHandleEvent = {
     trigger?: Trigger,
     heros?: Hero[],
     eheros?: Hero[],
-    hidxs?: number[],
+    hidx?: number,
     reset?: boolean,
     isChargedAtk?: boolean,
     isFallAtk?: boolean,

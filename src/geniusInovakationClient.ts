@@ -2565,7 +2565,7 @@ export default class GeniusInvokationClient {
             }
         }
         efhero.inStatus.filter(ist => ist.type.some(t => [2, 7].includes(t))).forEach(ist => {
-            restDmg = heroStatus(ist.id).handle(ist, { restDmg, willAttach, heros: res.eheros, hidx: frontIdx, isSummon }).restDmg ?? 0;
+            restDmg = heroStatus(ist.id).handle(ist, { restDmg, willAttach, heros: res.eheros, hidx: frontIdx, dmgSource: isSummon }).restDmg ?? 0;
         });
         if (efhero.isFront) {
             efhero.outStatus.filter(ost => ost.type.some(t => [2, 7].includes(t))).forEach(ost => {
@@ -2703,7 +2703,7 @@ export default class GeniusInvokationClient {
                     trigger: state,
                     heros,
                     eheros,
-                    hidxs: [hidx],
+                    hidx,
                     isChargedAtk,
                     isFallAtk,
                     hcard,
@@ -3889,7 +3889,7 @@ export default class GeniusInvokationClient {
         this.players[plidx].summon.forEach(smn => {
             const smnres = newSummonee(smn.id).handle(smn, {
                 heros,
-                hidxs: [hidx],
+                hidx,
                 isFallAtk: this.isFall,
                 minusDiceSkill: mds,
                 trigger: 'calc',

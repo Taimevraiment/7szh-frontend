@@ -1487,6 +1487,7 @@ button:active {
   justify-content: center;
   align-items: center;
   border-radius: 50%;
+  transition: background-image 1s;
 }
 
 .end-phase {

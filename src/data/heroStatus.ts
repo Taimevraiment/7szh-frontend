@@ -6,7 +6,7 @@ class GIStatus implements Status {
     id: number;
     name: string;
     description: string;
-    icon = '';
+    icon: string;
     group: number;
     type: number[];
     useCnt: number;
@@ -23,7 +23,7 @@ class GIStatus implements Status {
     explains: ExplainContent[];
     addition: any[];
     constructor(
-        id: number, name: string, description: string, icon = '', group: number, type: number[],
+        id: number, name: string, description: string, icon: string, group: number, type: number[],
         useCnt: number, maxCnt: number, roundCnt: number, handle?: (status: Status, event?: StatusHandleEvent) => StatusHandleRes,
         options: {
             smnId?: number, pct?: number, icbg?: string, expl?: ExplainContent[], act?: number,
@@ -1617,10 +1617,9 @@ const statusTotal: StatusObj = {
 
     2139: (cnt = 1) => new GIStatus(2139, '炎之魔蝎·守势', '【附属角色受到伤害时：】抵消1点伤害。；【[可用次数]：{useCnt}】',
         '', 0, [2], cnt, 0, -1, (status, event = {}) => {
-            const { restDmg = 0, summon } = event;
+            const { restDmg = 0 } = event;
             if (restDmg <= 0) return { restDmg };
             --status.useCnt;
-            if (summon) --summon.useCnt;
             return { restDmg: restDmg - 1 };
         }),
 
@@ -1864,9 +1863,9 @@ const statusTotal: StatusObj = {
 
     2158: (isTalent = false, useCnt = 2, addCnt?: number) => new GIStatus(2158, '原海明珠', `【所附属角色受到伤害时：】抵消1点伤害。；【每回合${isTalent ? 2 : 1}次：】抵消来自召唤物的伤害时不消耗[可用次数]。；【[可用次数]：{useCnt}】；【我方宣布结束时：】如果所附属角色为｢出战角色｣，则摸1张牌。`,
         '', 0, [2, 4], useCnt, 0, -1, (status, event = {}) => {
-            const { restDmg = 0, heros = [], hidx = -1, isSummon = -1 } = event;
+            const { restDmg = 0, heros = [], hidx = -1, dmgSource = -1 } = event;
             if (restDmg > 0) {
-                if (isSummon > -1 && status.perCnt > 0) --status.perCnt;
+                if (Math.floor(dmgSource / 1000) == 3 && status.perCnt > 0) --status.perCnt;
                 else --status.useCnt;
                 return { restDmg: restDmg - 1 }
             }
