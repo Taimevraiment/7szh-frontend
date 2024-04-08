@@ -1,6 +1,6 @@
 import { DEBUFF_BG_COLOR, ELEMENT, STATUS_BG_COLOR, ELEMENT_ICON } from "./constant";
 import { newSummonee } from "./summonee";
-import { allHidxs, getAtkHidx, isCdt, minusDiceSkillHandle } from "./utils";
+import { allHidxs, getAtkHidx, getMinhpHidxs, isCdt, minusDiceSkillHandle } from "./utils";
 
 class GIStatus implements Status {
     id: number;
@@ -24,7 +24,7 @@ class GIStatus implements Status {
     addition: any[];
     constructor(
         id: number, name: string, description: string, icon: string, group: number, type: number[],
-        useCnt: number, maxCnt: number, roundCnt: number, handle?: (status: Status, event?: StatusHandleEvent) => StatusHandleRes,
+        useCnt: number, maxCnt: number, roundCnt: number, handle?: (status: Status, event?: StatusHandleEvent) => StatusHandleRes | void,
         options: {
             smnId?: number, pct?: number, icbg?: string, expl?: ExplainContent[], act?: number,
             isTalent?: boolean, isReset?: boolean, add?: any[]
@@ -55,7 +55,7 @@ class GIStatus implements Status {
                 let { restDmg = 0 } = event;
                 let rest: StatusHandleRes = {};
                 if (handle) {
-                    const { restDmg: dmg = -1, ...other } = handle(status, event);
+                    const { restDmg: dmg = -1, ...other } = handle(status, event) ?? {};
                     if (dmg > -1) restDmg = dmg;
                     rest = { ...other };
                 }
@@ -87,7 +87,7 @@ class GIStatus implements Status {
                 if (isReset) status.perCnt = pct;
                 return {}
             }
-            return thandle(status, event);
+            return thandle(status, event) ?? {};
         }
     }
 }
@@ -109,7 +109,6 @@ const card587sts = (element: number) => {
                     --eStatus.useCnt;
                     --eStatus.perCnt;
                 }
-                return {}
             }
         }), { icbg: DEBUFF_BG_COLOR, pct: 1 });
 }
@@ -119,10 +118,7 @@ const card751sts = (windEl: number) => {
         'buff4', 1, [6], 2, 0, -1, status => ({
             trigger: [`${ELEMENT_ICON[STATUS_BG_COLOR.indexOf(status.iconBg)]}-dmg` as Trigger],
             addDmgCdt: 1,
-            exec: () => {
-                --status.useCnt;
-                return {}
-            }
+            exec: () => { --status.useCnt }
         }), { icbg: STATUS_BG_COLOR[windEl] })
 }
 
@@ -153,7 +149,6 @@ const statusTotal: StatusObj = {
             trigger: ['after-skilltype1'],
             exec: eStatus => {
                 if (eStatus) --eStatus.useCnt;
-                return {}
             },
         }), { icbg: STATUS_BG_COLOR[1] }),
 
@@ -163,20 +158,14 @@ const statusTotal: StatusObj = {
         'sts2005', 1, [6], 1, 0, -1, status => ({
             addDmgCdt: 2,
             trigger: ['fire-dmg', 'thunder-dmg'],
-            exec: () => {
-                --status.useCnt;
-                return {}
-            },
+            exec: () => { --status.useCnt },
         }), { icbg: STATUS_BG_COLOR[7] }),
 
     2006: () => new GIStatus(2006, '激化领域', '【我方对敌方出战角色造成[雷元素伤害]或[草元素伤害]时，】伤害值+1。；【[可用次数]：{useCnt}】',
         'sts2006', 1, [6], 2, 0, -1, status => ({
             addDmgCdt: 1,
             trigger: ['grass-dmg', 'thunder-dmg'],
-            exec: () => {
-                --status.useCnt;
-                return {}
-            },
+            exec: () => { --status.useCnt },
         })),
 
     2007: () => new GIStatus(2007, '结晶', '为我方出战角色提供1点[护盾]。(可叠加，最多到2)', '', 1, [7], 1, 2, -1),
@@ -207,10 +196,7 @@ const statusTotal: StatusObj = {
         'buff3', 1, [4, 10], 1, 0, -1, status => ({
             isQuickAction: true,
             trigger: ['change-from'],
-            exec: () => {
-                --status.useCnt;
-                return {}
-            }
+            exec: () => { --status.useCnt },
         })),
 
     2012: (icon = '') => new GIStatus(2012, '泡影', '【我方造成技能伤害时：】移除此状态，使本次伤害加倍。',
@@ -234,20 +220,14 @@ const statusTotal: StatusObj = {
         'buff5', 0, [4, 6, 10], 1, 0, 1, status => ({
             addDmgType1: 1,
             trigger: ['skilltype1'],
-            exec: () => {
-                --status.useCnt;
-                return {}
-            },
+            exec: () => { --status.useCnt },
         })),
 
     2015: () => new GIStatus(2015, '仙跳墙(生效中)', '本回合中，目标角色下一次｢元素爆发｣造成的伤害+3。',
         'buff2', 0, [4, 6, 10], 1, 0, 1, status => ({
             addDmgType3: 3,
             trigger: ['skilltype3'],
-            exec: () => {
-                --status.useCnt;
-                return {}
-            },
+            exec: () => { --status.useCnt },
         })),
 
     2016: () => new GIStatus(2016, '烤蘑菇披萨(生效中)', '两回合内结束阶段再治疗此角色1点。',
@@ -266,10 +246,7 @@ const statusTotal: StatusObj = {
         'buff3', 1, [4, 10], 1, 0, -1, status => ({
             trigger: ['skill'],
             cmds: [{ cmd: 'switch-after-self', cnt: 2500 }],
-            exec: () => {
-                --status.useCnt;
-                return {}
-            }
+            exec: () => { --status.useCnt },
         })),
 
     2018: () => new GIStatus(2018, '莲花酥(生效中)', '本回合中，目标角色下次受到的伤害-3。',
@@ -288,7 +265,6 @@ const statusTotal: StatusObj = {
                 ...minusSkillRes,
                 exec: () => {
                     if (isMinusSkill) --status.useCnt;
-                    return {}
                 },
             }
         }),
@@ -300,7 +276,6 @@ const statusTotal: StatusObj = {
             trigger: ['after-skill'],
             exec: eStatus => {
                 if (eStatus) --eStatus.useCnt;
-                return {}
             },
         }), { icbg: STATUS_BG_COLOR[2] }),
 
@@ -312,7 +287,6 @@ const statusTotal: StatusObj = {
                 ...minusSkillRes,
                 exec: () => {
                     if (isMinusSkill) --status.useCnt;
-                    return {}
                 },
             }
         }),
@@ -326,10 +300,7 @@ const statusTotal: StatusObj = {
         'buff2', 0, [4, 6, 10], 1, 0, 1, status => ({
             addDmgType2: 2,
             trigger: ['skilltype2'],
-            exec: () => {
-                --status.useCnt;
-                return {}
-            },
+            exec: () => { --status.useCnt },
         })),
 
     2025: () => new GIStatus(2025, '黄油蟹蟹(生效中)', '本回合中，所附属角色下次受到伤害-2。',
@@ -350,7 +321,7 @@ const statusTotal: StatusObj = {
                 --status.useCnt;
                 return { restDmg: restDmg - 1 };
             }
-            if (!heros.find(h => h.id == 1501)?.talentSlot) return {}
+            if (!heros.find(h => h.id == 1501)?.talentSlot) return;
             return {
                 trigger: ['rock-dmg'],
                 addDmgCdt: 1,
@@ -364,7 +335,6 @@ const statusTotal: StatusObj = {
             trigger: ['el7Reaction'],
             exec: eStatus => {
                 if (eStatus) --eStatus.useCnt;
-                return {}
             },
         })),
 
@@ -372,20 +342,14 @@ const statusTotal: StatusObj = {
         'buff2', 0, [6, 10], 1, 0, 1, (status, event = {}) => ({
             addDmgCdt: 3,
             trigger: (event?.isSkill ?? -1) > -1 ? ['el2Reaction'] : [],
-            exec: () => {
-                --status.useCnt;
-                return {}
-            },
+            exec: () => { --status.useCnt },
         })),
 
     2030: () => new GIStatus(2030, '元素共鸣：粉碎之冰(生效中)', '本回合中，我方当前出战角色下一次造成的伤害+2。',
         'buff2', 0, [6, 10], 1, 0, 1, status => ({
             addDmg: 2,
             trigger: ['skill'],
-            exec: () => {
-                --status.useCnt;
-                return {}
-            },
+            exec: () => { --status.useCnt },
         })),
 
     2031: () => new GIStatus(2031, '元素共鸣：坚定之岩(生效中)', '【本回合中，我方角色下一次造成[岩元素伤害]后：】如果我方存在提供[护盾]的出战状态，则为一个此类出战状态补充3点[护盾]。',
@@ -399,7 +363,6 @@ const statusTotal: StatusObj = {
                         shieldStatus.useCnt += 3;
                         --status.useCnt;
                     }
-                    return {}
                 }
             }
         }),
@@ -408,10 +371,7 @@ const statusTotal: StatusObj = {
         'buff2', 1, [4, 6, 10], 1, 0, 1, status => ({
             addDmgCdt: 2,
             trigger: ['elReaction'],
-            exec: () => {
-                --status.useCnt;
-                return {}
-            },
+            exec: () => { --status.useCnt },
         })),
 
     2033: (useCnt: number = 1) => new GIStatus(2033, '猫爪护盾', '为我方出战角色提供1点[护盾]。', '', 1, [7], useCnt, 0, -1),
@@ -419,7 +379,7 @@ const statusTotal: StatusObj = {
     2034: (icon = '', isTalent = false) => new GIStatus(2034, '鼓舞领域', '【我方角色使用技能时：】如果该角色生命值至少为7，则使此伤害额外+2; 技能结算后，如果该角色生命值不多于6，则治疗该角色2点。；【[持续回合]：{roundCnt}】',
         icon, 1, [1, 4], -1, 0, 2, (status, event = {}) => {
             const { heros = [], hidx = -1, trigger = '' } = event;
-            if (hidx == -1) return {}
+            if (hidx == -1) return;
             const fHero = heros[hidx];
             return {
                 trigger: ['skill', 'after-skill'],
@@ -452,7 +412,6 @@ const statusTotal: StatusObj = {
                 attachEl: 6,
                 exec: () => {
                     if (status.perCnt > 0 && isMinusSkill) --status.perCnt;
-                    return {}
                 },
             }
         }, { pct: 1, icbg: STATUS_BG_COLOR[6] }),
@@ -464,7 +423,6 @@ const statusTotal: StatusObj = {
             trigger: ['change-from'],
             exec: eStatus => {
                 if (eStatus) --eStatus.useCnt;
-                return {}
             },
         }), { icbg: STATUS_BG_COLOR[4] }),
 
@@ -492,7 +450,6 @@ const statusTotal: StatusObj = {
                 exec: eStatus => {
                     if (!status.isTalent) --status.useCnt;
                     else if (eStatus) --eStatus.useCnt;
-                    return {}
                 },
             }
         }, { icbg: STATUS_BG_COLOR[2], isTalent }),
@@ -537,10 +494,7 @@ const statusTotal: StatusObj = {
                 restDmg: Math.max(0, restDmg - 1),
                 trigger: ['skill'],
                 attachEl: isCdt(status.isTalent, 2),
-                exec: () => {
-                    --status.useCnt;
-                    return {}
-                },
+                exec: () => { --status.useCnt },
             }
         }, { isTalent }),
 
@@ -564,7 +518,6 @@ const statusTotal: StatusObj = {
             attachEl: 6,
             exec: () => {
                 if (status.perCnt > 0) --status.perCnt;
-                return {}
             },
         }), { pct: 1 }),
 
@@ -574,7 +527,7 @@ const statusTotal: StatusObj = {
             return {
                 trigger: ['el-dmg', 'el-getdmg', 'phase-end'],
                 exec: () => {
-                    if (hidx == -1) return {}
+                    if (hidx == -1) return;
                     const hero = heros[hidx];
                     const maxCnt = status.maxCnt + (!!hero.talentSlot ? 1 : 0);
                     if (trigger == 'phase-end') {
@@ -585,7 +538,6 @@ const statusTotal: StatusObj = {
                     } else if (status.useCnt < maxCnt) {
                         ++status.useCnt;
                     }
-                    return {}
                 },
             }
         }, { icbg: STATUS_BG_COLOR[7] }),
@@ -602,10 +554,7 @@ const statusTotal: StatusObj = {
             addDmgType1: 1,
             addDmgCdt: isCdt(event?.isChargedAtk, 1),
             trigger: ['skilltype1'],
-            exec: () => {
-                --status.useCnt;
-                return {}
-            },
+            exec: () => { --status.useCnt },
         })),
 
     2052: () => new GIStatus(2052, '大梦的曲调(生效中)', '【我方下次打出｢武器｣或｢圣遗物｣手牌时：】少花费1个元素骰。',
@@ -617,7 +566,6 @@ const statusTotal: StatusObj = {
                 trigger: ['card'],
                 exec: () => {
                     if (isMinus) --status.useCnt;
-                    return {}
                 },
             }
         }),
@@ -631,7 +579,6 @@ const statusTotal: StatusObj = {
                 trigger: ['card'],
                 exec: () => {
                     if (isMinus) --status.useCnt;
-                    return {}
                 },
             }
         }),
@@ -640,10 +587,7 @@ const statusTotal: StatusObj = {
         'buff3', 1, [4, 10], 1, 0, 1, status => ({
             trigger: ['kill'],
             isQuickAction: true,
-            exec: () => {
-                --status.useCnt;
-                return {}
-            }
+            exec: () => { --status.useCnt },
         })),
 
     2055: () => new GIStatus(2055, '旧时庭园(生效中)', '本回合中，我方下次打出｢武器｣或｢圣遗物｣装备牌时少花费2个元素骰。',
@@ -655,7 +599,6 @@ const statusTotal: StatusObj = {
                 trigger: ['card'],
                 exec: () => {
                     if (isMinus) --status.useCnt;
-                    return {}
                 },
             }
         }),
@@ -664,10 +607,7 @@ const statusTotal: StatusObj = {
         'buff2', 1, [4, 10], 1, 0, 1, status => ({
             trigger: ['skill'],
             cmds: [{ cmd: 'switch-after-self', cnt: 2500 }],
-            exec: () => {
-                --status.useCnt;
-                return {}
-            }
+            exec: () => { --status.useCnt },
         })),
 
     2057: () => new GIStatus(2057, '岩与契约(生效中)', '【下回合行动阶段开始时：】生成3点[万能元素骰]，并摸1张牌。',
@@ -676,22 +616,18 @@ const statusTotal: StatusObj = {
             cmds: [{ cmd: 'getDice', cnt: 3, element: 0 }, { cmd: 'getCard', cnt: 1 }],
             exec: eStatus => {
                 if (eStatus) --eStatus.useCnt;
-                return {}
-            }
+            },
         })),
 
     2058: (isTalent = false) => new GIStatus(2058, '爆裂火花', '【所附属角色进行[重击]时：】少花费1个[火元素骰]，并且伤害+1。；【[可用次数]：{useCnt}】',
         'buff5', 0, [4, 6], isTalent ? 2 : 1, 0, -1, (status, event = {}) => {
-            if (!event.isChargedAtk) return {}
+            if (!event.isChargedAtk) return;
             const { minusSkillRes } = minusDiceSkillHandle(event, { skilltype1: [0, 0, 1] });
             return {
                 trigger: ['skilltype1'],
                 addDmgCdt: 1,
                 ...minusSkillRes,
-                exec: () => {
-                    --status.useCnt;
-                    return {}
-                }
+                exec: () => { --status.useCnt },
             }
         }, { isTalent }),
 
@@ -703,7 +639,6 @@ const statusTotal: StatusObj = {
             trigger: ['after-skill'],
             exec: eStatus => {
                 if (eStatus) --eStatus.useCnt;
-                return {}
             }
         }), { icbg: DEBUFF_BG_COLOR }),
 
@@ -720,7 +655,6 @@ const statusTotal: StatusObj = {
                     if (trigger == 'phase-end') ++status.useCnt;
                     else if (trigger == 'skilltype3') status.useCnt += 2;
                     if (status.useCnt >= status.maxCnt) status.useCnt -= 4;
-                    return {}
                 }
             }
         }, { icbg: STATUS_BG_COLOR[3] }),
@@ -738,7 +672,6 @@ const statusTotal: StatusObj = {
                     if (trigger == 'card' && isMinusCard || trigger == 'skilltype2' && isMinusSkill) {
                         --status.useCnt;
                     }
-                    return {}
                 }
             }
         }),
@@ -750,7 +683,6 @@ const statusTotal: StatusObj = {
             exec: () => {
                 status.type.splice(status.type.indexOf(9), 1);
                 status.useCnt = 0;
-                return {}
             }
         }), { expl }),
 
@@ -774,10 +706,7 @@ const statusTotal: StatusObj = {
                 addDmgType2: 1,
                 addDmgType3: 1,
                 trigger,
-                exec: () => {
-                    --status.useCnt;
-                    return {}
-                }
+                exec: () => { --status.useCnt },
             }
         }),
 
@@ -796,10 +725,7 @@ const statusTotal: StatusObj = {
         'buff4', 0, [4, 6, 10], 1, 0, -1, status => ({
             trigger: ['skilltype2'],
             addDmgCdt: 3,
-            exec: () => {
-                --status.useCnt;
-                return {}
-            }
+            exec: () => { --status.useCnt },
         }), { icbg: STATUS_BG_COLOR[4], expl }),
 
     2067: () => new GIStatus(2067, '泷廻鉴花', '所附属角色｢普通攻击｣造成的伤害+1，造成的[物理伤害]变为[水元素伤害]。；【[可用次数]：{useCnt}】',
@@ -808,25 +734,19 @@ const statusTotal: StatusObj = {
                 addDmgType1: 1,
                 trigger: ['skilltype1'],
                 attachEl: 1,
-                exec: () => {
-                    --status.useCnt;
-                    return {}
-                },
+                exec: () => { --status.useCnt },
             }
         }, { icbg: STATUS_BG_COLOR[1] }),
 
     2068: () => new GIStatus(2068, '乱神之怪力', '【所附属角色进行[重击]时：】造成的伤害+1。如果[可用次数]至少为2，则还会使本技能少花费1个[无色元素骰]。；【[可用次数]：{useCnt}】(可叠加，最多叠加到3次)',
         'buff4', 0, [6], 1, 3, -1, (status, event = {}) => {
-            if (!event.isChargedAtk) return {}
+            if (!event.isChargedAtk) return;
             const { minusSkillRes } = minusDiceSkillHandle(event, { skilltype1: [0, 1, 0] }, () => status.useCnt >= 2);
             return {
                 addDmgCdt: 1,
                 ...minusSkillRes,
                 trigger: ['skilltype1'],
-                exec: () => {
-                    --status.useCnt;
-                    return {}
-                }
+                exec: () => { --status.useCnt },
             }
         }),
 
@@ -836,7 +756,7 @@ const statusTotal: StatusObj = {
             attachEl: 6,
             trigger: ['skilltype1'],
             exec: () => {
-                if (status.perCnt <= 0) return {}
+                if (status.perCnt <= 0) return;
                 --status.perCnt;
                 return { inStatus: [heroStatus(2068)] }
             }
@@ -853,15 +773,12 @@ const statusTotal: StatusObj = {
 
     2071: () => new GIStatus(2071, '通塞识', '【所附属角色进行[重击]时：】造成的[物理伤害]变为[草元素伤害]，并且会在技能结算后召唤【藏蕴花矢】。；【[可用次数]：{useCnt}】',
         'buff', 0, [16], 3, 0, -1, (status, event = {}) => {
-            if (!event.isChargedAtk) return {}
+            if (!event.isChargedAtk) return;
             return {
                 summon: [newSummonee(3027)],
                 trigger: ['skilltype1'],
                 attachEl: 7,
-                exec: () => {
-                    --status.useCnt;
-                    return {}
-                }
+                exec: () => { --status.useCnt },
             }
         }, { icbg: STATUS_BG_COLOR[7] }),
 
@@ -880,7 +797,6 @@ const statusTotal: StatusObj = {
                     } else {
                         --status.useCnt;
                     }
-                    return {}
                 }
             }
         }, { icbg: STATUS_BG_COLOR[4], pct: isCdt(isTalent, 1), isTalent }),
@@ -936,7 +852,6 @@ const statusTotal: StatusObj = {
                         if (type12 > -1) status.type.splice(type12, 1);
                         return { cmds: [{ cmd: 'getInStatus', status: [heroStatus(2076, status.icon)], hidxs }] }
                     }
-                    return {}
                 }
             }
         }, { icbg: DEBUFF_BG_COLOR }),
@@ -966,7 +881,6 @@ const statusTotal: StatusObj = {
             trigger: ['phase-end'],
             exec: eStatus => {
                 if (eStatus) --eStatus.useCnt;
-                return {};
             },
         }), { icbg: DEBUFF_BG_COLOR }),
 
@@ -981,7 +895,6 @@ const statusTotal: StatusObj = {
                     } else if (trigger == 'other-skilltype3') {
                         status.useCnt = Math.min(status.maxCnt, status.useCnt + 1);
                     }
-                    return {}
                 }
             }
         }, { icbg: STATUS_BG_COLOR[3], expl }),
@@ -993,7 +906,6 @@ const statusTotal: StatusObj = {
             trigger: ['action-start'],
             exec: eStatus => {
                 if (eStatus) --eStatus.useCnt;
-                return {}
             },
         }), { icbg: STATUS_BG_COLOR[3] }),
 
@@ -1041,7 +953,6 @@ const statusTotal: StatusObj = {
                         --status.perCnt;
                         return { changeHeroDiceCnt: changeHeroDiceCnt - 1 }
                     }
-                    return {}
                 },
             }
         }, { icbg: STATUS_BG_COLOR[5], pct: 1 }),
@@ -1086,7 +997,6 @@ const statusTotal: StatusObj = {
                         }
                     });
                     if (hasEl2 && eStatus) --eStatus.useCnt;
-                    return {}
                 }
             }
         }, { icbg: DEBUFF_BG_COLOR }),
@@ -1106,7 +1016,6 @@ const statusTotal: StatusObj = {
             cmds: [{ cmd: 'revive', cnt: 1 }],
             exec: eStatus => {
                 if (eStatus) --eStatus.useCnt;
-                return {}
             }
         })),
 
@@ -1117,10 +1026,10 @@ const statusTotal: StatusObj = {
             exec: eStatus => {
                 if (eStatus) {
                     --eStatus.useCnt;
-                    return {}
+                    return;
                 }
                 const { heros = [], hidx = -1 } = event;
-                if (!heros[hidx]?.talentSlot) return {}
+                if (!heros[hidx]?.talentSlot) return;
                 heros[hidx].talentSlot = null;
                 return { inStatus: [heroStatus(2093)] }
             }
@@ -1136,7 +1045,6 @@ const statusTotal: StatusObj = {
             exec: () => {
                 status.type.splice(status.type.indexOf(9), 1);
                 status.useCnt = 0;
-                return {}
             }
         }), { expl }),
 
@@ -1162,21 +1070,17 @@ const statusTotal: StatusObj = {
                 exec: eStatus => {
                     const trg = ['change-from', 'after-skilltype1'].indexOf(trigger);
                     if (eStatus && trg > -1) eStatus.perCnt &= ~(1 << trg);
-                    return {}
                 },
             }
         }, { icbg: STATUS_BG_COLOR[1], pct: isTalent ? 3 : 1, isTalent }),
 
     2096: () => new GIStatus(2096, '丹火印', '【角色进行[重击]时：】造成的伤害+2。；【[可用次数]：{useCnt}】(可叠加，最多叠加到2次)',
         'buff5', 0, [6], 1, 2, -1, (status, event = {}) => {
-            if (!event.isChargedAtk) return {}
+            if (!event.isChargedAtk) return;
             return {
                 trigger: ['skilltype1'],
                 addDmgCdt: 2,
-                exec: () => {
-                    --status.useCnt;
-                    return {}
-                }
+                exec: () => { --status.useCnt },
             }
         }),
 
@@ -1191,7 +1095,6 @@ const statusTotal: StatusObj = {
                 exec: () => {
                     if (trigger == 'phase-end') return { inStatus: [heroStatus(2096)] }
                     if (trigger == 'skilltype1' && isMinus && isMinusSkill) --status.perCnt;
-                    return {}
                 }
             }
         }, { icbg: STATUS_BG_COLOR[2], pct: 1 }),
@@ -1204,20 +1107,14 @@ const statusTotal: StatusObj = {
                 addDmgCdt: isCdt(isFallAtk, 1),
                 trigger: ['skill'],
                 attachEl: isCdt(isFallAtk, STATUS_BG_COLOR.indexOf(status.iconBg)),
-                exec: () => {
-                    --status.useCnt;
-                    return {}
-                }
+                exec: () => { --status.useCnt },
             }
         }, { icbg: STATUS_BG_COLOR[windEl] }),
 
     2099: (expl?: ExplainContent[]) => new GIStatus(2099, '引雷', '此状态初始具有2层｢引雷｣; 重复附属时，叠加1层｢引雷｣。｢引雷｣最多可以叠加到4层。；【结束阶段：】叠加1层｢引雷｣。；【所附属角色受到苍雷伤害时：】移除此状态，每层｢引雷｣使此伤害+1。',
         'debuff', 0, [6], 2, 4, -1, status => ({
             trigger: ['phase-end'],
-            exec: () => {
-                status.useCnt = Math.min(status.maxCnt, status.useCnt + 1);
-                return {}
-            }
+            exec: () => { status.useCnt = Math.min(status.maxCnt, status.useCnt + 1) },
         }), { act: 1, expl }),
 
     2100: (icon = '') => new GIStatus(2100, '度厄真符', '【我方角色使用技能后：】如果该角色生命值未满，则治疗该角色2点。；【[可用次数]：{useCnt}】',
@@ -1230,7 +1127,6 @@ const statusTotal: StatusObj = {
                 heal: isCdt(isHeal, 2),
                 exec: eStatus => {
                     if (isHeal && eStatus) --eStatus.useCnt;
-                    return {}
                 }
             }
         }, { icbg: STATUS_BG_COLOR[4] }),
@@ -1243,7 +1139,6 @@ const statusTotal: StatusObj = {
                 cmds: [{ cmd: phase > 6 ? 'getCard-oppo' : 'getCard', cnt: 2 }],
                 exec: eStatus => {
                     if (eStatus) --eStatus.useCnt;
-                    return {}
                 }
             }
         }),
@@ -1253,10 +1148,7 @@ const statusTotal: StatusObj = {
             addDmgType1: 2,
             trigger: ['skilltype1'],
             atkAfter: event.trigger == 'skilltype1',
-            exec: () => {
-                --status.useCnt;
-                return {}
-            }
+            exec: () => { --status.useCnt },
         })),
 
     2103: () => new GIStatus(2103, '倾落', '下次从该角色执行｢切换角色｣行动时少花费1个元素骰，并且造成1点[风元素伤害]。；【[可用次数]：{useCnt}】',
@@ -1272,7 +1164,6 @@ const statusTotal: StatusObj = {
                     return { changeHeroDiceCnt: changeHeroDiceCnt - 1 }
                 }
                 if (eStatus) --eStatus.useCnt;
-                return {}
             }
         })),
 
@@ -1284,7 +1175,6 @@ const statusTotal: StatusObj = {
             trigger: ['change-from'],
             exec: eStatus => {
                 if (eStatus) --eStatus.useCnt;
-                return {}
             }
         }), { icbg: STATUS_BG_COLOR[7] }),
 
@@ -1311,7 +1201,6 @@ const statusTotal: StatusObj = {
                 ...minusSkillRes,
                 exec: () => {
                     if (isMinusSkill) --status.useCnt;
-                    return {}
                 }
             }
         }),
@@ -1324,7 +1213,6 @@ const statusTotal: StatusObj = {
                 ...minusSkillRes,
                 exec: () => {
                     if (isMinusSkill) --status.useCnt;
-                    return {}
                 }
             }
         }),
@@ -1337,7 +1225,6 @@ const statusTotal: StatusObj = {
                 ...minusSkillRes,
                 exec: () => {
                     if (isMinusSkill) --status.useCnt;
-                    return {}
                 }
             }
         }, { expl }),
@@ -1351,7 +1238,6 @@ const statusTotal: StatusObj = {
                 trigger: ['card'],
                 exec: () => {
                     if (isMinus) --status.useCnt;
-                    return {}
                 },
             }
         }),
@@ -1373,7 +1259,6 @@ const statusTotal: StatusObj = {
             trigger: ['phase-end'],
             exec: eStatus => {
                 if (eStatus) --eStatus.useCnt;
-                return {};
             },
         }), { icbg: DEBUFF_BG_COLOR }),
 
@@ -1420,7 +1305,6 @@ const statusTotal: StatusObj = {
                 exec: () => {
                     if (trigger == 'phase-end') status.useCnt = 0;
                     else if (isMinusSkill) --status.useCnt;
-                    return {}
                 }
             }
         }, { expl }),
@@ -1434,7 +1318,7 @@ const statusTotal: StatusObj = {
             exec: () => {
                 const { trigger = '' } = event;
                 --status.useCnt;
-                if (trigger == 'change-from') return {}
+                if (trigger == 'change-from') return;
                 return { inStatus: [heroStatus(2118, [status.addition?.[0]])] }
             }
         }), { expl: [expl?.[0] as ExplainContent], add: [expl?.[1]] }),
@@ -1443,10 +1327,7 @@ const statusTotal: StatusObj = {
         'buff3', 0, [10, 11], 1, 0, -1, status => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 3,
-            exec: () => {
-                --status.useCnt;
-                return {}
-            }
+            exec: () => { --status.useCnt },
         }), { expl }),
 
     2119: () => card751sts(1),
@@ -1461,10 +1342,7 @@ const statusTotal: StatusObj = {
         icon, 0, [10, 11], 1, 0, -1, status => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 5,
-            exec: () => {
-                --status.useCnt;
-                return {}
-            }
+            exec: () => { --status.useCnt },
         }), { icbg: STATUS_BG_COLOR[2], expl }),
 
     2124: () => card587sts(1),
@@ -1494,7 +1372,6 @@ const statusTotal: StatusObj = {
                             return { cmds: [{ cmd: 'getCard', cnt: 1 }] }
                         }
                     }
-                    return {}
                 }
             }
         }, { icbg: STATUS_BG_COLOR[4], act: 2 }),
@@ -1513,7 +1390,6 @@ const statusTotal: StatusObj = {
                         return { cmds: [{ cmd: 'getCard', cnt: 1 }] }
                     }
                     if (trigger == 'phase-end') status.useCnt = Math.min(status.maxCnt, status.useCnt + 1);
-                    return {}
                 }
             }
         }, { icbg: STATUS_BG_COLOR[1], act }),
@@ -1532,7 +1408,6 @@ const statusTotal: StatusObj = {
             heal: isCdt(event.trigger == 'after-skilltype2', status.useCnt),
             exec: eStatus => {
                 if (eStatus) eStatus.useCnt = 0;
-                return {}
             }
         }), { expl }),
 
@@ -1546,7 +1421,6 @@ const statusTotal: StatusObj = {
                 isOppo: true,
                 exec: eStatus => {
                     if (eStatus) --eStatus.useCnt;
-                    return {}
                 }
             }
         }),
@@ -1580,7 +1454,6 @@ const statusTotal: StatusObj = {
                     if (isChargedAtk) {
                         status.roundCnt = Math.min(status.maxCnt, status.roundCnt + 1);
                     }
-                    return {}
                 }
             }
         }, { icbg: STATUS_BG_COLOR[7] }),
@@ -1593,7 +1466,6 @@ const statusTotal: StatusObj = {
             trigger: ['phase-end'],
             exec: eStatus => {
                 if (eStatus) --eStatus.useCnt;
-                return {};
             },
         }), { icbg: DEBUFF_BG_COLOR, pct: -type, expl: isExpl ? [heroStatus(2137, type ^ 1, false)] : [] }),
 
@@ -1608,7 +1480,7 @@ const statusTotal: StatusObj = {
                 exec: eStatus => {
                     if (eStatus) {
                         --eStatus.useCnt;
-                        return {}
+                        return;
                     }
                     return { cmds: [{ cmd: 'changePattern', cnt: 1851, hidxs: [hidx] }] }
                 }
@@ -1627,7 +1499,7 @@ const statusTotal: StatusObj = {
         icon, 1, [10], -1, 0, -1, status => ({
             trigger: ['skill'],
             exec: () => {
-                if (status.perCnt <= 0) return {}
+                if (status.perCnt <= 0) return;
                 --status.perCnt;
                 return { cmds: [{ cmd: 'getInStatus', status: [heroStatus(2141)] }] }
             }
@@ -1648,7 +1520,6 @@ const statusTotal: StatusObj = {
                         --talent.useCnt;
                         return { cmds: [{ cmd: 'getCard-oppo', cnt: 1 }] }
                     }
-                    return {}
                 }
             }
         }, { isReset: false }),
@@ -1668,7 +1539,6 @@ const statusTotal: StatusObj = {
                         const hidxs = [all[(all.indexOf(hidx) + 1) % all.length]];
                         return { cmds: [{ cmd: 'getInStatus', status: [heroStatus(2142)], hidxs }] }
                     }
-                    return {}
                 }
             }
         }),
@@ -1680,7 +1550,7 @@ const statusTotal: StatusObj = {
             exec: () => {
                 const { trigger = '' } = event;
                 --status.useCnt;
-                if (trigger == 'change-from') return {}
+                if (trigger == 'change-from') return;
                 return { inStatus: [heroStatus(2144, [status.explains?.[1]])] }
             }
         }), { expl }),
@@ -1689,10 +1559,7 @@ const statusTotal: StatusObj = {
         'buff3', 0, [11], 1, 0, -1, status => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 7,
-            exec: () => {
-                --status.useCnt;
-                return {}
-            }
+            exec: () => { --status.useCnt },
         }), { expl }),
 
     2145: (icon = '') => new GIStatus(2145, '磐岩百相·元素凝晶', '【角色受到‹4冰›/‹1水›/‹2火›/‹3雷›元素伤害后：】如果角色当前未汲取该元素的力量，则移除此状态，然后角色[汲取对应元素的力量]。',
@@ -1708,9 +1575,8 @@ const statusTotal: StatusObj = {
                         --status.useCnt;
                         const sts2153 = hero.inStatus.find(ist => ist.id == 2153);
                         if (!sts2153) throw new Error('status not found');
-                        return { ...heroStatus(2153).handle(sts2153, { ...event, trigger: `el6Reaction:${drawEl}` as Trigger }).exec?.() }
+                        return { ...heroStatus(2153).handle(sts2153, { ...event, trigger: `el6Reaction:${drawEl}` as Trigger })?.exec?.() }
                     }
-                    return {}
                 }
             }
         }, { icbg: STATUS_BG_COLOR[6] }),
@@ -1724,7 +1590,6 @@ const statusTotal: StatusObj = {
                 isInvalid,
                 exec: () => {
                     if (isInvalid) --status.useCnt;
-                    return {}
                 }
             }
         }),
@@ -1754,20 +1619,14 @@ const statusTotal: StatusObj = {
         'buff5', 0, [4, 6, 10], 1, 0, 1, status => ({
             trigger: ['skill'],
             addDmg: 1,
-            exec: () => {
-                --status.useCnt;
-                return {}
-            }
+            exec: () => { --status.useCnt }
         })),
 
     2150: () => new GIStatus(2150, '沙海守望·攻势防御', '本回合内，所附属角色下次造成的伤害额外+1。',
         'buff5', 0, [4, 6, 10], 1, 0, 1, status => ({
             trigger: ['skill'],
             addDmg: 1,
-            exec: () => {
-                --status.useCnt;
-                return {}
-            }
+            exec: () => { --status.useCnt }
         })),
 
     2151: () => new GIStatus(2151, '四叶印(生效中)', '【结束阶段：】切换到所附属角色。',
@@ -1787,7 +1646,6 @@ const statusTotal: StatusObj = {
                 ...minusSkillRes,
                 exec: () => {
                     if (isMinusSkill) --status.useCnt;
-                    return {}
                 },
             }
         }),
@@ -1800,7 +1658,7 @@ const statusTotal: StatusObj = {
                 const hero = heros[hidx];
                 const curEl = hero.srcs.indexOf(hero.src);
                 const drawEl = trigger.startsWith('el6Reaction') ? Number(trigger.slice(trigger.indexOf(':') + 1)) : 0;
-                if (drawEl == 0 || drawEl == curEl) return {}
+                if (drawEl == 0 || drawEl == curEl) return;
                 const isDrawed = status.perCnt != 0;
                 hero.src = hero.srcs[drawEl];
                 let els = -status.perCnt;
@@ -1830,20 +1688,14 @@ const statusTotal: StatusObj = {
         'buff3', 0, [10, 11], 1, 0, -1, status => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 12 + Number(status.addition[0]),
-            exec: () => {
-                --status.useCnt;
-                return {}
-            }
+            exec: () => { --status.useCnt },
         }), { expl, add: [windEl] }),
 
     2156: () => new GIStatus(2156, '四迸冰锥', '【我方角色｢普通攻击｣时：】对所有敌方后台角色造成1点[穿透伤害]。；【[可用次数]：{useCnt}】',
         'buff6', 0, [], 1, 0, -1, status => ({
             pendamage: 1,
             trigger: ['skilltype1'],
-            exec: () => {
-                --status.useCnt;
-                return {}
-            },
+            exec: () => { --status.useCnt },
         })),
 
     2157: () => new GIStatus(2157, '冰晶核心', '【所附属角色被击倒时：】移除此效果，使角色[免于被击倒]，并治疗该角色到1点生命值。',
@@ -1854,9 +1706,9 @@ const statusTotal: StatusObj = {
                 const { heros = [], hidx = -1 } = event;
                 if (eStatus) {
                     --eStatus.useCnt;
-                    return {}
+                    return;
                 }
-                if (!heros[hidx].talentSlot) return {}
+                if (!heros[hidx].talentSlot) return;
                 return { inStatusOppo: [heroStatus(2137)] }
             }
         })),
@@ -1906,7 +1758,6 @@ const statusTotal: StatusObj = {
                 trigger: ['card'],
                 exec: () => {
                     if (isMinus) --status.useCnt;
-                    return {}
                 },
             }
         }),
@@ -1925,7 +1776,6 @@ const statusTotal: StatusObj = {
                         status.type.pop();
                         status.useCnt = 0;
                     }
-                    return {}
                 }
             }
         }),
@@ -1941,7 +1791,6 @@ const statusTotal: StatusObj = {
                 trigger: ['phase-end'],
                 exec: eStatus => {
                     if (eStatus) --eStatus.useCnt;
-                    return {};
                 },
             }
         }, { icbg: DEBUFF_BG_COLOR }),
@@ -1949,7 +1798,7 @@ const statusTotal: StatusObj = {
     2164: (expl?: ExplainContent[], cnt = 1) => new GIStatus(2164, '源水之滴', `【那维莱特进行｢普通攻击｣后：】治疗角色2点，然后角色[准备技能]：【衡平推裁】。；【[可用次数]：{useCnt}(可叠加，最多叠加到3次)】`,
         'sts2164', 1, [1], cnt, 3, -1, (status, event = {}) => {
             const { heros = [], hidx = -1 } = event;
-            if (heros[hidx]?.id != 1110) return {}
+            if (heros[hidx]?.id != 1110) return;
             return {
                 heal: 2,
                 trigger: ['after-skilltype1'],
@@ -1964,32 +1813,26 @@ const statusTotal: StatusObj = {
         'buff3', 0, [10, 11], 1, 0, -1, status => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 17,
-            exec: () => {
-                --status.useCnt;
-                return {}
-            }
+            exec: () => { --status.useCnt },
         }), { expl }),
 
     2166: () => new GIStatus(2166, '遗龙之荣', '角色造成的伤害+1。【[可用次数]:{useCnt}】',
         'buff2', 0, [4, 6], 2, 0, -1, status => ({
             addDmg: 1,
             trigger: ['skill'],
-            exec: () => {
-                --status.useCnt;
-                return {}
-            }
+            exec: () => { --status.useCnt },
         })),
 
     2167: (icon = '') => new GIStatus(2167, '猫箱急件', '【绮良良为出战角色时，我方切换角色后：】造成1点[草元素伤害]，摸1张牌。；【[可用次数]：{useCnt}(可叠加，最多叠加到2次)】',
         icon, 1, [1], 1, 2, -1, (_status, event = {}) => {
             const { heros = [], force = false } = event;
-            if (!heros.find(h => h.id == 1607)?.isFront && !force) return {}
+            if (!heros.find(h => h.id == 1607)?.isFront && !force) return;
             return {
                 damage: 1,
                 element: 7,
                 trigger: ['change-from'],
                 exec: eStatus => {
-                    if (!eStatus) return {}
+                    if (!eStatus) return;
                     --eStatus.useCnt;
                     return { cmds: [{ cmd: 'getCard', cnt: 1 }] }
                 },
@@ -2010,7 +1853,6 @@ const statusTotal: StatusObj = {
                     --eStatus.useCnt;
                     eStatus.perCnt = 0;
                 }
-                return {}
             },
         }), { icbg: DEBUFF_BG_COLOR }),
 
@@ -2021,20 +1863,14 @@ const statusTotal: StatusObj = {
         'buff3', 0, [10, 11], 1, 0, -1, status => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 18,
-            exec: () => {
-                --status.useCnt;
-                return {}
-            }
+            exec: () => { --status.useCnt },
         }), { expl }),
 
     2172: () => new GIStatus(2172, '万世的浪涛', '角色在本回合中，下次造成的伤害+2。',
         'buff5', 0, [4, 6, 10], 1, 0, 1, status => ({
             addDmg: 2,
             trigger: ['skill'],
-            exec: () => {
-                --status.useCnt;
-                return {}
-            },
+            exec: () => { --status.useCnt },
         })),
 
     2173: () => new GIStatus(2173, '抗争之日·碎梦之时(生效中)', '本回合中，所附属角色受到的伤害-1。；【[可用次数]：{useCnt}】',
@@ -2054,7 +1890,6 @@ const statusTotal: StatusObj = {
                 isInvalid,
                 exec: () => {
                     if (isInvalid) --status.useCnt;
-                    return {}
                 }
             }
         }),
@@ -2070,31 +1905,30 @@ const statusTotal: StatusObj = {
                     ++summon.useCnt;
                     status.useCnt = 0;
                 }
-                return {}
             },
         }), { expl }),
 
-    2176: (icon = '') => new GIStatus(2176, '越袚草轮', '【我方切换角色后：】造成1点[雷元素伤害]，治疗我方出战角色1点。(每回合1次)；【[可用次数]：{useCnt}】',
-        icon, 1, [1], 3, 0, -1, status => {
-            if (status.perCnt == 0) return {}
+    2176: (icon = '') => new GIStatus(2176, '越袚草轮', '【我方切换角色后：】造成1点[雷元素伤害]，治疗受伤最多的我方角色1点。(每回合1次)；【[可用次数]：{useCnt}】',
+        icon, 1, [1], 3, 0, -1, (status, event = {}) => {
+            if (status.perCnt == 0) return;
             return {
                 damage: 1,
                 element: 3,
                 heal: 1,
+                hidxs: getMinhpHidxs(event.heros ?? []),
                 trigger: ['change-from'],
                 exec: eStatus => {
                     if (eStatus) {
                         --eStatus.useCnt;
                         --eStatus.perCnt;
                     }
-                    return {}
                 }
             }
         }, { icbg: STATUS_BG_COLOR[3], pct: 1 }),
 
     2177: (icon = '') => new GIStatus(2177, '疾风示现', '【所附属角色进行[重击]时：】少花费1个[无色元素骰]，造成的[物理伤害]变为[风元素伤害]，并且使敌方出战角色附属【风压坍陷】；【[可用次数]：{useCnt}】',
         icon, 0, [4, 16], 1, 0, -1, (status, event = {}) => {
-            if (!event.isChargedAtk) return {}
+            if (!event.isChargedAtk) return;
             const { minusSkillRes } = minusDiceSkillHandle(event, { skilltype1: [0, 1, 0] });
             return {
                 trigger: ['skilltype1'],
@@ -2122,10 +1956,7 @@ const statusTotal: StatusObj = {
         'buff3', 0, [10, 11], 1, 0, -1, status => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 19,
-            exec: () => {
-                --status.useCnt;
-                return {}
-            }
+            exec: () => { --status.useCnt },
         }), { expl }),
 
     2180: () => new GIStatus(2180, '暗流的诅咒', '【所在阵营的角色使用｢元素战技｣或｢元素爆发｣时：】需要多花费1个元素骰。；【[可用次数]：{useCnt}】',
@@ -2134,10 +1965,7 @@ const statusTotal: StatusObj = {
             return {
                 trigger: ['skilltype2', 'skilltype3'],
                 ...minusSkillRes,
-                exec: () => {
-                    --status.useCnt;
-                    return {}
-                },
+                exec: () => { --status.useCnt },
             }
         }),
 
@@ -2148,7 +1976,7 @@ const statusTotal: StatusObj = {
             exec: eStatus => {
                 if (eStatus) {
                     --eStatus.useCnt;
-                    return {}
+                    return;
                 }
                 return { cmds: [{ cmd: 'getInStatus', status: [heroStatus(2187)] }] }
             }
@@ -2160,10 +1988,7 @@ const statusTotal: StatusObj = {
         'buff3', 0, [10, 11], 1, 0, -1, status => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 20,
-            exec: () => {
-                --status.useCnt;
-                return {}
-            }
+            exec: () => { --status.useCnt },
         }), { expl }),
 
     2184: () => new GIStatus(2184, '悠远雷暴', '【结束阶段：】对所附属角色造成2点[穿透伤害]。；【[可用次数]：{useCnt}】',
@@ -2176,7 +2001,6 @@ const statusTotal: StatusObj = {
                 isOppo: true,
                 exec: eStatus => {
                     if (eStatus) --eStatus.useCnt;
-                    return {}
                 }
             }
         }),
@@ -2185,10 +2009,7 @@ const statusTotal: StatusObj = {
         'buff5', 0, [4, 6], 1, 2, 1, status => ({
             trigger: ['skill'],
             addDmg: 1,
-            exec: () => {
-                --status.useCnt;
-                return {}
-            }
+            exec: () => { --status.useCnt },
         })),
 
     2186: () => new GIStatus(2186, '缤纷马卡龙(生效中)', '该角色受到伤害后再治疗其1点。',
@@ -2197,12 +2018,26 @@ const statusTotal: StatusObj = {
             trigger: ['getdmg'],
             exec: eStatus => {
                 if (eStatus) --eStatus.useCnt;
-                return {}
             },
         })),
 
     2187: () => new GIStatus(2187, '水之新生后续todo名字待定', '角色造成的[物理伤害]变为[水元素伤害]，且[水元素伤害]+1。',
         'buff4', 0, [6, 8, 10], 1, 0, -1, () => ({ attachEl: 1, addDmg: 1 })),
+
+    2188: () => new GIStatus(2188, '沙与梦', '【对角色打出｢天赋｣或角色使用技能时：】少花费3个元素骰。；【[可用次数]：{useCnt}】',
+        'buff2', 0, [4], 1, 0, -1, (status, event = {}) => {
+            const { card, heros = [], hidx = -1, trigger = '', minusDiceCard: mdc = 0 } = event;
+            const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(event, { skill: [0, 0, 3] });
+            const isCardMinus = card && card.subType.includes(6) && card.userType == heros[hidx]?.id && card.cost > mdc;
+            return {
+                ...minusSkillRes,
+                minusDiceCard: isCdt(isCardMinus, 3),
+                trigger: ['card', 'skill'],
+                exec: () => {
+                    if (trigger == 'card' && isCardMinus || trigger == 'skill' && isMinusSkill) --status.useCnt;
+                },
+            }
+        }),
 
 };
 

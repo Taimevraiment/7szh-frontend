@@ -379,7 +379,7 @@ type CardHandleRes = {
     isDestroy?: boolean,
     restDmg?: number,
     isNotAddTask?: boolean,
-    exec?: () => CardExecRes
+    exec?: () => CardExecRes | void,
 }
 
 type CardExecRes = {
@@ -450,25 +450,20 @@ type StatusHandleRes = {
     attachEl?: number,
     isUpdateAttachEl?: boolean,
     atkAfter?: boolean,
-    exec?: (eStatus?: Status, event?: StatusExecEvent) => StatusExecRes,
+    exec?: (eStatus?: Status, event?: StatusExecEvent) => StatusExecRes | void,
 }
 
 type StatusExecEvent = {
     hidx?: number,
     changeHeroDiceCnt?: number,
     heros?: Hero[],
-    minusDiceCard?: number,
 }
 
 type StatusExecRes = {
-    restDmg?: number,
     cmds?: Cmds[],
-    addDmg?: number,
-    trigger?: Trigger[],
     inStatus?: Status[],
     outStatus?: Status[],
     changeHeroDiceCnt?: number,
-    immediate?: boolean,
     inStatusOppo?: Status[],
     outStatusOppo?: Status[],
     hidxs?: number[],
@@ -559,7 +554,7 @@ type SummonHandleRes = {
     minusDiceCard?: number,
     minusDiceSkill?: number[][],
     minusDiceSkills?: number[][],
-    exec?: (event: SummonExecEvent) => SummonExecRes,
+    exec?: (event: SummonExecEvent) => SummonExecRes | void,
 }
 
 type SummonExecEvent = {

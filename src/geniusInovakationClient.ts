@@ -350,7 +350,7 @@ export default class GeniusInvokationClient {
         });
         if (currCard.type != 0) cardres.exec?.();
         let { minusDiceCard } = this._doSlot('card', { hidxs: allHidxs(player.heros, { isAll: true }), hcard: currCard });
-        const { isInvalid, minusDiceCard: stsmdc } = this._doStatus(this.playerIdx, 4, 'card', { card: currCard, isOnlyFront: true, minusDiceCard });
+        const { isInvalid, minusDiceCard: stsmdc } = this._doStatus(this.playerIdx, [1, 4], 'card', { card: currCard, isOnlyFront: true, minusDiceCard });
         if (isInvalid) {
             this.socket.emit('sendToServer', {
                 handCards,
@@ -2006,7 +2006,7 @@ export default class GeniusInvokationClient {
                 ...((stype == 0 && sts ? sts : hero.inStatus).filter(ist => ist.type.includes(8) && (ist.useCnt > 0 || ist.roundCnt > 0))),
                 ...((stype == 1 && sts ? sts : hero.outStatus).filter(ost => ost.type.includes(8) && (ost.useCnt > 0 || ost.roundCnt > 0))),
             ][0];
-            const attachEl = attachElSts == undefined ? 0 : heroStatus(attachElSts.id).handle(attachElSts, { heros: aheros, hidx: ahidx }).attachEl ?? 0;
+            const attachEl = attachElSts == undefined ? 0 : heroStatus(attachElSts.id).handle(attachElSts, { heros: aheros, hidx: ahidx })?.attachEl ?? 0;
             for (const skill of hero.skills) {
                 if (skill.type == 4 || skill.dmgElement > 0 || skill.attachElement == attachEl) continue;
                 skill.description = skill.description.replace(ELEMENT[skill.attachElement], ELEMENT[attachEl]);
@@ -2473,7 +2473,7 @@ export default class GeniusInvokationClient {
                     //     (isOppo ? res.etriggers : res.atriggers)[hi].push('after-' + trigger as Trigger);
                     // }
                     if (stsres.exec && isWindExec && !sts.type.includes(11)) {
-                        const { inStatus = [], outStatus = [], inStatusOppo = [], outStatusOppo = [], hidxs = [], cmds = [] } = stsres.exec();
+                        const { inStatus = [], outStatus = [], inStatusOppo = [], outStatusOppo = [], hidxs = [], cmds = [] } = stsres.exec() ?? {};
                         (hidxs ?? [aFrontIdx]).forEach(hi => aist[hi].push(...inStatus));
                         aost.push(...outStatus);
                         (hidxs ?? [frontIdx]).forEach(hi => eist[hi].push(...inStatusOppo));
@@ -2565,7 +2565,7 @@ export default class GeniusInvokationClient {
             }
         }
         efhero.inStatus.filter(ist => ist.type.some(t => [2, 7].includes(t))).forEach(ist => {
-            restDmg = heroStatus(ist.id).handle(ist, { restDmg, willAttach, heros: res.eheros, hidx: frontIdx, dmgSource: isSummon }).restDmg ?? 0;
+            restDmg = heroStatus(ist.id).handle(ist, { restDmg, willAttach, heros: res.eheros, hidx: frontIdx, dmgSource: isSummon })?.restDmg ?? 0;
         });
         if (efhero.isFront) {
             efhero.outStatus.filter(ost => ost.type.some(t => [2, 7].includes(t))).forEach(ost => {
@@ -2583,7 +2583,7 @@ export default class GeniusInvokationClient {
                 }
             });
             afhero.outStatus.filter(ost => ost.type.includes(5)).forEach(ost => {
-                restDmg = heroStatus(ost.id).handle(ost, { restDmg }).restDmg ?? 0;
+                restDmg = heroStatus(ost.id).handle(ost, { restDmg })?.restDmg ?? 0;
             });
         }
         res.willDamage[getDmgIdx][0] = restDmg;
@@ -2718,7 +2718,7 @@ export default class GeniusInvokationClient {
                     minusDiceSkill = summonres.minusDiceSkill ?? minusDiceSkill;
                     if (!isExec) continue;
                     if (summonres.exec && (!isDmg || summonres.damage == undefined)) {
-                        const { cmds = [], changeHeroDiceCnt: smnDiceCnt = 0 } = summonres.exec?.({ summon, eheros });
+                        const { cmds = [], changeHeroDiceCnt: smnDiceCnt = 0 } = summonres.exec?.({ summon, eheros }) ?? {};
                         const { changedEl } = this._doCmds(cmds, { pidx, heros, isExec });
                         if (changedEl) summon.element = changedEl;
                         smncmds.push(...cmds);
@@ -3118,7 +3118,7 @@ export default class GeniusInvokationClient {
                     });
                 }
                 if (isExec) {
-                    const stsexecres = stsres.exec?.(undefined, { hidx, changeHeroDiceCnt, minusDiceCard });
+                    const stsexecres = stsres.exec?.(undefined, { changeHeroDiceCnt });
                     changeHeroDiceCnt = stsexecres?.changeHeroDiceCnt ?? 0;
                     nost.push(...(stsexecres?.outStatus ?? []));
                     nist.push(...(stsexecres?.inStatus ?? []));
@@ -3836,6 +3836,10 @@ export default class GeniusInvokationClient {
         const dmgChange = curHero.skills.filter(sk => sk.type < 4).map(() => 0);
         const costChange = curHero.skills.filter(sk => sk.type < 4).map(() => new Array(2).fill(0));
         let mds: number[][] = [];
+        for (const curSkill of curHero.skills) {
+            if (curSkill.type == 4) break;
+            mds.push(curSkill.cost.slice(0, 2).map(v => v.val));
+        }
         const calcDmgChange = (res: any) => {
             if (rdskill) dmgChange[0] += (res?.addDmg ?? 0) + (res?.[`addDmgType${rdskill.type}`] ?? 0);
             else {
@@ -3854,10 +3858,6 @@ export default class GeniusInvokationClient {
                     v[1] += res?.minusDiceSkills?.[i]?.[1] ?? 0;
                 }
             });
-        }
-        for (const curSkill of curHero.skills) {
-            if (curSkill.type == 4) break;
-            mds.push(curSkill.cost.slice(0, 2).map(v => v.val));
         }
         [curHero.weaponSlot, curHero.talentSlot, curHero.artifactSlot].forEach(slot => {
             if (slot != null) {

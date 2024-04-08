@@ -15,7 +15,7 @@ class GISite implements Site {
     handle: (site: Site, event?: SiteHandleEvent) => SiteHandleRes;
     isSelected: boolean = false;
     canSelect: boolean = false;
-    constructor(id: number, cardId: number, cnt: number, perCnt: number, type: number, handle: (site: Site, event?: SiteHandleEvent) => SiteHandleRes, hpCnt = 0) {
+    constructor(id: number, cardId: number, cnt: number, perCnt: number, type: number, handle: (site: Site, event?: SiteHandleEvent) => SiteHandleRes | void, hpCnt = 0) {
         this.id = id;
         this.sid = Math.floor(Math.random() * 1000);
         this.card = cardsTotal(cardId);
@@ -29,7 +29,7 @@ class GISite implements Site {
                 site.perCnt = perCnt;
                 return {}
             }
-            return handle(site, event);
+            return handle(site, event) ?? {};
         };
     }
 }
@@ -50,7 +50,7 @@ const siteTotal: SiteObj = {
     // 参量质变仪
     4002: (cardId: number) => new GISite(4002, cardId, 0, 0, 2, (site, event = {}) => {
         const { isSkill = -1 } = event;
-        if (isSkill == -1) return {}
+        if (isSkill == -1) return;
         return {
             trigger: ['el-dmg', 'el-getdmg'],
             siteCnt: site.cnt < 2 ? 1 : -3,
@@ -72,7 +72,7 @@ const siteTotal: SiteObj = {
     // 常九爷
     4004: (cardId: number) => new GISite(4004, cardId, 0, 0, 2, (site, event = {}) => {
         const { isSkill = -1 } = event;
-        if (isSkill == -1) return {}
+        if (isSkill == -1) return;
         return {
             trigger: ['any-dmg', 'any-getdmg', 'pen-dmg', 'pen-getdmg', 'elReaction', 'get-elReaction'],
             siteCnt: site.cnt < 2 ? 1 : -3,
@@ -315,7 +315,7 @@ const siteTotal: SiteObj = {
     // 刘苏
     4019: (cardId: number) => new GISite(4019, cardId, 2, 1, 2, (site, event = {}) => {
         const { heros = [], hidx = -1 } = event;
-        if (hidx == -1) return {}
+        if (hidx == -1) return;
         return {
             trigger: ['change'],
             exec: () => {
@@ -455,7 +455,7 @@ const siteTotal: SiteObj = {
     // 化城郭
     4028: (cardId: number) => new GISite(4028, cardId, 3, 1, 2, (site, event = {}) => {
         const { dices = [] } = event;
-        if (site.perCnt == 0 || dices.length > 0) return {}
+        if (site.perCnt == 0 || dices.length > 0) return;
         return {
             trigger: ['action-start'],
             exec: () => {
@@ -551,7 +551,7 @@ const siteTotal: SiteObj = {
     // 塞塔蕾
     4035: (cardId: number) => new GISite(4035, cardId, 3, 0, 2, (site, event = {}) => {
         const { hcards } = event;
-        if ((hcards?.length ?? 1) > 0) return {}
+        if ((hcards?.length ?? 1) > 0) return;
         return {
             trigger: ['action-after'],
             exec: () => {
@@ -796,7 +796,7 @@ const siteTotal: SiteObj = {
     // 太郎丸
     4050: (cardId: number) => new GISite(4050, cardId, 0, 0, 2, (site, event = {}) => {
         const { card } = event;
-        if (card?.id != 902) return {}
+        if (card?.id != 902) return;
         return {
             trigger: ['card'],
             siteCnt: site.cnt < 1 ? 1 : -site.cnt - 1,

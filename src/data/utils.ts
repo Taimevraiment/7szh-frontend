@@ -74,13 +74,13 @@ export const funcParse = (jsonStr: string | undefined): Function | undefined => 
 }
 
 // 处理减少技能骰子函数
-export const minusDiceSkillHandle = (options: { heros?: Hero[], hidxs?: number[], hidx?: number, isSkill?: number, minusDiceSkill?: number[][], trigger?: Trigger },
+export const minusDiceSkillHandle = (event: { heros?: Hero[], hidxs?: number[], hidx?: number, isSkill?: number, minusDiceSkill?: number[][], trigger?: Trigger },
     skills: { skill?: number[], skilltype1?: number[], skilltype2?: number[], skilltype3?: number[] },
     cdt: ((skill: Skill) => boolean) = (() => true)): {
         isMinusSkill: boolean,
         minusSkillRes: { minusDiceSkill: number[][], minusDiceSkills: number[][] }
     } => {
-    const { heros = [], hidxs = [], hidx = -1, isSkill: skidx = -1, minusDiceSkill: mds, trigger = '' } = options;
+    const { heros = [], hidxs = [], hidx = -1, isSkill: skidx = -1, minusDiceSkill: mds, trigger = '' } = event;
     const triggers: Trigger[] = Reflect.ownKeys(skills) as Trigger[];
     if (!mds || ![...triggers, 'calc'].includes(trigger)) {
         return { isMinusSkill: false, minusSkillRes: { minusDiceSkill: [], minusDiceSkills: [] } }

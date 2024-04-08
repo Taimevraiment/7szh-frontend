@@ -31,7 +31,7 @@ class GICard implements Card {
     explains: ExplainContent[];
     constructor(
         id: number, name: string, description?: string, src?: string, cost?: number, costType?: number, type?: number, subType?: number[],
-        userType: number = 0, canSelectHero?: number, handle?: (card: Card, event: CardHandleEvent) => CardHandleRes,
+        userType: number = 0, canSelectHero?: number, handle?: (card: Card, event: CardHandleEvent) => CardHandleRes | void,
         options: {
             uct?: number, pct?: number, expl?: ExplainContent[], energy?: number, anydice?: number, canSelectSummon?: number,
             isResetUct?: boolean, isResetPct?: boolean, spReset?: boolean, canSelectSite?: number
@@ -93,8 +93,7 @@ const jiliWeapon = (id: number, name: string, userType: number, src: string) => 
                 trigger: ['skilltype2'],
                 execmds: isCdt<Cmds[]>(card.perCnt > 0, [{ cmd: 'getDice', cnt: 1, element: heros[hidxs[0]].element ?? 0 }]),
                 exec: () => {
-                    if (card.perCnt > 0) return --card.perCnt;
-                    return {}
+                    if (card.perCnt > 0) --card.perCnt;
                 }
             }
         }, { pct: 1 });
@@ -108,7 +107,6 @@ const tiankongWeapon = (id: number, name: string, userType: number, src: string)
             trigger: ['skilltype1'],
             exec: () => {
                 if (card.perCnt > 0) --card.perCnt;
-                return {}
             }
         }), { pct: 1 });
 }
@@ -130,9 +128,8 @@ const normalElArtifact = (id: number, name: string, element: number, src: string
                 minusDiceCard: isCdt(isCardMinus, 1),
                 trigger: ['skill', 'card'],
                 exec: () => {
-                    if (trigger == 'card' && !isCardMinus || trigger == 'skill' && !isMinusSkill || card.perCnt <= 0) return {}
+                    if (trigger == 'card' && !isCardMinus || trigger == 'skill' && !isMinusSkill || card.perCnt <= 0) return;
                     --card.perCnt;
-                    return {}
                 }
             }
         }, { pct: 1 });
@@ -152,9 +149,8 @@ const advancedElArtifact = (id: number, name: string, element: number, src: stri
                 element,
                 cnt: 2,
                 exec: () => {
-                    if (trigger == 'card' && !isCardMinus || trigger == 'skill' && !isMinusSkill || card.perCnt <= 0) return {}
+                    if (trigger == 'card' && !isCardMinus || trigger == 'skill' && !isMinusSkill || card.perCnt <= 0) return;
                     --card.perCnt;
-                    return {}
                 }
             }
         }, { pct: 1 });
@@ -169,7 +165,7 @@ const talentSkill = (skidx: number): () => ({ trigger: Trigger[], cmds: Cmds[] }
     return () => ({ trigger: ['skill'], cmds: [{ cmd: 'useSkill', cnt: skidx }] });
 }
 
-const talentHandle = (event: CardHandleEvent, skidx: number, nexec: () => [(() => CardExecRes)?, CardHandleRes?], ntrigger: Trigger | Trigger[] = 'skill') => {
+const talentHandle = (event: CardHandleEvent, skidx: number, nexec: () => [(() => CardExecRes | void)?, CardHandleRes?], ntrigger: Trigger | Trigger[] = 'skill') => {
     const { reset = false, trigger = '' } = event;
     const { trigger: talTrg, cmds: talCmds } = talentSkill(skidx)();
     const cmds: Cmds[] = [...talCmds];
@@ -181,7 +177,7 @@ const talentHandle = (event: CardHandleEvent, skidx: number, nexec: () => [(() =
     if (isTrigger && ntrigger.length > 0) cmds.length = 0;
     const [nexecf = () => ({}), hdres = {}] = nexec();
     if (reset) return hdres;
-    const exec = () => isTrigger ? nexecf() : ({});
+    const exec = () => isTrigger ? (nexecf() ?? {}) : ({});
     const triggers: Trigger[] = ntrigger.some(tr => talTrg.includes(tr)) ? talTrg : ntrigger;
     return {
         ...(isTrigger ? hdres : {}),
@@ -252,7 +248,6 @@ const allCards: CardObj = {
             trigger: ['elReaction'],
             exec: () => {
                 if (card.perCnt > 0) --card.perCnt;
-                return {}
             }
         }), { pct: 2 }),
 
@@ -267,7 +262,6 @@ const allCards: CardObj = {
             trigger: ['phase-end'],
             exec: () => {
                 if (card.useCnt < 2) ++card.useCnt;
-                return {}
             }
         }), { uct: 0 }),
 
@@ -283,7 +277,6 @@ const allCards: CardObj = {
                 ...minusSkillRes,
                 exec: () => {
                     if (isMinus && isMinusSkill) --card.perCnt;
-                    return {}
                 }
             }
         }, { pct: 2 }),
@@ -297,9 +290,9 @@ const allCards: CardObj = {
                 trigger: ['getdmg', 'heal'],
                 addDmg: 1,
                 exec: () => {
-                    if (!isMinus) return {}
+                    if (!isMinus) return;
                     if (card.useCnt < 2) ++card.useCnt;
-                    if (card.perCnt == 0 || card.useCnt < 2) return {}
+                    if (card.perCnt == 0 || card.useCnt < 2) return;
                     --card.perCnt;
                     return { inStatus: [heroStatus(2172)] }
                 }
@@ -332,7 +325,6 @@ const allCards: CardObj = {
                 trigger: ['skill'],
                 exec: () => {
                     if (card.perCnt > 0 && skidxs.includes(isSkill)) --card.perCnt;
-                    return {}
                 }
             }
         }, { pct: 1 }),
@@ -369,7 +361,7 @@ const allCards: CardObj = {
                 addDmg: 1,
                 trigger: ['skill'],
                 exec: () => {
-                    if (card.perCnt == 0 || shieldCnt >= 2) return {}
+                    if (card.perCnt == 0 || shieldCnt >= 2) return;
                     --card.perCnt;
                     return { outStatus: [heroStatus(2049)] }
                 }
@@ -392,7 +384,6 @@ const allCards: CardObj = {
                         card.perCnt &= ~(1 << 1);
                         return { inStatus: [heroStatus(2150)] }
                     }
-                    return {}
                 }
             }
         }, { pct: 3 }),
@@ -420,13 +411,12 @@ const allCards: CardObj = {
                 addDmgCdt: isCdt(isShieldStatus && trigger == 'skill', 1),
                 trigger: ['skill', 'after-skilltype2'],
                 exec: () => {
-                    if (card.perCnt == 0 || trigger != 'after-skilltype2') return {}
+                    if (card.perCnt == 0 || trigger != 'after-skilltype2') return;
                     const ost = fhero.outStatus.find(ost => ost.type.includes(7));
                     if (ost) {
                         ++ost.useCnt;
                         --card.perCnt;
                     }
-                    return {}
                 }
             }
         }, { pct: 1 }),
@@ -448,7 +438,6 @@ const allCards: CardObj = {
             trigger: ['skill'],
             exec: () => {
                 if (card.useCnt < 2) ++card.useCnt;
-                return {}
             }
         }), { uct: 0, isResetUct: true }),
 
@@ -468,7 +457,6 @@ const allCards: CardObj = {
                 execmds,
                 exec: () => {
                     if (++card.useCnt >= 3 && hero.energy < hero.maxEnergy) card.useCnt -= 3;
-                    return {}
                 }
             }
         }, { uct: 0 }),
@@ -487,7 +475,6 @@ const allCards: CardObj = {
                 execmds: isCdt<Cmds[]>(card.perCnt > 0, [{ cmd: 'heal', cnt: 1, hidxs }]),
                 exec: () => {
                     if (card.perCnt > 0) --card.perCnt;
-                    return {}
                 }
             }
         }, { pct: 2 }),
@@ -502,7 +489,6 @@ const allCards: CardObj = {
             execmds: isCdt<Cmds[]>(card.perCnt > 0, [{ cmd: 'getEnergy', cnt: 1 }]),
             exec: () => {
                 if (card.perCnt > 0) --card.perCnt;
-                return {}
             }
         }), { pct: 1 }),
 
@@ -514,7 +500,6 @@ const allCards: CardObj = {
             execmds: isCdt<Cmds[]>(card.perCnt > 0, [{ cmd: 'getDice', cnt: 1, element: -1 }]),
             exec: () => {
                 if (card.perCnt > 0) --card.perCnt;
-                return {};
             }
         }), { pct: 2 }),
 
@@ -533,7 +518,6 @@ const allCards: CardObj = {
                 execmds: isCdt<Cmds[]>(!notUse, [{ cmd: 'heal', cnt: 1, hidxs }]),
                 exec: () => {
                     if (!notUse) --card.perCnt;
-                    return {}
                 }
             }
         }, { pct: 3 }),
@@ -549,7 +533,6 @@ const allCards: CardObj = {
                 execmds: isCdt<Cmds[]>(!notUse, [{ cmd: 'heal', cnt: 2, hidxs }]),
                 exec: () => {
                     if (!notUse) --card.perCnt;
-                    return {}
                 }
             }
         }, { pct: 1 }),
@@ -564,7 +547,6 @@ const allCards: CardObj = {
                 execmds: isCdt<Cmds[]>(!notUse, [{ cmd: 'heal', cnt: 1, hidxs: allHidxs(heros) }]),
                 exec: () => {
                     if (!notUse) --card.perCnt;
-                    return {}
                 }
             }
         }, { pct: 1 }),
@@ -576,7 +558,6 @@ const allCards: CardObj = {
             execmds: isCdt<Cmds[]>(card.perCnt > 0, [{ cmd: 'getDice', cnt: 2, element: 0 }]),
             exec: () => {
                 if (card.perCnt > 0) --card.perCnt;
-                return {}
             }
         }), { pct: 3, isResetPct: false }),
 
@@ -587,7 +568,6 @@ const allCards: CardObj = {
             execmds: isCdt<Cmds[]>(card.perCnt > 0, [{ cmd: 'getDice', cnt: 1, element: -2 }]),
             exec: () => {
                 if (card.perCnt > 0) --card.perCnt;
-                return {}
             }
         }), { pct: 3, isResetPct: false }),
 
@@ -601,7 +581,6 @@ const allCards: CardObj = {
                 execmds: isCdt<Cmds[]>(card.perCnt > 0, [{ cmd: 'getEnergy', cnt: 1, hidxs }]),
                 exec: () => {
                     if (card.perCnt > 0) --card.perCnt;
-                    return {}
                 }
             }
         }, { pct: 1 }),
@@ -625,9 +604,8 @@ const allCards: CardObj = {
                 trigger: ['other-skilltype3', 'skilltype3'],
                 execmds: isCdt<Cmds[]>(trigger == 'other-skilltype3', [{ cmd: 'getEnergy', cnt: 1, hidxs }]),
                 exec: () => {
-                    if (trigger == 'other-skilltype3') return {}
+                    if (trigger == 'other-skilltype3') return;
                     if (card.perCnt > 0) --card.perCnt;
-                    return {}
                 }
             }
         }, { pct: 1 }),
@@ -649,7 +627,6 @@ const allCards: CardObj = {
                     isCdt(card.perCnt > 0, [{ cmd: 'getDice', cnt: 1, element: heros[hidxs[0]]?.element ?? 0 }])),
                 exec: () => {
                     if (trigger == 'getdmg' && card.perCnt > 0 || heros[hidxs[0]].isFront) --card.perCnt;
-                    return {}
                 }
             }
         }, { pct: 1, expl: [heroStatus(2050)] }),
@@ -668,7 +645,6 @@ const allCards: CardObj = {
                     if (card.perCnt > 0 && (trigger == 'card' && isMinusCard || trigger == 'skilltype1' && isMinusSkill)) {
                         --card.perCnt;
                     }
-                    return {}
                 }
             }
         }, { pct: 1 }),
@@ -688,7 +664,6 @@ const allCards: CardObj = {
                     if (card.perCnt > 0 && (trigger == 'card' && isMinusCard || trigger == 'skilltype1' && isMinusSkill)) {
                         --card.perCnt;
                     }
-                    return {}
                 }
             }
         }, { pct: 1 }),
@@ -707,7 +682,6 @@ const allCards: CardObj = {
                     if (card.perCnt > 0 && (trigger == 'card' && isMinusCard || trigger == 'skilltype2' && isMinusSkill)) {
                         --card.perCnt;
                     }
-                    return {}
                 }
             }
         }, { pct: 1 }),
@@ -729,7 +703,6 @@ const allCards: CardObj = {
                     if (card.perCnt > 0 && (trigger == 'card' && isMinusCard || trigger == 'skilltype2' && isMinusSkill)) {
                         --card.perCnt;
                     }
-                    return {}
                 }
             }
         }, { pct: 1 }),
@@ -746,10 +719,9 @@ const allCards: CardObj = {
                 exec: () => {
                     if (trigger == 'heal') {
                         if (allHeal > 0) card.useCnt = Math.min(2, card.useCnt + allHeal * 0.34);
-                        return {}
+                        return;
                     }
                     if (trigger == 'dmg') card.useCnt %= 1;
-                    return {}
                 }
             }
         }, { uct: 0 }),
@@ -767,10 +739,9 @@ const allCards: CardObj = {
                 exec: () => {
                     if (trigger == 'heal') {
                         if (allHeal > 0) card.useCnt = Math.min(2, card.useCnt + allHeal * 0.34);
-                        return {}
+                        return;
                     }
                     if (trigger == 'dmg') card.useCnt %= 1;
-                    return {}
                 }
             }
         }, { uct: 0.681 }),
@@ -786,7 +757,6 @@ const allCards: CardObj = {
                 execmds: isCdt<Cmds[]>(isUse, [{ cmd: 'getCard', cnt: 1 }]),
                 exec: () => {
                     if (isUse) --card.perCnt;
-                    return {}
                 }
             }
         }, { pct: 1 }),
@@ -803,7 +773,6 @@ const allCards: CardObj = {
                 execmds: isCdt<Cmds[]>(isUse, [{ cmd: 'getCard', cnt: 1 }]),
                 exec: () => {
                     if (isUse) --card.perCnt;
-                    return {}
                 }
             }
         }, { pct: 1 }),
@@ -815,7 +784,6 @@ const allCards: CardObj = {
             execmds: isCdt<Cmds[]>(card.perCnt > 0, [{ cmd: 'getCard', cnt: 1 }]),
             exec: () => {
                 if (card.perCnt > 0) --card.perCnt;
-                return {}
             }
         }), { pct: 1 }),
 
@@ -834,7 +802,6 @@ const allCards: CardObj = {
                 exec: () => {
                     if (isGetCard) card.perCnt &= ~(1 << 0);
                     if (isGetDice) card.perCnt &= ~(1 << 1);
-                    return {}
                 }
             }
         }, { pct: 3 }),
@@ -849,7 +816,6 @@ const allCards: CardObj = {
                 cmds: isCdt<Cmds[]>(isGetCard, [{ cmd: 'getCard', cnt: 1 }]),
                 exec: () => {
                     if (isGetCard) --card.perCnt;
-                    return {}
                 }
             }
         }, { pct: 1 }),
@@ -866,7 +832,6 @@ const allCards: CardObj = {
                 execmds,
                 exec: () => {
                     if (isGetCard) --card.perCnt;
-                    return {}
                 }
             }
         }, { pct: 1 }),
@@ -884,7 +849,6 @@ const allCards: CardObj = {
                     if (isTriggered && ++card.useCnt == 2) {
                         --card.perCnt;
                     }
-                    return {}
                 }
             }
         }, { uct: 0, pct: 1, isResetUct: true }),
@@ -911,7 +875,6 @@ const allCards: CardObj = {
                         const skillcost = skill[0].val + skill[1].val;
                         card.useCnt -= skillcost - mdc - minusSkillRes.minusDiceSkill[isSkill].reduce((a, b) => a + b);
                     }
-                    return {}
                 }
             }
         }, { uct: 0 }),
@@ -920,14 +883,13 @@ const allCards: CardObj = {
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Artifact_Zijinghuaguan.webp',
         1, 8, 0, [1], 0, 1, (card, event) => {
             const { heros = [], hidxs = [], hcardsCnt = 10 } = event;
-            if (!heros[hidxs[0]]?.isFront || card.perCnt == 0) return {}
+            if (!heros[hidxs[0]]?.isFront || card.perCnt == 0) return;
             const execmds = isCdt<Cmds[]>(card.useCnt + 1 >= hcardsCnt, [{ cmd: 'getDice', cnt: 1, element: -1 }], [{ cmd: '' }]);
             return {
                 trigger: ['grass-getdmg-oppo'],
                 execmds,
                 exec: () => {
                     if (++card.useCnt >= hcardsCnt) --card.perCnt;
-                    return {}
                 }
             }
         }, { uct: 0, pct: 2, isResetUct: true }),
@@ -1154,7 +1116,7 @@ const allCards: CardObj = {
 
     324: new GICard(324, '太郎丸', '【入场时：】生成4张【太郎丸的存款】，均匀地置入我方牌库中。；我方打出2张【太郎丸的存款】后：弃置此牌，召唤【愤怒的太郎丸】。',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Assist_NPC_Taroumaru.webp',
-        1, 8, 1, [3], 0, 0, () => ({ cmds: [{ cmd: 'addCard', cnt: 4, card: 902, element: 1 }], site: [newSite(4050, 324)] }),
+        2, 0, 1, [3], 0, 0, () => ({ cmds: [{ cmd: 'addCard', cnt: 4, card: 902, element: 1 }], site: [newSite(4050, 324)] }),
         { expl: [extraCards[902], newSummonee(3059)] }),
 
     325: new GICard(325, '白手套和渔夫', '【结束阶段：】生成1张｢清洁工作｣，随机将其置入我方牌库顶部5张牌之中。；如果此牌的[可用次数]仅剩1次，则摸1张牌，｢清洁工作｣不再摸牌；[可用次数]：2',
@@ -1257,7 +1219,6 @@ const allCards: CardObj = {
                         ++getEnergy;
                     }
                     heros[fhidx].energy += getEnergy;
-                    return {}
                 }
             }
         }),
@@ -1288,7 +1249,6 @@ const allCards: CardObj = {
                         cardsTotal(fromWeapon.id).handle(fromWeapon, { reset: true });
                         toHero.weaponSlot = fromWeapon;
                     }
-                    return {}
                 }
             }
         }),
@@ -1311,7 +1271,6 @@ const allCards: CardObj = {
                         cardsTotal(fromArtifact.id).handle(fromArtifact, { reset: true });
                         toHero.artifactSlot = fromArtifact;
                     }
-                    return {}
                 }
             }
         }),
@@ -1323,7 +1282,6 @@ const allCards: CardObj = {
                 const { summons = [] } = event;
                 const selectSmn = summons.find(smn => smn.isSelected);
                 if (selectSmn) ++selectSmn.useCnt;
-                return {}
             }
         }), { canSelectSummon: 1 }),
 
@@ -1334,7 +1292,6 @@ const allCards: CardObj = {
                 const { esummons = [] } = event;
                 const selectSmn = esummons.find(smn => smn.isSelected);
                 if (selectSmn) selectSmn.useCnt = Math.max(0, selectSmn.useCnt - 2);
-                return {}
             }
         }), { canSelectSummon: 0 }),
 
@@ -1345,7 +1302,6 @@ const allCards: CardObj = {
                 const { summons = [], esummons = [] } = event;
                 summons.forEach(smn => (smn.useCnt = 0, smn.isDestroy = 0));
                 esummons.forEach(smn => (smn.useCnt = 0, smn.isDestroy = 0));
-                return {}
             }
         })),
 
@@ -1393,10 +1349,7 @@ const allCards: CardObj = {
                 outStatus: [heroStatus(2053)],
                 canSelectHero: heros.map(h => h.weaponSlot != null),
                 cmds: [{ cmd: 'getCard', cnt: 1, card: isCdt(!!hero.weaponSlot, cardsTotal(hero.weaponSlot?.id ?? 0)) }],
-                exec: () => {
-                    hero.weaponSlot = null;
-                    return {}
-                },
+                exec: () => { hero.weaponSlot = null },
             }
         }),
 
@@ -1417,10 +1370,7 @@ const allCards: CardObj = {
                 outStatus: [heroStatus(2110)],
                 canSelectHero: heros.map(h => h.artifactSlot != null),
                 cmds: [{ cmd: 'getCard', cnt: 1, card: isCdt(!!hero.artifactSlot, cardsTotal(hero.artifactSlot?.id ?? 0)) }],
-                exec: () => {
-                    hero.artifactSlot = null;
-                    return {}
-                },
+                exec: () => { hero.artifactSlot = null },
             }
         }),
 
@@ -1472,7 +1422,6 @@ const allCards: CardObj = {
                 exec: () => {
                     summons.forEach(smn => smn.useCnt = Math.max(0, smn.useCnt - 1));
                     esummons.forEach(smn => smn.useCnt = Math.max(0, smn.useCnt - 1));
-                    return {}
                 }
             }
         }),
@@ -1646,7 +1595,6 @@ const allCards: CardObj = {
                     summons.forEach(smn => {
                         if (smn.id == 3002) ++smn.useCnt;
                     });
-                    return {}
                 }
             }
         }),
@@ -1837,7 +1785,6 @@ const allCards: CardObj = {
             const isUse = card.perCnt > 0 && nhidxs.length > 0;
             return [() => {
                 if (isUse) --card.perCnt;
-                return {}
             }, { execmds: isCdt<Cmds[]>(isUse, [{ cmd: 'getEnergy', cnt: 1, hidxs: nhidxs }]) }]
         }), { pct: 1, expl: talentExplain(1302, 1) }),
 
@@ -1850,7 +1797,6 @@ const allCards: CardObj = {
             const hidxs = allHidxs(heros);
             return [() => {
                 if (isHeal) --card.perCnt;
-                return {}
             }, { execmds: isCdt<Cmds[]>(isHeal, [{ cmd: 'heal', cnt: 1, hidxs }]) }]
         }, 'skilltype1'), { pct: 1, expl: talentExplain(1502, 1) }),
 
@@ -1876,7 +1822,7 @@ const allCards: CardObj = {
             const { hidxs = [] } = event;
             const hdres = card.perCnt > 0 ? { heal: 2, hidxs } : {}
             return [() => {
-                if (card.perCnt <= 0) return {}
+                if (card.perCnt <= 0) return;
                 --card.perCnt;
                 return { ...hdres, cmds: [{ cmd: 'heal', cnt: 2, hidxs }] }
             }, hdres]
@@ -2141,7 +2087,6 @@ const allCards: CardObj = {
             const isAttachEl2 = eheros.find(h => h.isFront)?.attachElement.includes(2);
             return [() => {
                 --card.perCnt;
-                return {}
             }, { addDmgCdt: isCdt(card.perCnt > 0 && heros[hidxs[0]].isFront && isAttachEl2, 2) }]
         }, ['skill']), { pct: 1, expl: talentExplain(1210, 1) }),
 
@@ -2169,7 +2114,7 @@ const allCards: CardObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/19/258999284/b053865b60ec217331ea86ff7fb8789c_3260337021267875040.png',
         3, 8, 0, [-1, 6], 1702, 1, (card, event) => {
             const { heros = [], hidxs = [], restDmg = -1 } = event;
-            if (hidxs.length == 0) return {}
+            if (hidxs.length == 0) return;
             const hero = heros[hidxs[0]];
             if (restDmg > -1) {
                 if (restDmg < 3 || card.perCnt == 0) return { restDmg }
@@ -2214,7 +2159,6 @@ const allCards: CardObj = {
             const isUse = heros[hidxs[0]]?.isFront && card.perCnt > 0;
             return [() => {
                 if (isUse) --card.perCnt;
-                return {}
             }, { execmds: isCdt<Cmds[]>(isUse, [{ cmd: 'getCard', cnt: 2 }]) }]
         }, ['el5Reaction']), { pct: 1, expl: talentExplain(1408, 2) }),
 
@@ -2238,7 +2182,6 @@ const allCards: CardObj = {
             const isUse = card.perCnt > 0 && eheros.flatMap(h => h.inStatus).some(ist => ist.id == 2163);
             return [() => {
                 if (isUse) --card.perCnt;
-                return {}
             }, { execmds: isCdt<Cmds[]>(isUse, [{ cmd: 'heal', cnt: 2 }]) }]
         }, ['skilltype1', 'other-skilltype1']), { pct: 1, expl: talentExplain(1010, 1) }),
 
@@ -2280,7 +2223,6 @@ const allCards: CardObj = {
                     --card.perCnt;
                     card.subType.pop();
                 }
-                return {}
             }, {
                 addDmgCdt: isCdt((heros[hidxs[0]]?.hp ?? 10) <= 5, 1),
                 execmds: isCdt(card.perCnt > 0 && trigger == 'will-killed', [{ cmd: 'revive', cnt: 1 }])

@@ -70,7 +70,7 @@ class GISkill implements Skill {
     constructor(
         name: string, description: string, type: number, damage: number, cost: number,
         costElement: number, options: { ac?: number, ec?: number, de?: number, rdskidx?: number } = {},
-        src?: string | string[], explains?: ExplainContent[], handle?: (hevent: SkillHandleEvent) => SkillHandleRes
+        src?: string | string[], explains?: ExplainContent[], handle?: (hevent: SkillHandleEvent) => SkillHandleRes | void
     ) {
         this.name = name;
         this.description = description;
@@ -96,7 +96,7 @@ class GISkill implements Skill {
             let dmgElement = handleres.dmgElement;
             let atkAfter = handleres.atkAfter;
             for (const ist of hero.inStatus) {
-                const stsres = heroStatus(ist.id).handle(ist, hevent);
+                const stsres = heroStatus(ist.id).handle(ist, hevent) ?? {};
                 if (ist.type.includes(16) && stsres.attachEl && stsres.attachEl > 0 && (dmgElement ?? 0) == 0) {
                     dmgElement = stsres.attachEl;
                 }
@@ -208,7 +208,7 @@ const readySkillTotal: { [key: number]: (...args: any) => Skill } = {
 
     17: () => new GISkill('衡平推裁', '(需准备1个行动轮)；造成{dmg}点[水元素伤害]，如果生命值至少为6，则对自身造成1点[穿透伤害]使伤害+1。',
         1, 2, 0, 1, { ec: -2, rdskidx: 17 }, '', [], event => {
-            if (event.hero.hp < 6) return {}
+            if (event.hero.hp < 6) return;
             return { addDmgCdt: 1, pendamageSelf: 1 }
         }),
 
@@ -830,7 +830,7 @@ const allHeros: HeroObj = {
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/c351b44d3163278214f6f9db09c020fd_3304441541356399096.png',
         ], [], event => {
             const { hero: { talentSlot }, card, hcards = [], isExec = false } = event;
-            if (!isExec) return {}
+            if (!isExec) return;
             const isTalent = (!!talentSlot || card?.id == 720) ? 1 : 0;
             const inStatus: Status[] = [];
             const cmds: Cmds[] = [];
@@ -1167,7 +1167,7 @@ const allHeros: HeroObj = {
     1409: new GIHero(1409, '珐露珊', 4, 10, 5, 3,
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Char_Avatar_Faruzan.webp',
         skill1('迴身箭术'), [
-        new GISkill('非想风天', '造成{dmg}点[风元素伤害]，本角色附属【疾风示现】。', 2, 2, 3, 5, {}, [
+        new GISkill('非想风天', '造成{dmg}点[风元素伤害]，本角色附属【疾风示现】。', 2, 3, 3, 5, {}, [
             '',
             '',
         ], [heroStatus(2177), heroStatus(2178)], event => ({ inStatus: [heroStatus(2177, event.hero.skills[1].src)] })),
@@ -1289,7 +1289,7 @@ const allHeros: HeroObj = {
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/1bfdd645a02ea655cf3d4fa34d468a36_6197207334476477244.png',
         ], [], event => {
             const { hero: { talentSlot }, card } = event;
-            if (talentSlot == null && card?.id != 711) return {};
+            if (talentSlot == null && card?.id != 711) return;
             return { outStatusPre: [heroStatus(2028)] };
         }),
         new GISkill('猫猫秘宝', '造成{dmg}点[草元素伤害]，召唤【柯里安巴】。', 3, 2, 3, 7, { ec: 2 }, [
@@ -1609,7 +1609,7 @@ const allHeros: HeroObj = {
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/12/258999284/b9854a003c9d7e5b14bed92132391e9e_754640348498205527.png',
         ], [], event => {
             const { hero: { hp, skills: [, , , skill4], energy, maxEnergy }, getdmg = 0 } = event;
-            if (hp - getdmg > 7 || energy >= maxEnergy || skill4.isUsed) return {}
+            if (hp - getdmg > 7 || energy >= maxEnergy || skill4.isUsed) return;
             return {
                 trigger: ['getdmg'],
                 cmds: [{ cmd: 'getEnergy', cnt: 1 }]
@@ -1690,7 +1690,7 @@ const allHeros: HeroObj = {
         ], [heroStatus(2141)], event => {
             const { eheros = [] } = event;
             const sts2141 = eheros.findIndex(h => h.inStatus.some(ist => ist.id === 2141));
-            if (sts2141 == -1) return {}
+            if (sts2141 == -1) return;
             return { atkTo: sts2141 }
         }),
         new GISkill('轰雷禁锢', '造成{dmg}点[雷元素伤害]，召唤【轰雷禁锢】。', 3, 2, 3, 3, { ec: 2 }, [
@@ -1824,12 +1824,12 @@ const allHeros: HeroObj = {
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/19/258999284/b49c1863d6b6a61ec13501c27d8204bf_1566255463657696734.png',
         ], [heroStatus(2145)], event => {
             const { eheros = [], hero: { id, skills: [, { src }], inStatus }, heros, isExec = false } = event;
-            if (!isExec) return {}
+            if (!isExec) return;
             const rockEl = eheros.find(h => h.isFront)?.attachElement?.find(el => el > 0 && el < 5) ?? 6;
             if (rockEl == 6) return { inStatus: [heroStatus(2145, src)] }
             const sts2153 = inStatus?.find(ist => ist.id == 2153);
             if (!sts2153) throw new Error('sts2153 not found');
-            return { ...heroStatus(2153).handle(sts2153, { heros, hidx: heros?.findIndex(h => h.id == id), trigger: `el6Reaction:${rockEl}` as Trigger }).exec?.() }
+            return { ...heroStatus(2153).handle(sts2153, { heros, hidx: heros?.findIndex(h => h.id == id), trigger: `el6Reaction:${rockEl}` as Trigger })?.exec?.() }
         }),
         new GISkill('山崩毁阵', '造成{dmg}点[岩元素伤害]，每汲取过一种元素此伤害+1。', 3, 4, 3, 6, { ec: 2 }, [
             'https://act-webstatic.mihoyo.com/hk4e/e20200928calculate/item_skill_icon_u084qf/3eea73a1f50aaa9ab8f03546a0db4483.png',

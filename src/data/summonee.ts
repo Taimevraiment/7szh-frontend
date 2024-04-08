@@ -25,7 +25,7 @@ class GISummonee implements Summonee {
     isWill: boolean = false;
     constructor(
         id: number, name: string, description: string, src: string, useCnt: number, maxUse: number,
-        shield: number, damage: number, element: number, handle?: (summon: Summonee, event: SummonHandleEvent) => SummonHandleRes,
+        shield: number, damage: number, element: number, handle?: (summon: Summonee, event: SummonHandleEvent) => SummonHandleRes | void,
         options: { pct?: number, isTalent?: boolean, adt?: string[], pdmg?: number, isDestroy?: number, stsId?: number, spReset?: boolean } = {}
     ) {
         this.id = id;
@@ -50,7 +50,8 @@ class GISummonee implements Summonee {
                 summon.perCnt = pct;
                 if (!spReset) return {}
             }
-            return handle?.(summon, event) ?? {
+            if (handle) return handle(summon, event) ?? {}
+            return {
                 trigger: ['phase-end'],
                 exec: execEvent => {
                     const { summon: smn = summon } = execEvent;
@@ -115,7 +116,6 @@ const summonTotal: SummoneeObj = {
                         const element = Number(trigger.slice(trigger.indexOf(':') + 1));
                         return { cmds: [{ cmd: 'changeElement', element }] };
                     }
-                    return {};
                 }
             }
         }, { isTalent }),
@@ -130,7 +130,7 @@ const summonTotal: SummoneeObj = {
                 isNotAddTask: trigger == 'wind-dmg',
                 addDmgCdt: isCdt(isTalent, 1),
                 exec: execEvent => {
-                    if (trigger == 'wind-dmg') return {}
+                    if (trigger == 'wind-dmg') return;
                     return phaseEndAtk(execEvent?.summon ?? summon);
                 }
             }
@@ -313,7 +313,6 @@ const summonTotal: SummoneeObj = {
                         smn.useCnt += cnt;
                         return { cmds: [{ cmd: 'getEnergy', cnt: -1 }] }
                     }
-                    return {}
                 },
             }
         }, { adt: ['plus'], isDestroy: 2 }),
@@ -325,7 +324,6 @@ const summonTotal: SummoneeObj = {
             trigger: ['phase-end', 'skilltype1'],
             exec: execEvent => {
                 if (event?.trigger == 'phase-end') return phaseEndAtk(execEvent?.summon ?? summon);
-                return {}
             },
         })),
 
@@ -340,7 +338,7 @@ const summonTotal: SummoneeObj = {
                 exec: execEvent => {
                     const { summon: smn = summon } = execEvent;
                     if (trigger == 'phase-end') return phaseEndAtk(smn);
-                    if (smn.perCnt <= 0 || trigger != 'getdmg' || hidx == -1) return {}
+                    if (smn.perCnt <= 0 || trigger != 'getdmg' || hidx == -1) return;
                     --smn.perCnt;
                     return { cmds: [{ cmd: 'getInStatus', status: [heroStatus(2068)], hidxs: [hidx] }] }
                 },
@@ -361,7 +359,6 @@ const summonTotal: SummoneeObj = {
                 trigger: ['ice-getdmg-oppo', 'any-getdmg-oppo', 'phase-end'],
                 exec: execEvent => {
                     if (trigger == 'phase-end') return phaseEndAtk(execEvent?.summon ?? summon);
-                    return {}
                 },
             }
         }),
@@ -435,7 +432,6 @@ const summonTotal: SummoneeObj = {
                         const element = Number(trigger.slice(trigger.indexOf(':') + 1));
                         return { cmds: [{ cmd: 'changeElement', element }] };
                     }
-                    return {};
                 }
             }
         }),
@@ -476,11 +472,10 @@ const summonTotal: SummoneeObj = {
                     if (trigger.startsWith('after-skilltype')) {
                         if (isTalent || trigger == 'after-skilltype1') smn.useCnt = Math.max(smn.useCnt, Math.min(smn.maxUse, smn.useCnt + 1));
                         if (isTalent) return { cmds: [{ cmd: 'attack', cnt: 2 }] }
-                        return {}
+                        return;
                     }
                     smn.useCnt = Math.max(0, smn.useCnt - 1);
                     if (trigger == 'phase-end') return { cmds: [{ cmd: 'attack' }] }
-                    return {}
                 }
             }
         }),
@@ -525,7 +520,6 @@ const summonTotal: SummoneeObj = {
                         const element = Number(trigger.slice(trigger.indexOf(':') + 1));
                         return { cmds: [{ cmd: 'changeElement', element }] };
                     }
-                    return {};
                 }
             }
         }),
@@ -549,7 +543,6 @@ const summonTotal: SummoneeObj = {
                 exec: execEvent => {
                     if (trigger == 'phase-end') return phaseEndAtk(execEvent?.summon ?? summon);
                     if (trigger == 'skilltype1') return { cmds }
-                    return {}
                 },
             }
         }),
@@ -568,7 +561,6 @@ const summonTotal: SummoneeObj = {
                     const { summon: smn = summon } = execEvent;
                     if (trigger == 'phase-end') return phaseEndAtk(smn);
                     if (trigger == 'skilltype1' && isMinusSkill) --smn.perCnt;
-                    return {}
                 }
             }
         }, { pct: 1 }),
@@ -696,7 +688,6 @@ const summonTotal: SummoneeObj = {
                         const element = ELEMENT_ICON.indexOf(trigger.slice(0, trigger.indexOf('-getdmg')));
                         return { cmds: [{ cmd: 'changeElement', element }] };
                     }
-                    return {};
                 },
             }
         }, { spReset: true }),
@@ -737,7 +728,6 @@ const summonTotal: SummoneeObj = {
                     if (trigger == 'phase-start' && hidx > -1) {
                         return { cmds: [{ cmd: 'getInStatus', status: [heroStatus(2139, smn.isTalent ? 2 : 1)], hidxs: [hidx] }] }
                     }
-                    return {}
                 },
             }
         }, { isTalent, adt: isTalent ? ['plus'] : [] }),
@@ -814,7 +804,7 @@ const summonTotal: SummoneeObj = {
                         const sts2175 = eOutStatus?.findIndex(ist => ist.id == 2175) ?? -1;
                         if (sts2175 > -1) eOutStatus?.splice(sts2175, 1);
                     }
-                    if (trigger == 'get-elReaction') return {}
+                    if (trigger == 'get-elReaction') return;
                     const chero = hrs.find(h => h.id == 1764);
                     if (trigger == 'action-start' && chero?.talentSlot) --chero.talentSlot.useCnt;
                     return { cmds: [{ cmd: 'attack' }] }
@@ -835,7 +825,6 @@ const summonTotal: SummoneeObj = {
                 exec: execEvent => {
                     if (trigger == 'phase-end') return phaseEndAtk(execEvent?.summon ?? summon);
                     if (trigger == 'phase-start') return { cmds: [{ cmd: 'getDice', cnt: 1, element: 5 }] }
-                    return {}
                 },
             }
         }, { isTalent }),
