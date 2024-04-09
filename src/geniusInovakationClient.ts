@@ -1328,6 +1328,21 @@ export default class GeniusInvokationClient {
                 if (!curSkill) mds.push([0, 0]);
                 else mds.push(curSkill.cost.slice(0, 2).map(v => v.val));
             }
+            const fHero = aHeros[hidx];
+            [...fHero.inStatus, ...fHero.outStatus].forEach(sts => {
+                const stsres = heroStatus(sts.id).handle(sts);
+                if (stsres.addDiceSkill) {
+                    const { skill = [0, 0, 0] } = stsres.addDiceSkill;
+                    for (const si in fHero.skills) {
+                        const curskill = fHero.skills[si];
+                        if (curskill.type == 4) break;
+                        const skilltype = stsres.addDiceSkill?.[`skilltype${curskill.type as 1 | 2 | 3}`] ?? [0, 0, 0];
+                        mds[si][Math.sign(mds[si][1])] += skill[2] + skilltype[2];
+                        mds[si][0] += skill[0] + skilltype[0];
+                        mds[si][1] += skill[1] + skilltype[1];
+                    }
+                }
+            });
             if (skillres.atkAfter || skillres.atkBefore) {
                 const lhidx = allHidxs(this.opponent.heros);
                 const offset = skillres.atkAfter ? 1 : skillres.atkBefore ? -1 : 0;
@@ -3840,16 +3855,36 @@ export default class GeniusInvokationClient {
             if (curSkill.type == 4) break;
             mds.push(curSkill.cost.slice(0, 2).map(v => v.val));
         }
-        const calcDmgChange = (res: any) => {
-            if (rdskill) dmgChange[0] += (res?.addDmg ?? 0) + (res?.[`addDmgType${rdskill.type}`] ?? 0);
+        const statuses = [...curHero.inStatus, ...((isSwitch ? heros.find(h => h.isFront) : curHero)?.outStatus ?? [])];
+        statuses.forEach(sts => {
+            const stsres = heroStatus(sts.id).handle(sts);
+            if (stsres.addDiceSkill) {
+                const { skill = [0, 0, 0] } = stsres.addDiceSkill;
+                for (const sidx in curHero.skills) {
+                    const curskill = curHero.skills[sidx];
+                    if (curskill.type == 4) break;
+                    const skilltype = stsres.addDiceSkill?.[`skilltype${curskill.type as 1 | 2 | 3}`] ?? [0, 0, 0];
+                    const addDice = [0, 0];
+                    addDice[Math.sign(mds[sidx][1])] += skill[2] + skilltype[2];
+                    addDice[0] += skill[0] + skilltype[0];
+                    addDice[1] += skill[1] + skilltype[1];
+                    mds[sidx][0] += addDice[0];
+                    mds[sidx][1] += addDice[1];
+                    costChange[sidx][0] -= addDice[0];
+                    costChange[sidx][1] -= addDice[1];
+                }
+            }
+        });
+        const calcDmgChange = (res: CardHandleRes | StatusHandleRes | SummonHandleRes) => {
+            if (rdskill) dmgChange[0] += (res?.addDmg ?? 0) + (res?.[`addDmgType${rdskill.type as 1 | 2 | 3}`] ?? 0);
             else {
                 dmgChange.forEach((_, i, a) => {
                     const curSkill = curHero.skills[i];
-                    a[i] += (res?.addDmg ?? 0) + (res?.[`addDmgType${curSkill.type}`] ?? 0);
+                    a[i] += (res?.addDmg ?? 0) + (res?.[`addDmgType${curSkill.type as 1 | 2 | 3}`] ?? 0);
                 });
             }
         }
-        const calcCostChange = (res: any) => {
+        const calcCostChange = (res: CardHandleRes | StatusHandleRes | SummonHandleRes | SiteHandleRes) => {
             mds = res?.minusDiceSkill ?? mds;
             costChange.forEach((v, i) => {
                 const curSkill = curHero.skills[i];
@@ -3872,19 +3907,17 @@ export default class GeniusInvokationClient {
                 calcCostChange(slotres);
             }
         });
-        [curHero.inStatus, (isSwitch ? heros.find(h => h.isFront) : curHero)?.outStatus].forEach(stses => {
-            stses?.forEach(sts => {
-                const stsres = heroStatus(sts.id).handle(sts, {
-                    heros,
-                    eheros: this.players[plidx ^ 1].heros,
-                    hidx,
-                    isChargedAtk: (this.player.dice.length & 1) == 0,
-                    minusDiceSkill: mds,
-                    trigger: 'calc',
-                });
-                calcDmgChange(stsres);
-                calcCostChange(stsres);
+        statuses.forEach(sts => {
+            const stsres = heroStatus(sts.id).handle(sts, {
+                heros,
+                eheros: this.players[plidx ^ 1].heros,
+                hidx,
+                isChargedAtk: (this.player.dice.length & 1) == 0,
+                minusDiceSkill: mds,
+                trigger: 'calc',
             });
+            calcDmgChange(stsres);
+            calcCostChange(stsres);
         });
         this.players[plidx].summon.forEach(smn => {
             const smnres = newSummonee(smn.id).handle(smn, {
@@ -3906,7 +3939,6 @@ export default class GeniusInvokationClient {
                 minusDiceSkill: mds,
                 trigger: 'calc',
             });
-            calcDmgChange(siteres);
             calcCostChange(siteres);
         });
         if (rdskill) {
@@ -4175,7 +4207,7 @@ class TaskQueue {
             flag,
         });
     }
-    _delay(callback?: (cbarg?: any) => any | null, time = 0, arg?: any) {
+    _delay<T>(callback?: (cbarg?: T) => any | null, time = 0, arg?: T) {
         return new Promise<void>(resolve => {
             setTimeout(() => {
                 if (callback) callback(arg);

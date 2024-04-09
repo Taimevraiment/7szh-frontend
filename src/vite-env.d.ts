@@ -432,6 +432,12 @@ type StatusHandleRes = {
     addDmgType3?: number,
     addDmgCdt?: number,
     addDmgSummon?: number,
+    addDiceSkill?: {
+        skill?: number[],
+        skilltype1?: number[],
+        skilltype2?: number[],
+        skilltype3?: number[],
+    }
     getDmg?: number,
     minusDiceCard?: number,
     minusDiceHero?: number,

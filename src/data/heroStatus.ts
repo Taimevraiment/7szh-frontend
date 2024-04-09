@@ -1960,14 +1960,14 @@ const statusTotal: StatusObj = {
         }), { expl }),
 
     2180: () => new GIStatus(2180, '暗流的诅咒', '【所在阵营的角色使用｢元素战技｣或｢元素爆发｣时：】需要多花费1个元素骰。；【[可用次数]：{useCnt}】',
-        'debuff', 1, [4], 2, 0, -1, (status, event = {}) => {
-            const { minusSkillRes } = minusDiceSkillHandle(event, { skilltype2: [0, 0, -1], skilltype3: [0, 0, -1] });
-            return {
-                trigger: ['skilltype2', 'skilltype3'],
-                ...minusSkillRes,
-                exec: () => { --status.useCnt },
-            }
-        }),
+        'debuff', 1, [4], 2, 0, -1, status => ({
+            trigger: ['skilltype2', 'skilltype3'],
+            addDiceSkill: {
+                skilltype2: [0, 0, 1],
+                skilltype3: [0, 0, 1],
+            },
+            exec: () => { --status.useCnt },
+        })),
 
     2181: () => new GIStatus(2181, '水之新生', '【所附属角色被击倒时：】移除此效果，使角色[免于被击倒]，并治疗该角色到4点生命值。触发此效果后，角色造成的[物理伤害]变为[水元素伤害]，且[水元素伤害]+1。',
         'heal2', 0, [10, 13], 1, 0, -1, () => ({
