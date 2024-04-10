@@ -38,8 +38,8 @@
       <div v-if="client.isWin > -1 || client.isStart" class="rest-card" :class="{ 'mobile-rest-card': isMobile }">
         {{ client.opponent?.handCards?.length ?? 0 }}
       </div>
-      <img v-if="client.opponent?.isOffline" src="@/assets/svg/offline.svg" class="offline" alt="断线..." />
-      <img v-if="isLookon > -1" src="@/assets/svg/lookon.svg" class="lookon" alt="旁观"
+      <img v-if="client.opponent?.isOffline" src="@@/svg/offline.svg" class="offline" alt="断线..." />
+      <img v-if="isLookon > -1" src="@@/svg/lookon.svg" class="lookon" alt="旁观"
         @click="lookonTo(client.opponent?.pidx ?? -1)" />
       <img class="subtype8-oppo" :src="getDiceIcon('subtype8-empty')" />
       <img v-if="!client.opponent.isUsedSubType8" class="subtype8-oppo" :src="getDiceIcon('subtype8')" />
@@ -202,12 +202,14 @@ const afterWinHeros = ref<Hero[][]>([]); // 游戏结束后显示的角色信息
 
 // 获取骰子背景
 const getDiceIcon = (name: string) => {
+  return `/image/${name}-dice-bg.png`;
   return new URL(`/src/assets/image/${name}-dice-bg.png`, import.meta.url).href;
 };
 
 // 获取png图片
 const getPngIcon = (name: string) => {
   if (name.startsWith('http')) return name;
+  return `/image/${name}.png`;
   return new URL(`/src/assets/image/${name}.png`, import.meta.url).href;
 };
 

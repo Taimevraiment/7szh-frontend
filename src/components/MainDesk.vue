@@ -2,7 +2,7 @@
   <div class="main-container">
     <div class="side" :style="{ opacity: player.phase > 4 ? 1 : 0 }">
       <div class="round">
-        <img src="/src/assets/svg/round.svg" alt="回合" />
+        <img src="@@/svg/round.svg" alt="回合" />
         <span>{{ client.round }}</span>
       </div>
       <div class="pile">
@@ -114,7 +114,7 @@
         <img class="switch-icon" v-if="willSwitch[(hidx % 3) + (playerIdx ^ (hidx > 2 ? 0 : 1)) * 3]"
           :src="getSvgIcon('switch')" />
         <div class="hero-hp" v-if="hero?.hp > 0">
-          <img class="hero-hp-bg" src="@/assets/image/hero-hp-bg.png" />
+          <img class="hero-hp-bg" src="@@/image/hero-hp-bg.png" />
           <span>{{ Math.max(0, hero?.hp) }}</span>
         </div>
         <div class="hero-energys" v-if="hero?.hp > 0">
@@ -352,7 +352,7 @@
               <div class="init-card-energy" v-if="card.subType.includes(8)">
                 <img class="dice-img" :src="getDiceBgIcon(ELEMENT_ICON[10])" />
               </div>
-              <img src="@/assets/svg/initSelect.svg" alt="选中" v-if="card.isSelected" class="init-select" />
+              <img src="@@/svg/initSelect.svg" alt="选中" v-if="card.isSelected" class="init-select" />
             </div>
           </div>
           <button @click="changeCard" v-if="showChangeCardBtn">
@@ -430,27 +430,32 @@ watchEffect(() => {
 const getPngIcon = (name: string) => {
   if (name.startsWith('http')) return name;
   if (name.endsWith('-dice')) return getSvgIcon(name);
+  return `/image/${name}.png`;
   return new URL(`/src/assets/image/${name}.png`, import.meta.url).href;
 };
 
 // 获取svg图片
 const getSvgIcon = (name: string) => {
+  return `/svg/${name}.svg`;
   return new URL(`/src/assets/svg/${name}.svg`, import.meta.url).href;
 };
 
 // 获取骰子背景
 const getDiceBgIcon = (name: string, isCard = false) => {
   if (name == 'any' && !isCard) name += '1';
+  return `/image/${name}-dice-bg.png`;
   return new URL(`/src/assets/image/${name}-dice-bg.png`, import.meta.url).href;
 };
 
 // 获取骰子元素图案
 const getDiceIcon = (name: string) => {
+  return `/svg/${name}-dice.svg`;
   return new URL(`/src/assets/svg/${name}-dice.svg`, import.meta.url).href;
 };
 
 // 获取充能图标
 const getEnergyIcon = (isCharged: boolean = false) => {
+  return `/image/energy-${isCharged ? 'charged' : 'empty'}.png`;
   return new URL(`/src/assets/image/energy-${isCharged ? 'charged' : 'empty'}.png`, import.meta.url).href;
 };
 
@@ -1381,7 +1386,7 @@ button:active {
   border: 2px solid black;
   border-radius: 10px;
   background-color: #14408c;
-  background-image: url('@/assets/image/card-back.png');
+  background-image: url('@@/image/card-back.png');
   background-size: 100% 100%;
   color: black;
   text-align: center;
@@ -1412,7 +1417,7 @@ button:active {
   border: 2px solid black;
   border-radius: 10px;
   background-color: #14408c;
-  background-image: url('@/assets/image/card-back.png');
+  background-image: url('@@/image/card-back.png');
   background-size: 100% 100%;
   color: black;
   text-align: center;

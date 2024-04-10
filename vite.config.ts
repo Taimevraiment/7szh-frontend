@@ -8,7 +8,8 @@ export default defineConfig({
   plugins: [vue()],
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '@@': fileURLToPath(new URL('./public', import.meta.url))
     }
   },
   build: {
@@ -19,5 +20,6 @@ export default defineConfig({
         drop_debugger: true
       }
     }
-  }
+  },
+  logLevel: 'error',
 })

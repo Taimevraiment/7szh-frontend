@@ -37,7 +37,7 @@
           <span>{{ WEAPON_TYPE[(info as Hero).weaponType] }}</span>
           <span v-for="(local, lidx) in (info as Hero).local" :key="lidx">{{
             HERO_LOCAL[local]
-            }}</span>
+          }}</span>
         </div>
         <div class="info-hero-skill" v-for="(skill, sidx) in (skills as Skill[]).filter(
           (_, i) => type == 4 || i == type
@@ -365,6 +365,7 @@ const wrapRule = (...desc: string[]) => {
 
 // 获取骰子背景
 const getDiceIcon = (name: string) => {
+  return `/image/${name}-dice-bg.png`;
   return new URL(`/src/assets/image/${name}-dice-bg.png`, import.meta.url).href;
 };
 
@@ -373,11 +374,13 @@ const getPngIcon = (name: string) => {
   if (name.startsWith('http')) return name;
   if (name.endsWith('-dice')) return getSvgIcon(name);
   if (name == 'energy') name += '-dice-bg';
+  return `/image/${name}.png`;
   return new URL(`/src/assets/image/${name}.png`, import.meta.url).href;
 };
 
 // 获取svg filter
 const getSvgIcon = (name: string) => {
+  return `/svg/${name}.svg`;
   return new URL(`/src/assets/svg/${name}.svg`, import.meta.url).href;
 };
 
@@ -440,6 +443,7 @@ watchEffect(() => {
 
 // 获取图片
 const getIcon = (name: string) => {
+  return `/svg/${name}.svg`;
   return new URL(`/src/assets/svg/${name}.svg`, import.meta.url).href;
 };
 

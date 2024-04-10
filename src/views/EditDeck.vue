@@ -237,6 +237,7 @@ const pShareCode = ref<string>('');
 // 获取png图片
 const getPngIcon = (name: string) => {
     if (name.startsWith('http')) return name;
+    return `/image/${name}.png`;
     return new URL(`/src/assets/image/${name}.png`, import.meta.url).href;
 }
 
@@ -390,6 +391,7 @@ const updateInfo = (init = false) => {
 
 // 获取骰子背景
 const getDiceIcon = (name: string) => {
+    return `/image/${name}-dice-bg.png`;
     return new URL(`/src/assets/image/${name}-dice-bg.png`, import.meta.url).href;
 }
 
