@@ -1386,7 +1386,7 @@ button:active {
   border: 2px solid black;
   border-radius: 10px;
   background-color: #14408c;
-  background-image: url('@@/image/card-back.png');
+  background-image: url('/image/card-back.png');
   background-size: 100% 100%;
   color: black;
   text-align: center;
