@@ -1,7 +1,7 @@
 <template>
   <div class="main-container">
     <div class="side" :style="{ opacity: player.phase > 4 ? 1 : 0 }">
-      <div class="round">
+      <div class="round" @click.stop="showHistory">
         <img src="@@/svg/round.svg" alt="回合" />
         <span>{{ client.round }}</span>
       </div>
@@ -37,6 +37,11 @@
           v-for="(card, cidx) in player.willAddCard" :key="cidx">
           <img class="card-img" :src="card.src" v-if="card?.src?.length > 0" :alt="card.name" />
           <span v-else>{{ card.name }}</span>
+        </div>
+      </div>
+      <div class="history-info" v-if="isShowHistory">
+        <div v-for="(his, hsidx) in historyInfo" :key="hsidx">
+          {{ his }}
         </div>
       </div>
     </div>
@@ -366,8 +371,8 @@
 import { computed, ref, watchEffect } from 'vue';
 import { ELEMENT_COLOR, ELEMENT_ICON, ELEMENT_URL, STATUS_BG_COLOR } from '@/data/constant';
 
-const props = defineProps(['isMobile', 'canAction', 'isLookon', 'afterWinHeros', 'client']);
-const emits = defineEmits(['selectChangeCard', 'changeCard', 'reroll', 'selectHero', 'selectUseDice', 'selectSummon', 'selectSite', 'endPhase']);
+const props = defineProps(['isMobile', 'canAction', 'isLookon', 'afterWinHeros', 'client', 'isShowHistory']);
+const emits = defineEmits(['selectChangeCard', 'changeCard', 'reroll', 'selectHero', 'selectUseDice', 'selectSummon', 'selectSite', 'endPhase', 'showHistory']);
 
 const playerIdx = computed<number>(() => Math.max(props.isLookon, props.client.playerIdx));
 const player = computed<Player>(() => props.client.players[playerIdx.value]);
@@ -401,13 +406,10 @@ const heros = computed<Hero[]>(() => {
   return props.afterWinHeros.flat();
 });
 const currTime = computed<number>(() => ((props.client.countdown.limit - props.client.countdown.curr) / props.client.countdown.limit) * 100);
-
-const initCards = ref<(Card & { isSelected: boolean })[]>(
-  player.value.handCards.map(c => ({ ...c, isSelected: false }))
-);
-const dices = ref<DiceVO[]>(
-  player.value.dice.map(d => ({ val: d, isSelected: false }))
-);
+const isShowHistory = computed<boolean>(() => props.client.isShowHistory);
+const historyInfo = computed<string[]>(() => props.client.log.slice(4));
+const initCards = ref<(Card & { isSelected: boolean })[]>(player.value.handCards.map(c => ({ ...c, isSelected: false })));
+const dices = ref<DiceVO[]>(player.value.dice.map(d => ({ val: d, isSelected: false })));
 const showChangeCardBtn = ref<boolean>(true);
 
 let diceSelect: boolean[] = props.client.player.diceSelect.length == 0 ? new Array(player.value.dice.length).fill(false) : [...props.client.player.diceSelect];
@@ -521,6 +523,10 @@ const selectSummon = (pidx: number, suidx: number, isNotShow: boolean) => {
 const showSiteInfo = (pidx: number, siidx: number) => {
   emits('selectSite', pidx, siidx);
 };
+// 显示历史信息
+const showHistory = () => {
+  emits('showHistory');
+}
 // 结束回合
 const endPhase = () => {
   if (player.value.status == 0 || !canAction) return;
@@ -557,6 +563,7 @@ const endPhase = () => {
   font-weight: bolder;
   -webkit-text-stroke: 1px black;
   margin-bottom: 5px;
+  cursor: pointer;
 }
 
 .round * {
@@ -1306,6 +1313,20 @@ button:active {
   border-radius: 10px;
 }
 
+.history-info {
+  position: absolute;
+  left: 0;
+  top: 20px;
+  padding: 10px;
+  color: white;
+  height: 80%;
+  overflow-y: scroll;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+  z-index: 2;
+  background-color: #35527fce;
+}
+
 .subtype8-border {
   position: absolute;
   width: 100%;
@@ -1514,6 +1535,21 @@ button:active {
 
 svg {
   display: none;
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 5px;
+  background: #335c99d0;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 @keyframes blink {

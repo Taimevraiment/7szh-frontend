@@ -32,7 +32,7 @@
             <button class="edit-btn share" @click.stop="showShareCode">复制分享码</button>
             <input type="text" v-model="pShareCode" class="share-code-input" placeholder="粘贴分享码" />
             <button class="edit-btn share" v-if="pShareCode.length > 0" @click.stop="pasteShareCode">粘贴分享码</button>
-            <div class="share-code" v-if="isShowShareCode">{{ shareCode }}</div>
+            <div class="share-code" v-if="isShowShareCode" @click.stop="">{{ shareCode }}</div>
             <div v-if="currIdx == 0">
                 <div class="heros-deck">
                     <div class="hero-deck" :class="{ 'mobile-hero-deck': isMobile }" v-for="(dhero, dhidx) in herosDeck"
@@ -513,8 +513,27 @@ const showFilter = () => {
 const showShareCode = () => {
     isShowShareCode.value = true;
     updateShareCode();
-    navigator.clipboard.writeText(shareCode.value).then(() => confirm("已成功复制到剪贴板"))
-        .catch(err => console.error("无法复制到剪贴板", err));
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        navigator.clipboard.writeText(shareCode.value).then(() => confirm('已成功复制到剪贴板'))
+            .catch(err => alert('无法复制到剪贴板:' + err));
+    } else if (document.execCommand) {
+        var textArea = document.createElement('textarea');
+        textArea.value = shareCode.value;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        setTimeout(() => {
+            document.execCommand('copy');
+            textArea.remove();
+            confirm('已成功复制到剪贴板')
+        }, 0);
+    } else {
+        alert('无法复制到剪贴板');
+    }
 }
 
 const pasteShareCode = () => {
@@ -684,6 +703,7 @@ body div {
 }
 
 .share-code {
+    user-select: all;
     position: absolute;
     top: 40px;
     left: 80px;

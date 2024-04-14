@@ -31,6 +31,7 @@ export default class GeniusInvokationClient {
     isShowDmg: boolean = false; // 是否显示伤害数
     isShowHeal: boolean = false; // 是否显示加血数
     isShowChangeHero: number = 0; // 是否显示切换角色按钮 0不显示 1显示 2显示且为快速行动
+    isShowHistory: boolean = false; // 是否显示历史信息
     isFall: boolean = false; // 是否为下落攻击状态
     canAction: boolean = false; // 是否可以操作
     willSummons: Summonee[][] = [[], []]; // 将要召唤的召唤物
@@ -127,6 +128,7 @@ export default class GeniusInvokationClient {
         this.summonCnt = [[0, 0, 0, 0], [0, 0, 0, 0]];
         this.isValid = false;
         this.isShowChangeHero = 0;
+        this.isShowHistory = false;
         this.isReconcile = false;
         this.player.diceSelect = this.player.dice.map(() => false);
     }
@@ -558,6 +560,7 @@ export default class GeniusInvokationClient {
         this.isStart = data.isStart ?? this.isStart;
         this.phase = data.phase ?? this.phase;
         this.canAction = this.player?.canAction ?? false;
+        this.log = data.log ?? this.log;
         this._startTimer(data.currCountdown);
         if (data.taskQueueVal) {
             this.taskQueue.queue = data.taskQueueVal.queue;

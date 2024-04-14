@@ -48,7 +48,8 @@
     <MainDesk v-if="client.phase > 1 || client.isWin > -1" :isMobile="isMobile" :canAction="canAction"
       :afterWinHeros="afterWinHeros" :isLookon="isLookon" :client="client" @select-change-card="selectChangeCard"
       @change-card="changeCard" @reroll="reroll" @select-hero="selectHero" @select-use-dice="selectUseDice"
-      @select-site="selectCardSite" @select-summon="selectCardSummon" @end-phase="endPhase" />
+      @select-site="selectCardSite" @select-summon="selectCardSummon" @end-phase="endPhase"
+      @show-history="showHistory" />
 
     <div v-if="(client.player?.phase ?? 0) > 2 || client.isWin > -1" class="hand-card"
       :class="{ 'mobile-hand-card': isMobile }"
@@ -191,11 +192,8 @@ const { players: cplayers, isLookon: cisLookon, countdown, follow } = history.st
 
 const userid = Number(localStorage.getItem('7szh_userid') || '-1'); // 玩家id
 const roomId = route.params.roomId; // 房间id
-const isLookon = ref<number>(
-  cisLookon ? follow ?? Math.floor(Math.random() * 2) : -1
-); // 是否旁观
-const client = ref(new GeniusInvokationClient(socket, userid, cplayers, isMobile.value, countdown,
-  JSON.parse(localStorage.getItem('GIdecks') || '[]'), Number(localStorage.getItem('GIdeckIdx') || '0'), isLookon.value));
+const isLookon = ref<number>(cisLookon ? follow ?? Math.floor(Math.random() * 2) : -1); // 是否旁观
+const client = ref(new GeniusInvokationClient(socket, userid, cplayers, isMobile.value, countdown, JSON.parse(localStorage.getItem('GIdecks') || '[]'), Number(localStorage.getItem('GIdeckIdx') || '0'), isLookon.value));
 
 const canAction = computed<boolean>(() => client.value.canAction && client.value.tip.content == '' && client.value.actionInfo == '' && !client.value.taskQueue.isExecuting); // 是否可以操作
 const afterWinHeros = ref<Hero[][]>([]); // 游戏结束后显示的角色信息
@@ -323,6 +321,10 @@ const endPhase = () => {
 // 使用卡
 const useCard = () => {
   client.value.useCard();
+};
+// 显示历史信息
+const showHistory = () => {
+  client.value.isShowHistory = true;
 };
 
 // 切换旁观人
