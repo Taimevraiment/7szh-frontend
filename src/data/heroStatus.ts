@@ -155,18 +155,26 @@ const statusTotal: StatusObj = {
     2004: () => new GIStatus(2004, '冻结', '角色无法使用技能持续到回合结束。；角色受到[火元素伤害]或[物理伤害]时，移除此效果，使该伤害+2', 'freeze', 0, [3, 10, 14], -1, 0, 1),
 
     2005: () => new GIStatus(2005, '草原核', '【我方对敌方出战角色造成[火元素伤害]或[雷元素伤害]时，】伤害值+2。；【[可用次数]：{useCnt}】',
-        'sts2005', 1, [6], 1, 0, -1, status => ({
-            addDmgCdt: 2,
-            trigger: ['fire-dmg', 'thunder-dmg'],
-            exec: () => { --status.useCnt },
-        }), { icbg: STATUS_BG_COLOR[7] }),
+        'sts2005', 1, [6], 1, 0, -1, (status, event = {}) => {
+            const { eheros = [], getDmgIdx = -1 } = event;
+            if (!eheros[getDmgIdx]?.isFront) return;
+            return {
+                addDmgCdt: 2,
+                trigger: ['fire-dmg', 'thunder-dmg'],
+                exec: () => { --status.useCnt },
+            }
+        }, { icbg: STATUS_BG_COLOR[7] }),
 
     2006: () => new GIStatus(2006, '激化领域', '【我方对敌方出战角色造成[雷元素伤害]或[草元素伤害]时，】伤害值+1。；【[可用次数]：{useCnt}】',
-        'sts2006', 1, [6], 2, 0, -1, status => ({
-            addDmgCdt: 1,
-            trigger: ['grass-dmg', 'thunder-dmg'],
-            exec: () => { --status.useCnt },
-        })),
+        'sts2006', 1, [6], 2, 0, -1, (status, event = {}) => {
+            const { eheros = [], getDmgIdx = -1 } = event;
+            if (!eheros[getDmgIdx]?.isFront) return;
+            return {
+                addDmgCdt: 1,
+                trigger: ['grass-dmg', 'thunder-dmg'],
+                exec: () => { --status.useCnt },
+            }
+        }),
 
     2007: () => new GIStatus(2007, '结晶', '为我方出战角色提供1点[护盾]。(可叠加，最多到2)', '', 1, [7], 1, 2, -1),
 

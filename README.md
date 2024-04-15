@@ -1362,6 +1362,12 @@ constructor(
 
 解释：敌方所有召唤物
 
+##### getDmgIdx
+
+类型：number
+
+解释：受到攻击的角色序号（从0开始）
+
 #### StatusHandleRes
 
 ##### restDmg

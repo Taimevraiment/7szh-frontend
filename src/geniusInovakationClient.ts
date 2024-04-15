@@ -2445,6 +2445,7 @@ export default class GeniusInvokationClient {
                         skilltype: sktype,
                         isElStatus,
                         isFallAtk,
+                        getDmgIdx: frontIdx,
                         hasDmg: res.willDamage[getDmgIdx][0] > 0,
                         isSkill: skidx,
                         dmgSource: skidx > -1 ? afhero.id : isSummon,

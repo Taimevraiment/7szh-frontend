@@ -418,6 +418,7 @@ type StatusHandleEvent = {
     force?: boolean,
     summons?: Summonee[],
     esummons?: Summonee[],
+    getDmgIdx?: number,
 }
 
 type StatusHandleRes = {
