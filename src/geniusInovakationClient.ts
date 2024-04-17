@@ -444,6 +444,7 @@ export default class GeniusInvokationClient {
                 handCards,
                 currCard,
                 dices: isCdt(!isAction, ndices),
+                rollCnt: this.rollCnt,
                 hidxs,
                 heros: isCdt(!isAction, player.heros),
                 eheros: isCdt(!isAction, opponent.heros),
@@ -568,7 +569,7 @@ export default class GeniusInvokationClient {
             this.taskQueue.isExecuting = data.taskQueueVal.isExecuting;
             this.taskQueue.statusAtk = data.taskQueueVal.statusAtk;
         }
-        if (this.player.phase == PHASE.DICE) this.rollCnt = 1;
+        if (this.player.phase == PHASE.DICE) this.rollCnt = this.player.rollCnt;
         if (data.isFlag) this.socket.emit('sendToServer');
         this.wrap(this.player);
         this._clacCardChange();
@@ -719,7 +720,15 @@ export default class GeniusInvokationClient {
             await this._sendTip('骰子投掷阶段');
             this.showRerollBtn = true;
             const dices = this.rollDice();
-            if (dices) this.socket.emit('sendToServer', { cpidx: this.playerIdx, dices, flag: 'getServerInfo-phase-dice-' + this.playerIdx });
+            this.player.rollCnt = this.rollCnt;
+            if (dices) {
+                this.socket.emit('sendToServer', {
+                    cpidx: this.playerIdx,
+                    dices,
+                    rollCnt: this.rollCnt,
+                    flag: 'getServerInfo-phase-dice-' + this.playerIdx
+                });
+            }
         }
         if (this.phase == PHASE.DICE && phase == PHASE.ACTION_START) { // 开始阶段
             this.showRerollBtn = true;
@@ -4237,6 +4246,7 @@ const NULL_PLAYER: Player = {
     summon: [],
     dice: [],
     diceSelect: [],
+    rollCnt: -1,
     status: 0,
     phase: 0,
     info: '',

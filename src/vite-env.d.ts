@@ -26,6 +26,7 @@ type Player = {
     summon: Summonee[], // 召唤物
     dice: number[], // 骰子
     diceSelect: boolean[], // 骰子选择数组
+    rollCnt: number, // 骰子投掷次数
     status: number,
     phase: number,
     info: string, // 右上角提示信息
