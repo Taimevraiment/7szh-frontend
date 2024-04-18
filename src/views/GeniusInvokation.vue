@@ -3,7 +3,7 @@
     <button v-if="!client.isStart || isLookon > -1" class="exit" @click="exit">
       返回
     </button>
-    <div style="position: absolute;left: 60px;">房间号{{ roomId }}</div>
+    <div style="position: absolute;left: 60px;color: white;">房间号{{ roomId }}</div>
     <button v-if="client.isStart && isLookon == -1 && client.phase > 5" class="exit" @click="giveup">
       投降
     </button>
@@ -352,11 +352,18 @@ onUnmounted(() => {
   socket.off('getPlayerAndRoomList', getPlayerList);
 });
 
+let prodEnv = 0;
 // dev
 const devOps = (cidx = 0) => {
-  if (!isDev) return;
-  let ops = prompt('摸牌id/#骰子/@充能/%血量/&附着:')?.split(/[,，\.\/、]+/).filter(v => v != '');
-  if (ops == undefined) return;
+  if (!isDev && ++prodEnv < 3) return;
+  let opses = prompt(isDev ? '摸牌id/#骰子/@充能/%血量/&附着:' : '');
+  if (!isDev) {
+    if (!opses?.startsWith('debug')) return;
+    opses = opses?.slice(5);
+    prodEnv = 0;
+  }
+  if (!opses) return;
+  const ops = opses.split(/[,，\.\/、]+/).filter(v => v != '');
   const cpidx = client.value.playerIdx ^ cidx;
   let heros = client.value.players[cpidx].heros;
   let dices;
@@ -433,7 +440,10 @@ body {
 .container {
   width: 100%;
   height: 95vh;
-  background-color: #aed1c8;
+  /* background-color: #aed1c8; */
+  background: url('@@/image/desk_bg.png');
+  background-size: cover;
+  background-position: center center;
   position: relative;
   user-select: none;
   overflow: hidden;
@@ -445,6 +455,7 @@ body {
   top: 0;
   width: 30%;
   height: 20px;
+  color: white;
 }
 
 .hand-card {
