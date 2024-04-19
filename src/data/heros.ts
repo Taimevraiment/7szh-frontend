@@ -206,7 +206,7 @@ const readySkillTotal: { [key: number]: (...args: any) => Skill } = {
 
     16: () => new GISkill('风风轮舞踢', '(需准备1个行动轮)；造成{dmg}点[冰元素伤害]。', 2, 2, 0, 4, { ec: -2, rdskidx: 16 }),
 
-    17: () => new GISkill('衡平推裁', '(需准备1个行动轮)；造成{dmg}点[水元素伤害]，如果生命值至少为6，则对自身造成1点[穿透伤害]使伤害+1。',
+    17: () => new GISkill('衡平推裁', '(需准备1个行动轮)；造成{dmg}点[水元素伤害]，如果生命值至少为6，则对自身造成1点[穿透伤害]，使伤害+1。',
         1, 2, 0, 1, { ec: -2, rdskidx: 17 }, '', [], event => {
             if (event.hero.hp < 6) return;
             return { addDmgCdt: 1, pendamageSelf: 1 }

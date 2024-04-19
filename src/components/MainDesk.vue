@@ -40,7 +40,8 @@
         </div>
       </div>
       <div class="history-info" v-if="isShowHistory">
-        <div v-for="(his, hsidx) in historyInfo" :key="hsidx">
+        <div v-for="(his, hsidx) in historyInfo" :key="hsidx"
+          :style="{ color: his.match(/(?<=\[)[^\]]+(?=\])/)?.[0] == player.name ? '#e0b97e' : '#63a0e6' }">
           {{ his }}
         </div>
       </div>

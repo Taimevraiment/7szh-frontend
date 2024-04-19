@@ -1591,7 +1591,6 @@ export default class GeniusInvokationClient {
         if (sidx > -1) {
             const [afterASkillTrgs, afterESkillTrgs] = [atriggers, etriggers]
                 .map(xtrgs => xtrgs.map(trgs => trgs.map(trg => trg.startsWith('skill') ? 'after-' + trg : trg.startsWith('after-') ? trg.slice(6) : trg) as Trigger[]));
-            // todo 修复[下落斩+愚人众伏兵]的，把 aswhidx, eswhidx 改为 hidx, eFrontIdx
             eaHeros.forEach((h, hi) => {
                 if (hi == oeFrontIdx) afterESkillTrgs[hi].push('status-destroy');
                 doAfterStatus(h.inStatus, 0, afterESkillTrgs[hi], aswhidx, eswhidx, 1);

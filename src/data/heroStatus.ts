@@ -1803,7 +1803,7 @@ const statusTotal: StatusObj = {
             }
         }, { icbg: DEBUFF_BG_COLOR }),
 
-    2164: (expl?: ExplainContent[], cnt = 1) => new GIStatus(2164, '源水之滴', `【那维莱特进行｢普通攻击｣后：】治疗角色2点，然后角色[准备技能]：【衡平推裁】。；【[可用次数]：{useCnt}(可叠加，最多叠加到3次)】`,
+    2164: (expl?: ExplainContent[], cnt = 1) => new GIStatus(2164, '源水之滴', `【那维莱特进行｢普通攻击｣后：】治疗角色2点，然后角色[准备技能]：【衡平推裁】。；【[可用次数]：{useCnt}】(可叠加，最多叠加到3次)`,
         'sts2164', 1, [1], cnt, 3, -1, (status, event = {}) => {
             const { heros = [], hidx = -1 } = event;
             if (heros[hidx]?.id != 1110) return;
@@ -1831,7 +1831,7 @@ const statusTotal: StatusObj = {
             exec: () => { --status.useCnt },
         })),
 
-    2167: (icon = '') => new GIStatus(2167, '猫箱急件', '【绮良良为出战角色时，我方切换角色后：】造成1点[草元素伤害]，摸1张牌。；【[可用次数]：{useCnt}(可叠加，最多叠加到2次)】',
+    2167: (icon = '') => new GIStatus(2167, '猫箱急件', '【绮良良为出战角色时，我方切换角色后：】造成1点[草元素伤害]，摸1张牌。；【[可用次数]：{useCnt}】(可叠加，最多叠加到2次)',
         icon, 1, [1], 1, 2, -1, (_status, event = {}) => {
             const { heros = [], force = false } = event;
             if (!heros.find(h => h.id == 1607)?.isFront && !force) return;
