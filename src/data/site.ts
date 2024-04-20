@@ -564,7 +564,7 @@ const siteTotal: SiteObj = {
     4036: (cardId: number) => new GISite(4036, cardId, 0, 1, 3, (site, event = {}) => {
         const { card, heros = [], minusDiceCard: mdc = 0 } = event;
         const isMinus = card && card.subType.includes(1) && card.cost > mdc && site.perCnt > 0;
-        const minusCnt = 1 + heros.filter(h => h.artifactSlot != null).length;
+        const minusCnt = 1 + (heros.filter(h => h.artifactSlot != null).length >= 2 ? 1 : 0);
         return {
             trigger: ['card'],
             isNotAddTask: true,
@@ -668,7 +668,7 @@ const siteTotal: SiteObj = {
     // 化种匣
     4043: (cardId: number) => new GISite(4043, cardId, 2, 1, 2, (site, event = {}) => {
         const { card, minusDiceCard: mdc = 0 } = event;
-        const isMinus = card && card.cost == 1 && card.type < 2 && site.perCnt > 0 && card.cost > mdc;
+        const isMinus = card && card.cost >= 2 && card.type == 1 && site.perCnt > 0 && card.cost > mdc;
         return {
             trigger: ['card'],
             minusDiceCard: isCdt(isMinus, 1),
@@ -702,16 +702,13 @@ const siteTotal: SiteObj = {
     // 婕德
     4045: (cardId: number, cnt: number) => new GISite(4045, cardId, cnt, 0, 2, (site, event = {}) => {
         const { trigger = '', playerInfo: { destroyedSite = 0 } = {} } = event;
+        const triggers: Trigger[] = ['site-destroy'];
+        if (site.cnt >= 6) triggers.push('skilltype3');
         return {
-            trigger: ['site-destroy', 'skilltype3'],
-            siteCnt: isCdt(trigger == 'skilltype3' && site.cnt >= 5, -site.cnt - 1),
+            trigger: triggers,
             exec: () => {
-                if (trigger == 'skilltype3' && site.cnt >= 5) {
-                    return { cmds: [{ cmd: 'getDice', element: 0, cnt: site.cnt - 2 }], isDestroy: true }
-                }
-                if (trigger == 'site-destroy') {
-                    site.cnt = Math.min(6, destroyedSite);
-                }
+                if (trigger == 'skilltype3') return { cmds: [{ cmd: 'getInStatus', status: [heroStatus(2188)] }], isDestroy: true }
+                if (trigger == 'site-destroy') site.cnt = Math.min(6, destroyedSite);
                 return { isDestroy: false }
             }
         }
@@ -812,10 +809,9 @@ const siteTotal: SiteObj = {
         trigger: ['phase-end'],
         exec: () => {
             --site.cnt;
-            return {
-                cmds: [{ cmd: 'addCard', cnt: 1, card: 903 + site.cnt, hidxs: [5] }],
-                isDestroy: site.cnt == 0,
-            }
+            const cmds: Cmds[] = [{ cmd: 'addCard', cnt: 1, card: 903 + site.cnt, hidxs: [5] }];
+            if (site.cnt == 0) cmds.push({ cmd: 'getCard', cnt: 1 });
+            return { cmds, isDestroy: site.cnt == 0 }
         }
     })),
 }

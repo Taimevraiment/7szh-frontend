@@ -684,15 +684,7 @@ const statusTotal: StatusObj = {
             }
         }),
 
-    2062: (expl?: ExplainContent[]) => new GIStatus(2062, '捉浪·涛拥之守', '本角色将在下次行动时，直接使用技能：【踏潮】。；【准备技能期间：】提供2点[护盾]，保护所附属角色。',
-        '', 0, [7, 9, 11], 2, 0, -1, status => ({
-            trigger: ['change-from', 'useReadySkill'],
-            skill: 1,
-            exec: () => {
-                status.type.splice(status.type.indexOf(9), 1);
-                status.useCnt = 0;
-            }
-        }), { expl }),
+    2062: () => new GIStatus(2062, '捉浪·涛拥之守', '提供2点[护盾]，保护所附属角色。', '', 0, [7], 2, 0, -1),
 
     2063: (icon = '') => new GIStatus(2063, '雷兽之盾', '【我方角色｢普通攻击｣后：】造成1点[雷元素伤害]。；【我方角色受到至少为3的伤害时：】抵消其中1点伤害。；【[持续回合]：{roundCnt}】',
         icon, 0, [1, 2], -1, 0, 2, (_status, event = {}) => {
@@ -1027,34 +1019,37 @@ const statusTotal: StatusObj = {
             }
         })),
 
-    2092: () => new GIStatus(2092, '火之新生', '【所附属角色被击倒时：】移除此效果，使角色[免于被击倒]，并治疗该角色到3点生命值。',
+    2092: () => new GIStatus(2092, '火之新生', '【所附属角色被击倒时：】移除此效果，使角色[免于被击倒]，并治疗该角色到4点生命值。此效果触发后，此角色造成的[火元素伤害]+1。',
         'heal2', 0, [10, 13], 1, 0, -1, (_status, event = {}) => ({
             trigger: ['will-killed'],
-            cmds: [{ cmd: 'revive', cnt: 3 }],
+            cmds: [{ cmd: 'revive', cnt: 4 }],
             exec: eStatus => {
                 if (eStatus) {
                     --eStatus.useCnt;
                     return;
                 }
                 const { heros = [], hidx = -1 } = event;
-                if (!heros[hidx]?.talentSlot) return;
-                heros[hidx].talentSlot = null;
-                return { inStatus: [heroStatus(2093)] }
+                const inStatus = [heroStatus(2191)];
+                if (heros[hidx]?.talentSlot) {
+                    heros[hidx].talentSlot = null;
+                    inStatus.push(heroStatus(2093))
+                }
+                return { inStatus }
             }
         })),
 
-    2093: () => new GIStatus(2093, '渊火加护', '为所附属角色提供3点[护盾]。此[护盾]耗尽前，所附属角色造成的[火元素伤害]+1。',
-        '', 0, [6, 7], 3, 0, -1, () => ({ addDmg: 1 })),
-
-    2094: (expl?: ExplainContent[]) => new GIStatus(2094, '苍鹭护盾', '本角色将在下次行动时，直接使用技能：【苍鹭震击】。；【准备技能期间：】提供2点[护盾]，保护所附属角色。',
-        '', 0, [7, 9, 11], 2, 0, -1, status => ({
-            trigger: ['change-from', 'useReadySkill'],
-            skill: 4,
-            exec: () => {
-                status.type.splice(status.type.indexOf(9), 1);
-                status.useCnt = 0;
+    2093: () => new GIStatus(2093, '渊火加护', '为所附属角色提供2点[护盾]。此[护盾]耗尽后：对所有敌方角色造成1点[穿透伤害]。',
+        '', 0, [1, 7], 2, 0, -1, (status, event = {}) => {
+            if (status.useCnt > 0) return;
+            const { eheros = [] } = event;
+            return {
+                trigger: ['status-destroy'],
+                pendamage: 1,
+                hidxs: allHidxs(eheros),
             }
-        }), { expl }),
+        }),
+
+    2094: () => new GIStatus(2094, '苍鹭护盾', '提供2点[护盾]，保护所附属角色。', '', 0, [7], 2, 0, -1),
 
     2095: (icon = '', isTalent = false) => new GIStatus(2095, '赤冕祝祷', `我方角色｢普通攻击｣造成的伤害+1。；我方单手剑、双手剑或长柄武器角色造成的[物理伤害]变为[水元素伤害]。；【我方切换角色后：】造成1点[水元素伤害]。(每回合1次)；${isTalent ? '【我方角色｢普通攻击｣后：】造成1点[水元素伤害]。(每回合1次)；' : ''}【[持续回合]：{roundCnt}】`,
         icon, 1, [1, 6, 8], -1, 0, 2, (status, event = {}) => {
@@ -1285,7 +1280,7 @@ const statusTotal: StatusObj = {
         '', 1, [1, 7], 1, 0, -1, (status, event = {}) => {
             const { heros = [], hidx = -1 } = event;
             const fhero = heros[hidx];
-            if (!fhero) throw new Error('hero not found');
+            if (!fhero) return;
             const triggers: Trigger[] = [];
             if (status.useCnt == 0) triggers.push('status-destroy');
             if (fhero.id == 1605) triggers.push('skilltype3');
@@ -1934,7 +1929,7 @@ const statusTotal: StatusObj = {
             }
         }, { icbg: STATUS_BG_COLOR[3], pct: 1 }),
 
-    2177: (icon = '') => new GIStatus(2177, '疾风示现', '【所附属角色进行[重击]时：】少花费1个[无色元素骰]，造成的[物理伤害]变为[风元素伤害]，并且使敌方出战角色附属【风压坍陷】；【[可用次数]：{useCnt}】',
+    2177: (icon = '') => new GIStatus(2177, '疾风示现', '【所附属角色进行[重击]时：】少花费1个[无色元素骰]，造成的[物理伤害]变为[风元素伤害]，并且使目标角色附属【风压坍陷】；【[可用次数]：{useCnt}】',
         icon, 0, [4, 16], 1, 0, -1, (status, event = {}) => {
             if (!event.isChargedAtk) return;
             const { minusSkillRes } = minusDiceSkillHandle(event, { skilltype1: [0, 1, 0] });
@@ -1986,11 +1981,11 @@ const statusTotal: StatusObj = {
                     --eStatus.useCnt;
                     return;
                 }
-                return { cmds: [{ cmd: 'getInStatus', status: [heroStatus(2187)] }] }
+                return { inStatus: [heroStatus(2187)] }
             }
         })),
 
-    2182: (useCnt = 1) => new GIStatus(2182, '重甲蟹壳', '每层提供1点[护盾]，保护所附属角色。', '', 0, [7], useCnt, 100, -1),
+    2182: (useCnt = 1) => new GIStatus(2182, '重甲蟹壳', '每层提供1点[护盾]，保护所附属角色。', '', 0, [7], useCnt, 1000, -1),
 
     2183: (expl?: ExplainContent[]) => new GIStatus(2183, '炽烈轰破', '本角色将在下次行动时，直接使用技能：【炽烈轰破】。',
         'buff3', 0, [10, 11], 1, 0, -1, status => ({
@@ -2046,6 +2041,23 @@ const statusTotal: StatusObj = {
                 },
             }
         }),
+
+    2189: (expl?: ExplainContent[]) => new GIStatus(2189, '踏潮', '本角色将在下次行动时，直接使用技能：【踏潮】。',
+        'buff3', 0, [10, 11], 1, 0, -1, status => ({
+            trigger: ['change-from', 'useReadySkill'],
+            skill: 1,
+            exec: () => { --status.useCnt }
+        }), { expl }),
+
+    2190: (expl?: ExplainContent[]) => new GIStatus(2190, '苍鹭震击', '本角色将在下次行动时，直接使用技能：【苍鹭震击】。',
+        'buff3', 0, [10, 11], 1, 0, -1, status => ({
+            trigger: ['change-from', 'useReadySkill'],
+            skill: 4,
+            exec: () => { --status.useCnt }
+        }), { expl }),
+
+    2191: () => new GIStatus(2191, '火之新生后续todo名字待定', '角色造成的[火元素伤害]+1。',
+        'buff4', 0, [6, 10], 1, 0, -1, () => ({ addDmg: 1 })),
 
 };
 

@@ -218,15 +218,11 @@ const extraCards: CardObj = {
         '',
         0, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'getDice', cnt: 1, element: 0 }] })),
 
-    903: new GICard(903, '清洁工作', '我方出战角色下次造成伤害+1。(可叠加，最多叠加到2)',
+    903: new GICard(903, '清洁工作', '我方出战角色下次造成伤害+1。(可叠加，最多叠加到+2)',
         '',
         0, 8, 2, [], 0, 0, () => ({ inStatus: [heroStatus(2185)] })),
 
-    904: new GICard(904, '清洁工作', '摸1张牌，我方出战角色下次造成伤害+1。(可叠加，最多叠加到2)',
-        '',
-        0, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'getCard', cnt: 1 }], inStatus: [heroStatus(2185)] })),
-
-    905: new GICard(905, '海底宝藏', '治疗我方出战角色1点，生成1个随机基础元素骰。',
+    904: new GICard(904, '海底宝藏', '治疗我方出战角色1点，生成1个随机基础元素骰。',
         '',
         0, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'heal', cnt: 1 }, { cmd: 'getDice', cnt: 1, element: -1 }] })),
 }
@@ -884,10 +880,9 @@ const allCards: CardObj = {
         1, 8, 0, [1], 0, 1, (card, event) => {
             const { heros = [], hidxs = [], hcardsCnt = 10 } = event;
             if (!heros[hidxs[0]]?.isFront || card.perCnt == 0) return;
-            const execmds = isCdt<Cmds[]>(card.useCnt + 1 >= hcardsCnt, [{ cmd: 'getDice', cnt: 1, element: -1 }], [{ cmd: '' }]);
             return {
                 trigger: ['grass-getdmg-oppo'],
-                execmds,
+                execmds: isCdt<Cmds[]>(card.useCnt + 1 >= hcardsCnt, [{ cmd: 'getDice', cnt: 1, element: -1 }], [{ cmd: '' }]),
                 exec: () => {
                     if (++card.useCnt >= hcardsCnt) --card.perCnt;
                 }
@@ -1086,7 +1081,7 @@ const allCards: CardObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/08/12/203927054/b4a9b32d9ff26697821d3cf0f2444ef7_7283838166930329300.png',
         1, 8, 1, [3], 0, 0, () => ({ site: [newSite(4035, 319)] })),
 
-    320: new GICard(320, '弥生七月', '【我方打出｢圣遗物｣手牌时：】少花费1个元素骰; 我方场上每有一个已装备｢圣遗物｣的角色，就额外少花费1个元素骰。(每回合1次)',
+    320: new GICard(320, '弥生七月', '【我方打出｢圣遗物｣手牌时：】少花费1个元素骰; 如果我方场上已有2个装备｢圣遗物｣的角色，就额外少花费1个元素骰。(每回合1次)',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/09/24/258999284/09820a12324bca69fe30277287462e2f_7162251245504180312.png',
         1, 8, 1, [3], 0, 0, () => ({ site: [newSite(4036, 320)] })),
 
@@ -1094,12 +1089,12 @@ const allCards: CardObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/17/258999284/eb0cb5b32a8c816b7f13c3d44d0a0fe4_6830305949958078300.png',
         0, 8, 1, [3], 0, 0, () => ({ site: [newSite(4042, 321)] })),
 
-    322: new GICard(322, '婕德', '此牌会记录本场对局中我方支援区弃置卡牌的数量，称为｢阅历｣。(最多6点)；【我方角色使用｢元素爆发｣后：】如果｢阅历｣至少为5，则弃置此牌，生成【｢阅历｣-2】数量的[万能元素骰]。',
+    322: new GICard(322, '婕德', '此牌会记录本场对局中我方支援区弃置卡牌的数量，称为｢阅历｣。(最多6点)；【我方角色使用｢元素爆发｣后：】如果｢阅历｣至少为6，则弃置此牌，对我方出战角色附属【沙与梦】。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/01/27/258999284/8931597db1022094e0ebdf3e91f5f44c_6917553066022383928.png',
-        2, 0, 1, [3], 0, 0, (_card, event) => {
+        1, 8, 1, [3], 0, 0, (_card, event) => {
             const { playerInfo: { destroyedSite = 0 } = {} } = event;
             return { site: [newSite(4045, 322, destroyedSite)] }
-        }),
+        }, { expl: [heroStatus(2188)] }),
 
     323: new GICard(323, '西尔弗和迈勒斯', '此牌会记录本场对局中敌方角色受到过的元素伤害种类数，称为｢侍从的周到｣。(最多4点)；【结束阶段：】如果｢侍从的周到｣至少为3，则弃置此牌，然后摸｢侍从的周到｣点数的牌。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/01/27/258999284/e160832e6337e402fc01d5f89c042aa3_8868205734801507533.png',
@@ -1119,7 +1114,7 @@ const allCards: CardObj = {
         2, 0, 1, [3], 0, 0, () => ({ cmds: [{ cmd: 'addCard', cnt: 4, card: 902, element: 1 }], site: [newSite(4050, 324)] }),
         { expl: [extraCards[902], newSummonee(3059)] }),
 
-    325: new GICard(325, '白手套和渔夫', '【结束阶段：】生成1张｢清洁工作｣，随机将其置入我方牌库顶部5张牌之中。；如果此牌的[可用次数]仅剩1次，则摸1张牌，｢清洁工作｣不再摸牌；[可用次数]：2',
+    325: new GICard(325, '白手套和渔夫', '【结束阶段：】生成1张｢清洁工作｣，随机将其置入我方牌库顶部5张牌之中。；如果此牌的[可用次数]仅剩1次，则摸1张牌。；[可用次数]：2',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Assist_NPC_Baishoutao.webp',
         0, 8, 1, [3], 0, 0, () => ({ site: [newSite(4051, 325)] }), { expl: [extraCards[903]] }),
 
@@ -1139,7 +1134,7 @@ const allCards: CardObj = {
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/4321ae941ccf75069eb630547df61e3c_1672242083656433331.png',
         1, 8, 1, [4], 0, 0, () => ({ site: [newSite(4038, 404)] })),
 
-    405: new GICard(405, '化种匣', '【我方打出原本元素骰费用为1的装备或支援牌时：】少花费1个元素骰。(每回合1次)；[可用次数]：2',
+    405: new GICard(405, '化种匣', '【我方打出原本元素骰费用至少为2的支援牌时：】少花费1个元素骰。(每回合1次)；[可用次数]：2',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/17/258999284/3a16ca3da02eaf503cc8169d5e29e938_8021832463219302062.png',
         0, 8, 1, [4], 0, 0, () => ({ site: [newSite(4043, 405)] })),
 
@@ -1428,7 +1423,7 @@ const allCards: CardObj = {
 
     529: new GICard(529, '海中寻宝', '生成6张【海底宝藏】，随机地置入我方牌库中。',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Event_Event_Xunbao.webp',
-        1, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'addCard', cnt: 6, card: 905 }] }), { expl: [extraCards[905]] }),
+        1, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'addCard', cnt: 6, card: 904 }] }), { expl: [extraCards[904]] }),
 
     561: new GICard(561, '自由的新风', '【本回合中，轮到我方行动期间有对方角色被击倒时：】本次行动结束后，我方可以再连续行动一次。；【[可用次数]：】1',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/09/24/258999284/bccf12a9c926bec7203e543c469ac58d_1423280855629304603.png',
@@ -1688,14 +1683,16 @@ const allCards: CardObj = {
     614: new GICard(614, '松茸酿肉卷', '治疗目标角色2点，3回合内结束阶段再治疗此角色1点。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/01/27/258999284/9001508071c110f4b13088edeb22c8b4_7346504108686077875.png',
         2, 8, 2, [5], 0, 1, (_card, event) => {
-            const canSelectHero = (event?.heros ?? []).map(h => h.hp < h.maxhp);
+            const { heros = [] } = event;
+            const canSelectHero = heros.map(h => h.hp < h.maxhp);
             return { cmds: [{ cmd: 'heal', cnt: 2 }], inStatus: [heroStatus(2159), heroStatus(2009)], canSelectHero }
         }),
 
     615: new GICard(615, '缤纷马卡龙', '治疗目标角色1点，该角色接下来3次受到伤害后再治疗其1点。',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Event_Food_Macarons.webp',
         2, 0, 2, [5], 0, 1, (_card, event) => {
-            const canSelectHero = (event?.heros ?? []).map(h => h.hp < h.maxhp);
+            const { heros = [] } = event;
+            const canSelectHero = heros.map(h => h.hp < h.maxhp);
             return { cmds: [{ cmd: 'heal', cnt: 1 }], inStatus: [heroStatus(2186), heroStatus(2009)], canSelectHero }
         }),
 
@@ -1981,7 +1978,7 @@ const allCards: CardObj = {
             cmds: [{ cmd: 'heal', cnt: 3 }]
         }), { expl: talentExplain(1761, 3) }),
 
-    748: new GICard(748, '烬火重燃', '【入场时：】如果装备有此牌的【深渊咏者·渊火】已触发过【火之新生】，就立刻弃置此牌，为角色附属【渊火加护】。；装备有此牌的【深渊咏者·渊火】触发【火之新生】时：弃置此牌，为角色附属[渊火加护]。',
+    748: new GICard(748, '烬火重燃', '【入场时：】如果装备有此牌的【深渊咏者·渊火】已触发过【火之新生】，就立刻弃置此牌，为角色附属【渊火加护】。；装备有此牌的【深渊咏者·渊火】触发【火之新生】时：弃置此牌，为角色附属【渊火加护】。',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/c065153c09a84ed9d7c358c8cc61171f_8734243408282507546.png',
         2, 2, 0, [6], 1742, 1, (_card, event) => {
             const { heros = [], hidxs = [] } = event;

@@ -534,7 +534,7 @@ const allHeros: HeroObj = {
         new GISkill('圣仪·苍鹭庇卫', '本角色附属【苍鹭护盾】并[准备技能]：【苍鹭震击】。', 2, 0, 3, 1, {}, [
             'https://patchwiki.biligame.com/images/ys/b/b0/ay6ytf53eoh7q26tim9feavkmui7m67.png',
             'https://act-upload.mihoyo.com/ys-obc/2023/07/07/183046623/b66a56151a7b1d1b554543bf5a5fcbe8_3742905607972259834.png',
-        ], [heroStatus(2094), readySkill(4)], () => ({ inStatus: [heroStatus(2094, [readySkill(4)])] })),
+        ], [heroStatus(2094), readySkill(4)], () => ({ inStatus: [heroStatus(2094), heroStatus(2190, [readySkill(4)])] })),
         new GISkill('圣仪·灰鸰衒潮', '造成{dmg}点[水元素伤害]，生成【赤冕祝祷】。', 3, 2, 3, 1, { ec: 2 }, [
             'https://patchwiki.biligame.com/images/ys/f/fc/ipi3ncx8dl44m9og51z6g72pu1mux41.png',
             'https://act-upload.mihoyo.com/ys-obc/2023/07/07/183046623/65b29af9633d647a90b9ff0acd90d750_1308512450439952516.png',
@@ -883,7 +883,7 @@ const allHeros: HeroObj = {
             'https://uploadstatic.mihoyo.com/ys-obc/2022/12/09/12109492/ab87d12b9075094e4ddc0637d3d938ba_5680751413245970029.png',
         ], [heroStatus(2062), readySkill(1)], event => {
             const { hero: { talentSlot }, card } = event;
-            const inStatus = [heroStatus(2062, [readySkill(1)])];
+            const inStatus = [heroStatus(2062), heroStatus(2189, [readySkill(1)])];
             if (!!talentSlot || card?.id == 729) inStatus.push(heroStatus(2107));
             return { inStatus }
         }),
@@ -1171,7 +1171,7 @@ const allHeros: HeroObj = {
             '',
             '',
         ], [heroStatus(2177), heroStatus(2178)], event => ({ inStatus: [heroStatus(2177, event.hero.skills[1].src)] })),
-        new GISkill('抟风秘道', '造成{dmg}点[风元素伤害]，召唤【赫耀多方面体】。', 3, 2, 3, 5, { ec: 2 }, [
+        new GISkill('抟风秘道', '造成{dmg}点[风元素伤害]，召唤【赫耀多方面体】。', 3, 1, 3, 5, { ec: 2 }, [
             '',
             '',
         ], [newSummonee(3058)], event => {
@@ -1540,7 +1540,7 @@ const allHeros: HeroObj = {
             '',
             '',
         ], [readySkill(19)], () => ({ inStatus: [heroStatus(2179, [readySkill(19)])] })),
-        new GISkill('激流强震', '造成{dmg}点[水元素伤害]，在对方场上生成【暗流的诅咒】。', 3, 4, 3, 1, { ec: 2 }, [
+        new GISkill('激流强震', '造成{dmg}点[水元素伤害]，在对方场上生成【暗流的诅咒】。', 3, 3, 3, 1, { ec: 2 }, [
             '',
             '',
         ], [heroStatus(2180)], () => ({ outStatusOppo: [heroStatus(2180)] })),
@@ -1643,6 +1643,7 @@ const allHeros: HeroObj = {
                 heros.forEach(hero => stsCnt += [...hero.inStatus, ...hero.outStatus].filter(sts => sts.type.includes(7) && sts.id != 2182).length * 2);
                 if (stsCnt > 0 && (hero.talentSlot?.perCnt ?? 0) > 0) stsCnt += 2;
             }
+            if (stsCnt == 0) return;
             return {
                 trigger: ['game-start', 'action-after'],
                 inStatus: isCdt(stsCnt > 0, [heroStatus(2182, stsCnt)]),
