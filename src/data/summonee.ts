@@ -259,7 +259,7 @@ const summonTotal: SummoneeObj = {
             exec: execEvent => {
                 const { cmds = [] } = phaseEndAtk(execEvent?.summon ?? summon);
                 return {
-                    cmds: [...cmds, { cmd: 'getInStatus', status: [heroStatus(2064)] }],
+                    cmds: [...cmds, { cmd: 'getStatus', status: [heroStatus(2064)] }],
                 }
             }
         })),
@@ -271,7 +271,7 @@ const summonTotal: SummoneeObj = {
             exec: execEvent => {
                 const { cmds = [] } = phaseEndAtk(execEvent?.summon ?? summon);
                 return {
-                    cmds: [...cmds, { cmd: 'getInStatus', status: [heroStatus(2064)] }],
+                    cmds: [...cmds, { cmd: 'getStatus', status: [heroStatus(2064)] }],
                 }
             }
         })),
@@ -340,7 +340,7 @@ const summonTotal: SummoneeObj = {
                     if (trigger == 'phase-end') return phaseEndAtk(smn);
                     if (smn.perCnt <= 0 || trigger != 'getdmg' || hidx == -1) return;
                     --smn.perCnt;
-                    return { cmds: [{ cmd: 'getInStatus', status: [heroStatus(2068)], hidxs: [hidx] }] }
+                    return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2068)], hidxs: [hidx] }] }
                 },
             }
         }, { pct: 1, isDestroy: 2, stsId: 2070 }),
@@ -701,7 +701,7 @@ const summonTotal: SummoneeObj = {
                 const { cmds = [] } = phaseEndAtk(execEvent?.summon ?? summon);
                 const { heros = [] } = event;
                 if (heros.filter(h => h.element == 6).length >= 2) {
-                    cmds.push({ cmd: 'getOutStatus', status: [heroStatus(2007)] })
+                    cmds.push({ cmd: 'getStatus', status: [heroStatus(2007)] })
                 }
                 return { cmds }
             }
@@ -726,7 +726,7 @@ const summonTotal: SummoneeObj = {
                         return { cmds: [{ cmd: 'attack', cnt: smn.damage + addDmg }] }
                     }
                     if (trigger == 'phase-start' && hidx > -1) {
-                        return { cmds: [{ cmd: 'getInStatus', status: [heroStatus(2139, smn.isTalent ? 2 : 1)], hidxs: [hidx] }] }
+                        return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2139, smn.isTalent ? 2 : 1)], hidxs: [hidx] }] }
                     }
                 },
             }

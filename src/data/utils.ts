@@ -49,9 +49,12 @@ export const getNearestHidx = (hidx: number, heros: Hero[]): number => {
 
 // 获得所有后台角色hidx
 export const getBackHidxs = (heros: Hero[], frontIdx: number = -1): number[] => {
-    return heros.map((h, hi) => ({ hi, hp: h.hp, isFront: h.isFront }))
-        .filter(v => v.hp > 0 && (frontIdx == -1 ? !v.isFront : v.hi != frontIdx))
-        .map(v => v.hi) ?? [];
+    const hidxs = heros.map((h, hi) => ({ hi, hp: h.hp, isFront: h.isFront }))
+        .filter(v => {
+            if (frontIdx == -1 && v.isFront) frontIdx = v.hi;
+            return v.hp > 0 && (frontIdx == -1 ? !v.isFront : v.hi != frontIdx)
+        }).map(v => v.hi) ?? [];
+    return hidxs.slice(frontIdx).concat(hidxs.slice(0, frontIdx));
 }
 
 // 序列化函数

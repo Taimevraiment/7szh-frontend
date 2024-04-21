@@ -610,7 +610,7 @@ const allCards: CardObj = {
         'https://uploadstatic.mihoyo.com/ys-obc/2023/02/27/12109492/86ed124f5715f96604248a48a57de351_6600927335776465307.png',
         2, 8, 0, [1], 0, 1, () => ({
             trigger: ['phase-start'],
-            execmds: [{ cmd: 'getInStatus', status: [heroStatus(2050)] }],
+            execmds: [{ cmd: 'getStatus', status: [heroStatus(2050)] }],
         }), { expl: [heroStatus(2050)] }),
 
     110: new GICard(110, '千岩牢固', '【行动阶段开始时：】为角色附属｢重嶂不移｣。；【角色受到伤害后：】如果所附属角色为｢出战角色｣，则生成1个此角色元素类型的元素骰。(每回合1次)',
@@ -619,7 +619,7 @@ const allCards: CardObj = {
             const { heros = [], hidxs = [], trigger = '' } = event;
             return {
                 trigger: ['phase-start', 'getdmg'],
-                execmds: isCdt<Cmds[]>(trigger == 'phase-start', [{ cmd: 'getInStatus', status: [heroStatus(2050)] }],
+                execmds: isCdt<Cmds[]>(trigger == 'phase-start', [{ cmd: 'getStatus', status: [heroStatus(2050)] }],
                     isCdt(card.perCnt > 0, [{ cmd: 'getDice', cnt: 1, element: heros[hidxs[0]]?.element ?? 0 }])),
                 exec: () => {
                     if (trigger == 'getdmg' && card.perCnt > 0 || heros[hidxs[0]].isFront) --card.perCnt;
@@ -655,7 +655,7 @@ const allCards: CardObj = {
                 ...minusSkillRes,
                 minusDiceCard: isCdt(isMinusCard, 1),
                 trigger: ['skilltype1', 'card', 'change-to'],
-                execmds: isCdt<Cmds[]>(trigger == 'change-to', [{ cmd: 'getInStatus', status: [heroStatus(2072)] }]),
+                execmds: isCdt<Cmds[]>(trigger == 'change-to', [{ cmd: 'getStatus', status: [heroStatus(2072)] }]),
                 exec: () => {
                     if (card.perCnt > 0 && (trigger == 'card' && isMinusCard || trigger == 'skilltype1' && isMinusSkill)) {
                         --card.perCnt;
@@ -1856,7 +1856,7 @@ const allCards: CardObj = {
     725: new GICard(725, '重铸：岩盔', '[战斗行动]：我方出战角色为【丘丘岩盔王】时，装备此牌。；【丘丘岩盔王】装备此牌后，立刻使用一次【Upa Shato】。；装备有此牌的【丘丘岩盔王】击倒地方角色后：【丘丘岩盔王】重新附属【岩盔】和【坚岩之力】。',
         'https://patchwiki.biligame.com/images/ys/9/9f/ijpaagvk7o9jh1pzb933vl9l2l4islk.png',
         4, 6, 0, [6, 7], 1801, 1, (_card, event) => talentHandle(event, 2, () =>
-            [() => ({}), { execmds: [{ cmd: 'getInStatus', status: [heroStatus(2045), heroStatus(2046)] }] }], 'kill'), { expl: talentExplain(1801, 2), energy: 2 }),
+            [() => ({}), { execmds: [{ cmd: 'getStatus', status: [heroStatus(2045), heroStatus(2046)] }] }], 'kill'), { expl: talentExplain(1801, 2), energy: 2 }),
 
     726: new GICard(726, '孢子增殖', '[战斗行动]：我方出战角色为【翠翎恐蕈】时，装备此牌。；【翠翎恐蕈】装备此牌后，立刻使用一次【不稳定孢子云】。；装备有此牌的【翠翎恐蕈】可累积的｢活化激能｣层数+1。',
         'https://patchwiki.biligame.com/images/ys/4/41/bj27pgk1uzd78oc9twitrw7aj1fzatb.png',

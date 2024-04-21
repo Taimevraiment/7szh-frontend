@@ -33,7 +33,7 @@
       'player-display-oppo': true,
       'curr-player': client.opponent?.status == 1 && client.phase < 7 && client.phase > 2 && client.isWin == -1,
       'mobile-player-display': isMobile,
-    }">
+    }" @click.stop="devOps(1)">
       <p>{{ client.opponent?.name }}</p>
       <div v-if="client.isWin > -1 || client.isStart" class="rest-card" :class="{ 'mobile-rest-card': isMobile }">
         {{ client.opponent?.handCards?.length ?? 0 }}
@@ -167,6 +167,7 @@
   }">
     {{ client.actionInfo }}
   </div>
+  <div class="debug-mask" v-if="isOpenMask" :style="{ opacity: maskOpacity }"></div>
 </template>
 
 <script setup lang='ts'>
@@ -353,14 +354,25 @@ onUnmounted(() => {
 });
 
 let prodEnv = 0;
+const maskOpacity = ref<number>(0.94);
+const isOpenMask = ref<boolean>(false);
 // dev
 const devOps = (cidx = 0) => {
   if (!isDev && ++prodEnv < 3) return;
-  let opses = prompt(isDev ? '摸牌id/#骰子/@充能/%血量/&附着:' : '');
+  let opses = prompt(isDev ? '摸牌id/#骰子/@充能/%血量/&附着/=状态:' : '');
   if (!isDev) {
     if (!opses?.startsWith('debug')) return;
     opses = opses?.slice(5);
     prodEnv = 0;
+    if (opses.startsWith('--')) {
+      const opacity = +opses.slice(2);
+      if (opacity == 1) isOpenMask.value = false;
+      else {
+        if (opacity > 0) maskOpacity.value = opacity;
+        isOpenMask.value = opacity > 0 || !isOpenMask.value;
+      }
+      opses = null;
+    }
   }
   if (!opses) return;
   const ops = opses.split(/[,，\.\/、]+/).filter(v => v != '');
@@ -396,7 +408,7 @@ const devOps = (cidx = 0) => {
       flag.add('setEnergy');
     } else if (op.startsWith('#')) { // 骰子
       const [cnt = 16, el = 0] = op.slice(1).split(/[:：]+/).map(h);
-      const { ndices } = client.value._doCmds([{ cmd: 'getDice', cnt, element: el }]);
+      const { ndices } = client.value._doCmds([{ cmd: 'getDice', cnt, element: el }], { pidx: cpidx });
       dices = ndices;
       flag.add('getDice');
     } else if (op.startsWith('-')) { // 弃牌
@@ -417,7 +429,7 @@ const devOps = (cidx = 0) => {
         cards.push(cardTotal.find(c => c.userType == heros[client.value.players[cpidx].hidx].id)?.id ?? 0);
       }
       if (cid > 0) cards.push(...new Array(cnt).fill(cid));
-      cards = client.value._doCmds([{ cmd: 'getCard', cnt, card: cards }]).cmds?.[0].card as Card[];
+      cards = client.value._doCmds([{ cmd: 'getCard', cnt, card: cards }], { pidx: cpidx }).cmds?.[0].card as Card[];
       flag.add('getCard');
     }
   }
@@ -869,6 +881,17 @@ body {
   transform: translateX(-50%);
   cursor: pointer;
   z-index: 6;
+}
+
+.debug-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #dedede;
+  z-index: 50;
+  pointer-events: none;
 }
 
 @media screen and (orientation: portrait) {

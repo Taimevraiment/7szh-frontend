@@ -850,7 +850,7 @@ const statusTotal: StatusObj = {
                     if (trigger == 'killed') {
                         const type12 = status.type.indexOf(12);
                         if (type12 > -1) status.type.splice(type12, 1);
-                        return { cmds: [{ cmd: 'getInStatus', status: [heroStatus(2076, status.icon)], hidxs }] }
+                        return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2076, status.icon)], hidxs }] }
                     }
                 }
             }
@@ -1504,7 +1504,7 @@ const statusTotal: StatusObj = {
             exec: () => {
                 if (status.perCnt <= 0) return;
                 --status.perCnt;
-                return { cmds: [{ cmd: 'getInStatus', status: [heroStatus(2141)] }] }
+                return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2141)] }] }
             }
         }), { icbg: DEBUFF_BG_COLOR, pct: 1, expl: [heroStatus(2141)] }),
 
@@ -1540,7 +1540,7 @@ const statusTotal: StatusObj = {
                         --talent.useCnt;
                         const all = allHidxs(heros);
                         const hidxs = [all[(all.indexOf(hidx) + 1) % all.length]];
-                        return { cmds: [{ cmd: 'getInStatus', status: [heroStatus(2142)], hidxs }] }
+                        return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2142)], hidxs }] }
                     }
                 }
             }
@@ -1683,7 +1683,7 @@ const statusTotal: StatusObj = {
             trigger: ['after-skilltype1'],
             exec: eStatus => {
                 if (eStatus) --eStatus.useCnt;
-                return { cmds: [{ cmd: 'getOutStatus', status: [heroStatus(2106)] }] }
+                return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2106)] }] }
             },
         }), { icbg: STATUS_BG_COLOR[2], expl: [heroStatus(2106)], isTalent }),
 
@@ -1807,7 +1807,7 @@ const statusTotal: StatusObj = {
                 trigger: ['after-skilltype1'],
                 exec: eStatus => {
                     if (eStatus) --eStatus.useCnt;
-                    return { cmds: [{ cmd: 'getInStatus', status: [heroStatus(2165, status.explains)] }] }
+                    return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2165, status.explains)] }] }
                 },
             }
         }, { expl }),

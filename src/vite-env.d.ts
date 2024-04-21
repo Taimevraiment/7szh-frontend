@@ -235,8 +235,8 @@ type Cmds = {
     isReadySkill?: boolean,
 }
 
-type Cmd = 'getDice' | 'getCard' | 'getCard-oppo' | 'getEnergy' | 'heal' | 'getInStatus' | 'getOutStatus' | 'getOutStatusOppo' |
-    'getInStatusOppo' | 'reroll' | 'revive' | 'switch-to-self' | 'switch-after-self' | 'switch-before-self' | 'switch-to' |
+type Cmd = 'getDice' | 'getCard' | 'getCard-oppo' | 'getEnergy' | 'heal' | 'getStatus' | 'getStatusOppo' |
+    'reroll' | 'revive' | 'switch-to-self' | 'switch-after-self' | 'switch-before-self' | 'switch-to' |
     'switch-before' | 'switch-after' | 'attach' | 'attack' | 'changeDice' | 'changeCard' | 'changeElement' | 'useSkill' |
     'changePattern' | 'getSkill' | 'loseSkill' | 'addCard' | '';
 
