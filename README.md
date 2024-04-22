@@ -2385,11 +2385,19 @@ hidxs(number[]): 如果没有则为当前出战角色，否则为数组中idx
 
 isAttach(boolean): 是否给我方附着元素
 
-### getInStatus
+### getStatus
 
-获得角色状态
+获得我方角色状态或出战状态
 
-inStatus(Status[]): 角色状态数组
+inStatus(Status[]): 角色状态或出战状态数组
+
+hidxs(number[]): 如果没有则为当前出战角色，否则为数组中idx
+
+### getStatusOppo
+
+获得敌方角色状态或出战状态
+
+inStatus(Status[]): 角色状态或出战状态数组
 
 hidxs(number[]): 如果没有则为当前出战角色，否则为数组中idx
 

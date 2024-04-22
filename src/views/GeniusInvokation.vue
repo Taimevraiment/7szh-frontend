@@ -34,7 +34,11 @@
       'curr-player': client.opponent?.status == 1 && client.phase < 7 && client.phase > 2 && client.isWin == -1,
       'mobile-player-display': isMobile,
     }" @click.stop="devOps(1)">
-      <p>{{ client.opponent?.name }}</p>
+      <p v-if="client.opponent?.name">{{ client.opponent?.name }}</p>
+      <p class="ai-btn" v-if="!client.opponent?.name" @click.stop="addAI">+添加bot</p>
+      <p class="ai-btn" v-if="client.opponent.id == 1 && client.phase < 2" @click.stop="removeAI">
+        -删除bot
+      </p>
       <div v-if="client.isWin > -1 || client.isStart" class="rest-card" :class="{ 'mobile-rest-card': isMobile }">
         {{ client.opponent?.handCards?.length ?? 0 }}
       </div>
@@ -198,6 +202,7 @@ const client = ref(new GeniusInvokationClient(socket, userid, cplayers, isMobile
 
 const canAction = computed<boolean>(() => client.value.canAction && client.value.tip.content == '' && client.value.actionInfo == '' && !client.value.taskQueue.isExecuting); // 是否可以操作
 const afterWinHeros = ref<Hero[][]>([]); // 游戏结束后显示的角色信息
+let clientAI: GeniusInvokationClient | null = null;
 
 // 获取骰子背景
 const getDiceIcon = (name: string) => {
@@ -327,11 +332,17 @@ const useCard = () => {
 const showHistory = () => {
   client.value.isShowHistory = true;
 };
-
 // 切换旁观人
 const lookonTo = (idx: number) => {
   client.value.lookonTo(idx);
 };
+// 添加AI
+const addAI = () => socket.emit('addAI');
+// 移除AI
+const removeAI = () => {
+  socket.emit('removeAI');
+  clientAI = null
+}
 
 const getPlayerList = ({ plist }: { plist: Player[] }) => {
   const me = plist.find(p => p.id == userid);
@@ -343,14 +354,25 @@ onMounted(() => {
     const isFlag = data.isStart && !client.value.isStart;
     client.value.roomInfoUpdate({ isFlag, ...data });
   });
-  socket.on('getServerInfo', data => client.value.getServerInfo(data));
+  socket.on('getServerInfo', data => {
+    client.value.getServerInfo(data);
+    if (clientAI != null) clientAI.getServerInfo(data);
+  });
   socket.on('getPlayerAndRoomList', getPlayerList);
+  socket.on('addAI', ({ players }) => {
+    cplayers.length = 0;
+    cplayers.push(...players);
+    const AIDeck = [{ name: 'AIDeck', shareCode: 'AMEQVgIVAGAwfnkHB+CQf3oHB/CggHsIBwCwgXwIBxDAgn0IByDRgysIEjCxhCwIEkAA' }]; // 默认是随机卡组，或者对方指定，现在就搞成固定的前几个
+    clientAI = new GeniusInvokationClient(socket, 1, cplayers, false, countdown, AIDeck, 0, -1);
+    clientAI.startGame();
+  });
 });
 
 onUnmounted(() => {
   socket.off('roomInfoUpdate');
   socket.off('getServerInfo');
   socket.off('getPlayerAndRoomList', getPlayerList);
+  socket.off('addAI');
 });
 
 let prodEnv = 0;
@@ -358,7 +380,7 @@ const maskOpacity = ref<number>(0.94);
 const isOpenMask = ref<boolean>(false);
 // dev
 const devOps = (cidx = 0) => {
-  if (!isDev && ++prodEnv < 3) return;
+  if (client.value.phase < 5 || !isDev && ++prodEnv < 3) return;
   let opses = prompt(isDev ? '摸牌id/#骰子/@充能/%血量/&附着/=状态:' : '');
   if (!isDev) {
     if (!opses?.startsWith('debug')) return;
@@ -892,6 +914,12 @@ body {
   background-color: #dedede;
   z-index: 50;
   pointer-events: none;
+}
+
+.ai-btn {
+  cursor: pointer;
+  color: red;
+  padding-top: 20px;
 }
 
 @media screen and (orientation: portrait) {
