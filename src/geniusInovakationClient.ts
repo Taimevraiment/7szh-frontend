@@ -413,16 +413,18 @@ export default class GeniusInvokationClient {
             if (cardres.hidxs && currCard.type > 0) hidxs.splice(0, 20, ...cardres.hidxs);
             const site: Site[] = [...player.site];
             let isSiteDestroy = false;
+            let csite: Site[] = site;
             if (cardres.site) {
                 if (site.length == 4) {
                     const selectSiteIdx = site.findIndex(site => site.isSelected);
                     site.splice(selectSiteIdx, 1);
                     isSiteDestroy = true;
+                    csite = clone(site);
                 }
                 site.push(...cardres.site);
             }
             if (oSiteCnt - player.site.length > 0) isSiteDestroy = true;
-            if (isSiteDestroy) this._doSite(this.playerIdx, 'site-destroy', { csite: site, isQuickAction: true });
+            if (isSiteDestroy) this._doSite(this.playerIdx, 'site-destroy', { csite, isQuickAction: true });
             aSummon = this._updateSummon(cardres.summon ?? [], aSummon, aHeros[player.hidx].outStatus);
             esummon = this._updateSummon([], esummon, opponent.heros[opponent.hidx].outStatus);
             player.heros = [...aHeros];
@@ -606,6 +608,7 @@ export default class GeniusInvokationClient {
             return;
         }
         const isAI = this.player.id == 1;
+        let isTurnStart = false;
         if (isSwitchAtking) this.isSwitchAtking = false;
         if (!resetOnly && this.phase > 1 && this.isWin == -1) {
             if (this.player?.phase == PHASE.CHANGE_CARD && players[this.playerIdx]?.phase == PHASE.CHOOSE_HERO) {
@@ -617,17 +620,18 @@ export default class GeniusInvokationClient {
                 } else await this._sendTip('选择出战角色');
             }
             const isMyTurn = () => players[this.playerIdx].heros[this.player.hidx].inStatus.every((ist: Status) => !ist.type.includes(14));
-            if (this.player.status == 0 && players[this.playerIdx].status == 1 && phase == PHASE.ACTION) {
+            if (this.player.status == 0 && players?.[this.playerIdx].status == 1 && phase == PHASE.ACTION) {
                 if (isMyTurn()) {
                     setTimeout(() => {
                         this._doStatus(this.playerIdx, 11, 'useReadySkill', { isOnlyFront: true, isOnlyInStatus: true });
                     }, 200);
                 }
-                if (isAI) this.doAIAction(4);
+                if (isAI) this.doAIAction();
                 else await this._sendTip('你的回合开始');
+                isTurnStart = true;
                 this.cancel();
             }
-            if (this.opponent?.status == 0 && players[this.playerIdx ^ 1].status == 1 && phase == PHASE.ACTION) {
+            if (this.opponent?.status == 0 && players?.[this.playerIdx ^ 1].status == 1 && phase == PHASE.ACTION) {
                 await this._sendTip('对方回合开始');
             }
             if (players[this.playerIdx]?.phase == PHASE.ACTION && players[this.playerIdx ^ 1]?.phase == PHASE.ACTION_END &&
@@ -721,6 +725,11 @@ export default class GeniusInvokationClient {
         this.canAction = !hasReadySkill && !!this.player?.canAction && players[this.playerIdx].phase == PHASE.ACTION &&
             this.taskQueue.isTaskEmpty() && this.isStart;
 
+        if (isAI && !isTurnStart && this.canAction) {
+            await this._delay(1000);
+            if (this.canAction) this.doAIAction();
+        }
+
         this.round = round;
         if ([PHASE.CHANGE_CARD, PHASE.ACTION_END, PHASE.PHASE_END].includes(this.phase) && phase == PHASE.DICE && changeTo == undefined) {
             this.phase = phase;
@@ -739,8 +748,8 @@ export default class GeniusInvokationClient {
             }
             if (isAI) {
                 while (this.rollCnt > 0) {
-                    this.reroll(this.player.dice.map(d => ({ val: d, isSelected: ![0, ...this.player.heros.map(h => h.element)].includes(d) })));
                     await this._delay(500);
+                    this.reroll(this.player.dice.map(d => ({ val: d, isSelected: ![0, ...this.player.heros.map(h => h.element)].includes(d) })));
                 }
             }
         }
@@ -1187,9 +1196,10 @@ export default class GeniusInvokationClient {
     /**
      * 调和骰子
      * @param bool 是否进行调和
+     * @returns 是否调和成功
      */
     reconcile(bool: boolean) {
-        if (this.player.dice.every(v => [0, this._getFrontHero().element].includes(v))) return;
+        if (this.player.dice.every(v => [0, this._getFrontHero().element].includes(v))) return false;
         if (bool) {
             if (!this.isReconcile) {
                 this.isReconcile = true;
@@ -1220,6 +1230,7 @@ export default class GeniusInvokationClient {
         } else {
             this.isReconcile = bool;
         }
+        return true;
     }
     /**
      * 使用技能
@@ -2001,9 +2012,9 @@ export default class GeniusInvokationClient {
      */
     doAIAction(idx?: number) {
         const actionPool = new Array(4).fill(0).map((_, i) => i).sort(() => Math.random() - 0.5);
-        const actIdx = idx ?? actionPool.pop() ?? 0;
+        let actIdx = idx ?? actionPool.pop() ?? 0;
         const actions = [
-            () => { // 使用卡
+            () => { // 0 使用卡
                 const cidxs = new Array(this.handCards.length).fill(0).map((_, i) => i).sort(() => Math.random() - 0.5);
                 while (cidxs.length > 0) {
                     let cidx = cidxs.pop() ?? 0;
@@ -2024,28 +2035,41 @@ export default class GeniusInvokationClient {
                 }
                 return false;
             },
-            () => { // 使用技能
+            () => { // 1 使用技能 todo 重写要先判断以后，调用第一次useSkill，然后再判断一次，如果不行就下一个
                 const skills = this._getFrontHero().skills;
                 const skill = skills.filter(sk => sk.type < 4 && !sk.isForbidden).pop();
                 if (!skill) return false;
-                this.useSkill(skills.findIndex(sk => sk.name == skill.name));
+                const skidx = skills.findIndex(sk => sk.name == skill.name);
+                this.useSkill(skidx);
+                this.useSkill(skidx);
                 return true;
             },
-            () => { // 切换角色
+            () => { // 2 切换角色
                 this.selectHero(1, getBackHidxs(this.player.heros).sort(() => Math.random() - 0.5)[0]);
                 this.chooseHero();
-                return this.isValid;
+                const isValid = this.isValid;
+                this.changeHero();
+                return isValid;
             },
-            () => { // 调和
-                return true
+            () => { // 3 调和
+                if (this.handCards.length == 0) return false;
+                this.selectCard(0);
+                if (this.reconcile(true)) actionPool.push(0, 1);
+                return this.reconcile(true);
             },
-            () => { // 结束回合
+            () => { // 4 结束回合
                 this.endPhase();
                 return true;
             }
         ];
+        console.log('first:', actIdx);
         setTimeout(() => {
-            while (!actions[actIdx]());
+            let actionres = false;
+            while (actionres = !actions[actIdx]()) {
+                actIdx = actionPool.pop() ?? 4;
+                console.log('retry:', actIdx);
+            }
+            if (actionres) this.doAIAction(4);
         }, 1500);
     }
     /**

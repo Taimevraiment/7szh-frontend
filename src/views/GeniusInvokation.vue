@@ -920,6 +920,7 @@ body {
   cursor: pointer;
   color: red;
   padding-top: 20px;
+  z-index: 2;
 }
 
 @media screen and (orientation: portrait) {

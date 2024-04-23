@@ -7,12 +7,12 @@
       </div>
       <div class="pile">
         <span>
-          <div>{{ opponent.dice.length }}</div>
+          <div>{{ opponent?.dice.length }}</div>
         </span>
-        {{ opponent.pile.length }}
-        <div class="will-getcard-oppo" :class="{ 'mobile-will-card': isMobile }"
+        {{ opponent?.pile.length }}
+        <div class="will-getcard-oppo" :class="{ 'mobile-will-card': isMobile }" v-if="opponent?.willGetCard"
           :style="{ left: `${cidx * 70 - 70}px` }" v-for="(_, cidx) in opponent.willGetCard" :key="cidx"></div>
-        <div class="will-addcard-oppo" :class="{ 'mobile-will-card': isMobile }"
+        <div class="will-addcard-oppo" :class="{ 'mobile-will-card': isMobile }" v-if="opponent?.willAddCard"
           :style="{ left: `${cidx * 70 - 70}px` }" v-for="(_, cidx) in opponent.willAddCard" :key="cidx"></div>
       </div>
       <div class="timer" :style="{
@@ -48,7 +48,7 @@
     </div>
 
     <div class="sites self">
-      <div class="site-area" v-for="(siteArea, saidx) in [opponent.site, player.site]" :key="saidx">
+      <div class="site-area" v-for="(siteArea, saidx) in [opponent?.site ?? [], player.site]" :key="saidx">
         <div class="site" :class="{
           'site-select': site.isSelected,
           'site-can-select': site.canSelect && player.status == 1,
@@ -85,7 +85,7 @@
     </div>
 
     <div class="heros">
-      <div class="hero" @click.stop="selectHero(hidx < 3 ? 0 : 1, hidx % 3)" :style="{
+      <div class="hero" @click.stop="selectHero(hidx < 3 ? 0 : 1, hidx % 3)" v-if="!!opponent" :style="{
         'background-color': hero.src.length == 0 ? ELEMENT_COLOR[hero?.element ?? 0] : '',
         animation: hero?.isFront &&
           ((hidx > 2 && player.status == 1 && player.summon.every(s => !s.isSelected)) ||
@@ -264,7 +264,7 @@
         </div>
 
         <div class="summons">
-          <div class="summon-area"
+          <div class="summon-area" v-if="!!opponent"
             v-for="(smnArea, saidx) in [[...opponent.summon, ...willSummons[0]], [...player.summon, ...willSummons[1]]]"
             :key="saidx">
             <div class="summon" :class="{

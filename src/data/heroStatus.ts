@@ -1417,6 +1417,7 @@ const statusTotal: StatusObj = {
     2133: () => new GIStatus(2133, '攻袭余威', '【结束阶段：】如果角色生命值至少为6，则受到2点[穿透伤害]。；【[持续回合]：{roundCnt}】',
         'debuff', 0, [1, 3], 1, 0, 1, (_status, event = {}) => {
             const { heros = [], hidx = -1 } = event;
+            if (hidx == -1) return;
             return {
                 trigger: isCdt(heros[hidx].hp >= 6, ['phase-end']),
                 pendamage: 2,
@@ -1568,6 +1569,7 @@ const statusTotal: StatusObj = {
     2145: (icon = '') => new GIStatus(2145, '磐岩百相·元素凝晶', '【角色受到‹4冰›/‹1水›/‹2火›/‹3雷›元素伤害后：】如果角色当前未汲取该元素的力量，则移除此状态，然后角色[汲取对应元素的力量]。',
         icon, 0, [10], 1, 0, -1, (status, event = {}) => {
             const { heros = [], hidx = -1, trigger = '' } = event;
+            if (hidx == -1) return;
             const hero = heros[hidx];
             const curEl = hero.srcs.indexOf(hero.src);
             const drawEl = ELEMENT_ICON.indexOf(trigger.split('-')[0]);
