@@ -797,7 +797,7 @@ const siteTotal: SiteObj = {
         return {
             trigger: ['card'],
             siteCnt: site.cnt < 1 ? 1 : -site.cnt - 1,
-            summon: isCdt(site.cnt == 1, [newSummonee(3059)]),
+            summon: isCdt(site.cnt == 1, [newSummonee(3059, site.card.src)]),
             exec: () => {
                 ++site.cnt;
                 return { isDestroy: site.cnt >= 2 }

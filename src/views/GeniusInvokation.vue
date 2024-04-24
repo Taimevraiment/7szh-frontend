@@ -1,17 +1,17 @@
 <template>
   <div class="container" :class="{ 'mobile-container': isMobile }" @click.stop="cancel">
-    <button v-if="!client.isStart || isLookon > -1" class="exit" @click="exit">
+    <button v-if="!client.isStart || isLookon > -1" class="exit" @click.stop="exit">
       返回
     </button>
     <div style="position: absolute;left: 60px;color: white;">房间号{{ roomId }}</div>
-    <button v-if="client.isStart && isLookon == -1 && client.phase > 5" class="exit" @click="giveup">
+    <button v-if="client.isStart && isLookon == -1 && client.phase > 5" class="exit" @click.stop="giveup">
       投降
     </button>
     <div class="player-info">{{ client.player?.info }}</div>
-    <button v-if="isLookon == -1 && client.phase < 2" class="start" @click="startGame">
+    <button v-if="isLookon == -1 && client.phase < 2" class="start" @click.stop="startGame">
       {{ client.player?.phase == 0 ? "准备开始" : "取消准备" }}
     </button>
-    <button v-if="isLookon == -1 && client.player?.phase == 0" class="deck-open" @click="enterEditDeck">
+    <button v-if="isLookon == -1 && client.player?.phase == 0" class="deck-open" @click.stop="enterEditDeck">
       查看卡组
     </button>
 
@@ -44,7 +44,7 @@
       </div>
       <img v-if="client.opponent?.isOffline" src="@@/svg/offline.svg" class="offline" alt="断线..." />
       <img v-if="isLookon > -1" src="@@/svg/lookon.svg" class="lookon" alt="旁观"
-        @click="lookonTo(client.opponent?.pidx ?? -1)" />
+        @click.stop="lookonTo(client.opponent?.pidx ?? -1)" />
       <img class="subtype8-oppo" :src="getDiceIcon('subtype8-empty')" />
       <img v-if="!client.opponent.isUsedSubType8" class="subtype8-oppo" :src="getDiceIcon('subtype8')" />
     </div>
@@ -186,6 +186,8 @@ import { ELEMENT_COLOR, SKILL_TYPE_ABBR, CHANGE_GOOD_COLOR, ELEMENT_ICON, CHANGE
 import { cardTotal } from '@/data/cards';
 import { getSocket } from '@/store/socket';
 import { heroStatus } from '@/data/heroStatus';
+import { heroTotal } from '@/data/heros';
+import { genShareCode } from '@/data/utils';
 
 const router = useRouter();
 const route = useRoute();
@@ -362,7 +364,30 @@ onMounted(() => {
   socket.on('addAI', ({ players }) => {
     cplayers.length = 0;
     cplayers.push(...players);
-    const AIDeck = [{ name: 'AIDeck', shareCode: 'AMEQVgIVAGAwfnkHB+CQf3oHB/CggHsIBwCwgXwIBxDAgn0IByDRgysIEjCxhCwIEkAA' }]; // 默认是随机卡组，或者对方指定，现在就搞成固定的前几个
+    const heroIds = new Set<number>();
+    while (heroIds.size < 3) {
+      heroIds.add(heroTotal[Math.floor(Math.random() * (heroTotal.length - 1)) + 1].id);
+    }
+    const deck = [...heroIds];
+    const cardIdsMap = new Map<number, number>();
+    let cnts = 0;
+    while (cnts < 30) {
+      const card = cardTotal[Math.floor(Math.random() * (heroTotal.length - 1)) + 1];
+      const cid = card.id;
+      const cnt = cardIdsMap.get(cid) || 0;
+      if (cnt < 2) {
+        if (cid > 700 && !heroIds.has(card.userType) || cid > 560 && cid < 600) continue;
+        cardIdsMap.set(cid, cnt + 1);
+        ++cnts;
+      }
+    }
+    for (const [cid, cnt] of cardIdsMap.entries()) {
+      for (let i = 0; i < cnt; ++i) {
+        deck.push(cid);
+      }
+    }
+    const shareCode = genShareCode(deck);
+    const AIDeck = [{ name: 'AIDeck', shareCode }];
     clientAI = new GeniusInvokationClient(socket, 1, cplayers, false, countdown, AIDeck, 0, -1);
     clientAI.startGame();
   });

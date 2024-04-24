@@ -620,7 +620,7 @@ export default class GeniusInvokationClient {
                 } else await this._sendTip('选择出战角色');
             }
             const isMyTurn = () => players[this.playerIdx].heros[this.player.hidx].inStatus.every((ist: Status) => !ist.type.includes(14));
-            if (this.player.status == 0 && players?.[this.playerIdx].status == 1 && phase == PHASE.ACTION) {
+            if (this.player.status == 0 && players[this.playerIdx].status == 1 && phase == PHASE.ACTION) {
                 if (isMyTurn()) {
                     setTimeout(() => {
                         this._doStatus(this.playerIdx, 11, 'useReadySkill', { isOnlyFront: true, isOnlyInStatus: true });
@@ -631,7 +631,7 @@ export default class GeniusInvokationClient {
                 isTurnStart = true;
                 this.cancel();
             }
-            if (this.opponent?.status == 0 && players?.[this.playerIdx ^ 1].status == 1 && phase == PHASE.ACTION) {
+            if (this.opponent?.status == 0 && players[this.playerIdx ^ 1].status == 1 && phase == PHASE.ACTION) {
                 await this._sendTip('对方回合开始');
             }
             if (players[this.playerIdx]?.phase == PHASE.ACTION && players[this.playerIdx ^ 1]?.phase == PHASE.ACTION_END &&
@@ -2035,11 +2035,11 @@ export default class GeniusInvokationClient {
                 }
                 return false;
             },
-            () => { // 1 使用技能 todo 重写要先判断以后，调用第一次useSkill，然后再判断一次，如果不行就下一个
-                const skills = this._getFrontHero().skills;
-                const skill = skills.filter(sk => sk.type < 4 && !sk.isForbidden).pop();
+            () => { // 1 使用技能
+                if (this._getFrontHero().inStatus.findIndex(s => s.type.includes(14))) return false;
+                const skill = this.skills.filter(sk => !sk.isForbidden).pop();
                 if (!skill) return false;
-                const skidx = skills.findIndex(sk => sk.name == skill.name);
+                const skidx = this.skills.findIndex(sk => sk.name == skill?.name);
                 this.useSkill(skidx);
                 this.useSkill(skidx);
                 return true;

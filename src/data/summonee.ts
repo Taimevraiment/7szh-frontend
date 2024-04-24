@@ -813,7 +813,7 @@ const summonTotal: SummoneeObj = {
         }),
 
     3058: (isTalent = false) => new GISummonee(3058, '赫耀多方面体', '【结束阶段：】造成{dmg}点[风元素伤害]。；【[可用次数]：{useCnt}】；【此召唤物在场时：】敌方角色受到的[风元素伤害]+1。',
-        '',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/d51fd00a7e640ba13b62315e5184be58_168888966568961527.png',
         3, 3, 0, 1, 5, (summon, event) => {
             const { trigger = '' } = event;
             const triggers: Trigger[] = ['wind-getdmg-oppo', 'phase-end'];
@@ -829,9 +829,7 @@ const summonTotal: SummoneeObj = {
             }
         }, { isTalent }),
 
-    3059: () => new GISummonee(3059, '愤怒的太郎丸', '【结束阶段：】造成{dmg}点[物理伤害]。；【[可用次数]：{useCnt}】',
-        '',
-        2, 2, 0, 2, 0),
+    3059: (src = '') => new GISummonee(3059, '愤怒的太郎丸', '【结束阶段：】造成{dmg}点[物理伤害]。；【[可用次数]：{useCnt}】', src, 2, 2, 0, 2, 0),
 
 }
 

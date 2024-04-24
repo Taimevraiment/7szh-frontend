@@ -1733,7 +1733,7 @@ const statusTotal: StatusObj = {
             }
         }, { isTalent, pct: isTalent ? 2 : 1, act: addCnt }),
 
-    2159: () => new GIStatus(2159, '松茸酿肉卷(生效中)', '3回合内结束阶段再治疗此角色1点。',
+    2159: () => new GIStatus(2159, '松茸酿肉卷(生效中)', '【结束阶段：】治疗该角色1点。【[可用次数]：{useCnt}】',
         'heal', 0, [3], 3, 0, -1, (_status, event = {}) => {
             const { hidx = -1 } = event;
             return {
@@ -1812,7 +1812,7 @@ const statusTotal: StatusObj = {
                     return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2165, status.explains)] }] }
                 },
             }
-        }, { expl }),
+        }, { expl, icbg: STATUS_BG_COLOR[1] }),
 
     2165: (expl?: ExplainContent[]) => new GIStatus(2165, '衡平推裁', `本角色将在下次行动时，直接使用技能：【衡平推裁】。`,
         'buff3', 0, [10, 11], 1, 0, -1, status => ({
@@ -1931,9 +1931,10 @@ const statusTotal: StatusObj = {
             }
         }, { icbg: STATUS_BG_COLOR[3], pct: 1 }),
 
-    2177: (icon = '') => new GIStatus(2177, '疾风示现', '【所附属角色进行[重击]时：】少花费1个[无色元素骰]，造成的[物理伤害]变为[风元素伤害]，并且使目标角色附属【风压坍陷】；【[可用次数]：{useCnt}】',
-        icon, 0, [4, 16], 1, 0, -1, (status, event = {}) => {
-            if (!event.isChargedAtk) return;
+    2177: () => new GIStatus(2177, '疾风示现', '【所附属角色进行[重击]时：】少花费1个[无色元素骰]，造成的[物理伤害]变为[风元素伤害]，并且使目标角色附属【风压坍陷】；【[可用次数]：{useCnt}】',
+        'buff', 0, [4, 16], 1, 0, -1, (status, event = {}) => {
+            const { heros = [], hidx = -1, isChargedAtk = false } = event;
+            if (!isChargedAtk || hidx == -1) return;
             const { minusSkillRes } = minusDiceSkillHandle(event, { skilltype1: [0, 1, 0] });
             return {
                 trigger: ['skilltype1'],
@@ -1941,13 +1942,13 @@ const statusTotal: StatusObj = {
                 attachEl: 5,
                 exec: () => {
                     --status.useCnt;
-                    return { inStatusOppo: [heroStatus(2178)] }
+                    return { inStatusOppo: [heroStatus(2178, heros[hidx].skills[1].src)] }
                 }
             }
         }, { icbg: STATUS_BG_COLOR[5], expl: [heroStatus(2178)] }),
 
-    2178: () => new GIStatus(2178, '风压坍陷', '【结束阶段：】将附属角色切换为｢出战角色｣。；【[可用次数]：{useCnt}】；(同一方场上最多存在一个此状态)',
-        'buff3', 0, [3], 1, 0, -1, (_status, event = {}) => ({
+    2178: (icon = '') => new GIStatus(2178, '风压坍陷', '【结束阶段：】将附属角色切换为｢出战角色｣。；【[可用次数]：{useCnt}】；(同一方场上最多存在一个此状态)',
+        icon, 0, [3], 1, 0, -1, (_status, event = {}) => ({
             trigger: ['phase-end'],
             onlyOne: true,
             exec: eStatus => {
@@ -1955,7 +1956,7 @@ const statusTotal: StatusObj = {
                 const { hidx = -1 } = event;
                 return { cmds: [{ cmd: 'switch-to-self', hidxs: [hidx], cnt: 1100 }] }
             }
-        })),
+        }), { icbg: DEBUFF_BG_COLOR }),
 
     2179: (expl?: ExplainContent[]) => new GIStatus(2179, '涟锋旋刃', '本角色将在下次行动时，直接使用技能：【涟锋旋刃】。',
         'buff3', 0, [10, 11], 1, 0, -1, status => ({
@@ -1965,14 +1966,14 @@ const statusTotal: StatusObj = {
         }), { expl }),
 
     2180: () => new GIStatus(2180, '暗流的诅咒', '【所在阵营的角色使用｢元素战技｣或｢元素爆发｣时：】需要多花费1个元素骰。；【[可用次数]：{useCnt}】',
-        'debuff', 1, [4], 2, 0, -1, status => ({
+        'sts2180', 1, [4], 2, 0, -1, status => ({
             trigger: ['skilltype2', 'skilltype3'],
             addDiceSkill: {
                 skilltype2: [0, 0, 1],
                 skilltype3: [0, 0, 1],
             },
             exec: () => { --status.useCnt },
-        })),
+        }), { icbg: DEBUFF_BG_COLOR }),
 
     2181: () => new GIStatus(2181, '水之新生', '【所附属角色被击倒时：】移除此效果，使角色[免于被击倒]，并治疗该角色到4点生命值。触发此效果后，角色造成的[物理伤害]变为[水元素伤害]，且[水元素伤害]+1。',
         'heal2', 0, [10, 13], 1, 0, -1, () => ({
@@ -1989,7 +1990,7 @@ const statusTotal: StatusObj = {
 
     2182: (useCnt = 1) => new GIStatus(2182, '重甲蟹壳', '每层提供1点[护盾]，保护所附属角色。', '', 0, [7], useCnt, 1000, -1),
 
-    2183: (expl?: ExplainContent[]) => new GIStatus(2183, '炽烈轰破', '本角色将在下次行动时，直接使用技能：【炽烈轰破】。',
+    2183: (expl?: ExplainContent[]) => new GIStatus(2183, '积蓄烈威', '本角色将在下次行动时，直接使用技能：【炽烈轰破】。',
         'buff3', 0, [10, 11], 1, 0, -1, status => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 20,
@@ -2010,14 +2011,14 @@ const statusTotal: StatusObj = {
             }
         }),
 
-    2185: () => new GIStatus(2185, '清洁工作todo名字待定', '所附属角色下次造成的伤害+1。；【[可用次数]：{useCnt}(可叠加，最多叠加到2)】',
-        'buff5', 0, [4, 6], 1, 2, 1, status => ({
+    2185: () => new GIStatus(2185, '｢清洁工作｣(生效中)', '我方出战角色下次造成的伤害+1。；(可叠加，最多叠加到+2)',
+        'buff5', 1, [4, 6], 1, 2, 1, status => ({
             trigger: ['skill'],
             addDmg: 1,
             exec: () => { --status.useCnt },
         })),
 
-    2186: () => new GIStatus(2186, '缤纷马卡龙(生效中)', '该角色受到伤害后再治疗其1点。',
+    2186: () => new GIStatus(2186, '缤纷马卡龙(生效中)', '【所附属角色受到伤害后：】治疗该角色1点。；【[可用次数]：{useCnt}】',
         'heal', 0, [1], 3, 0, -1, () => ({
             heal: 1,
             trigger: ['getdmg'],
@@ -2026,8 +2027,8 @@ const statusTotal: StatusObj = {
             },
         })),
 
-    2187: () => new GIStatus(2187, '水之新生后续todo名字待定', '角色造成的[物理伤害]变为[水元素伤害]，且[水元素伤害]+1。',
-        'buff4', 0, [6, 8, 10], 1, 0, -1, () => ({ attachEl: 1, addDmg: 1 })),
+    2187: () => new GIStatus(2187, '水之新生·锐势', '角色造成的[物理伤害]变为[水元素伤害]，且[水元素伤害]+1。',
+        'buff4', 0, [6, 8, 10], 1, 0, -1, () => ({ attachEl: 1, addDmg: 1 }), { icbg: STATUS_BG_COLOR[1] }),
 
     2188: () => new GIStatus(2188, '沙与梦', '【对角色打出｢天赋｣或角色使用技能时：】少花费3个元素骰。；【[可用次数]：{useCnt}】',
         'buff2', 0, [4], 1, 0, -1, (status, event = {}) => {

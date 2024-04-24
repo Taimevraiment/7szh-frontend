@@ -1005,18 +1005,18 @@ const allHeros: HeroObj = {
     ]),
 
     1311: new GIHero(1311, '久岐忍', 3, 10, 3, 1,
-        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Char_Avatar_Shinobu.webp',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/97e8a503ac00ee72817a33b15bc6e971_1406073271702365176.png',
         skill1('忍流飞刃斩'), [
         new GISkill('越袚雷草之轮', '生成【越袚草轮】。如果本角色生命值至少为6，则对自身造成2点[穿透伤害]。', 2, 0, 3, 3, {}, [
             '',
-            '',
+            'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/2c5603069fd6b7e1738de78d8ee13a40_2690219876080442261.png',
         ], [heroStatus(2176)], event => {
             const { hero: { hp, skills: [, { src }] } } = event;
             return { outStatus: [heroStatus(2176, src)], pendamageSelf: isCdt(hp >= 6, 2) }
         }),
         new GISkill('御咏鸣神刈山祭', '造成{dmg}点[雷元素伤害]，治疗本角色2点。', 3, 4, 3, 3, { ec: 2 }, [
             '',
-            '',
+            'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/20e4d43aa23679f40e2f3afbdb467a3b_3325226986841086396.png',
         ], [], () => ({ heal: 2 }))
     ]),
 
@@ -1165,15 +1165,15 @@ const allHeros: HeroObj = {
     ]),
 
     1409: new GIHero(1409, '珐露珊', 4, 10, 5, 3,
-        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Char_Avatar_Faruzan.webp',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/df01c4398360e3884ceef43d0717699d_6350296313348675536.png',
         skill1('迴身箭术'), [
         new GISkill('非想风天', '造成{dmg}点[风元素伤害]，本角色附属【疾风示现】。', 2, 3, 3, 5, {}, [
             '',
-            '',
-        ], [heroStatus(2177), heroStatus(2178)], event => ({ inStatus: [heroStatus(2177, event.hero.skills[1].src)] })),
+            'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/7fb2f931bdb1d001003ac18fa8c5a042_180586662624215779.png',
+        ], [heroStatus(2177), heroStatus(2178)], () => ({ inStatus: [heroStatus(2177)] })),
         new GISkill('抟风秘道', '造成{dmg}点[风元素伤害]，召唤【赫耀多方面体】。', 3, 1, 3, 5, { ec: 2 }, [
             '',
-            '',
+            'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/c992b62ec652ce301ab6e9895aac1284_9109457382282902369.png',
         ], [newSummonee(3058)], event => {
             const { hero: { talentSlot }, card, summons = [] } = event;
             const isTalent = !!talentSlot || card?.id == 781;
@@ -1534,19 +1534,19 @@ const allHeros: HeroObj = {
     ]),
 
     1723: new GIHero(1723, '深渊使徒·激流', 0, 6, 1, 0,
-        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Char_Monster_InvokerHeraldWater.webp',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/8e4f28eaf527a26d7b014eed8ee0f966_202629246380655977.png',
         skill1('波刃锋斩'), [
         new GISkill('洄涡锋刃', '造成{dmg}点[水元素伤害]，然后[准备技能]：【涟锋旋刃】。', 2, 2, 3, 1, {}, [
             '',
-            '',
+            'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/84c980b8b25210d2cd1bd9d2377cd932_6861846186263087638.png',
         ], [readySkill(19)], () => ({ inStatus: [heroStatus(2179, [readySkill(19)])] })),
         new GISkill('激流强震', '造成{dmg}点[水元素伤害]，在对方场上生成【暗流的诅咒】。', 3, 3, 3, 1, { ec: 2 }, [
             '',
-            '',
+            'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/190ea01a320f9023eee1656e09528bb2_8501522101938982601.png',
         ], [heroStatus(2180)], () => ({ outStatusOppo: [heroStatus(2180)] })),
         new GISkill('水之新生', '战斗开始时，初始附属【水之新生】。', 4, 0, 0, 0, {}, [
             '',
-            '',
+            'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/9783051b9763b8f81a40693a8581356b_6481810639931260223.png',
         ], [heroStatus(2181)], () => ({ trigger: ['game-start'], inStatus: [heroStatus(2181)] }))
     ]),
 
@@ -1618,11 +1618,11 @@ const allHeros: HeroObj = {
     ]),
 
     1744: new GIHero(1744, '铁甲熔火帝皇', 0, 6, 2, 0,
-        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Char_Monster_HermitCrabPrimo.webp',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/e96a9a84bdc0f1d2171010770f0605f0_3000155239481283018.png',
         skill1('重钳碎击'), [
         new GISkill('烈焰燃绽', '造成{dmg}点[火元素伤害]; 如果本角色附属有至少7层【重甲蟹壳】，则此伤害+1。；然后，本角色附属2层【重甲蟹壳】。', 2, 1, 3, 2, {}, [
             '',
-            '',
+            'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/b73f1ffc4ba14fa027c3e36104bf7119_3142073596996390484.png',
         ], [heroStatus(2182)], event => {
             const { hero: { inStatus } } = event;
             const sts2182Cnt = inStatus.find(ist => ist.id == 2182)?.useCnt ?? 0;
@@ -1630,11 +1630,11 @@ const allHeros: HeroObj = {
         }),
         new GISkill('战阵爆轰', '本角色[准备技能]：【炽烈轰破】。', 3, 0, 3, 2, { ec: 2 }, [
             '',
-            '',
+            'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/5e576be9db73eed2272d0a78bad44763_3474057319865960269.png',
         ], [readySkill(20)], () => ({ inStatus: [heroStatus(2183, [readySkill(20)])] })),
         new GISkill('帝王甲胄', '战斗开始时：初始附属5层【重甲蟹壳】。；【我方执行任意行动后：】如果我方场上存在【重甲蟹壳】以外的[护盾]状态或[护盾]出战状态，则将其全部移除; 每移除1个，就使角色附属2层【重甲蟹壳】。', 4, 0, 0, 0, {}, [
             '',
-            '',
+            'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/ff758e8c9934e346c98ad5e864cc097e_6735052592007467103.png',
         ], [heroStatus(2182)], event => {
             const { hero, heros = [], trigger = '' } = event;
             let stsCnt = 0;

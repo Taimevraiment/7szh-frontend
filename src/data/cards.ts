@@ -438,7 +438,7 @@ const allCards: CardObj = {
         }), { uct: 0, isResetUct: true }),
 
     68: new GICard(68, '公义的酬报', '角色使用｢元素爆发｣造成的伤害+2。；【我方出战角色受到伤害或治疗后：】累积1点｢公义之理｣。如果此牌已累积3点｢公义之理｣，则消耗3点｢公义之理｣，使角色获得1点[充能]。',
-        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Weapon_Gongyichoubao.webp',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/000bcdedf14ef6af2cfa36a003841098_4382151758785122038.png',
         2, 8, 0, [0], 5, 1, (card, event) => {
             const { heros = [], hidxs = [], getdmg = [], heal = [] } = event;
             const fhidx = heros.findIndex(h => h.isFront);
@@ -876,7 +876,7 @@ const allCards: CardObj = {
         }, { uct: 0 }),
 
     125: new GICard(125, '紫晶的花冠', '【所附属角色为出战角色，敌方受到[草元素伤害]后：】累积1枚｢花冠水晶｣。如果｢花冠水晶｣大于等于我方手牌数，则生成1个随机基础元素骰。(每回合至多生成2个)',
-        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Artifact_Zijinghuaguan.webp',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/e431910b741b3723c64334265ce3e93e_3262613974155239712.png',
         1, 8, 0, [1], 0, 1, (card, event) => {
             const { heros = [], hidxs = [], hcardsCnt = 10 } = event;
             if (!heros[hidxs[0]]?.isFront || card.perCnt == 0) return;
@@ -990,7 +990,7 @@ const allCards: CardObj = {
         1, 8, 1, [2], 0, 0, () => ({ site: [newSite(4047, 218)] })),
 
     219: new GICard(219, '清籁岛', '【任意阵营的角色受到治疗后：】使该角色附属【悠远雷暴】。；[持续回合]：2',
-        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Assist_Location_Qinglaidao.webp',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/2bfc84b730feaf6a350373080d97c255_2788497572764739451.png',
         1, 8, 1, [2], 0, 0, () => ({ site: [newSite(4049, 219)] }), { expl: [heroStatus(2184)] }),
 
     301: new GICard(301, '派蒙', '【行动阶段开始时：】生成2点[万能元素骰]。；[可用次数]：2。',
@@ -1110,12 +1110,12 @@ const allCards: CardObj = {
         }),
 
     324: new GICard(324, '太郎丸', '【入场时：】生成4张【太郎丸的存款】，均匀地置入我方牌库中。；我方打出2张【太郎丸的存款】后：弃置此牌，召唤【愤怒的太郎丸】。',
-        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Assist_NPC_Taroumaru.webp',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/21981b1c1976bec9d767097aa861227d_6685318429748077021.png',
         2, 0, 1, [3], 0, 0, () => ({ cmds: [{ cmd: 'addCard', cnt: 4, card: 902, element: 1 }], site: [newSite(4050, 324)] }),
         { expl: [extraCards[902], newSummonee(3059)] }),
 
     325: new GICard(325, '白手套和渔夫', '【结束阶段：】生成1张｢清洁工作｣，随机将其置入我方牌库顶部5张牌之中。；如果此牌的[可用次数]仅剩1次，则摸1张牌。；[可用次数]：2',
-        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Assist_NPC_Baishoutao.webp',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/08e6d818575b52bd4459ec98798a799a_2502234583603653928.png',
         0, 8, 1, [3], 0, 0, () => ({ site: [newSite(4051, 325)] }), { expl: [extraCards[903]] }),
 
     401: new GICard(401, '参量质变仪', '【双方角色使用技能后：】如果造成了元素伤害，此牌积累1个｢质变进度｣。；此牌已累积3个｢质变进度｣时，弃置此牌并生成3个不同的基础元素骰。',
@@ -1422,7 +1422,7 @@ const allCards: CardObj = {
         }),
 
     529: new GICard(529, '海中寻宝', '生成6张【海底宝藏】，随机地置入我方牌库中。',
-        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Event_Event_Xunbao.webp',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/40001dfa11a6aa20be3de16e0c89d598_3587066228917552605.png',
         1, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'addCard', cnt: 6, card: 904 }] }), { expl: [extraCards[904]] }),
 
     561: new GICard(561, '自由的新风', '【本回合中，轮到我方行动期间有对方角色被击倒时：】本次行动结束后，我方可以再连续行动一次。；【[可用次数]：】1',
@@ -1689,7 +1689,7 @@ const allCards: CardObj = {
         }),
 
     615: new GICard(615, '缤纷马卡龙', '治疗目标角色1点，该角色接下来3次受到伤害后再治疗其1点。',
-        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Event_Food_Macarons.webp',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/287f535c9a60620259bb149a75a3a001_7028948017645858669.png',
         2, 0, 2, [5], 0, 1, (_card, event) => {
             const { heros = [] } = event;
             const canSelectHero = heros.map(h => h.hp < h.maxhp);
@@ -2208,7 +2208,7 @@ const allCards: CardObj = {
         3, 3, 0, [6, 7], 1764, 1, talentSkill(1), { pct: 1, expl: talentExplain(1764, 1) }),
 
     780: new GICard(780, '割舍软弱之心', '[战斗行动]：我方出战角色为【久岐忍】时，装备此牌。；【久岐忍】装备此牌后，立刻使用一次【御咏鸣神刈山祭】。；装备有此牌的【久岐忍】被击倒时：角色[免于被击倒]，并治疗该角色到1点生命值。(每回合1次)；如果装备有此牌的【久岐忍】生命值不多于5，则该角色造成的伤害+1。',
-        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_Shinobu.webp',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/b53d6688202a139f452bda31939162f8_3511216535123780784.png',
         3, 3, 0, [6, 7, -4], 1311, 1, (card, event) => talentHandle(event, 2, () => {
             const { heros = [], hidxs = [], trigger = '', reset = false } = event;
             if (reset) {
@@ -2228,11 +2228,11 @@ const allCards: CardObj = {
         { pct: 1, expl: talentExplain(1311, 2), energy: 2, spReset: true }),
 
     781: new GICard(781, '妙道合真', '[战斗行动]：我方出战角色为【珐露珊】时，装备此牌。；【珐露珊】装备此牌后，立刻使用一次【抟风秘道】。；装备有此牌的【珐露珊】所召唤的【赫耀多方面体】入场时和行动阶段开始时：生成1个[风元素骰]。',
-        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_Faruzan.webp',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/6f4712bcbbe53515e63c1de112a58967_7457105821554314257.png',
         3, 5, 0, [6, 7], 1409, 1, talentSkill(2), { expl: talentExplain(1409, 2), energy: 2 }),
 
     782: new GICard(782, '暗流涌动', '【入场时：】如果装备有此牌的【深渊使徒·激流】已触发过【水之新生】，则在对方场上生成【暗流的诅咒】。；装备有此牌的【深渊使徒·激流】被击倒或触发【水之新生】时：在对方场上生成【暗流的诅咒】。',
-        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_InvokerHeraldWater.webp',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/1dc62c9d9244cd9d63b6f01253ca9533_7942036787353741713.png',
         1, 1, 0, [6], 1723, 1, (_card, event) => {
             const { heros = [], hidxs = [] } = event;
             const isTriggered = heros[hidxs[0]]?.inStatus.every(ist => ist.id != 2181);
@@ -2244,7 +2244,7 @@ const allCards: CardObj = {
         }, { expl: [heroStatus(2181)] }),
 
     783: new GICard(783, '熔火铁甲', '【入场时：】对装备有此牌的【铁甲熔火帝皇】[附着火元素]。；我方除【重甲蟹壳】以外的[护盾]状态或[护盾]出战状态被移除后：装备有此牌的【铁甲熔火帝皇】附属2层【重甲蟹壳】。(每回合1次)',
-        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_HermitCrabPrimo.webp',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/c6d40de0f6da94fb8a8ddeccc458e5f0_8856536643600313687.png',
         1, 2, 0, [6], 1744, 1, (_card, event) => {
             const { hidxs = [] } = event;
             return { cmds: [{ cmd: 'attach', hidxs, element: 2 }] }
