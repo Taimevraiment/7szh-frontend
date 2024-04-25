@@ -1026,7 +1026,7 @@ const allHeros: HeroObj = {
         new GISkill('风灵作成·陆叁零捌', '造成{dmg}点[风元素伤害]，使对方强制切换到前一个角色。', 2, 3, 3, 5, {}, [
             'https://patchwiki.biligame.com/images/ys/6/6a/lu1s5jeliurancx62txk0i7pbgeu07d.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/20e905e459a535c372b1c0eacf6dd9d8_1859277343951133632.png',
-        ], [], () => ({ cmds: [{ cmd: 'switch-before', cnt: 2500 }] })),
+        ], [], () => ({ cmds: [{ cmd: 'switch-before', cnt: 2500, isOppo: true }] })),
         new GISkill('禁·风灵作成·柒伍同构贰型', '造成{dmg}点[风元素伤害]，召唤【大型风灵】。', 3, 1, 3, 5, { ec: 2 }, [
             'https://patchwiki.biligame.com/images/ys/8/8b/mfq7sbev9evjdy9lxkfsp96np5fockl.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/2f7e7dededadbb4bec6cd5a1e3b8714a_8254714025319039539.png',
@@ -1043,7 +1043,7 @@ const allHeros: HeroObj = {
         new GISkill('风压剑', '造成{dmg}点[风元素伤害]，使对方强制切换到下一个角色。', 2, 3, 3, 5, {}, [
             'https://patchwiki.biligame.com/images/ys/7/76/qzlqexf6zwkkcpxpyevb3m4viwepssv.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/68d6fd8c9815617b0491dd19586ae2f4_2703229586151516906.png',
-        ], [], () => ({ cmds: [{ cmd: 'switch-after', cnt: 2500 }] })),
+        ], [], () => ({ cmds: [{ cmd: 'switch-after', cnt: 2500, isOppo: true }] })),
         new GISkill('蒲公英之风', '治疗我方所有角色2点，召唤【蒲公英领域】。', 3, 0, 4, 5, { ec: 2 }, [
             'https://patchwiki.biligame.com/images/ys/2/23/gqtjyn7ckzz3g0zbtmska8ws1ry1dqj.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/e4d3dd465a4f6026ba923619c1827c94_3960747061292563787.png',
@@ -1095,7 +1095,7 @@ const allHeros: HeroObj = {
             'https://act-upload.mihoyo.com/ys-obc/2023/07/07/183046623/c492b46c71485b1377cf8c9f3f5dd6e8_6376046014259793309.png',
         ], [heroStatus(2098)], event => ({
             inStatus: [heroStatus(2098, event.windEl)],
-            cmds: [{ cmd: 'switch-after-self', cnt: 2500 }],
+            cmds: [{ cmd: 'switch-after', cnt: 2500 }],
         })),
         new GISkill('万叶之一刀', '造成{dmg}点[风元素伤害]，召唤【流风秋野】。', 3, 3, 3, 5, { ec: 2 }, [
             'https://patchwiki.biligame.com/images/ys/4/47/g6cfvzw12ruiclawmxh903fcoowmr9j.png',
@@ -1139,7 +1139,7 @@ const allHeros: HeroObj = {
                 heal: isCdt(cdt, 2),
                 inStatus: isCdt(cdt, [heroStatus(2133)]),
                 addDmgCdt: isCdt(isTalent, 2),
-                cmds: isCdt(isTalent, [{ cmd: 'switch-before', cnt: 2500 }]),
+                cmds: isCdt(isTalent, [{ cmd: 'switch-before', cnt: 2500, isOppo: true }]),
             }
         }),
         new GISkill('魔术·运变惊奇', '造成{dmg}点[风元素伤害]，召唤【惊奇猫猫盒】。', 3, 2, 3, 5, { ec: 2 }, [
@@ -1758,7 +1758,7 @@ const allHeros: HeroObj = {
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/a72086131fbe3e03201926a46dac48f3_7155522304163694322.png',
         ], [newSummonee(3019)], event => {
             const { hero: { talentSlot }, card } = event;
-            const cmds = isCdt<Cmds[]>(!!talentSlot || card?.id == 724, [{ cmd: 'switch-after-self', cnt: 2500 }]);
+            const cmds = isCdt<Cmds[]>(!!talentSlot || card?.id == 724, [{ cmd: 'switch-after', cnt: 2500 }]);
             return { summon: [newSummonee(3019)], cmds }
         }),
         new GISkill('霜驰影突', '召唤【剑影·霜驰】。', 2, 0, 3, 4, {}, [
@@ -1766,7 +1766,7 @@ const allHeros: HeroObj = {
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/6df8766388e62c6a97f9898605fb45e2_6047730151662669218.png',
         ], [newSummonee(3020)], event => {
             const { hero: { talentSlot }, card } = event;
-            const cmds = isCdt<Cmds[]>(!!talentSlot || card?.id == 724, [{ cmd: 'switch-before-self', cnt: 2500 }]);
+            const cmds = isCdt<Cmds[]>(!!talentSlot || card?.id == 724, [{ cmd: 'switch-before', cnt: 2500 }]);
             return { summon: [newSummonee(3020)], cmds }
         }),
         new GISkill('机巧伪天狗抄', '造成{dmg}点[风元素伤害]，触发我方所有【剑影】召唤物效果。(不消耗其可用次数)', 3, 4, 3, 5, { ec: 3 }, [

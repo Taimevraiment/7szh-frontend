@@ -210,7 +210,7 @@ const extraCards: CardObj = {
             const hidx = heros.findIndex(h => h.id == 1303);
             const fhidx = heros.findIndex(h => h.isFront);
             const cmds: Cmds[] = [{ cmd: 'useSkill', cnt: 1 }];
-            if (hidx != fhidx) cmds.unshift({ cmd: 'switch-to-self', hidxs: [hidx] });
+            if (hidx != fhidx) cmds.unshift({ cmd: 'switch-to', hidxs: [hidx] });
             return { trigger: ['skilltype2'], cmds }
         }, { expl: talentExplain(1303, 2) }),
 
@@ -220,7 +220,7 @@ const extraCards: CardObj = {
 
     903: new GICard(903, '清洁工作', '我方出战角色下次造成伤害+1。(可叠加，最多叠加到+2)',
         '',
-        0, 8, 2, [], 0, 0, () => ({ inStatus: [heroStatus(2185)] })),
+        0, 8, 2, [], 0, 0, () => ({ outStatus: [heroStatus(2185)] })),
 
     904: new GICard(904, '海底宝藏', '治疗我方出战角色1点，生成1个随机基础元素骰。',
         '',
@@ -1305,7 +1305,7 @@ const allCards: CardObj = {
         3, 8, 2, [7], 0, 1, (_card, event) => {
             const { heros = [], hidxs = [] } = event;
             return {
-                cmds: [{ cmd: 'switch-to-self', hidxs }, { cmd: 'useSkill', cnt: 0 }],
+                cmds: [{ cmd: 'switch-to', hidxs }, { cmd: 'useSkill', cnt: 0 }],
                 canSelectHero: heros.map(h => !h.isFront && h.hp > 0),
             }
         }),
@@ -1327,7 +1327,7 @@ const allCards: CardObj = {
             const { hcardsCnt = 0, ehcardsCnt = 0 } = event;
             const cmds: Cmds[] = [];
             if (hcardsCnt < 5) cmds.push({ cmd: 'getCard', cnt: 5 - hcardsCnt });
-            if (ehcardsCnt < 4) cmds.push({ cmd: 'getCard-oppo', cnt: 4 - ehcardsCnt });
+            if (ehcardsCnt < 4) cmds.push({ cmd: 'getCard', cnt: 4 - ehcardsCnt, isOppo: true });
             return { cmds, isValid: cmds.length > 0 }
         }),
 
@@ -1563,7 +1563,7 @@ const allCards: CardObj = {
         1, 5, 2, [9], 0, 1, (_card, event) => {
             const { hidxs = [], heros = [] } = event;
             return {
-                cmds: [{ cmd: 'switch-to-self', hidxs }, { cmd: 'getDice', cnt: 1, element: 0 }],
+                cmds: [{ cmd: 'switch-to', hidxs }, { cmd: 'getDice', cnt: 1, element: 0 }],
                 canSelectHero: heros.map(h => !h.isFront && h.hp > 0),
             }
         }),

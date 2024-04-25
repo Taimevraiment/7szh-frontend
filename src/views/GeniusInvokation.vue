@@ -35,8 +35,8 @@
       'mobile-player-display': isMobile,
     }" @click.stop="devOps(1)">
       <p v-if="client.opponent?.name">{{ client.opponent?.name }}</p>
-      <p class="ai-btn" v-if="!client.opponent?.name" @click.stop="addAI">+添加bot</p>
-      <p class="ai-btn" v-if="client.opponent.id == 1 && client.phase < 2" @click.stop="removeAI">
+      <p class="ai-btn" v-if="!client.opponent?.name" style="color:aquamarine" @click.stop="addAI">+添加bot</p>
+      <p class="ai-btn" v-if="client.opponent.id == 1 && client.phase < 2" style="color:red" @click.stop="removeAI">
         -删除bot
       </p>
       <div v-if="client.isWin > -1 || client.isStart" class="rest-card" :class="{ 'mobile-rest-card': isMobile }">
@@ -142,7 +142,7 @@
           <span style="z-index: 1">{{ Math.max(cost.val - (cidx < 2 ? skill.costChange[cidx] : 0), 0) }} </span>
         </div>
         <div class="skill-forbidden" v-if="isLookon > -1 || skill.isForbidden || client.player.status == 0 || !canAction || client.phase > 6 ||
-          (client.player.heros.find(h => h.isFront)?.inStatus?.findIndex(s => s.type.includes(14)) ?? -1) > -1"
+          client.player.heros.find(h => h.isFront)?.inStatus?.some(s => s.type.includes(14))"
           @click.stop="useSkill(sidx, true)"></div>
       </div>
     </div>
@@ -158,7 +158,7 @@
   <h1 v-if="client.error != ''" style="color: red">{{ client.error }}</h1>
 
   <div class="tip" :class="{ 'tip-enter': client.tip.content != '', 'tip-leave': client.tip.content == '' }"
-    :style="{ top: client.tip?.top ?? '40%', color: client.tip?.color ?? 'black' }">
+    :style="{ top: client.tip?.top ?? '40%', color: client.tip?.color ?? 'black', pointerEvents: 'none' }">
     {{ client.tip.content }}
   </div>
 
@@ -943,7 +943,6 @@ body {
 
 .ai-btn {
   cursor: pointer;
-  color: red;
   padding-top: 20px;
   z-index: 2;
 }

@@ -102,7 +102,7 @@ const card587sts = (element: number) => {
         ELEMENT_ICON[element] + '-dice', 1, [1], 2, 0, -1, status => ({
             damage: isCdt(status.perCnt > 0, 1),
             element: ELEMENT_ICON.indexOf(status.icon.split('-')[0]),
-            isOppo: true,
+            isSelf: true,
             trigger: ['after-skill'],
             exec: eStatus => {
                 if (eStatus && eStatus.perCnt > 0) {
@@ -253,7 +253,7 @@ const statusTotal: StatusObj = {
     2017: () => new GIStatus(2017, '鹤归之时(生效中)', '【我方下一次使用技能后：】将下一个我方后台角色切换到场上。',
         'buff3', 1, [4, 10], 1, 0, -1, status => ({
             trigger: ['skill'],
-            cmds: [{ cmd: 'switch-after-self', cnt: 2500 }],
+            cmds: [{ cmd: 'switch-after', cnt: 2500 }],
             exec: () => { --status.useCnt },
         })),
 
@@ -614,7 +614,7 @@ const statusTotal: StatusObj = {
     2056: () => new GIStatus(2056, '风与自由(生效中)', '【本回合中，我方角色使用技能后：】将下一个我方后台角色切换到场上。',
         'buff2', 1, [4, 10], 1, 0, 1, status => ({
             trigger: ['skill'],
-            cmds: [{ cmd: 'switch-after-self', cnt: 2500 }],
+            cmds: [{ cmd: 'switch-after', cnt: 2500 }],
             exec: () => { --status.useCnt },
         })),
 
@@ -643,7 +643,7 @@ const statusTotal: StatusObj = {
         icon, 1, [1], 2, 0, -1, () => ({
             damage: 2,
             element: 2,
-            isOppo: true,
+            isSelf: true,
             trigger: ['after-skill'],
             exec: eStatus => {
                 if (eStatus) --eStatus.useCnt;
@@ -845,7 +845,7 @@ const statusTotal: StatusObj = {
                 trigger: triggers,
                 pendamage: isCdt(isTalent, 1),
                 hidxs: isCdt(isTalent, [hidx]),
-                isOppo: isCdt(isTalent, true),
+                isSelf: isCdt(isTalent, true),
                 exec: () => {
                     if (trigger == 'killed') {
                         const type12 = status.type.indexOf(12);
@@ -877,7 +877,7 @@ const statusTotal: StatusObj = {
         'sts2079', 0, [1], 1, 0, -1, () => ({
             damage: 1,
             element: 2,
-            isOppo: true,
+            isSelf: true,
             trigger: ['phase-end'],
             exec: eStatus => {
                 if (eStatus) --eStatus.useCnt;
@@ -979,7 +979,7 @@ const statusTotal: StatusObj = {
                 damage: isCdt(hasEl2, 1),
                 element: 7,
                 pendamage: 1,
-                isOppo: true,
+                isSelf: true,
                 hidxs,
                 trigger: ['get-elReaction'],
                 exec: (eStatus, execEvent = {}) => {
@@ -1139,7 +1139,7 @@ const statusTotal: StatusObj = {
             const { phase = -1 } = event;
             return {
                 trigger: ['any-end-phase'],
-                cmds: [{ cmd: phase > 6 ? 'getCard-oppo' : 'getCard', cnt: 2 }],
+                cmds: [{ cmd: 'getCard', cnt: 2, isOppo: phase > 6 }],
                 exec: eStatus => {
                     if (eStatus) --eStatus.useCnt;
                 }
@@ -1258,7 +1258,7 @@ const statusTotal: StatusObj = {
         icon, 0, [1], 1, 0, -1, () => ({
             damage: 3,
             element: 1,
-            isOppo: true,
+            isSelf: true,
             trigger: ['phase-end'],
             exec: eStatus => {
                 if (eStatus) --eStatus.useCnt;
@@ -1422,7 +1422,7 @@ const statusTotal: StatusObj = {
                 trigger: isCdt(heros[hidx].hp >= 6, ['phase-end']),
                 pendamage: 2,
                 hidxs: [hidx],
-                isOppo: true,
+                isSelf: true,
                 exec: eStatus => {
                     if (eStatus) --eStatus.useCnt;
                 }
@@ -1466,7 +1466,7 @@ const statusTotal: StatusObj = {
         ELEMENT_ICON[[4, 2][type]] + '-dice', 0, [1], 1, 0, -1, status => ({
             damage: 1,
             element: status.perCnt == 0 ? 4 : 2,
-            isOppo: true,
+            isSelf: true,
             trigger: ['phase-end'],
             exec: eStatus => {
                 if (eStatus) --eStatus.useCnt;
@@ -1522,7 +1522,7 @@ const statusTotal: StatusObj = {
                     if (getDmg > 0) --status.useCnt;
                     if (talent && talent.useCnt > 0) {
                         --talent.useCnt;
-                        return { cmds: [{ cmd: 'getCard-oppo', cnt: 1 }] }
+                        return { cmds: [{ cmd: 'getCard', cnt: 1, isOppo: true }] }
                     }
                 }
             }
@@ -1639,7 +1639,7 @@ const statusTotal: StatusObj = {
             trigger: ['phase-end'],
             exec: () => {
                 const { hidx = -1 } = event;
-                return { cmds: [{ cmd: 'switch-to-self', hidxs: [hidx], cnt: 1100 }] }
+                return { cmds: [{ cmd: 'switch-to', hidxs: [hidx], cnt: 1100 }] }
             }
         })),
 
@@ -1792,7 +1792,7 @@ const statusTotal: StatusObj = {
             return {
                 damage: isCdt(isAddDmg, 2, 1),
                 element: 4,
-                isOppo: true,
+                isSelf: true,
                 trigger: ['phase-end'],
                 exec: eStatus => {
                     if (eStatus) --eStatus.useCnt;
@@ -1850,7 +1850,7 @@ const statusTotal: StatusObj = {
         icon, 1, [1, 4], 2, 0, -1, status => ({
             damage: isCdt(status.perCnt <= -1, 1),
             element: 7,
-            isOppo: true,
+            isSelf: true,
             trigger: ['card'],
             exec: eStatus => {
                 --status.perCnt;
@@ -1954,7 +1954,7 @@ const statusTotal: StatusObj = {
             exec: eStatus => {
                 if (eStatus) --eStatus.useCnt;
                 const { hidx = -1 } = event;
-                return { cmds: [{ cmd: 'switch-to-self', hidxs: [hidx], cnt: 1100 }] }
+                return { cmds: [{ cmd: 'switch-to', hidxs: [hidx], cnt: 1100 }] }
             }
         }), { icbg: DEBUFF_BG_COLOR }),
 
@@ -1998,18 +1998,18 @@ const statusTotal: StatusObj = {
         }), { expl }),
 
     2184: () => new GIStatus(2184, '悠远雷暴', '【结束阶段：】对所附属角色造成2点[穿透伤害]。；【[可用次数]：{useCnt}】',
-        'debuff', 0, [1], 1, 0, -1, (_status, event = {}) => {
+        'sts2079', 0, [1], 1, 0, -1, (_status, event = {}) => {
             const { hidx = -1 } = event;
             return {
                 trigger: ['phase-end'],
                 pendamage: 2,
                 hidxs: [hidx],
-                isOppo: true,
+                isSelf: true,
                 exec: eStatus => {
                     if (eStatus) --eStatus.useCnt;
                 }
             }
-        }),
+        }, { icbg: DEBUFF_BG_COLOR }),
 
     2185: () => new GIStatus(2185, '｢清洁工作｣(生效中)', '我方出战角色下次造成的伤害+1。；(可叠加，最多叠加到+2)',
         'buff5', 1, [4, 6], 1, 2, 1, status => ({
@@ -2059,8 +2059,7 @@ const statusTotal: StatusObj = {
             exec: () => { --status.useCnt }
         }), { expl }),
 
-    2191: () => new GIStatus(2191, '火之新生后续todo名字待定', '角色造成的[火元素伤害]+1。',
-        'buff4', 0, [6, 10], 1, 0, -1, () => ({ addDmg: 1 })),
+    2191: () => new GIStatus(2191, '火之新生·锐势', '角色造成的[火元素伤害]+1。', 'buff4', 0, [6, 10], 1, 0, -1, () => ({ addDmg: 1 })),
 
 };
 

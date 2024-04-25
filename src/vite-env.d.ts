@@ -214,7 +214,7 @@ type StatusTask = {
     id: number, // 攻击状态id
     type: number, // 攻击状态类型：0角色状态 1阵营状态
     pidx: number, // 攻击者pidx
-    isOppo: number, // 是否为自伤
+    isSelf: number, // 是否为自伤
     trigger: Trigger, // 触发条件
     hidx?: number, // 攻击者hidx
     isSwitchAtk?: boolean, // 是否为下落攻击/刻晴切换攻击
@@ -233,12 +233,12 @@ type Cmds = {
     subtype?: number | number[],
     status?: Status[],
     isReadySkill?: boolean,
+    isOppo?: boolean,
 }
 
-type Cmd = 'getDice' | 'getCard' | 'getCard-oppo' | 'getEnergy' | 'heal' | 'getStatus' | 'getStatusOppo' |
-    'reroll' | 'revive' | 'switch-to-self' | 'switch-after-self' | 'switch-before-self' | 'switch-to' |
+type Cmd = 'getDice' | 'getCard' | 'getEnergy' | 'heal' | 'getStatus' | 'reroll' | 'revive' | 'switch-to' |
     'switch-before' | 'switch-after' | 'attach' | 'attack' | 'changeDice' | 'changeCard' | 'changeElement' | 'useSkill' |
-    'changePattern' | 'getSkill' | 'loseSkill' | 'addCard' | '';
+    'changePattern' | 'getSkill' | 'loseSkill' | 'addCard' | 'discard' | '';
 
 type GameInfo = {
     artifactCnt: number, // 初始牌堆圣遗物数量
@@ -264,7 +264,7 @@ type Trigger = 'phase-start' | 'phase-end' | 'phase-dice' | 'game-start' | 'acti
     `other-el${TrgEl}Reaction` | 'other-elReaction' | 'ecard' | `el6Reaction:${TrgElRe}` | 'get-elReaction' | `get-el${TrgEl}Reaction` |
     'get-elReaction-oppo' | 'kill' | 'killed' | 'will-killed' | 'dmg' | `${TrgDmg}-dmg` | `${TrgElReDmg}-dmg-wind` | 'getdmg' | 'other-getdmg' |
     `${TrgDmg}-getdmg` | 'getdmg-oppo' | 'revive' | `${TrgDmg}-getdmg-oppo` | 'heal' | 'eheal' | 'useReadySkill' | 'status-destroy' |
-    'summon-destroy' | 'slot-destroy' | 'site-destroy' | 'calc' | '';
+    'summon-destroy' | 'slot-destroy' | 'site-destroy' | 'calc' | 'reconcile' | 'discard' | '';
 
 type ExplainContent = Skill | Status | Summonee | Card;
 
@@ -449,7 +449,7 @@ type StatusHandleRes = {
     heal?: number,
     hidxs?: number[],
     isQuickAction?: boolean,
-    isOppo?: boolean,
+    isSelf?: boolean,
     skill?: number,
     cmds?: Cmds[],
     summon?: Summonee[],

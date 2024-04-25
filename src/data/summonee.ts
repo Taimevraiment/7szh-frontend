@@ -426,7 +426,7 @@ const summonTotal: SummoneeObj = {
                     const { summon: smn = summon } = execEvent;
                     if (trigger == 'phase-end') {
                         smn.useCnt = Math.max(0, smn.useCnt - 1);
-                        return { cmds: [{ cmd: 'attack' }, { cmd: 'switch-to', hidxs: [hidx], cnt: 2500 }] };
+                        return { cmds: [{ cmd: 'attack' }, { cmd: 'switch-to', hidxs: [hidx], cnt: 2500, isOppo: true }] };
                     }
                     if (trigger.startsWith('el5Reaction:') && smn.element == 5) {
                         const element = Number(trigger.slice(trigger.indexOf(':') + 1));
