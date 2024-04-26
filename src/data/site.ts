@@ -752,7 +752,7 @@ const siteTotal: SiteObj = {
             exec: () => {
                 if (trigger == 'phase-start' && site.cnt >= 4) {
                     site.cnt -= 4;
-                    return { cmds: [{ cmd: 'getStatusOppo', status: [heroStatus(2174)] }], isDestroy: false }
+                    return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2174)], isOppo: true }], isDestroy: false }
                 }
                 site.cnt = Math.min(4, site.cnt + 1);
                 return { isDestroy: false }
@@ -784,7 +784,7 @@ const siteTotal: SiteObj = {
             exec: () => {
                 if (trigger == 'phase-end') return { isDestroy: --site.cnt == 0 }
                 return {
-                    cmds: [{ cmd: `getStatus${trigger == 'eheal' ? 'Oppo' : ''}`, status: [heroStatus(2184)], hidxs }],
+                    cmds: [{ cmd: 'getStatus', status: [heroStatus(2184)], hidxs, isOppo: trigger == 'eheal' }],
                     isDestroy: false,
                 }
             }

@@ -1061,7 +1061,7 @@ const allHeros: HeroObj = {
             'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/73d15303525e2658bf60d8336109d92e_404486790465744082.png',
         ], [heroStatus(2082)], event => {
             const { hero: { talentSlot }, card } = event;
-            const isTalent = talentSlot || card?.id == 742;
+            const isTalent = !!talentSlot || card?.id == 742;
             return { outStatus: [heroStatus(2082, isTalent)] }
         }),
         new GISkill('风神之诗', '造成{dmg}点[风元素伤害]，召唤【暴风之眼】。', 3, 2, 3, 5, { ec: 2 }, [
@@ -1807,10 +1807,7 @@ const allHeros: HeroObj = {
         new GISkill('魔化：岩盔', '战斗开始时，初始附属【岩盔】和【坚岩之力】。', 4, 0, 0, 0, {}, [
             'https://patchwiki.biligame.com/images/ys/3/3e/i50gzgkih3a45yl3df7hvq6143bw6r9.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/60d5501fc29ffb28bc6d2a435b463b2a_6974894146119719968.png',
-        ], [heroStatus(2045), heroStatus(2046)], () => ({
-            trigger: ['game-start'],
-            inStatus: [heroStatus(2045), heroStatus(2046)],
-        }))
+        ], [heroStatus(2045), heroStatus(2046)], () => ({ trigger: ['game-start'], inStatus: [heroStatus(2045), heroStatus(2046)] }))
     ]),
 
     1802: new GIHero(1802, '若陀龙王', 0, 10, 6, 0, [

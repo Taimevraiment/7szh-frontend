@@ -113,8 +113,9 @@
                 <span class="status-title-left">
                   <div class="status-icon">
                     <div class="status-bg" :style="{ background: ist.iconBg }"></div>
-                    <img v-if="ist.icon != ''" :src="getPngIcon(ist.icon)"
-                      :style="{ filter: ist.icon.startsWith('https') || ist.icon.startsWith('buff') || ist.icon.endsWith('dice') ? `url(${getSvgIcon('filter')}#status-color-${STATUS_BG_COLOR.indexOf(ist.iconBg)})` : '' }" />
+                    <img v-if="ist.icon != ''" :src="getPngIcon(ist.icon)" :style="{
+                      filter: ist.icon.startsWith('https') || ist.icon.startsWith('buff') || ist.icon.endsWith('dice') ? `url(${getSvgIcon('filter')}#status-color-${STATUS_BG_COLOR.indexOf(ist.iconBg)})` : ''
+                    }" />
                     <div class="status-cnt" v-if="!ist.type.includes(10) && (ist.useCnt >= 0 || ist.roundCnt >= 0)">
                       {{ ist.useCnt < 0 ? ist.roundCnt : ist.useCnt }} </div>
                     </div>
@@ -619,6 +620,7 @@ const showRule = (...desc: string[]) => {
 
 .status-icon>img {
   width: 100%;
+  border-radius: 50%;
 }
 
 .status-bg {

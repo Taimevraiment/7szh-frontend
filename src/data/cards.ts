@@ -50,7 +50,7 @@ class GICard implements Card {
             const el = Math.ceil((id - 580) / 2);
             this.description += `；(牌组中包含至少2个‹${el}${ELEMENT[el]}›角色，才能加入牌组)`;
         } else if (subType?.includes(6)) this.description += `；(牌组中包含【${herosTotal(userType).name}】，才能加入牌组)`;
-        this.src = src ?? '';
+        this.src = src?.startsWith('https://') ? src : 'http://taim.3vhost.club/geniusInovakation/' + src;
         this.cost = cost ?? 0;
         this.costType = costType ?? 8;
         this.type = type ?? -1;
@@ -215,15 +215,15 @@ const extraCards: CardObj = {
         }, { expl: talentExplain(1303, 2) }),
 
     902: new GICard(902, '太郎丸的存款', '生成1个[万能元素骰]。',
-        '',
+        'mihoyo_tailangwandecunkuan.png',
         0, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'getDice', cnt: 1, element: 0 }] })),
 
-    903: new GICard(903, '清洁工作', '我方出战角色下次造成伤害+1。(可叠加，最多叠加到+2)',
-        '',
+    903: new GICard(903, '｢清洁工作｣', '我方出战角色下次造成伤害+1。(可叠加，最多叠加到+2)',
+        'mihoyo_qingjiegongzuo.png',
         0, 8, 2, [], 0, 0, () => ({ outStatus: [heroStatus(2185)] })),
 
     904: new GICard(904, '海底宝藏', '治疗我方出战角色1点，生成1个随机基础元素骰。',
-        '',
+        'mihoyo_haidibaozang.png',
         0, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'heal', cnt: 1 }, { cmd: 'getDice', cnt: 1, element: -1 }] })),
 }
 

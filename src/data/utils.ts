@@ -14,7 +14,7 @@ export const clone = <T>(obj: T, notUse: boolean = false): T => {
 }
 
 // 获取受伤最多的角色的hidxs(只有一个number的数组)
-export const getMinhpHidxs = (heros: Hero[], fhidx?: number): number[] => {
+export const getMaxHertHidxs = (heros: Hero[], fhidx?: number): number[] => {
     fhidx = fhidx ?? heros.findIndex(h => h.isFront);
     if (fhidx == -1) return [];
     const maxHert = Math.max(...heros.filter(h => h.hp > 0).map(h => h.maxhp - h.hp));
@@ -23,6 +23,23 @@ export const getMinhpHidxs = (heros: Hero[], fhidx?: number): number[] => {
         const hidx = (i + fhidx) % heros.length;
         const hert = heros[hidx].maxhp - heros[hidx].hp;
         if (heros[hidx].hp > 0 && hert == maxHert) {
+            hidxs.push(hidx);
+            break;
+        }
+    }
+    return hidxs;
+}
+
+// 获取受伤最少的角色的hidxs(只有一个number的数组)
+export const getMinHertHidxs = (heros: Hero[], fhidx?: number): number[] => {
+    fhidx = fhidx ?? heros.findIndex(h => h.isFront);
+    if (fhidx == -1) return [];
+    const minHert = Math.min(...heros.filter(h => h.hp > 0).map(h => h.maxhp - h.hp));
+    const hidxs: number[] = [];
+    for (let i = 0; i < heros.length; ++i) {
+        const hidx = (i + fhidx) % heros.length;
+        const hert = heros[hidx].maxhp - heros[hidx].hp;
+        if (heros[hidx].hp > 0 && hert == minHert) {
             hidxs.push(hidx);
             break;
         }
@@ -77,18 +94,17 @@ export const funcParse = (jsonStr: string | undefined): Function | undefined => 
 }
 
 // 处理减少技能骰子函数
-export const minusDiceSkillHandle = (event: { heros?: Hero[], hidxs?: number[], hidx?: number, isSkill?: number, minusDiceSkill?: number[][], trigger?: Trigger },
+export const minusDiceSkillHandle = (event: { heros?: Hero[], hidxs?: number[], hidx?: number, hero?: Hero, isSkill?: number, minusDiceSkill?: number[][], trigger?: Trigger },
     skills: { skill?: number[], skilltype1?: number[], skilltype2?: number[], skilltype3?: number[] },
     cdt: ((skill: Skill) => boolean) = (() => true)): {
         isMinusSkill: boolean,
         minusSkillRes: { minusDiceSkill: number[][], minusDiceSkills: number[][] }
     } => {
-    const { heros = [], hidxs = [], hidx = -1, isSkill: skidx = -1, minusDiceSkill: mds, trigger = '' } = event;
+    const { heros = [], hidxs = [], hidx = -1, isSkill: skidx = -1, minusDiceSkill: mds, hero = heros[hidxs[0] ?? hidx], trigger = '' } = event;
     const triggers: Trigger[] = Reflect.ownKeys(skills) as Trigger[];
     if (!mds || ![...triggers, 'calc'].includes(trigger)) {
         return { isMinusSkill: false, minusSkillRes: { minusDiceSkill: [], minusDiceSkills: [] } }
     }
-    const hero = heros[hidxs[0] ?? hidx];
     const { skill: nskill, skilltype1, skilltype2, skilltype3 } = skills;
     const nskillstype = [skilltype1, skilltype2, skilltype3];
     let isMinusSkill = true;

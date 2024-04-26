@@ -1,6 +1,6 @@
 import { DEBUFF_BG_COLOR, ELEMENT, STATUS_BG_COLOR, ELEMENT_ICON } from "./constant";
 import { newSummonee } from "./summonee";
-import { allHidxs, getAtkHidx, getMinhpHidxs, isCdt, minusDiceSkillHandle } from "./utils";
+import { allHidxs, getAtkHidx, getMaxHertHidxs, isCdt, minusDiceSkillHandle } from "./utils";
 
 class GIStatus implements Status {
     id: number;
@@ -1913,14 +1913,14 @@ const statusTotal: StatusObj = {
             },
         }), { expl }),
 
-    2176: (icon = '') => new GIStatus(2176, '越袚草轮', '【我方切换角色后：】造成1点[雷元素伤害]，治疗受伤最多的我方角色1点。(每回合1次)；【[可用次数]：{useCnt}】',
+    2176: (icon = '') => new GIStatus(2176, '越袚草轮', '【我方切换角色后：】造成1点[雷元素伤害]，治疗我方受伤最多的角色1点。(每回合1次)；【[可用次数]：{useCnt}】',
         icon, 1, [1], 3, 0, -1, (status, event = {}) => {
             if (status.perCnt == 0) return;
             return {
                 damage: 1,
                 element: 3,
                 heal: 1,
-                hidxs: getMinhpHidxs(event.heros ?? []),
+                hidxs: getMaxHertHidxs(event.heros ?? []),
                 trigger: ['change-from'],
                 exec: eStatus => {
                     if (eStatus) {
@@ -1932,7 +1932,7 @@ const statusTotal: StatusObj = {
         }, { icbg: STATUS_BG_COLOR[3], pct: 1 }),
 
     2177: () => new GIStatus(2177, '疾风示现', '【所附属角色进行[重击]时：】少花费1个[无色元素骰]，造成的[物理伤害]变为[风元素伤害]，并且使目标角色附属【风压坍陷】；【[可用次数]：{useCnt}】',
-        'buff', 0, [4, 16], 1, 0, -1, (status, event = {}) => {
+        'buff', 0, [16], 1, 0, -1, (status, event = {}) => {
             const { heros = [], hidx = -1, isChargedAtk = false } = event;
             if (!isChargedAtk || hidx == -1) return;
             const { minusSkillRes } = minusDiceSkillHandle(event, { skilltype1: [0, 1, 0] });

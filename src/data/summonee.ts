@@ -1,6 +1,6 @@
 import { ELEMENT_ICON } from "./constant";
 import { heroStatus } from "./heroStatus";
-import { allHidxs, getAtkHidx, getMinhpHidxs, getNearestHidx, isCdt, minusDiceSkillHandle } from "./utils";
+import { allHidxs, getAtkHidx, getMaxHertHidxs, getNearestHidx, isCdt, minusDiceSkillHandle } from "./utils";
 
 class GISummonee implements Summonee {
     id: number;
@@ -31,7 +31,7 @@ class GISummonee implements Summonee {
         this.id = id;
         this.name = name;
         this.description = description;
-        this.src = src;
+        this.src = src.startsWith('https://') ? src : 'http://taim.3vhost.club/geniusInovakation/' + src;
         this.useCnt = useCnt;
         this.maxUse = maxUse;
         this.shield = shield;
@@ -202,12 +202,10 @@ const summonTotal: SummoneeObj = {
         2, 2, 0, 2, 1),
 
     3017: () => new GISummonee(3017, '纯水幻形·飞鸢', '【结束阶段：】造成{dmg}点[水元素伤害]。；【[可用次数]：{useCnt}】',
-        'http://taim.3vhost.club/geniusInovakation/mihoyo_chunshui_feiyuan.png',
-        3, 3, 0, 1, 1),
+        'mihoyo_chunshui_feiyuan.png', 3, 3, 0, 1, 1),
 
     3018: () => new GISummonee(3018, '纯水幻形·蛙', '【我方出战角色受到伤害时：】抵消{shield}点伤害。；【[可用次数]：{useCnt}】，耗尽时不弃置此牌。；【结束阶段，如果可用次数已耗尽：】弃置此牌以造成{dmg}点[水元素伤害]。',
-        'http://taim.3vhost.club/geniusInovakation/mihoyo_chunshui_wa.png',
-        1, 1, -1, 2, 1, summon => {
+        'mihoyo_chunshui_wa.png', 1, 1, -1, 2, 1, summon => {
             const trigger: Trigger[] = [];
             if (summon.useCnt == 0) trigger.push('phase-end');
             return {
@@ -533,7 +531,7 @@ const summonTotal: SummoneeObj = {
         3, 3, 0, 1, 4, (summon, event) => {
             const { heros = [], trigger = '', isExec = false } = event;
             const triggers: Trigger[] = ['phase-end'];
-            const hidxs = getMinhpHidxs(heros);
+            const hidxs = getMaxHertHidxs(heros);
             const isHeal = heros[getAtkHidx(heros)]?.id == 1008 && trigger == 'skilltype1' && hidxs.length > 0;
             if (isHeal) triggers.push('skilltype1');
             const cmds: Cmds[] = [{ cmd: 'heal', cnt: 1, hidxs }];
@@ -586,7 +584,7 @@ const summonTotal: SummoneeObj = {
                 const isLast = smn.isTalent && smn.useCnt == 1;
                 smn.useCnt = Math.max(0, smn.useCnt - 1);
                 const cmds: Cmds[] = [{ cmd: 'attack', cnt: isCdt(isLast, smn.damage + 1) }];
-                const hidxs = getMinhpHidxs(heros);
+                const hidxs = getMaxHertHidxs(heros);
                 if (hidxs.length > 0) cmds.push({ cmd: 'heal', cnt: isCdt(isLast, smn.shield + 1), hidxs });
                 return { cmds }
             }
@@ -754,7 +752,7 @@ const summonTotal: SummoneeObj = {
             exec: execEvent => {
                 const { heros = [] } = event;
                 const { summon: smn = summon } = execEvent;
-                return phaseEndAtk(smn, getMinhpHidxs(heros));
+                return phaseEndAtk(smn, getMaxHertHidxs(heros));
             }
         })),
 

@@ -576,6 +576,7 @@ export default class GeniusInvokationClient {
         if (data.isFlag) this.socket.emit('sendToServer');
         this.wrap(this.player);
         this._clacCardChange();
+        this._calcSkillChange(1, this.player.hidx, { isUpdateHandcards: false });
     }
     /**
      * 从服务器获取数据

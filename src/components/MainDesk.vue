@@ -12,8 +12,12 @@
         {{ opponent?.pile.length }}
         <div class="will-getcard-oppo" :class="{ 'mobile-will-card': isMobile }" v-if="opponent?.willGetCard"
           :style="{ left: `${cidx * 70 - 70}px` }" v-for="(_, cidx) in opponent.willGetCard" :key="cidx"></div>
-        <div class="will-addcard-oppo" :class="{ 'mobile-will-card': isMobile }" v-if="opponent?.willAddCard"
-          :style="{ left: `${cidx * 70 - 70}px` }" v-for="(_, cidx) in opponent.willAddCard" :key="cidx"></div>
+        <div class="will-addcard-my" :class="{ 'mobile-will-card': isMobile }" v-if="opponent?.willAddCard"
+          :style="{ left: `${cidx * 70 - 70}px` }" v-for="(card, cidx) in opponent.willAddCard" :key="cidx">
+          <img class="card-img" :src="card.src" v-if="card?.src?.length > 0" style="border: 2px solid black;"
+            :alt="card.name" />
+          <span v-else>{{ card.name }}</span>
+        </div>
       </div>
       <div class="timer" :style="{
         'background-image': `conic-gradient(transparent ${currTime}%, ${player.status == 0 ? '#2b6aff' : '#ffb36d'} ${currTime + 5}%)`
@@ -30,12 +34,14 @@
         {{ player.pile.length }}
         <div class="will-getcard-my" :class="{ 'mobile-will-card': isMobile }" :style="{ left: `${cidx * 70 - 70}px` }"
           v-for="(card, cidx) in player.willGetCard" :key="cidx">
-          <img class="card-img" :src="card.src" v-if="card?.src?.length > 0" :alt="card.name" />
+          <img class="card-img" :src="card.src" v-if="card?.src?.length > 0" style="border: 2px solid black;"
+            :alt="card.name" />
           <span v-else>{{ card.name }}</span>
         </div>
         <div class="will-addcard-my" :class="{ 'mobile-will-card': isMobile }" :style="{ left: `${cidx * 70 - 70}px` }"
           v-for="(card, cidx) in player.willAddCard" :key="cidx">
-          <img class="card-img" :src="card.src" v-if="card?.src?.length > 0" :alt="card.name" />
+          <img class="card-img" :src="card.src" v-if="card?.src?.length > 0" style="border: 2px solid black;"
+            :alt="card.name" />
           <span v-else>{{ card.name }}</span>
         </div>
       </div>
@@ -914,6 +920,7 @@ button:active {
   left: 50%;
   width: 100%;
   height: 100%;
+  border-radius: 50%;
   transform: translate(-50%, -50%);
 }
 
@@ -1428,7 +1435,7 @@ button:active {
   background-color: #a7bbdd;
   padding-top: 20px;
   transform: translate(500%, -10%);
-  animation: addcard 0.8s linear;
+  animation: addcard 1.2s linear;
   opacity: 0;
 }
 
@@ -1445,7 +1452,7 @@ button:active {
   text-align: center;
   padding-top: 20px;
   transform: translate(500%, -10%);
-  animation: addcard 0.8s linear;
+  animation: addcard 1.2s linear;
   overflow: hidden;
   opacity: 0;
 }
@@ -1598,7 +1605,20 @@ svg {
 @keyframes addcard {
   0% {
     z-index: 5;
+    opacity: 0;
+    transform: translate(500%, -10%);
+  }
+
+  30% {
+    z-index: 5;
     opacity: 1;
+    transform: translate(500%, -10%);
+  }
+
+  50% {
+    z-index: 5;
+    opacity: 1;
+    transform: translate(500%, -10%);
   }
 
   100% {
