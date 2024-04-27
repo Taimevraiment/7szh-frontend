@@ -1745,7 +1745,7 @@ const statusTotal: StatusObj = {
             }
         }),
 
-    2160: () => new GIStatus(2160, '原木刀(生效中)', '【角色在本回合中，下次使用｢普通攻击｣后：】生成2个此角色类型的元素骰。',
+    2160: (name: string) => new GIStatus(2160, `${name}(生效中)`, '【角色在本回合中，下次使用｢普通攻击｣后：】生成2个此角色类型的元素骰。',
         'buff2', 0, [3, 4, 10], 1, 0, 1, status => ({
             trigger: ['skilltype1'],
             exec: () => {

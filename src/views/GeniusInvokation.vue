@@ -94,7 +94,7 @@
       </button>
       <button v-if="client.currCard.id > 0 && canAction" @click.stop="reconcile(true)"
         :style="{ backgroundColor: ELEMENT_COLOR[client.player.heros.find(v => v.isFront)?.element ?? 0] }"
-        :class="{ forbidden: client.player.dice.every(v => [0, client.player.heros[client.player.hidx].element].includes(v)) }">
+        :class="{ forbidden: client.player.dice.every(v => [0, client.player.heros[client.player.hidx].element].includes(v)) || client.currCard.subType.includes(-5) }">
         调和
       </button>
       <button v-if="client.isReconcile && client.currCard.id > 0" @click.stop="reconcile(false)">

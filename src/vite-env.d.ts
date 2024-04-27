@@ -74,7 +74,7 @@ type Card = {
     costChange: number, // 费用变化
     costType: number, // 费用类型  0无色 1水 2火 3雷 4冰 5风 6岩 7草 8同色
     type: number, // 牌类型：0装备 1支援 2事件
-    subType: number[], // 副类型：0武器 1圣遗物 2场地 3伙伴 4道具 5料理 6天赋 7战斗行动 8秘传 9元素共鸣 -1减伤 -2复苏料理 -3所属共鸣 -4免击倒
+    subType: number[], // 副类型：0武器 1圣遗物 2场地 3伙伴 4道具 5料理 6天赋 7战斗行动 8秘传 9元素共鸣 -1减伤 -2复苏料理 -3所属共鸣 -4免击倒 -5不能调和
     userType: number, // 使用人类型匹配：0全匹配 匹配武器Hero.weaponType 匹配天赋Hero.id
     useCnt: number, // 累积点数
     perCnt: number, // 每回合的效果使用次数
@@ -291,6 +291,8 @@ type SkillHandleEvent = {
     getdmg?: number,
     windEl?: number,
     trigger?: Trigger,
+    minusDiceSkill?: number[][],
+    heal?: number[],
 }
 
 type SkillHandleRes = {
@@ -318,6 +320,8 @@ type SkillHandleRes = {
     atkBefore?: boolean,
     atkAfter?: boolean,
     atkTo?: number,
+    minusDiceSkill?: number[][],
+    minusDiceSkills?: number[][],
     exec?: () => void,
 }
 
@@ -544,6 +548,7 @@ type SummonHandleEvent = {
     isSkill?: number,
     minusDiceCard?: number,
     minusDiceSkill?: number[][],
+    tround?: number,
 }
 
 type SummonHandleRes = {
@@ -562,6 +567,7 @@ type SummonHandleRes = {
     minusDiceCard?: number,
     minusDiceSkill?: number[][],
     minusDiceSkills?: number[][],
+    tround?: number,
     exec?: (event: SummonExecEvent) => SummonExecRes | void,
 }
 

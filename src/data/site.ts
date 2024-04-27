@@ -408,14 +408,13 @@ const siteTotal: SiteObj = {
                         } else newdices.push(dice);
                     }
                     dices.push(...newdices);
-                    site.perCnt = -Number(tmpdices.map(v => v == 0 ? 8 : v).join(''));
+                    site.perCnt = -tmpdices.map(v => v == 0 ? 8 : v).join('');
                     return { isDestroy: false }
-                }
-                if (trigger == 'phase-start') {
+                } else if (trigger == 'phase-start') {
                     const element = site.perCnt.toString().slice(1).split('').map(v => Number(v) % 8);
                     site.cnt = 0;
                     site.perCnt = 0;
-                    return { cmds: [{ cmd: 'getDice', cnt: 2, element }], isDestroy: false }
+                    if (element.length > 0) return { cmds: [{ cmd: 'getDice', cnt: 2, element }], isDestroy: false }
                 }
                 return { isDestroy: false }
             }
@@ -702,10 +701,9 @@ const siteTotal: SiteObj = {
     // 婕德
     4045: (cardId: number, cnt: number) => new GISite(4045, cardId, cnt, 0, 2, (site, event = {}) => {
         const { trigger = '', playerInfo: { destroyedSite = 0 } = {} } = event;
-        const triggers: Trigger[] = ['site-destroy'];
-        if (site.cnt >= 6) triggers.push('skilltype3');
         return {
-            trigger: triggers,
+            trigger: site.cnt >= 6 ? ['skilltype3'] : ['site-destroy'],
+            siteCnt: isCdt(site.cnt >= 6, -10),
             exec: () => {
                 if (trigger == 'skilltype3') return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2188)] }], isDestroy: true }
                 if (trigger == 'site-destroy') site.cnt = Math.min(6, destroyedSite);
@@ -717,6 +715,7 @@ const siteTotal: SiteObj = {
     4046: (cardId: number, cnt: number) => new GISite(4046, cardId, cnt, 0, 2, (site, event = {}) => {
         const { trigger = '', playerInfo: { oppoGetElDmgType = 0 } = {} } = event;
         const triggers: Trigger[] = [1, 2, 3, 4, 5, 6, 7].map(v => ELEMENT_ICON[v] + '-getdmg-oppo') as Trigger[];
+        if (site.cnt >= 4) triggers.length = 0;
         if (site.cnt >= 3) triggers.push('phase-end');
         return {
             trigger: triggers,
@@ -792,26 +791,20 @@ const siteTotal: SiteObj = {
     }),
     // 太郎丸
     4050: (cardId: number) => new GISite(4050, cardId, 0, 0, 2, (site, event = {}) => {
-        const { card } = event;
-        if (card?.id != 902) return;
+        if (event.card?.id != 902) return;
         return {
             trigger: ['card'],
-            siteCnt: site.cnt < 1 ? 1 : -site.cnt - 1,
             summon: isCdt(site.cnt == 1, [newSummonee(3059, site.card.src)]),
-            exec: () => {
-                ++site.cnt;
-                return { isDestroy: site.cnt >= 2 }
-            },
+            exec: () => ({ isDestroy: ++site.cnt >= 2 }),
         }
     }),
     // 白手套和渔夫
     4051: (cardId: number) => new GISite(4051, cardId, 2, 0, 1, site => ({
         trigger: ['phase-end'],
         exec: () => {
-            --site.cnt;
-            const cmds: Cmds[] = [{ cmd: 'addCard', cnt: 1, card: 903 + site.cnt, hidxs: [5] }];
-            if (site.cnt == 0) cmds.push({ cmd: 'getCard', cnt: 1 });
-            return { cmds, isDestroy: site.cnt == 0 }
+            const cmds: Cmds[] = [{ cmd: 'addCard', cnt: 1, card: 903, hidxs: [5] }];
+            if (site.cnt == 1) cmds.push({ cmd: 'getCard', cnt: 1 });
+            return { cmds, isDestroy: --site.cnt == 0 }
         }
     })),
 }

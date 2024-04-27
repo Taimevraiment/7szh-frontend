@@ -111,9 +111,14 @@ const tiankongWeapon = (id: number, name: string, userType: number, src: string)
         }), { pct: 1 });
 }
 
-const senlinWeapon = (id: number, name: string, userType: number, src: string) => {
+const senlin1Weapon = (id: number, name: string, userType: number, src: string) => {
     return new GICard(id, name, '【角色造成的伤害+1】。；【入场时：】所附属角色在本回合中，下次对角色打出｢天赋｣或使用｢元素战技｣时少花费2个元素骰。', src, 3, 8, 0, [0], userType, 1,
         () => ({ addDmg: 1, inStatus: [heroStatus(2061, name)] }));
+}
+
+const senlin2Weapon = (id: number, name: string, userType: number, src: string) => {
+    return new GICard(id, name, '【角色造成的伤害+1】。；【入场时：】所附属角色在本回合中，下次使用｢普通攻击｣后：生成2个此角色类型的元素骰。', src, 3, 0, 0, [0], userType, 1,
+        () => ({ addDmg: 1, inStatus: [heroStatus(2060, name)] }));
 }
 
 const normalElArtifact = (id: number, name: string, element: number, src: string) => {
@@ -333,7 +338,7 @@ const allCards: CardObj = {
             exec: () => ({ outStatus: [heroStatus(2048)] })
         }), { expl: [heroStatus(2048)] }),
 
-    26: senlinWeapon(26, '王下近侍', 3, 'https://act-upload.mihoyo.com/wiki-user-upload/2023/08/12/203927054/c667e01fa50b448958eff1d077a7ce1b_1806864451648421284.png'),
+    26: senlin1Weapon(26, '王下近侍', 3, 'https://act-upload.mihoyo.com/wiki-user-upload/2023/08/12/203927054/c667e01fa50b448958eff1d077a7ce1b_1806864451648421284.png'),
 
     41: normalWeapon(41, '白铁大剑', 2, 'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/75720734/d8916ae5aaa5296a25c1f54713e2fd85_802175621117502141.png'),
 
@@ -425,7 +430,7 @@ const allCards: CardObj = {
             return { addDmg: 1, trigger: ['phase-start'], execmds }
         }),
 
-    66: senlinWeapon(66, '贯月矢', 5, 'https://act-upload.mihoyo.com/wiki-user-upload/2023/09/24/258999284/9d44a608d1ba86c970a0fe897f22121c_7239489409641716764.png'),
+    66: senlin1Weapon(66, '贯月矢', 5, 'https://act-upload.mihoyo.com/wiki-user-upload/2023/09/24/258999284/9d44a608d1ba86c970a0fe897f22121c_7239489409641716764.png'),
 
     67: new GICard(67, '和璞鸢', '【角色造成的伤害+1】。；【角色使用技能后：】直到回合结束前，此牌所提供的伤害加成值额外+1。(最多累积到+2)',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/15/258999284/972e1ba2e544111bc0069697539b707e_7547101337974467153.png',
@@ -499,9 +504,7 @@ const allCards: CardObj = {
             }
         }), { pct: 2 }),
 
-    87: new GICard(87, '原木刀', '【角色造成的伤害+1】。；【入场时：】所附属角色在本回合中，下次使用｢普通攻击｣后：生成2个此角色类型的元素骰。',
-        'https://act-upload.mihoyo.com/wiki-user-upload/2024/01/27/258999284/1f97927392b79a716430461251ff53e2_4196794667556484935.png',
-        3, 0, 0, [0], 1, 1, () => ({ addDmg: 1, inStatus: [heroStatus(2160)] })),
+    87: senlin2Weapon(87, '原木刀', 1, 'https://act-upload.mihoyo.com/wiki-user-upload/2024/01/27/258999284/1f97927392b79a716430461251ff53e2_4196794667556484935.png'),
 
     101: new GICard(101, '冒险家头带', '【角色使用｢普通攻击｣后：】治疗自身1点(每回合至多3次)。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/75720734/c2617ba94c31d82bd4af6df8e74aac91_8306847584147063772.png',
@@ -879,15 +882,15 @@ const allCards: CardObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/e431910b741b3723c64334265ce3e93e_3262613974155239712.png',
         1, 8, 0, [1], 0, 1, (card, event) => {
             const { heros = [], hidxs = [], hcardsCnt = 10 } = event;
-            if (!heros[hidxs[0]]?.isFront || card.perCnt == 0) return;
+            if (!heros[hidxs[0]]?.isFront) return;
             return {
                 trigger: ['grass-getdmg-oppo'],
-                execmds: isCdt<Cmds[]>(card.useCnt + 1 >= hcardsCnt, [{ cmd: 'getDice', cnt: 1, element: -1 }], [{ cmd: '' }]),
+                execmds: isCdt<Cmds[]>(card.useCnt + 1 >= hcardsCnt && card.perCnt > 0, [{ cmd: 'getDice', cnt: 1, element: -1 }], [{ cmd: '' }]),
                 exec: () => {
-                    if (++card.useCnt >= hcardsCnt) --card.perCnt;
+                    if (++card.useCnt >= hcardsCnt && card.perCnt > 0) --card.perCnt;
                 }
             }
-        }, { uct: 0, pct: 2, isResetUct: true }),
+        }, { uct: 0, pct: 2 }),
 
     180: normalElArtifact(180, '破冰踏雪的回音', 4, 'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/75720734/65841e618f66c6cb19823657118de30e_3244206711075165707.png'),
 

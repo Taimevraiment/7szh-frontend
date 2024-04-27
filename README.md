@@ -50,7 +50,7 @@
 
 0武器 1圣遗物 2场地 3伙伴 4道具 5料理 6天赋 7战斗行动 8秘传 9元素共鸣 
 
--1减伤 -2复苏料理 -3所属共鸣 -4免击倒
+-1减伤 -2复苏料理 -3所属共鸣 -4免击倒 -5不能调和
 
 ## userType
 
@@ -919,6 +919,18 @@ constructor(
 类型：Trigger
 
 解释：触发的事件名
+
+##### minusDiceSkill
+
+类型：number[][]
+
+解释：当前各个技能的花费，用于有减技能骰效果的卡牌
+
+##### heal
+
+类型：number[]
+
+解释：本次我方各个角色回血数量
 
 #### SkillHandleRes
 
@@ -1851,6 +1863,12 @@ spReset?: boolean
 
 解释：当前各个技能的花费，用于有减技能骰效果的卡牌
 
+##### tround
+
+类型：number
+
+解释：当前触发轮次，默认为0
+
 #### SummonHandleRes
 
 ##### trigger
@@ -1930,6 +1948,12 @@ spReset?: boolean
 类型：number
 
 解释：对卡牌的减骰
+
+##### tround
+
+类型：number
+
+解释：下次触发轮次，默认为0
 
 ##### exec
 

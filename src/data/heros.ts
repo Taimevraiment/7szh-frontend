@@ -85,7 +85,7 @@ class GISkill implements Skill {
         this.src = src?.[0] ?? '';
         this.explains = explains ?? [];
         this.handle = hevent => {
-            const { reset = false, hero, skidx, isReadySkill = false } = hevent;
+            const { reset = false, heros = [], hero, skidx, isReadySkill = false } = hevent;
             const handleres = handle?.(hevent) ?? {};
             if (isReadySkill) return handleres;
             const curskill = hero.skills[skidx];
@@ -96,8 +96,8 @@ class GISkill implements Skill {
             let dmgElement = handleres.dmgElement;
             let atkAfter = handleres.atkAfter;
             for (const ist of hero.inStatus) {
-                const stsres = heroStatus(ist.id).handle(ist, hevent) ?? {};
-                if (ist.type.includes(16) && stsres.attachEl && stsres.attachEl > 0 && (dmgElement ?? 0) == 0) {
+                const stsres = heroStatus(ist.id).handle(ist, { ...hevent, hidx: heros.findIndex(h => h.id == hero.id) }) ?? {};
+                if (ist.type.includes(16) && (stsres.attachEl ?? 0) > 0 && (dmgElement ?? 0) == 0) {
                     dmgElement = stsres.attachEl;
                 }
                 if (stsres.atkAfter) atkAfter = true;

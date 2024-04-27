@@ -1541,6 +1541,10 @@ button:active {
   border: 3px outset #bdbdbd !important;
 }
 
+img {
+  -webkit-user-drag: none;
+}
+
 svg {
   display: none;
 }
