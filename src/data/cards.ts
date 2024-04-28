@@ -170,7 +170,7 @@ const talentSkill = (skidx: number): () => ({ trigger: Trigger[], cmds: Cmds[] }
     return () => ({ trigger: ['skill'], cmds: [{ cmd: 'useSkill', cnt: skidx }] });
 }
 
-const talentHandle = (event: CardHandleEvent, skidx: number, nexec: () => [(() => CardExecRes | void)?, CardHandleRes?], ntrigger: Trigger | Trigger[] = 'skill') => {
+const talentHandle = (event: CardHandleEvent, skidx: number, nexec: () => [(() => CardExecRes | void)?, CardHandleRes?] | undefined, ntrigger: Trigger | Trigger[] = 'skill') => {
     const { reset = false, trigger = '' } = event;
     const { trigger: talTrg, cmds: talCmds } = talentSkill(skidx)();
     const cmds: Cmds[] = [...talCmds];
@@ -180,7 +180,7 @@ const talentHandle = (event: CardHandleEvent, skidx: number, nexec: () => [(() =
     }
     const isTrigger = ntrigger.length == 0 || [...ntrigger, 'calc'].some(tr => tr == trigger.split(':')[0]);
     if (isTrigger && ntrigger.length > 0) cmds.length = 0;
-    const [nexecf = () => ({}), hdres = {}] = nexec();
+    const [nexecf = () => ({}), hdres = {}] = nexec() ?? [];
     if (reset) return hdres;
     const exec = () => isTrigger ? (nexecf() ?? {}) : ({});
     const triggers: Trigger[] = ntrigger.some(tr => talTrg.includes(tr)) ? talTrg : ntrigger;
@@ -230,6 +230,22 @@ const extraCards: CardObj = {
     904: new GICard(904, '海底宝藏', '治疗我方出战角色1点，生成1个随机基础元素骰。',
         'mihoyo_haidibaozang.png',
         0, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'heal', cnt: 1 }, { cmd: 'getDice', cnt: 1, element: -1 }] })),
+
+    905: new GICard(905, '圣俗杂座', '在｢始基力：荒性｣和｢始基力：芒性｣之中，切换【芙宁娜】的形态。；如果我方场上存在【沙龙成员】或【众水的歌者】，也切换其形态。',
+        '',
+        0, 8, 2, [], 0, 0, (_card, event) => {
+            const { heros = [], summons = [] } = event;
+            const hero = heros.find(h => h.id == 1111);
+            if (!hero) return;
+            const nlocal = ((hero.local.pop() ?? 11) - 11) ^ 1;
+            hero.local.push(11 + nlocal);
+            hero.src = hero.srcs[nlocal];
+            const smnIdx = summons.findIndex(smn => smn.id == 3060 + (nlocal ^ 1));
+            if (smnIdx > -1) {
+                const useCnt = summons[smnIdx].useCnt;
+                summons.splice(smnIdx, 1, newSummonee(3060 + nlocal, useCnt));
+            }
+        }),
 }
 
 const allCards: CardObj = {
@@ -1470,6 +1486,16 @@ const allCards: CardObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/03/06/258999284/035d9f63a863e8ad26cb6ecf62725411_2229767666746467527.png',
         0, 8, 2, [8], 0, 1, () => ({ inStatus: [heroStatus(2173)] })),
 
+    568: new GICard(568, '旧日鏖战', '【敌方出战角色的[充能]至少为1时，才能打出：】使其[充能]-1.',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Event_Event_LeiShenZhan.webp',
+        1, 8, 2, [8], 0, 1, (_card, event) => {
+            const { eheros = [] } = event;
+            return {
+                isValid: (eheros.find(h => h.isFront)?.energy ?? 0) > 0,
+                cmds: [{ cmd: 'getEnergy', cnt: -1, isOppo: true }],
+            }
+        }),
+
     570: new GICard(570, '深渊的呼唤', '召唤一个随机｢丘丘人｣召唤物！',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/75833613/011610bb3aedb5dddfa1db1322c0fd60_7383120485374723900.png',
         2, 8, 2, [-3], 0, 0, (_card, event) => {
@@ -2216,7 +2242,7 @@ const allCards: CardObj = {
             const { heros = [], hidxs = [], trigger = '', reset = false } = event;
             if (reset) {
                 if (!card.subType.includes(-4)) card.subType.push(-4);
-                return []
+                return;
             }
             return [() => {
                 if (trigger == 'will-killed') {
@@ -2252,6 +2278,44 @@ const allCards: CardObj = {
             const { hidxs = [] } = event;
             return { cmds: [{ cmd: 'attach', hidxs, element: 2 }] }
         }, { expl: [heroStatus(2182)], pct: 1 }),
+
+    784: new GICard(784, '予行恶者以惩惧', '[战斗行动]：我方出战角色为【莱欧斯利】时，装备此牌。；【莱欧斯利】装备此牌后，立刻使用一次【迅烈倾霜拳】。；装备有此牌的【莱欧斯利】受到伤害或治疗后，此牌累积1点｢惩戒计数｣。；装备有此牌的【莱欧斯利】使用技能时：如果已有3点｢惩戒计数｣，则消耗3点使此技能伤害+1。',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_Wriothesley.webp',
+        1, 4, 0, [6, 7], 1011, 1, (card, event) => talentHandle(event, 0, () => {
+            const { hidxs = [], heal = [], trigger = '' } = event;
+            return [() => {
+                if (trigger == 'getdmg' || trigger == 'heal' && heal[hidxs[0]] > 0) ++card.useCnt;
+                else if (trigger == 'skill' && card.useCnt >= 3) card.useCnt -= 3;
+            }, { addDmgCdt: isCdt(card.useCnt >= 3, 1) }]
+        }, ['getdmg', 'heal', 'skill']), { expl: talentExplain(1011, 0), anydice: 2 }),
+
+    785: new GICard(785, '｢诸君听我颂，共举爱之杯！｣', '[战斗行动]：我方出战角色为【芙宁娜】时，装备此牌。；【芙宁娜】装备此牌后，立刻使用一次【孤心沙龙】。；装备有此牌的【芙宁娜】使用【孤心沙龙】时，会对自身附属【万众瞩目】。',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_Furina.webp',
+        3, 1, 0, [6, 7], 1111, 1, talentSkill(1), { expl: [...talentExplain(1111, 1), heroStatus(2186)] }),
+
+    786: new GICard(786, '地狱里摇摆', '[战斗行动]：我方出战角色为【辛焱】时，装备此牌。；【辛焱】装备此牌后，立刻使用一次【炎舞】。；【装备有此牌的辛焱使用技能时：】如果我方手牌数量不多于1，则造成的伤害+2。(每回合1次)',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_Xinyan.webp',
+        1, 2, 0, [6, 7], 1212, 1, (card, event) => talentHandle(event, 0, () => {
+            const { hcardsCnt = 10 } = event;
+            return [() => { --card.perCnt }, { addDmgCdt: isCdt(hcardsCnt <= 1 && card.perCnt > 0, 2) }]
+        }, 'skill'), { pct: 1, expl: talentExplain(1212, 0), anydice: 2 }),
+
+    787: new GICard(787, '庄谐并举', '[战斗行动]：我方出战角色为【云堇】时，装备此牌。；【云堇】装备此牌后，立刻使用一次【破嶂见旌仪】。；装备有此牌的【云堇】在场时，我方没有手牌，则【飞云旗阵】会使｢普通攻击｣造成的伤害额外+2。',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_Yunjin.webp',
+        3, 6, 0, [6, 7], 1507, 1, talentSkill(2), { expl: talentExplain(1507, 2), energy: 2 }),
+
+    788: new GICard(788, '预算师的技艺', '[战斗行动]：我方出战角色为【卡维】时，装备此牌。；【卡维】装备此牌后，立刻使用一次【画则巧施】。；装备有此牌的【卡维】为出战角色，我方触发【迸发扫描】的效果后：将1张所[舍弃]卡牌的复制加入你的手牌。如果该牌为｢场地｣牌，则使本回合中我方下次打出｢场地｣时少花费2个元素骰。(每回合1次)',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_Kaveh.webp',
+        3, 7, 0, [6, 7], 1608, 1, (card, event) => talentHandle(event, 1, () => {
+            const { heros = [], hidxs = [], playerInfo: { discardIds = [] } = {} } = event;
+            const hero = heros[hidxs[0]];
+            if (card.perCnt == 0 || !hero.isFront || hero.outStatus.every(ost => ost.id != 2202)) return;
+            const addCardId = discardIds[Math.floor(Math.random() * discardIds.length)];
+            return [() => {
+                --card.perCnt;
+                return { outStatus: isCdt(Math.floor(addCardId / 100) == 2, [heroStatus(2204)]) }
+            }, { execmds: [{ cmd: 'getCard', cnt: 1, card: addCardId }] }]
+        }, 'skilltype1'), { pct: 1, expl: talentExplain(1608, 1) }),
 
     ...extraCards,
 

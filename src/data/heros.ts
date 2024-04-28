@@ -1,7 +1,7 @@
 import { ELEMENT } from './constant';
 import { heroStatus } from './heroStatus';
 import { newSummonee } from './summonee';
-import { allHidxs, isCdt } from './utils';
+import { allHidxs, clone, isCdt, minusDiceSkillHandle } from './utils';
 
 class GIHero implements Hero {
     id: number;
@@ -70,7 +70,7 @@ class GISkill implements Skill {
     constructor(
         name: string, description: string, type: number, damage: number, cost: number,
         costElement: number, options: { ac?: number, ec?: number, de?: number, rdskidx?: number } = {},
-        src?: string | string[], explains?: ExplainContent[], handle?: (hevent: SkillHandleEvent) => SkillHandleRes | void
+        src?: string | string[], explains?: ExplainContent[], handle?: (hevent: SkillHandleEvent) => SkillHandleRes | undefined
     ) {
         this.name = name;
         this.description = description;
@@ -96,7 +96,9 @@ class GISkill implements Skill {
             let dmgElement = handleres.dmgElement;
             let atkAfter = handleres.atkAfter;
             for (const ist of hero.inStatus) {
-                const stsres = heroStatus(ist.id).handle(ist, { ...hevent, hidx: heros.findIndex(h => h.id == hero.id) }) ?? {};
+                const event = { ...clone(hevent), hidx: heros.findIndex(h => h.id == hero.id) };
+                event.minusDiceSkill = undefined;
+                const stsres = heroStatus(ist.id).handle(ist, event) ?? {};
                 if (ist.type.includes(16) && (stsres.attachEl ?? 0) > 0 && (dmgElement ?? 0) == 0) {
                     dmgElement = stsres.attachEl;
                 }
@@ -116,7 +118,7 @@ class GISkill implements Skill {
     }
 }
 
-const skill1 = (name: string, weaponType?: number, handle?: (event: SkillHandleEvent) => SkillHandleRes,
+const skill1 = (name: string, weaponType?: number, handle?: (event: SkillHandleEvent) => SkillHandleRes | undefined,
     description: string = '', explains: ExplainContent[] = []) => {
     return (costElement: number, weaponType2: number) => {
         const wptype = weaponType ?? weaponType2;
@@ -220,6 +222,12 @@ const readySkillTotal: { [key: number]: (...args: any) => Skill } = {
         3, 1, 0, 2, { ec: -2, rdskidx: 20 }, '', [heroStatus(2182)], event => {
             const { hero: { inStatus } } = event;
             return { pendamage: 2, addDmgCdt: Math.floor((inStatus.find(ist => ist.id == 2182)?.useCnt ?? 0) / 2) }
+        }),
+
+    21: () => new GISkill('长枪开相', '(需准备1个行动轮)；造成{dmg}点[岩元素伤害]; 如果本回合中我方[舍弃]或[调和]过至少1张牌，则此伤害+1。',
+        2, 2, 0, 6, { ec: -2, rdskidx: 21 }, '', [], event => {
+            const { playerInfo: { disCardCnt = 0, reconcileCnt = 0 } = {} } = event;
+            return { addDmgCdt: isCdt(disCardCnt + reconcileCnt > 0, 1) }
         }),
 }
 
@@ -399,6 +407,30 @@ const allHeros: HeroObj = {
             'https://patchwiki.biligame.com/images/ys/0/06/sg317tpcyew82aovprl39dfxavasbd4.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2024/03/06/258999284/e1d95cabb132d11c4fc412719e026aa6_3660966934155106231.png',
         ], [newSummonee(3056)], event => ({ heal: 1, hidxs: allHidxs(event.heros), summon: [newSummonee(3056)] }))
+    ]),
+
+    1011: new GIHero(1011, '莱欧斯利', [5, 11], 10, 4, 4,
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Char_Avatar_Wriothesley.webp',
+        skill1('迅烈倾霜拳'), [
+        new GISkill('冰牙突驰', '造成{dmg}点[冰元素伤害]，本角色附属【寒烈的惩裁】。', 2, 2, 3, 4, {}, [
+            '',
+            '',
+        ], [heroStatus(2192)], event => ({ inStatus: [heroStatus(2192, event.hero.skills[1].src)] })),
+        new GISkill('黑金狼噬', '造成{dmg}点[冰元素伤害]，生成【余威冰锥】。', 3, 3, 3, 4, { ec: 3 }, [
+            '',
+            '',
+        ], [heroStatus(2193)], event => ({ outStatus: [heroStatus(2193, event.hero.skills[2].src)] })),
+        new GISkill('黑金狼噬', '【本角色在本回合中受到伤害或治疗每累计到2次时：】｢元素爆发｣少花费1个元素骰(最多少花费2个)。', 4, 0, 0, 0, {}, [
+            '',
+            '',
+        ], [], event => {
+            const { hero: { skills: [, , , { useCnt }] }, trigger = '' } = event;
+            if (trigger == 'calc') {
+                const { minusSkillRes } = minusDiceSkillHandle(event, { skilltype3: [0, 0, Math.min(Math.floor(useCnt / 2), 2)] });
+                return { ...minusSkillRes }
+            }
+            return { trigger: ['getdmg', 'heal'] }
+        })
     ]),
 
     1101: new GIHero(1101, '芭芭拉', 1, 10, 1, 4,
@@ -596,6 +628,28 @@ const allHeros: HeroObj = {
         ], [heroStatus(2164), readySkill(17)], () => ({ pendamage: 1, outStatus: [heroStatus(2164, [readySkill(17)], 2)] })),
     ]),
 
+    1111: new GIHero(1111, '芙宁娜', [5, 11], 10, 1, 1,
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Char_Avatar_Furina.webp',
+        skill1('独舞之邀', undefined, event => {
+            const { hero: { skills: [skill1] }, hcards = [] } = event;
+            if (skill1.useCnt > 0) return;
+            if (hcards.some(c => c.id == 905)) return { exec: () => { --skill1.useCnt } }
+            return { cmds: [{ cmd: 'getCard', cnt: 1, card: 905 }] }
+        }, '；【每回合1次：】如果手牌中没有【圣俗杂座】，则生成手牌【圣俗杂座】', []), [
+        new GISkill('孤心沙龙', '【芙宁娜】当前处于｢始基力：荒性｣形态，召唤【沙龙成员】。；(【芙宁娜】处于｢始基力：芒性｣形态时，会改为召唤【众水的歌者】。)', 2, 0, 3, 1, {}, [
+            '',
+            '',
+        ], [newSummonee(3060), newSummonee(3061)], event => {
+            const { hero: { local, talentSlot }, card } = event;
+            const isTalent = !!talentSlot || card?.id == 785;
+            return { summon: [newSummonee(local.includes(11) ? 3060 : 3061)], inStatus: isCdt(isTalent, [heroStatus(2196)],) }
+        }),
+        new GISkill('万众狂欢', '造成{dmg}点[水元素伤害]，生成【普世欢腾】。', 3, 3, 3, 1, { ec: 2 }, [
+            '',
+            '',
+        ], [heroStatus(2194)], () => ({ outStatus: [heroStatus(2194)] })),
+    ]),
+
     1201: new GIHero(1201, '迪卢克', 1, 10, 2, 2,
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/12109492/62a4fe60bee58508b5cb8ea1379bc975_5924535359245042441.png',
         skill1('淬炼之剑'), [
@@ -790,6 +844,22 @@ const allHeros: HeroObj = {
             const { hero: { talentSlot, skills: [, , { src }] }, card } = event;
             const isTalent = !!talentSlot || card?.id == 772;
             return { outStatus: [heroStatus(2106), heroStatus(2154, src, isTalent)] }
+        })
+    ]),
+
+    1212: new GIHero(1212, '辛焱', 2, 10, 2, 2,
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Char_Avatar_Xinyan.webp',
+        skill1('炎舞'), [
+        new GISkill('热情拂扫', '造成{dmg}点[火元素伤害]，随机[舍弃]1张元素骰费用最高的手牌，生成【热情护盾】。', 2, 2, 3, 2, {}, [
+            '',
+            '',
+        ], [heroStatus(2197)], () => ({ cmds: [{ cmd: 'discard', element: 0 }], outStatus: [heroStatus(2197)] })),
+        new GISkill('叛逆刮弦', '造成{dmg}点[物理伤害]，对所有敌方后台角色造成2点[穿透伤害]; [舍弃]我方所有手牌，生成【氛围烈焰】。', 3, 3, 3, 2, { ec: 2, de: 0 }, [
+            '',
+            '',
+        ], [heroStatus(2188)], event => {
+            const { hero: { skills: [, , { src }] } } = event;
+            return { pendamage: 2, outStatus: [heroStatus(2188, src)] }
         })
     ]),
 
@@ -1281,6 +1351,22 @@ const allHeros: HeroObj = {
         })
     ]),
 
+    1507: new GIHero(1507, '云堇', 2, 10, 6, 5,
+        '',
+        skill1('拂云出手'), [
+        new GISkill('旋云开相', '生成【飞云旗阵】，本角色附属【旋云护盾】并[准备技能]：【长枪开相】。', 2, 0, 3, 6, {}, [
+            '',
+            '',
+        ], [heroStatus(2198), heroStatus(2199), readySkill(21)], event => {
+            const { hero: { skills: [, { src }] } } = event;
+            return { outStatus: [heroStatus(2198, src)], inStatus: [heroStatus(2199), heroStatus(2201, [readySkill(21)])] }
+        }),
+        new GISkill('破嶂见旌仪', '造成{dmg}点[岩元素伤害]，生成3层【飞云旗阵】。', 3, 2, 3, 6, { ec: 2 }, [
+            '',
+            '',
+        ], [heroStatus(2198)], event => ({ outStatus: [heroStatus(2198, event.hero.skills[1].src, 3)] }))
+    ]),
+
     1601: new GIHero(1601, '柯莱', 4, 10, 7, 3,
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/12109492/cca275e9c7e6fa6cf61c5e1d6768db9d_4064677380613373250.png',
         skill1('祈颂射艺'), [
@@ -1412,6 +1498,19 @@ const allHeros: HeroObj = {
             'https://patchwiki.biligame.com/images/ys/9/9a/dbkhj9brr5xbkjgx56nabv1dgk7gxio.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2024/02/28/258999284/562bc0909575afbc29f1971ae2c4b24d_5181008040290623097.png',
         ], [heroStatus(2169)], event => ({ outStatusOppo: [heroStatus(2169, event.hero.skills[2].src)] }))
+    ]),
+
+    1608: new GIHero(1608, '卡维', 4, 10, 7, 2,
+        '',
+        skill1('旋规设矩'), [
+        new GISkill('画则巧施', '造成{dmg}点[草元素伤害]，生成【迸发扫描】。', 2, 2, 3, 7, {}, [
+            '',
+            '',
+        ], [heroStatus(2202)], event => ({ outStatus: [heroStatus(2202, event.hero.skills[1].src)] })),
+        new GISkill('繁绘隅穹', '造成{dmg}点[草元素伤害]，本角色附属【梅赫拉克的助力】，生成2层【迸发扫描】。', 3, 3, 3, 7, { ec: 2 }, [
+            '',
+            '',
+        ], [heroStatus(2203), heroStatus(2202)], event => ({ inStatus: [heroStatus(2203)], outStatus: [heroStatus(2202, event.hero.skills[1].src, 2)] }))
     ]),
 
     1701: new GIHero(1701, '愚人众·冰萤术士', 8, 10, 4, 0,

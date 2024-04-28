@@ -1,6 +1,6 @@
 import { ELEMENT_ICON } from "./constant";
 import { heroStatus } from "./heroStatus";
-import { allHidxs, getAtkHidx, getMaxHertHidxs, getNearestHidx, isCdt, minusDiceSkillHandle } from "./utils";
+import { allHidxs, getAtkHidx, getMaxHertHidxs, getMinHertHidxs, getNearestHidx, isCdt, minusDiceSkillHandle } from "./utils";
 
 class GISummonee implements Summonee {
     id: number;
@@ -53,10 +53,7 @@ class GISummonee implements Summonee {
             if (handle) return handle(summon, event) ?? {}
             return {
                 trigger: ['phase-end'],
-                exec: execEvent => {
-                    const { summon: smn = summon } = execEvent;
-                    return phaseEndAtk(smn);
-                },
+                exec: execEvent => phaseEndAtk(execEvent.summon ?? summon),
             }
         };
     }
@@ -828,6 +825,41 @@ const summonTotal: SummoneeObj = {
         }, { isTalent }),
 
     3059: (src = '') => new GISummonee(3059, '愤怒的太郎丸', '【结束阶段：】造成{dmg}点[物理伤害]。；【[可用次数]：{useCnt}】', src, 2, 2, 0, 2, 0),
+
+    3060: (useCnt = 2) => new GISummonee(3060, '沙龙成员', '【结束阶段：】造成{dmg}点[水元素伤害]。如果我方存在生命值至少为6的角色，则对一位受伤最少的我方角色造成1点[穿透伤害]，然后再造成1点[水元素伤害]。；【[可用次数]：{useCnt}(可叠加，最多叠加到4次)】',
+        '',
+        useCnt, 4, 0, 1, 1, (summon, event) => {
+            const { tround = 0, heros = [] } = event;
+            const hasTround = tround == 0 && heros.some(h => h.hp >= 6);
+            return {
+                trigger: ['phase-end'],
+                tround: isCdt(hasTround, 1),
+                exec: execEvent => {
+                    const { summon: smn = summon } = execEvent;
+                    if (!hasTround) smn.useCnt = Math.max(0, smn.useCnt - 1);
+                    if (tround == 0) return { cmds: [{ cmd: 'attack' }] }
+                    return { cmds: [{ cmd: 'attack', element: -1, hidxs: getMinHertHidxs(heros), isOppo: true }, { cmd: 'attack', cnt: 1 }] }
+                },
+            }
+        }),
+
+    3061: (useCnt = 2) => new GISummonee(3061, '众水的歌者', '【结束阶段：】治疗所有我方角色1点。如果我方存在生命值不多于5的角色，则再治疗一位受伤最多的角色1点。；【[可用次数]：{useCnt}(可叠加，最多叠加到4次)】',
+        '',
+        useCnt, 4, 1, 0, 0, (summon, event) => {
+            const { tround = 0, heros = [] } = event;
+            const hasTround = tround == 0 && heros.some(h => h.hp <= 5);
+            return {
+                trigger: ['phase-end'],
+                tround: isCdt(hasTround, 1),
+                exec: execEvent => {
+                    const { summon: smn = summon } = execEvent;
+                    if (!hasTround) smn.useCnt = Math.max(0, smn.useCnt - 1);
+                    if (tround == 0) return { cmds: [{ cmd: 'heal', hidxs: allHidxs(heros) }] }
+                    return { cmds: [{ cmd: 'heal', hidxs: getMaxHertHidxs(heros) }] }
+                },
+            }
+        }),
+
 
 }
 

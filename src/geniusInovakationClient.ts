@@ -765,6 +765,8 @@ export default class GeniusInvokationClient {
             if (this.round == 1) this.phase = phase;
             setTimeout(async () => {
                 this.isReseted = false;
+                this.player.playerInfo.disCardCnt = 0;
+                this.player.playerInfo.reconcileCnt = 0;
                 this.player.heros.forEach(h => { // 重置技能
                     for (let i = 0; i < h.skills.length; ++i) {
                         const skill = h.skills[i];
@@ -982,6 +984,8 @@ export default class GeniusInvokationClient {
             this._doSummon(this.playerIdx, 'action-start');
             await this._execTask();
             this._doSite(this.playerIdx, 'action-start');
+            await this._execTask();
+            this._doStatus(this.playerIdx ^ 1, [1], 'action-start-oppo', { intvl: [100, 500, 1000, 100], isOnlyFront: true });
             await this._execTask();
         }
         if (startTimer) this._startTimer();
@@ -1351,6 +1355,7 @@ export default class GeniusInvokationClient {
             isReadySkill,
             isExec,
             windEl: eaHeros.find(h => h.isFront)?.attachElement?.find(el => el > 0 && el < 5),
+            playerInfo: this.player.playerInfo,
             trigger: `skilltype${skill.type}` as Trigger,
         }) ?? {};
         if (isExec) skillres.exec?.();
@@ -4066,6 +4071,7 @@ export default class GeniusInvokationClient {
                 hidx,
                 isChargedAtk: (this.player.dice.length & 1) == 0,
                 minusDiceSkill: mds,
+                hcardsCnt: this.players[plidx].handCards.length,
                 trigger: 'calc',
             });
             calcDmgChange(stsres);
@@ -4406,6 +4412,9 @@ const NULL_PLAYER: Player = {
         usedCardIds: [],
         destroyedSite: 0,
         oppoGetElDmgType: 0,
+        disCardCnt: 0,
+        reconcileCnt: 0,
+        discardIds: [],
     },
 };
 

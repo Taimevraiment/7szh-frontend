@@ -39,7 +39,7 @@ type Player = {
     canAction: boolean, // 是否可以行动
     isUsedSubType8: boolean, // 是否使用秘传卡
     isOffline: boolean,
-    playerInfo: gameInfo,
+    playerInfo: GameInfo,
 }
 
 type OriDeck = {
@@ -250,6 +250,9 @@ type GameInfo = {
     usedCardIds: number[], // 使用过的牌的id
     destroyedSite: number, // 我方被弃置的支援牌数量
     oppoGetElDmgType: number, // 敌方受到元素伤害的种类(用位计数)
+    disCardCnt: number, // 每回合舍弃卡牌的数量
+    reconcileCnt: number, // 每回合调和次数
+    discardIds: number[], // 舍弃卡牌的id
 }
 
 type TrgElRe = 1 | 2 | 3 | 4;
@@ -258,7 +261,7 @@ type TrgEl = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 type TrgDmg = 'el' | 'pen' | 'any' | 'water' | 'fire' | 'thunder' | 'ice' | 'wind' | 'rock' | 'grass';
 type TrgElReDmg = 'water' | 'fire' | 'thunder' | 'ice';
 
-type Trigger = 'phase-start' | 'phase-end' | 'phase-dice' | 'game-start' | 'action-start' | 'action-after' | 'end-phase' | 'any-end-phase' |
+type Trigger = 'phase-start' | 'phase-end' | 'phase-dice' | 'game-start' | 'action-start' | 'action-start-oppo' | 'action-after' | 'end-phase' | 'any-end-phase' |
     'skill' | `skilltype${TrgSkType}` | `other-skilltype${TrgSkType}` | `after-skilltype${TrgSkType}` | 'after-skill' | 'oppo-skill' | 'other-skill' |
     'change' | 'change-to' | 'change-from' | 'change-oppo' | 'card' | 'elReaction' | `el${TrgEl}Reaction` | `el5Reaction:${TrgElRe}` |
     `other-el${TrgEl}Reaction` | 'other-elReaction' | 'ecard' | `el6Reaction:${TrgElRe}` | 'get-elReaction' | `get-el${TrgEl}Reaction` |
@@ -293,6 +296,7 @@ type SkillHandleEvent = {
     trigger?: Trigger,
     minusDiceSkill?: number[][],
     heal?: number[],
+    playerInfo?: GameInfo
 }
 
 type SkillHandleRes = {
@@ -424,6 +428,8 @@ type StatusHandleEvent = {
     summons?: Summonee[],
     esummons?: Summonee[],
     getDmgIdx?: number,
+    hcardsCnt?: number,
+    pile?: Card[],
 }
 
 type StatusHandleRes = {

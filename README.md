@@ -932,6 +932,12 @@ constructor(
 
 解释：本次我方各个角色回血数量
 
+##### playerInfo
+
+类型：GameInfo
+
+解释：一些游戏信息，详见类型
+
 #### SkillHandleRes
 
 ##### inStatus
@@ -1379,6 +1385,18 @@ constructor(
 类型：number
 
 解释：受到攻击的角色序号（从0开始）
+
+##### hcardsCnt
+
+类型：number
+
+解释：我方手牌数
+
+##### pile
+
+类型：Card[]
+
+解释：我方牌库
 
 #### StatusHandleRes
 
@@ -2532,9 +2550,13 @@ element(number):
 
 0 弃置花费最高的手牌 
 
-1 弃置牌堆顶的牌 
+1 弃置所有手牌
 
-2 弃置牌库中随机一张牌
+2 弃置牌堆顶的牌 
+
+3 弃置牌库中随机一张牌
+
+cnt(number): 弃置第cnt张手牌(从0开始)
 
 
 # 触发时机 Trigger
@@ -2558,6 +2580,10 @@ element(number):
 ### action-start
 
 我方选择行动前
+
+### action-start-oppo
+
+敌方选择行动前
 
 ### action-after
 
