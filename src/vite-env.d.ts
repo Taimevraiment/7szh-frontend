@@ -157,7 +157,7 @@ type Status = {
 type Hero = {
     id: number, // 唯一id 从1000开始
     name: string, // 角色名
-    local: number[], // 所属：0魔物 1蒙德 2璃月 3稻妻 4须弥 5枫丹 6纳塔 7至冬 8愚人众 9丘丘人 10镀金旅团 11始基力:荒性 12始基力:芒性
+    local: number[], // 所属：0魔物 1蒙德 2璃月 3稻妻 4须弥 5枫丹 6纳塔 7至冬 8愚人众 9丘丘人 10镀金旅团 11始基力:荒性 12始基力:芒性 13 圣骸兽
     maxhp: number, // 最大血量
     hp: number, // 当前血量
     element: number, // 角色元素：0物理 1水 2火 3雷 4冰 5风 6岩 7草
@@ -192,6 +192,7 @@ type Skill = {
     dmgChange: number, // 伤害变化
     costChange: number[], // 费用变化 [元素骰, 任意骰]
     useCnt: number, // 技能已使用次数
+    perCnt: number, // 每回合使用次数
     isUsed: boolean, // 本场游戏是否使用过
     rdskidx: number, // 准备技能的idx
     descriptions: string[], // 处理后的技能描述
@@ -310,6 +311,7 @@ type SkillHandleRes = {
     pendamage?: number,
     pendamageSelf?: number,
     addDmgCdt?: number,
+    multiDmgCdt?: number,
     isQuickAction?: boolean,
     inStatusOppoPre?: Status[],
     outStatusOppoPre?: Status[],
@@ -340,7 +342,7 @@ type CardHandleEvent = {
     summons?: Summonee[],
     esummons?: Summonee[],
     changeHeroDiceCnt?: number,
-    hcardsCnt?: number,
+    hcards?: Card[],
     ehcardsCnt?: number,
     heal?: number[],
     ephase?: number,
@@ -411,6 +413,7 @@ type StatusHandleEvent = {
     reset?: boolean,
     trigger?: Trigger,
     card?: Card,
+    discards?: Card[],
     isChargedAtk?: boolean,
     isFallAtk?: boolean,
     phase?: number,
@@ -443,6 +446,7 @@ type StatusHandleRes = {
     addDmgType2?: number,
     addDmgType3?: number,
     addDmgCdt?: number,
+    multiDmgCdt?: number,
     addDmgSummon?: number,
     addDiceSkill?: {
         skill?: number[],

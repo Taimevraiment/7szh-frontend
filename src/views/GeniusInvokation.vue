@@ -155,7 +155,7 @@
     {{ client.players[client.isWin % 2]?.name }}获胜！！！
   </h1>
 
-  <h1 v-if="client.error != ''" style="color: red">{{ client.error }}</h1>
+  <h1 v-if="client.error != '' && isDev" class="error">{{ client.error }}</h1>
 
   <div class="tip" :class="{ 'tip-enter': client.tip.content != '', 'tip-leave': client.tip.content == '' }"
     :style="{ top: client.tip?.top ?? '40%', color: client.tip?.color ?? 'black', pointerEvents: 'none' }">
@@ -945,6 +945,14 @@ body {
   cursor: pointer;
   padding-top: 20px;
   z-index: 2;
+}
+
+.error {
+  color: red;
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 10;
 }
 
 @media screen and (orientation: portrait) {

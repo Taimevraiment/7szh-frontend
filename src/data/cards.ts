@@ -246,6 +246,20 @@ const extraCards: CardObj = {
                 summons.splice(smnIdx, 1, newSummonee(3060 + nlocal, useCnt));
             }
         }),
+
+    906: new GICard(906, '噬骸能量块', '随机[舍弃]1张原本元素骰费用最高的手牌，生成1个我方出战角色类型的元素骰。如果我方出战角色是｢圣骸兽｣角色，则使其获得1点[充能]。(每回合最多打出1张)',
+        '',
+        0, 8, 2, [], 0, 0, (_card, event) => {
+            const { heros = [], hidxs = [] } = event;
+            const cmds: Cmds[] = [{ cmd: 'discard', element: 0 }, { cmd: 'getDice', cnt: 1, element: -2 }];
+            const fhero = heros[hidxs[0]];
+            if (fhero?.local.includes(13)) cmds.push({ cmd: 'getEnergy', cnt: 1 })
+            return { isValid: !fhero?.outStatus.some(ost => ost.id == 2207), cmds }
+        }),
+
+    907: new GICard(907, '唤醒眷属', '【打出此牌或[舍弃]此牌时：】召唤一个独立的【增殖生命体】。',
+        '',
+        0, 8, 2, [], 0, 0, () => ({ summon: [newSummonee(3063)] }), { expl: [newSummonee(3063)] }),
 }
 
 const allCards: CardObj = {
@@ -422,7 +436,7 @@ const allCards: CardObj = {
         3, 8, 0, [0], 5, 1, (card, event) => {
             const { heros = [], hidxs = [], trigger = '' } = event;
             const fhero = heros[hidxs[0]];
-            const isShieldStatus = fhero?.inStatus?.some(ist => ist.type.includes(7)) || fhero?.outStatus?.some(ost => ost.type.includes(7));
+            const isShieldStatus = fhero?.inStatus.some(ist => ist.type.includes(7)) || fhero?.outStatus.some(ost => ost.type.includes(7));
             return {
                 addDmg: 1,
                 addDmgCdt: isCdt(isShieldStatus && trigger == 'skill', 1),
@@ -805,7 +819,7 @@ const allCards: CardObj = {
     120: new GICard(120, '来歆余响', '【角色使用｢普通攻击｣后：】摸1张牌。(每回合1次)；【角色使用技能后：】如果我方元素骰数量不多于手牌数量，则生成1个所附属角色类型的元素骰。(每回合1次)',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/18/258999284/d9db70a7475940b91d63699e1276678d_8473736559088406285.png',
         2, 8, 0, [1], 0, 1, (card, event) => {
-            const { heros = [], hidxs = [], hcardsCnt = 0, dicesCnt = 0, trigger = '' } = event;
+            const { heros = [], hidxs = [], hcards: { length: hcardsCnt } = [], dicesCnt = 0, trigger = '' } = event;
             const isGetCard = trigger == 'skilltype1' && (card.perCnt >> 0 & 1) == 1;
             const isGetDice = trigger.startsWith('skill') && dicesCnt <= hcardsCnt && (card.perCnt >> 1 & 1) == 1;
             const execmds: Cmds[] = [];
@@ -897,7 +911,7 @@ const allCards: CardObj = {
     125: new GICard(125, '紫晶的花冠', '【所附属角色为出战角色，敌方受到[草元素伤害]后：】累积1枚｢花冠水晶｣。如果｢花冠水晶｣大于等于我方手牌数，则生成1个随机基础元素骰。(每回合至多生成2个)',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/e431910b741b3723c64334265ce3e93e_3262613974155239712.png',
         1, 8, 0, [1], 0, 1, (card, event) => {
-            const { heros = [], hidxs = [], hcardsCnt = 10 } = event;
+            const { heros = [], hidxs = [], hcards: { length: hcardsCnt } = [] } = event;
             if (!heros[hidxs[0]]?.isFront) return;
             return {
                 trigger: ['grass-getdmg-oppo'],
@@ -1186,7 +1200,7 @@ const allCards: CardObj = {
         0, 8, 2, [], 0, 0, (_card, event) => {
             const { heros = [], hidxs = [] } = event;
             return {
-                isValid: !heros[hidxs[0]]?.outStatus?.some(ost => ost.id == 2116) && heros.some(h => h.hp == 0),
+                isValid: !heros[hidxs[0]]?.outStatus.some(ost => ost.id == 2116) && heros.some(h => h.hp == 0),
                 cmds: [{ cmd: 'getDice', cnt: 1, element: 0 }, { cmd: 'getEnergy', cnt: 1 }],
                 outStatus: [heroStatus(2116)],
             }
@@ -1343,7 +1357,7 @@ const allCards: CardObj = {
     518: new GICard(518, '永远的友谊', '牌数小于4的牌手摸牌，直到手牌数各为4张。',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/31/183046623/d5a778eb85b98892156d269044c54147_5022722922597227063.png',
         2, 8, 2, [], 0, 0, (_card, event) => {
-            const { hcardsCnt = 0, ehcardsCnt = 0 } = event;
+            const { hcards: { length: hcardsCnt } = [], ehcardsCnt = 0 } = event;
             const cmds: Cmds[] = [];
             if (hcardsCnt < 5) cmds.push({ cmd: 'getCard', cnt: 5 - hcardsCnt });
             if (ehcardsCnt < 4) cmds.push({ cmd: 'getCard', cnt: 4 - ehcardsCnt, isOppo: true });
@@ -1404,7 +1418,7 @@ const allCards: CardObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/17/258999284/4845ea28326df1869e6385677b360722_5388810612366437595.png',
         0, 8, 2, [], 0, 1, () => ({ inStatus: [heroStatus(2151)] })),
 
-    526: new GICard(526, '机关铸成之链', '【目标我方角色每次受到伤害或治疗后：】累积1点｢备战度｣(最多累积2点)。；【我方打出费用不多于｢备战度｣的｢武器｣或｢圣遗物｣时:】移除所有｢备战度｣，以免费打出该牌。',
+    526: new GICard(526, '机关铸成之链', '【目标我方角色每次受到伤害或治疗后：】累积1点｢备战度｣(最多累积2点)。；【我方打出原本费用不多于｢备战度｣的｢武器｣或｢圣遗物｣时:】移除所有｢备战度｣，以免费打出该牌。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/01/27/258999284/51fdd12cc46cba10a8454337b8c2de30_3419304185196056567.png',
         0, 8, 2, [], 0, 1, () => ({ inStatus: [heroStatus(2162)] })),
 
@@ -1819,7 +1833,7 @@ const allCards: CardObj = {
         3, 6, 0, [6, 7], 1502, 1,
         (card, event) => talentHandle(event, 1, () => {
             const { heros = [], hidxs: hi = [] } = event;
-            const isHeal = heros[hi[0]]?.outStatus?.some(ost => ost.id == 2036) && card.perCnt > 0;
+            const isHeal = heros[hi[0]]?.outStatus.some(ost => ost.id == 2036) && card.perCnt > 0;
             const hidxs = allHidxs(heros);
             return [() => {
                 if (isHeal) --card.perCnt;
@@ -1986,7 +2000,7 @@ const allCards: CardObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/05/24/255120502/1742e240e25035ec13155e7975f7fe3e_495500543253279445.png',
         5, 6, 0, [6, 7], 1504, 1, (_card, event) => talentHandle(event, 2, () => {
             const { heros = [], hidxs = [] } = event;
-            const istShield = heros[hidxs[0]].inStatus?.some(ist => ist.type.includes(7));
+            const istShield = heros[hidxs[0]]?.inStatus.some(ist => ist.type.includes(7));
             const ostShield = heros.find(h => h.isFront)?.outStatus.some(ost => ost.type.includes(7));
             return [() => ({}), { addDmgSummon: isCdt(istShield || ostShield, 1) }]
         }, 'rock-dmg'), { expl: talentExplain(1504, 2) }),
@@ -2190,7 +2204,10 @@ const allCards: CardObj = {
 
     774: new GICard(774, '严霜棱晶', '我方出战角色为【无相之冰】时，才能打出：使其附属【冰晶核心】。；装备有此牌的【无相之冰】触发【冰晶核心】后：对敌方出战角色附属【严寒】。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/01/27/258999284/71d1da569b1927b33c9cd1dcf04c7ab1_880598011600009874.png',
-        1, 4, 0, [6], 1703, 1, () => ({ inStatus: [heroStatus(2157)] }), { expl: [...talentExplain(1703, 3), heroStatus(2137)] }),
+        1, 4, 0, [6], 1703, 1, (_card, event) => {
+            const { heros = [], hidxs = [] } = event;
+            return { isValid: heros[hidxs[0]]?.isFront, inStatus: [heroStatus(2157)] }
+        }, { expl: [...talentExplain(1703, 3), heroStatus(2137)] }),
 
     775: new GICard(775, '明珠固化', '我方出战角色为【千年珍珠骏麟】时，才能打出：入场时，使【千年珍珠骏麟】附属[可用次数]为1的【原海明珠】; 如果已附属【原海明珠】，则使其[可用次数]+1。；装备有此牌的【千年珍珠骏麟】所附属的【原海明珠】抵消召唤物造成的伤害时，改为每回合2次不消耗[可用次数]。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/01/25/258999284/ec966272143de66e191950a6016cf14f_3693512171806066057.png',
@@ -2296,8 +2313,9 @@ const allCards: CardObj = {
     786: new GICard(786, '地狱里摇摆', '[战斗行动]：我方出战角色为【辛焱】时，装备此牌。；【辛焱】装备此牌后，立刻使用一次【炎舞】。；【装备有此牌的辛焱使用技能时：】如果我方手牌数量不多于1，则造成的伤害+2。(每回合1次)',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_Xinyan.webp',
         1, 2, 0, [6, 7], 1212, 1, (card, event) => talentHandle(event, 0, () => {
-            const { hcardsCnt = 10 } = event;
-            return [() => { --card.perCnt }, { addDmgCdt: isCdt(hcardsCnt <= 1 && card.perCnt > 0, 2) }]
+            const { hcards = [] } = event;
+            if (hcards.length > 1 || card.perCnt == 0) return;
+            return [() => { --card.perCnt }, { addDmgCdt: 2 }]
         }, 'skill'), { pct: 1, expl: talentExplain(1212, 0), anydice: 2 }),
 
     787: new GICard(787, '庄谐并举', '[战斗行动]：我方出战角色为【云堇】时，装备此牌。；【云堇】装备此牌后，立刻使用一次【破嶂见旌仪】。；装备有此牌的【云堇】在场时，我方没有手牌，则【飞云旗阵】会使｢普通攻击｣造成的伤害额外+2。',
@@ -2316,6 +2334,40 @@ const allCards: CardObj = {
                 return { outStatus: isCdt(Math.floor(addCardId / 100) == 2, [heroStatus(2204)]) }
             }, { execmds: [{ cmd: 'getCard', cnt: 1, card: addCardId }] }]
         }, 'skilltype1'), { pct: 1, expl: talentExplain(1608, 1) }),
+
+    789: new GICard(789, '无光鲸噬', '[战斗行动]：我方出战角色为【吞星之鲸】时，装备此牌。；【吞星之鲸】装备此牌后，立刻使用一次【迸落星雨】。；装备有此牌的【吞星之鲸】使用【迸落星雨】[舍弃]1张手牌后：治疗此角色该手牌元素骰费用的点数。(每回合1次)',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_Ptahur.webp',
+        4, 1, 0, [6, 7], 1724, 1, (card, event) => talentHandle(event, 1, () => {
+            if (card.perCnt == 0) return;
+            const { hcards = [] } = event;
+            return [() => { --card.perCnt }, { execmds: [{ cmd: 'heal', cnt: Math.max(...hcards.map(c => c.cost + c.anydice)) }] }]
+        }, 'skilltype2'), { pct: 1, expl: talentExplain(1724, 1) }),
+
+    790: new GICard(790, '亡雷凝蓄', '【入场时：】生成1张【噬骸能量块】，置入我方手牌。；装备有此牌的【圣骸毒蝎】在场时，我方打出【噬骸能量块】后：摸1张牌，然后生成1张【噬骸能量块】，随机置入我方牌库中。',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_ScorpionSacred.webp',
+        1, 3, 0, [6], 1765, 1, (_card, event) => {
+            const { hcard } = event;
+            return {
+                trigger: ['card'],
+                cmds: [{ cmd: 'getCard', cnt: 1, card: 906 }],
+                execmds: isCdt(hcard?.id == 906, [{ cmd: 'getCard', cnt: 1 }, { cmd: 'addCard', cnt: 1, card: 906 }]),
+            }
+        }),
+
+    791: new GICard(791, '亡风啸卷', '【入场时：】生成1张【噬骸能量块】，置入我方手牌。；装备有此牌的【圣骸毒蝎】在场时，我方打出【噬骸能量块】后：本回合中，我方下次切换角色后，生成1个出战角色类型的元素骰。',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_ChrysopeleaSacred.webp',
+        1, 5, 0, [6], 1783, 1, (_card, event) => {
+            const { hcard } = event;
+            return {
+                trigger: ['card'],
+                cmds: [{ cmd: 'getCard', cnt: 1, card: 906 }],
+                execmds: isCdt(hcard?.id == 906, [{ cmd: 'getStatus', status: [heroStatus(2208)] }]),
+            }
+        }),
+
+    792: new GICard(792, '万千子嗣', '【入场时：】生成4张【唤醒眷属】，随机置入我方牌库。；装备有此牌的【阿佩普的绿洲守望者】在场时，我方造成的伤害+1。',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_Apep.webp',
+        2, 7, 0, [6], 1822, 1, () => ({ cmds: [{ cmd: 'addCard', cnt: 4, card: 907 }], addDmg: 1 })),
 
     ...extraCards,
 

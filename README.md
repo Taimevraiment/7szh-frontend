@@ -210,11 +210,11 @@ constructor(
 
 解释：当前切换角色所需要的骰子数
 
-##### hcardsCnt
+##### hcards
 
-类型：number
+类型：Card[]
 
-解释：我方手牌数
+解释：我方手牌
 
 ##### ehcardsCnt
 
@@ -581,7 +581,7 @@ constructor(
 
 类型：number[]
 
-解释：所属标签 0魔物 1蒙德 2璃月 3稻妻 4须弥 5枫丹 6纳塔 7至冬 8愚人众 9丘丘人 10镀金旅团 11始基力:荒性 12始基力:芒性
+解释：所属标签 0魔物 1蒙德 2璃月 3稻妻 4须弥 5枫丹 6纳塔 7至冬 8愚人众 9丘丘人 10镀金旅团 11始基力:荒性 12始基力:芒性 13 圣骸兽
 
 ## maxhp
 
@@ -756,6 +756,12 @@ val为花费数量，color为花费颜色
 
 解释：本回合技能已使用次数
 
+## perCnt
+
+类型：number
+
+解释：每回合使用次数
+
 ## isUsed
 
 类型：boolean
@@ -784,7 +790,8 @@ constructor(
     ac?: number, 
     ec?: number, 
     de?: number, 
-    rdskidx?: number 
+    rdskidx?: number,
+    pct?: number,
   } = {},
   src?: string | string[], 
   explains?: ExplainContent[], 
@@ -825,6 +832,12 @@ constructor(
 解释：readySkillIdx 准备技能的序号
 
 默认值：-1
+
+#### pct
+
+解释：perCnt 每回合使用次数
+
+默认值：0
 
 ### handle 效果函数
 
@@ -998,7 +1011,13 @@ constructor(
 
 类型：number
 
-解释：满足触发事件条件增伤
+解释：满足触发事件条件加数增伤
+
+##### multiDmgCdt
+
+类型：number
+
+解释：满足触发事件条件倍数增伤
 
 ##### isQuickAction
 
@@ -1284,6 +1303,12 @@ constructor(
 
 解释：装备对该卡的减骰判断
 
+##### discard
+
+类型：Card[]
+
+解释：被舍弃的卡牌
+
 ##### isChargedAtk
 
 类型：boolean
@@ -1458,7 +1483,13 @@ constructor(
 
 类型：number
 
-解释：满足触发事件条件增伤
+解释：满足触发事件条件加数增伤
+
+##### multiDmgCdt
+
+类型：number
+
+解释：满足触发事件条件倍数增伤
 
 ##### addDmgSummon
 
@@ -2406,6 +2437,8 @@ hidxs(number[]): 不包含其中的卡id
 
 isOppo(boolean): 是否为敌方摸牌
 
+isAttach(boolean): 是否为从牌库查找(配合card)
+
 ### getEnergy
 
 获得充能
@@ -2556,7 +2589,11 @@ element(number):
 
 3 弃置牌库中随机一张牌
 
-cnt(number): 弃置第cnt张手牌(从0开始)
+hidxs(number[]): 弃置的手牌索引(从0开始)
+
+cnt(number): 弃置张数
+
+card(number): 弃置卡牌的id
 
 
 # 触发时机 Trigger

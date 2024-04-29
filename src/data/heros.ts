@@ -58,6 +58,7 @@ class GISkill implements Skill {
     dmgChange: number = 0;
     costChange: [number, number] = [0, 0];
     useCnt: number = 0;
+    perCnt: number = 0;
     attachElement: number = 0;
     explains: ExplainContent[];
     canSelect: boolean = false;
@@ -69,17 +70,18 @@ class GISkill implements Skill {
     handle: (event: SkillHandleEvent) => SkillHandleRes = () => ({});
     constructor(
         name: string, description: string, type: number, damage: number, cost: number,
-        costElement: number, options: { ac?: number, ec?: number, de?: number, rdskidx?: number } = {},
+        costElement: number, options: { ac?: number, ec?: number, de?: number, rdskidx?: number, pct?: number } = {},
         src?: string | string[], explains?: ExplainContent[], handle?: (hevent: SkillHandleEvent) => SkillHandleRes | undefined
     ) {
         this.name = name;
         this.description = description;
         this.type = type;
         this.damage = damage;
-        const { ac = 0, ec = 0, de = costElement % 8, rdskidx = -1 } = options;
+        const { ac = 0, ec = 0, de = costElement % 8, rdskidx = -1, pct = 0 } = options;
         this.dmgElement = de;
         this.rdskidx = rdskidx;
         this.cost = [{ val: cost, color: costElement }, { val: ac, color: 0 }, { val: ec, color: 9 }];
+        this.perCnt = pct;
         if (typeof src == 'string') src = [src];
         src = src?.filter(s => s != '');
         this.src = src?.[0] ?? '';
@@ -91,6 +93,7 @@ class GISkill implements Skill {
             const curskill = hero.skills[skidx];
             if (reset) {
                 curskill.useCnt = 0;
+                curskill.perCnt = pct;
                 return {}
             }
             let dmgElement = handleres.dmgElement;
@@ -119,7 +122,7 @@ class GISkill implements Skill {
 }
 
 const skill1 = (name: string, weaponType?: number, handle?: (event: SkillHandleEvent) => SkillHandleRes | undefined,
-    description: string = '', explains: ExplainContent[] = []) => {
+    description: string = '', explains: ExplainContent[] = [], options: { pct?: number } = {}) => {
     return (costElement: number, weaponType2: number) => {
         const wptype = weaponType ?? weaponType2;
         const sdmgElement = wptype == 4 ? costElement : 0;
@@ -141,7 +144,7 @@ const skill1 = (name: string, weaponType?: number, handle?: (event: SkillHandleE
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/26/12109492/54dd31a9c0a4417ca4b5463532d7f5e8_811908281150698503.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/0cd68ecb1a011d94e2b4be1b99ac3302_8062496215333431665.png',
         ];
-        return new GISkill(name, sdescription, 1, sdamage, 1, costElement, { ac: 2, de: sdmgElement }, [src[wptype], src2[wptype]], explains, handle);
+        return new GISkill(name, sdescription, 1, sdamage, 1, costElement, { ac: 2, de: sdmgElement, ...options }, [src[wptype], src2[wptype]], explains, handle);
     }
 }
 
@@ -632,10 +635,10 @@ const allHeros: HeroObj = {
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Char_Avatar_Furina.webp',
         skill1('独舞之邀', undefined, event => {
             const { hero: { skills: [skill1] }, hcards = [] } = event;
-            if (skill1.useCnt > 0) return;
-            if (hcards.some(c => c.id == 905)) return { exec: () => { --skill1.useCnt } }
+            if (skill1.perCnt == 0 || hcards.some(c => c.id == 905)) return;
+            --skill1.perCnt;
             return { cmds: [{ cmd: 'getCard', cnt: 1, card: 905 }] }
-        }, '；【每回合1次：】如果手牌中没有【圣俗杂座】，则生成手牌【圣俗杂座】', []), [
+        }, '；【每回合1次：】如果手牌中没有【圣俗杂座】，则生成手牌【圣俗杂座】', [], { pct: 1 }), [
         new GISkill('孤心沙龙', '【芙宁娜】当前处于｢始基力：荒性｣形态，召唤【沙龙成员】。；(【芙宁娜】处于｢始基力：芒性｣形态时，会改为召唤【众水的歌者】。)', 2, 0, 3, 1, {}, [
             '',
             '',
@@ -648,6 +651,10 @@ const allHeros: HeroObj = {
             '',
             '',
         ], [heroStatus(2194)], () => ({ outStatus: [heroStatus(2194)] })),
+        new GISkill('始基力：圣俗杂座', '战斗开始时，生成手牌【圣俗杂座】。', 4, 0, 0, 0, {}, [
+            '',
+            '',
+        ], [], () => ({ trigger: ['game-start'], cmds: [{ cmd: 'getCard', cnt: 1, card: 905 }] })),
     ]),
 
     1201: new GIHero(1201, '迪卢克', 1, 10, 2, 2,
@@ -1649,6 +1656,36 @@ const allHeros: HeroObj = {
         ], [heroStatus(2181)], () => ({ trigger: ['game-start'], inStatus: [heroStatus(2181)] }))
     ]),
 
+    1724: new GIHero(1724, '吞星之鲸', 0, 5, 1, 0,
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Char_Monster_Ptahur.webp',
+        skill1('碎涛旋跃'), [
+        new GISkill('迸落星雨', '造成{dmg}点[水元素伤害]，此角色每有3点【无尽食欲】提供的额外最大生命，此伤害+1(最多+4)。然后[舍弃]元素骰费用最高的手牌。', 2, 2, 3, 1, {}, [
+            '',
+            '',
+        ], [heroStatus(2205)], event => {
+            const { hero: { inStatus } } = event;
+            return {
+                addDmgCdt: Math.min(4, Math.floor((inStatus.find(ist => ist.id == 2205)?.useCnt ?? 0) / 3)),
+                cmds: [{ cmd: 'discard', element: 0 }],
+            }
+        }),
+        new GISkill('横噬鲸吞', '造成{dmg}点[水元素伤害]，对敌方所有后台角色造成1点[穿透伤害]。召唤【黑色幻影】。', 3, 1, 3, 1, { ec: 2 }, [
+            '',
+            '',
+        ], [newSummonee(3062)], event => {
+            const { hero: { outStatus } } = event;
+            const sts2205 = outStatus.find(ost => ost.id == 2205);
+            if (!sts2205) return;
+            const dmg = Math.max(...sts2205.addition[1]);
+            const cnt = sts2205.addition[1].filter((n: number) => n == dmg).length;
+            return { pendamage: 1, summon: [newSummonee(3062, dmg, cnt)] }
+        }),
+        new GISkill('无尽食欲', '战斗开始时，生成【深噬之域】。', 4, 0, 0, 0, {}, [
+            '',
+            '',
+        ], [heroStatus(2205)], event => ({ trigger: ['game-start'], outStatus: [heroStatus(2205, event.hero.skills[3].src)] }))
+    ]),
+
     1741: new GIHero(1741, '愚人众·火之债务处理人', 8, 9, 2, 0,
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/12109492/9f134f05bb71f0ee1afb33785cf945e9_8487118119361104507.png',
         skill1('突刺'), [
@@ -1849,6 +1886,27 @@ const allHeros: HeroObj = {
         })
     ]),
 
+    1765: new GIHero(1765, '圣骸毒蝎', [0, 13], 10, 3, 0,
+        '',
+        skill1('蝎爪钳击'), [
+        new GISkill('蝎尾锥刺', '造成{dmg}点[雷元素伤害]。；生成1张【噬骸能量块】，随机置入我方牌库顶部2张牌之中。', 2, 3, 3, 3, {}, [
+            '',
+            '',
+        ], [], () => ({ cmds: [{ cmd: 'addCard', card: 906, cnt: 1, hidxs: [2] }] })),
+        new GISkill('雷锥散射', '造成{dmg}点[雷元素伤害]，弃置手牌中最多3张【噬骸能量块】，在对方场上生成【雷锥陷阱】。', 3, 3, 3, 3, { ec: 2 }, [
+            '',
+            '',
+        ], [heroStatus(2206)], event => {
+            const { hcards = [] } = event;
+            const cnt = Math.min(3, hcards.filter(c => c.id == 906).length);
+            if (cnt == 0) return;
+            return {
+                cmds: [{ cmd: 'discard', cnt, card: 906 }],
+                outStatusOppo: [heroStatus(2206, cnt)],
+            }
+        })
+    ]),
+
     1781: new GIHero(1781, '魔偶剑鬼', 0, 10, 5, 0,
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/12109492/5b21d3abb8dd7245a8f5f540d8049fcb_59481287402207724.png',
         skill1('一文字'), [
@@ -1892,6 +1950,36 @@ const allHeros: HeroObj = {
             const hidxs = eheros.map((h, hi) => ({ hi, f: !h.isFront, hp: h.hp })).filter(v => v.f && v.hp > 0).map(v => v.hi);
             return { inStatusOppo: [heroStatus(2142)], hidxs }
         })
+    ]),
+
+    1783: new GIHero(1783, '圣骸飞蛇', [0, 13], 10, 5, 0,
+        '',
+        skill1('旋尾迅击'), [
+        new GISkill('盘绕风引', '造成{dmg}点[风元素伤害]，摸1张【噬骸能量块】; 然后，手牌中每有1张【噬骸能量块】，摸1张牌(每回合最多抓2张)。', 2, 2, 3, 5, { pct: 2 }, [
+            '',
+            '',
+        ], [], event => {
+            const { hcards = [], hero: { skills: [, skill1] } } = event;
+            const cmds: Cmds[] = [{ cmd: 'getCard', cnt: 1, card: 906, isAttach: true }];
+            if (skill1.perCnt < 2) {
+                const cnt = Math.min(2 - skill1.perCnt, hcards.filter(c => c.id == 906).length) + (hcards.length < 10 ? 1 : 0);
+                skill1.perCnt -= cnt;
+                cmds.push({ cmd: 'getCard', cnt });
+            }
+            return { cmds }
+        }),
+        new GISkill('错落风涡', '造成{dmg}点[风元素伤害]，[舍弃]手牌中所有的【噬骸能量块】，每[舍弃]2张，此次伤害翻倍1次。', 3, 2, 3, 5, { ec: 2 }, [
+            '',
+            '',
+        ], [], event => {
+            const { hcards = [] } = event;
+            const cnt = hcards.filter(c => c.id == 906).length;
+            return { cmds: [{ cmd: 'discard', cnt, card: 906 }], multiDmgCdt: 2 ** Math.floor(cnt / 2) }
+        }),
+        new GISkill('不朽亡骸·风', '战斗开始时，生成6张【噬骸能量块】，均匀放入牌库。', 4, 0, 0, 0, {}, [
+            '',
+            '',
+        ], [], () => ({ trigger: ['game-start'], cmds: [{ cmd: 'addCard', cnt: 6, card: 906, element: 1 }] })),
     ]),
 
     1801: new GIHero(1801, '丘丘岩盔王', [0, 9], 8, 6, 0,
@@ -1958,6 +2046,38 @@ const allHeros: HeroObj = {
             'https://patchwiki.biligame.com/images/ys/7/79/q3o61yegls3thng3z7dns2sykg2voci.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/27/12109492/f72847095bda0ccb92781ed3f1c1bb4e_1629774298046012918.png',
         ], [heroStatus(2047)], () => ({ trigger: ['game-start', 'revive'], inStatus: [heroStatus(2047)] }))
+    ]),
+
+    1822: new GIHero(1822, '阿佩普的绿洲守望者', 0, 10, 7, 0,
+        '',
+        skill1('失乡重击'), [
+        new GISkill('生命流束', '造成{dmg}点[草元素伤害]，摸1张【唤醒眷属】，生成1层【绿洲之滋养】。', 2, 2, 3, 7, {}, [
+            '',
+            '',
+        ], [heroStatus(2209)], event => {
+            const { hero: { skills: [, { src }] } } = event;
+            return { cmds: [{ cmd: 'getCard', cnt: 1, card: 907, isAttach: true }], outStatus: [heroStatus(2209, src)] }
+        }),
+        new GISkill('终景迸落', '造成{dmg}点[草元素伤害]，摸1张【唤醒眷属】，生成2层【绿洲之滋养】。', 3, 2, 3, 7, { ec: 2 }, [
+            '',
+            '',
+        ], [heroStatus(2209)], event => {
+            const { hero: { skills: [, { src }] } } = event;
+            return { cmds: [{ cmd: 'getCard', cnt: 1, card: 907, isAttach: true }], outStatus: [heroStatus(2209, src, 2)] }
+        }),
+        new GISkill('增殖感召', '战斗开始时，生成6张【唤醒眷属】，随机放入牌库。我方召唤4个【增殖生命体】后，此角色附属【重燃的绿洲之心】，并获得2点[护盾]。', 4, 0, 0, 0, {}, [
+            '',
+            '',
+        ], [heroStatus(2210), heroStatus(2211)], event => {
+            const { card, trigger = '' } = event;
+            const cmds: Cmds[] = [];
+            if (trigger == 'game-start') {
+                cmds.push({ cmd: 'addCard', cnt: 6, card: 907 });
+            } else if (['card', 'discard'].includes(trigger) && card?.id == 907) {
+                cmds.push({ cmd: 'getStatus', status: [heroStatus(2211), heroStatus(2212)] });
+            }
+            return { trigger: ['game-start', 'card', 'discard'], cmds }
+        })
     ]),
 
 

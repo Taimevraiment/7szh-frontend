@@ -212,11 +212,9 @@ const statusTotal: StatusObj = {
         })),
 
     2012: (icon = '') => new GIStatus(2012, '泡影', '【我方造成技能伤害时：】移除此状态，使本次伤害加倍。',
-        icon, 1, [5, 10], 1, 0, -1, (status, event = {}) => {
-            const { restDmg = 0 } = event;
-            if (restDmg <= 0) return { restDmg };
+        icon, 1, [5, 10], 1, 0, -1, status => {
             --status.useCnt;
-            return { restDmg: restDmg * 2 };
+            return { multiDmgCdt: 2 }
         }, { icbg: STATUS_BG_COLOR[1] }),
 
     2013: (summonId: number) => new GIStatus(2013, '虚影', '【我方出战角色受到伤害时：】抵消1点伤害。；【[可用次数]：{useCnt}】',
@@ -1771,10 +1769,10 @@ const statusTotal: StatusObj = {
             }
         }),
 
-    2162: () => new GIStatus(2162, '机关铸成之链(生效中)', '【所附属角色每次受到伤害或治疗后：】累积1点｢备战度｣(最多累积2点)。；【我方打出费用不多于｢备战度｣的｢武器｣或｢圣遗物｣时:】移除此状态，以免费打出该牌。',
+    2162: () => new GIStatus(2162, '机关铸成之链(生效中)', '【所附属角色每次受到伤害或治疗后：】累积1点｢备战度｣(最多累积2点)。；【我方打出原本费用不多于｢备战度｣的｢武器｣或｢圣遗物｣时:】移除此状态，以免费打出该牌。',
         'buff3', 1, [4, 9], 0, 0, -1, (status, event = {}) => {
             const { card, trigger = '', heal = [], hidx = -1, minusDiceCard: mdc = 0 } = event;
-            const isMinus = card && card.subType.some(st => st < 2) && card.cost > mdc && status.useCnt >= card.cost - mdc;
+            const isMinus = card && card.subType.some(st => st < 2) && card.cost > mdc && status.useCnt >= card.cost;
             return {
                 trigger: ['getdmg', 'heal', 'card'],
                 minusDiceCard: isMinus ? card.cost - mdc : 0,
@@ -2016,10 +2014,10 @@ const statusTotal: StatusObj = {
         }, { icbg: DEBUFF_BG_COLOR }),
 
     2185: () => new GIStatus(2185, '｢清洁工作｣(生效中)', '我方出战角色下次造成的伤害+1。；(可叠加，最多叠加到+2)',
-        'buff5', 1, [4, 6], 1, 2, 1, status => ({
+        'buff5', 1, [4, 6], 1, 2, -1, status => ({
             trigger: ['skill'],
-            addDmg: 1,
-            exec: () => { --status.useCnt },
+            addDmg: status.useCnt,
+            exec: () => { status.useCnt = 0 },
         })),
 
     2186: () => new GIStatus(2186, '缤纷马卡龙(生效中)', '【所附属角色受到伤害后：】治疗该角色1点。；【[可用次数]：{useCnt}】',
@@ -2120,7 +2118,7 @@ const statusTotal: StatusObj = {
             }
         }, { icbg: STATUS_BG_COLOR[4], expl: [heroStatus(2195)] }),
 
-    2195: () => new GIStatus(2195, '狂欢值', '我方造成的伤害+1。；【[可用次数]：{useCnt}(可叠加，没有上限)】',
+    2195: () => new GIStatus(2195, '狂欢值', '我方造成的伤害+1。(包括角色引发的扩散伤害)；【[可用次数]：{useCnt}(可叠加，没有上限)】',
         'buff5', 1, [4, 6], 1, 1000, 1, status => ({
             trigger: ['getdmg-oppo'],
             addDmgCdt: 1,
@@ -2234,6 +2232,83 @@ const statusTotal: StatusObj = {
                 },
             }
         }),
+
+    2205: (icon = '', useCnt = 0) => new GIStatus(2205, '深噬之域', '我方[舍弃]或[调和]的手牌，会被吞噬。；每吞噬3张牌：【吞星之鲸】获得1点额外最大生命; 如果其中存在原本元素骰费用值相同的牌，则额外获得1点; 如果3张均相同，再额外获得1点。',
+        icon, 1, [9, 12], useCnt, 0, -1, (status, event = {}) => {
+            const { heros = [], discards = [] } = event;
+            return {
+                trigger: ['discard', 'reconcile'],
+                exec: () => {
+                    const hidx = heros.findIndex(h => h.id == 1724);
+                    if (hidx == -1) return;
+                    const [curDiscard, allDiscard] = status.addition;
+                    discards.forEach(c => {
+                        const cost = c.cost + c.anydice;
+                        curDiscard.push(cost);
+                        allDiscard.push(cost);
+                        if (status.addition.length == 3) {
+                            const cnt = 4 - new Set(curDiscard).size;
+                            status.useCnt += cnt;
+                            heros[hidx].maxhp += cnt;
+                            curDiscard.length = 0;
+                        }
+                    });
+                }
+            }
+        }, { add: [[], []] }),
+
+    2206: (useCnt: number) => new GIStatus(2206, '雷锥陷阱', '【所在阵营的角色使用技能后：】对所在阵营的出战角色造成2点[雷元素伤害]。；【[可用次数]：初始为创建时所弃置的噬骸能量块张数。(最多叠加到3)】',
+        'debuff', 1, [1], useCnt, 3, -1, () => ({
+            damage: 2,
+            element: 3,
+            isSelf: true,
+            trigger: ['after-skill'],
+            exec: eStatus => {
+                if (eStatus) --eStatus.useCnt;
+            }
+        })),
+
+    2207: () => new GIStatus(2207, '噬骸能量块(冷却中)', '本回合无法再打出【噬骸能量块】。', 'debuff', 1, [3, 10], -1, 0, 1),
+
+    2208: () => new GIStatus(2208, '亡风啸卷(生效中)', '本回合中，我方下次切换角色后，生成1个出战角色类型的元素骰。',
+        'buff2', 1, [4, 10], 1, 0, 1, status => ({
+            trigger: ['change-from'],
+            exec: () => {
+                --status.useCnt;
+                return { cmds: [{ cmd: 'getDice', cnt: 1, element: -2 }] }
+            }
+        })),
+
+    2209: (icon = '', useCnt = 1) => new GIStatus(2209, '绿洲之滋养', '我方打出【唤醒眷属】时：少花费1个元素骰。；【[可用次数]：{useCnt}(可叠加，最多到3)】',
+        icon, 1, [4], useCnt, 3, -1, (status, event = {}) => {
+            const { card, minusDiceCard: mdc = 0 } = event;
+            const isMinus = card && card.id == 907 && card.cost > mdc;
+            return {
+                trigger: ['card'],
+                minusDiceCard: isCdt(isMinus, 1),
+                exec: () => {
+                    if (isMinus) --status.useCnt;
+                }
+            }
+        }),
+
+    2210: (icon = '') => new GIStatus(2210, '重燃的绿洲之心', '所附属角色造成的伤害+3。；【所附属角色使用技能后：】移除我方场上的【绿洲之滋养】，每移除1层就治疗所附属角色1点。',
+        icon, 0, [6, 10], -1, 0, -1, (_status, event = {}) => {
+            const { heros = [], hidx = -1 } = event;
+            const sts2209 = heros[hidx]?.outStatus.find(ost => ost.id == 2209);
+            let cnt = 0;
+            if (sts2209) {
+                cnt = sts2209.useCnt;
+                sts2209.useCnt = 0;
+            }
+            return {
+                trigger: ['skill'],
+                addDmg: 3,
+                exec: () => ({ cmds: [{ cmd: 'heal', cnt }] })
+            }
+        }),
+
+    2211: () => shieldStatus(2211, 'todo重燃的绿洲之心护盾'),
 
 };
 
