@@ -46,7 +46,7 @@ export const DEBUFF_BG_COLOR = '#ff7575';
 
 export const STATUS_BG_COLOR = ['#848484', '#003ab6', '#b46534', '#9956c8', '#00b7dc', '#62c8b3', '#c39c26', '#869c17', DEBUFF_BG_COLOR, '#b9a11a', '', '', '#b79b00'];
 
-export const HERO_LOCAL = ['魔物', '蒙德', '璃月', '稻妻', '须弥', '枫丹', '纳塔', '至冬', '愚人众', '丘丘人', '镀金旅团', '始基力:荒性', '始基力:芒性'];
+export const HERO_LOCAL = ['魔物', '蒙德', '璃月', '稻妻', '须弥', '枫丹', '纳塔', '至冬', '愚人众', '丘丘人', '镀金旅团', '始基力:荒性', '始基力:芒性', '圣骸兽'];
 
 export const HERO_LOCAL_URL = [
     '',

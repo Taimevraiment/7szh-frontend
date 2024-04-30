@@ -429,6 +429,7 @@ const devOps = (cidx = 0) => {
   let flag = new Set<string>();
   let cards: (number | Card)[] = [];
   let handCards: Card[] | undefined;
+  const cmds: Cmds[] = [];
   const h = (v: string) => (v == '' ? undefined : Number(v));
   for (const op of ops) {
     if (op.startsWith('&')) { // 附着
@@ -459,8 +460,11 @@ const devOps = (cidx = 0) => {
       dices = ndices;
       flag.add('getDice');
     } else if (op.startsWith('-')) { // 弃牌
-      const dcardcnt = Number(op);
-      handCards = client.value.player.handCards.slice(0, dcardcnt);
+      // const dcardcnt = Number(op);
+      // handCards = client.value.player.handCards.slice(0, dcardcnt);
+      const dcmds: Cmds[] = [{ cmd: 'discard', card: 25, cnt: 3 }];
+      client.value._doCmds(dcmds, { pidx: cpidx });
+      cmds.push(...dcmds);
       flag.add('disCard');
     } else if (op.startsWith('=')) { // 状态
       const [stsid = 0, hidx = heros.findIndex(h => h.isFront)] = op.slice(1).split(/[:：]+/).map(h);
@@ -478,16 +482,10 @@ const devOps = (cidx = 0) => {
       if (cid > 0) cards.push(...new Array(cnt).fill(cid));
       cards = client.value._doCmds([{ cmd: 'getCard', cnt, card: cards }], { pidx: cpidx }).cmds?.[0].card as Card[];
       flag.add('getCard');
+      cmds.push({ cmd: 'getCard', cnt: cards.length, card: cards });
     }
   }
-  socket.emit('sendToServer', {
-    cpidx,
-    heros,
-    dices,
-    cmds: [{ cmd: 'getCard', cnt: cards.length, card: cards }],
-    handCards,
-    flag: 'dev-' + [...flag].join('&'),
-  });
+  socket.emit('sendToServer', { cpidx, heros, dices, cmds, handCards, flag: 'dev-' + [...flag].join('&') });
 };
 </script>
 

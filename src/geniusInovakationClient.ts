@@ -3857,31 +3857,47 @@ export default class GeniusInvokationClient {
             } else if (cmd == 'discard') {
                 if (discards == undefined) discards = [];
                 let discardCnt = Math.max(1, cnt);
-                if (typeof card == 'number') {
-                    const targetCard = player.handCards.find(c => c.id == card);
-                    discardCnt = Math.min(discardCnt, player.handCards.filter(c => c.id == card).length);
-                    if (player.handCards.length == 0 || !targetCard) break;
-                    while (discardCnt-- > 0) {
-                        discards.push(clone(targetCard));
-                    }
+                if (hidxs && hidxs.length > 0) {
+                    discards.push(...clone(player.handCards.filter((_, ci) => hidxs.includes(ci))));
                 } else {
-                    if (element == 1) {
-                        discards.push(...clone(player.handCards));
+                    const discardIdxs = hidxs ?? [];
+                    if (typeof card == 'number') {
+                        const targetCard = player.handCards.find(c => c.id == card);
+                        discardCnt = Math.min(discardCnt, player.handCards.filter(c => c.id == card).length);
+                        if (player.handCards.length > 0 && targetCard) {
+                            let curIdx = -1;
+                            while (discardCnt-- > 0) {
+                                discards.push(clone(targetCard));
+                                curIdx = player.handCards.findIndex((c, ci) => ci > curIdx && c.id == targetCard.id);
+                                discardIdxs.push(curIdx);
+                            }
+                        }
                     } else {
-                        const hcardsSorted = player.handCards.slice().sort((a, b) => ((b.cost + b.anydice) - (a.cost + a.anydice)) || (Math.random() - 0.5));
-                        while (discardCnt-- > 0) {
-                            if (element == 0) {
-                                if (hcardsSorted.length == 0) break;
-                                discards.push(clone(hcardsSorted.shift()!));
-                            } else if (element == 2) {
-                                if (player.pile.length == 0) break;
-                                discards.push(clone(player.pile[0]));
-                            } else if (element == 3) {
-                                if (player.pile.length == 0) break;
-                                discards.push(clone(player.pile[Math.floor(Math.random() * player.pile.length)]));
+                        if (element == 1) {
+                            discards.push(...clone(player.handCards));
+                            discardIdxs.push(...new Array(player.handCards.length).fill(0).map((_, ci) => ci));
+                        } else {
+                            const hcardsSorted = player.handCards.slice().sort((a, b) => ((b.cost + b.anydice) - (a.cost + a.anydice)) || (Math.random() - 0.5));
+                            while (discardCnt-- > 0) {
+                                if (element == 0) {
+                                    if (hcardsSorted.length == 0) break;
+                                    const curDiscard = clone(hcardsSorted.shift()!)
+                                    discards.push(curDiscard);
+                                    discardIdxs.push(player.handCards.findIndex(c => c.id == curDiscard.id));
+                                } else if (element == 2) {
+                                    if (player.pile.length == 0) break;
+                                    discards.push(clone(player.pile[0]));
+                                    discardIdxs.push(0);
+                                } else if (element == 3) {
+                                    if (player.pile.length == 0) break;
+                                    const disIdx = Math.floor(Math.random() * player.pile.length);
+                                    discards.push(clone(player.pile[disIdx]));
+                                    discardIdxs.push(disIdx);
+                                }
                             }
                         }
                     }
+                    cmds[i].hidxs = [...discardIdxs];
                 }
             } else if (cmd == 'getDice' && isExec) {
                 ndices = this._getDice(dices, cnt, element, { pidx });
@@ -4431,6 +4447,7 @@ const NULL_PLAYER: Player = {
     info: '',
     willGetCard: [],
     willAddCard: [],
+    willDiscard: [],
     pidx: -1,
     hidx: -1,
     tarhidx: -1,
