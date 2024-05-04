@@ -3878,6 +3878,7 @@ export default class GeniusInvokationClient {
                             discardIdxs.push(...new Array(player.handCards.length).fill(0).map((_, ci) => ci));
                         } else {
                             const hcardsSorted = player.handCards.slice().sort((a, b) => ((b.cost + b.anydice) - (a.cost + a.anydice)) || (Math.random() - 0.5));
+                            const targetCnt = discardCnt;
                             while (discardCnt-- > 0) {
                                 if (element == 0) {
                                     if (hcardsSorted.length == 0) break;
@@ -3887,7 +3888,7 @@ export default class GeniusInvokationClient {
                                 } else if (element == 2) {
                                     if (player.pile.length == 0) break;
                                     discards.push(clone(player.pile[0]));
-                                    discardIdxs.push(0);
+                                    discardIdxs.push(targetCnt - discardCnt);
                                 } else if (element == 3) {
                                     if (player.pile.length == 0) break;
                                     const disIdx = Math.floor(Math.random() * player.pile.length);
@@ -4447,7 +4448,7 @@ const NULL_PLAYER: Player = {
     info: '',
     willGetCard: [],
     willAddCard: [],
-    willDiscard: [],
+    willDiscard: [[], []],
     pidx: -1,
     hidx: -1,
     tarhidx: -1,

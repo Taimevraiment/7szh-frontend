@@ -14,8 +14,17 @@
           :style="{ left: `${cidx * 70 - 70}px` }" v-for="(_, cidx) in opponent.willGetCard" :key="cidx"></div>
         <div class="will-addcard-my" :class="{ 'mobile-will-card': isMobile }" v-if="opponent?.willAddCard"
           :style="{ left: `${cidx * 70 - 70}px` }" v-for="(card, cidx) in opponent.willAddCard" :key="cidx">
-          <img class="card-img" :src="card.src" v-if="card?.src?.length > 0" style="border: 2px solid black;"
-            :alt="card.name" />
+          <img class="card-img" :src="card.src" v-if="card?.src?.length > 0" :alt="card.name" />
+          <span v-else>{{ card.name }}</span>
+        </div>
+        <div class="will-discard-hcard-oppo" :class="{ 'mobile-will-card': isMobile }"
+          :style="{ left: `${cidx * 70 - 70}px` }" v-for="(card, cidx) in opponent.willDiscard[0]" :key="cidx">
+          <img class="card-img" :src="card.src" v-if="card?.src?.length > 0" :alt="card.name" />
+          <span v-else>{{ card.name }}</span>
+        </div>
+        <div class="will-discard-pile-my" :class="{ 'mobile-will-card': isMobile }"
+          :style="{ left: `${cidx * 70 - 70}px` }" v-for="(card, cidx) in opponent.willDiscard[1]" :key="cidx">
+          <img class="card-img" :src="card.src" v-if="card?.src?.length > 0" :alt="card.name" />
           <span v-else>{{ card.name }}</span>
         </div>
       </div>
@@ -34,14 +43,22 @@
         {{ player.pile.length }}
         <div class="will-getcard-my" :class="{ 'mobile-will-card': isMobile }" :style="{ left: `${cidx * 70 - 70}px` }"
           v-for="(card, cidx) in player.willGetCard" :key="cidx">
-          <img class="card-img" :src="card.src" v-if="card?.src?.length > 0" style="border: 2px solid black;"
-            :alt="card.name" />
+          <img class="card-img" :src="card.src" v-if="card?.src?.length > 0" :alt="card.name" />
           <span v-else>{{ card.name }}</span>
         </div>
         <div class="will-addcard-my" :class="{ 'mobile-will-card': isMobile }" :style="{ left: `${cidx * 70 - 70}px` }"
           v-for="(card, cidx) in player.willAddCard" :key="cidx">
-          <img class="card-img" :src="card.src" v-if="card?.src?.length > 0" style="border: 2px solid black;"
-            :alt="card.name" />
+          <img class="card-img" :src="card.src" v-if="card?.src?.length > 0" :alt="card.name" />
+          <span v-else>{{ card.name }}</span>
+        </div>
+        <div class="will-discard-hcard-my" :class="{ 'mobile-will-card': isMobile }"
+          :style="{ left: `${cidx * 70 - 70}px` }" v-for="(card, cidx) in player.willDiscard[0]" :key="cidx">
+          <img class="card-img" :src="card.src" v-if="card?.src?.length > 0" :alt="card.name" />
+          <span v-else>{{ card.name }}</span>
+        </div>
+        <div class="will-discard-pile-my" :class="{ 'mobile-will-card': isMobile }"
+          :style="{ left: `${cidx * 70 - 70}px` }" v-for="(card, cidx) in player.willDiscard[1]" :key="cidx">
+          <img class="card-img" :src="card.src" v-if="card?.src?.length > 0" :alt="card.name" />
           <span v-else>{{ card.name }}</span>
         </div>
       </div>
@@ -188,6 +205,7 @@
               filter: ists.icon.startsWith('https') || ists.icon.startsWith('buff') || ists.icon.endsWith('dice')
                 ? `url(${getSvgIcon('filter')}#status-color-${STATUS_BG_COLOR.indexOf(ists.iconBg)})` : '',
             }" :src="getPngIcon(ists.icon)" />
+            <div v-else style="color: white;">{{ ists.name[0] }}</div>
             <div :style="{ position: 'absolute', width: '100%', height: '100%', borderRadius: '50%' }"
               :class="{ 'status-can-use': ists.perCnt > 0 }"></div>
             <div class="status-cnt" :class="{ 'mobile-status-cnt': isMobile }"
@@ -209,17 +227,12 @@
               <div class="status-bg" :class="{ 'mobile-status-bg': isMobile }" :style="{ background: osts.iconBg }">
               </div>
               <img v-if="osts.icon != ''" class="status-icon" :style="{
-                filter:
-                  osts.icon.startsWith('https') ||
-                    osts.icon.startsWith('buff') ||
-                    osts.icon.endsWith('dice') ? `url(${getSvgIcon('filter')}#status-color-${STATUS_BG_COLOR.indexOf(osts.iconBg)})` : '',
+                filter: osts.icon.startsWith('https') || osts.icon.startsWith('buff') || osts.icon.endsWith('dice')
+                  ? `url(${getSvgIcon('filter')}#status-color-${STATUS_BG_COLOR.indexOf(osts.iconBg)})` : '',
               }" :src="getPngIcon(osts.icon)" />
-              <div :style="{
-                position: 'absolute',
-                width: '100%',
-                height: '100%',
-                borderRadius: '50%',
-              }" :class="{ 'status-can-use': osts.perCnt > 0 }"></div>
+              <div v-else style="color: white;">{{ osts.name[0] }}</div>
+              <div :style="{ position: 'absolute', width: '100%', height: '100%', borderRadius: '50%' }"
+                :class="{ 'status-can-use': osts.perCnt > 0 }"></div>
               <div class="status-cnt" :class="{ 'mobile-status-cnt': isMobile }"
                 v-if="!osts.type.includes(10) && (osts.useCnt >= 0 || osts.roundCnt >= 0)">
                 {{ osts.useCnt < 0 ? osts.roundCnt : osts.useCnt }} </div>
@@ -1319,6 +1332,7 @@ button:active {
   height: 100%;
   object-fit: cover; */
   border-radius: 10px;
+  border: 2px solid black;
 }
 
 .history-info {
@@ -1405,7 +1419,7 @@ button:active {
   background-color: #a7bbdd;
   padding-top: 20px;
   transform: rotate(90deg);
-  animation: getcardmy 1.5s linear forwards;
+  animation: getcard-my 1.5s linear forwards;
 }
 
 .will-getcard-oppo {
@@ -1421,7 +1435,7 @@ button:active {
   text-align: center;
   padding-top: 20px;
   transform: rotate(90deg);
-  animation: getcardoppo 1.5s linear forwards;
+  animation: getcard-oppo 1.5s linear forwards;
   overflow: hidden;
 }
 
@@ -1455,6 +1469,45 @@ button:active {
   animation: addcard 1.2s linear;
   overflow: hidden;
   opacity: 0;
+}
+
+.will-discard-pile-my {
+  position: absolute;
+  width: 90px;
+  height: 120px;
+  border-radius: 10px;
+  color: black;
+  text-align: center;
+  background-color: #a7bbdd;
+  padding-top: 20px;
+  transform: rotate(90deg);
+  animation: discard-pile 1.5s linear forwards;
+}
+
+.will-discard-hcard-my {
+  position: absolute;
+  width: 90px;
+  height: 120px;
+  border-radius: 10px;
+  color: black;
+  text-align: center;
+  background-color: #a7bbdd;
+  padding-top: 20px;
+  transform: rotate(90deg);
+  animation: discard-hcard-my 1.5s linear forwards;
+}
+
+.will-discard-hcard-oppo {
+  position: absolute;
+  width: 90px;
+  height: 120px;
+  border-radius: 10px;
+  color: black;
+  text-align: center;
+  background-color: #a7bbdd;
+  padding-top: 20px;
+  transform: rotate(90deg);
+  animation: discard-hcard-oppo 1.5s linear forwards;
 }
 
 .mobile-hero {
@@ -1578,7 +1631,7 @@ svg {
   }
 }
 
-@keyframes getcardmy {
+@keyframes getcard-my {
   20% {
     transform: translate(500%, -10%);
     z-index: 5;
@@ -1594,7 +1647,7 @@ svg {
   }
 }
 
-@keyframes getcardoppo {
+@keyframes getcard-oppo {
   50% {
     transform: translate(1100%, -50%);
     z-index: 5;
@@ -1628,6 +1681,66 @@ svg {
   100% {
     transform: rotate(-90deg);
     opacity: 0;
+  }
+}
+
+@keyframes discard-pile {
+  20% {
+    transform: translate(500%, -10%);
+    z-index: 5;
+  }
+
+  80% {
+    transform: translate(500%, -10%);
+    z-index: 5;
+  }
+
+  100% {
+    transform-origin: center center;
+    transform: translate(500%, -10%) scale(0);
+    z-index: 5;
+  }
+}
+
+@keyframes discard-hcard-my {
+  0% {
+    transform: translate(500%, 200%);
+  }
+
+  20% {
+    transform: translate(500%, -10%);
+    z-index: 5;
+  }
+
+  80% {
+    transform: translate(500%, -10%);
+    z-index: 5;
+  }
+
+  100% {
+    transform: translate(500%, -10%) scale(0);
+    z-index: 5;
+  }
+}
+
+@keyframes discard-hcard-oppo {
+  0% {
+    transform: translate(1300%, -80%);
+  }
+
+  20% {
+    transform: translate(500%, -10%);
+    z-index: 5;
+  }
+
+  80% {
+    transform: translate(500%, -10%);
+    z-index: 5;
+  }
+
+  100% {
+    transform: translate(500%, -10%) scale(0);
+    z-index: 5;
   }
 }
 

@@ -460,11 +460,22 @@ const devOps = (cidx = 0) => {
       dices = ndices;
       flag.add('getDice');
     } else if (op.startsWith('-')) { // 弃牌
-      // const dcardcnt = Number(op);
-      // handCards = client.value.player.handCards.slice(0, dcardcnt);
-      const dcmds: Cmds[] = [{ cmd: 'discard', card: 25, cnt: 3 }];
-      client.value._doCmds(dcmds, { pidx: cpidx });
-      cmds.push(...dcmds);
+      if (isNaN(+op)) {
+        const rest = op.slice(1);
+        const eidx = rest.indexOf('e');
+        const cidx = rest.indexOf('c');
+        const cdidx = rest.indexOf('cd');
+        const hidx = rest.indexOf('h');
+        const element = eidx == -1 ? 0 : (parseInt(rest.slice(eidx + 1)) || 0);
+        const cnt = cidx == -1 ? 1 : (parseInt(rest.slice(cidx + 1)) || 1);
+        const card = cdidx == -1 ? undefined : (parseInt(rest.slice(cdidx + 1)) || undefined);
+        const hidxs = hidx == -1 ? undefined : (parseInt(rest.slice(cdidx + 1)) || undefined)?.toString().split('').map(Number) || undefined;
+        const dcmds: Cmds[] = [{ cmd: 'discard', element, cnt, card, hidxs }];
+        client.value._doCmds(dcmds, { pidx: cpidx });
+        cmds.push(...dcmds);
+      } else {
+        handCards = client.value.player.handCards.slice(0, +op);
+      }
       flag.add('disCard');
     } else if (op.startsWith('=')) { // 状态
       const [stsid = 0, hidx = heros.findIndex(h => h.isFront)] = op.slice(1).split(/[:：]+/).map(h);

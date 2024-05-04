@@ -32,7 +32,7 @@ type Player = {
     info: string, // 右上角提示信息
     willGetCard: Card[], // 即将获得的卡
     willAddCard: Card[], // 即将加入牌堆的卡
-    willDiscard: Card[], // 即将舍弃的卡
+    willDiscard: Card[][], // 即将舍弃的卡
     pidx: number,
     hidx: number, // 出战角色索引idx
     tarhidx: number, // 受击角色索引idx

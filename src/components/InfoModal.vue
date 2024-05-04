@@ -116,6 +116,7 @@
                     <img v-if="ist.icon != ''" :src="getPngIcon(ist.icon)" :style="{
                       filter: ist.icon.startsWith('https') || ist.icon.startsWith('buff') || ist.icon.endsWith('dice') ? `url(${getSvgIcon('filter')}#status-color-${STATUS_BG_COLOR.indexOf(ist.iconBg)})` : ''
                     }" />
+                    <div v-else style="color: white;">{{ ist.name[0] }}</div>
                     <div class="status-cnt" v-if="!ist.type.includes(10) && (ist.useCnt >= 0 || ist.roundCnt >= 0)">
                       {{ ist.useCnt < 0 ? ist.roundCnt : ist.useCnt }} </div>
                     </div>
@@ -143,6 +144,7 @@
                     <div class="status-bg" :style="{ background: ost.iconBg }"></div>
                     <img v-if="ost.icon != ''" :src="getPngIcon(ost.icon)"
                       :style="{ filter: ost.icon.startsWith('https') || ost.icon.startsWith('buff') || ost.icon.endsWith('dice') ? `url(${getSvgIcon('filter')}#status-color-${STATUS_BG_COLOR.indexOf(ost.iconBg)})` : '' }" />
+                    <div v-else style="color: white;">{{ ost.name[0] }}</div>
                     <div class="status-cnt" v-if="!ost.type.includes(10) && (ost.useCnt >= 0 || ost.roundCnt >= 0)">
                       {{ ost.useCnt < 0 ? ost.roundCnt : ost.useCnt }} </div>
                     </div>
@@ -210,6 +212,7 @@
                 <div class="status-bg" :style="{ background: ist.iconBg }"></div>
                 <img v-if="ist.icon != ''" :src="getPngIcon(ist.icon)"
                   :style="{ filter: ist.icon.startsWith('https') || ist.icon.startsWith('buff') || ist.icon.endsWith('dice') ? `url(${getSvgIcon('filter')}#status-color-${STATUS_BG_COLOR.indexOf(ist.iconBg)})` : '' }" />
+                <div v-else style="color: white;">{{ ist.name[0] }}</div>
                 <div class="status-cnt" v-if="!ist.type.includes(10) && (ist.useCnt >= 0 || ist.roundCnt >= 0)">
                   {{ ist.useCnt < 0 ? ist.roundCnt : ist.useCnt }} </div>
                 </div>
@@ -237,6 +240,7 @@
                 <div class="status-bg" :style="{ background: ost.iconBg }"></div>
                 <img v-if="ost.icon != ''" :src="getPngIcon(ost.icon)"
                   :style="{ filter: ost.icon.startsWith('https') || ost.icon.startsWith('buff') || ost.icon.endsWith('dice') ? `url(${getSvgIcon('filter')}#status-color-${STATUS_BG_COLOR.indexOf(ost.iconBg)})` : '' }" />
+                <div v-else style="color: white;">{{ ost.name[0] }}</div>
                 <div class="status-cnt" v-if="!ost.type.includes(10) && (ost.useCnt >= 0 || ost.roundCnt >= 0)">
                   {{ ost.useCnt < 0 ? ost.roundCnt : ost.useCnt }} </div>
                 </div>
