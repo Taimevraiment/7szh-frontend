@@ -631,14 +631,15 @@ const allHeros: HeroObj = {
         ], [heroStatus(2164), readySkill(17)], () => ({ pendamage: 1, outStatus: [heroStatus(2164, [readySkill(17)], 2)] })),
     ]),
 
-    1111: new GIHero(1111, '芙宁娜', [5, 11], 10, 1, 1,
+    1111: new GIHero(1111, '芙宁娜', [5, 11], 10, 1, 1, [
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Char_Avatar_Furina.webp',
-        skill1('独舞之邀', undefined, event => {
-            const { hero: { skills: [skill1] }, hcards = [] } = event;
-            if (skill1.perCnt == 0 || hcards.some(c => c.id == 905)) return;
-            --skill1.perCnt;
-            return { cmds: [{ cmd: 'getCard', cnt: 1, card: 905 }] }
-        }, '；【每回合1次：】如果手牌中没有【圣俗杂座】，则生成手牌【圣俗杂座】', [], { pct: 1 }), [
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Char_Avatar_Furina.webp',
+    ], skill1('独舞之邀', undefined, event => {
+        const { hero: { skills: [skill1] }, hcards = [], isExec = false } = event;
+        if (skill1.perCnt == 0 || hcards.some(c => c.id == 905) || !isExec) return;
+        --skill1.perCnt;
+        return { cmds: [{ cmd: 'getCard', cnt: 1, card: 905 }] }
+    }, '；【每回合1次：】如果手牌中没有【圣俗杂座】，则生成手牌【圣俗杂座】。', [], { pct: 1 }), [
         new GISkill('孤心沙龙', '【芙宁娜】当前处于｢始基力：荒性｣形态，召唤【沙龙成员】。；(【芙宁娜】处于｢始基力：芒性｣形态时，会改为召唤【众水的歌者】。)', 2, 0, 3, 1, {}, [
             '',
             '',
@@ -650,7 +651,7 @@ const allHeros: HeroObj = {
         new GISkill('万众狂欢', '造成{dmg}点[水元素伤害]，生成【普世欢腾】。', 3, 3, 3, 1, { ec: 2 }, [
             '',
             '',
-        ], [heroStatus(2194)], () => ({ outStatus: [heroStatus(2194)] })),
+        ], [heroStatus(2194), heroStatus(2195)], () => ({ outStatus: [heroStatus(2194)] })),
         new GISkill('始基力：圣俗杂座', '战斗开始时，生成手牌【圣俗杂座】。', 4, 0, 0, 0, {}, [
             '',
             '',
@@ -864,9 +865,9 @@ const allHeros: HeroObj = {
         new GISkill('叛逆刮弦', '造成{dmg}点[物理伤害]，对所有敌方后台角色造成2点[穿透伤害]; [舍弃]我方所有手牌，生成【氛围烈焰】。', 3, 3, 3, 2, { ec: 2, de: 0 }, [
             '',
             '',
-        ], [heroStatus(2188)], event => {
+        ], [heroStatus(2199)], event => {
             const { hero: { skills: [, , { src }] } } = event;
-            return { pendamage: 2, outStatus: [heroStatus(2188, src)] }
+            return { pendamage: 2, outStatus: [heroStatus(2199, src)], cmds: [{ cmd: 'discard', element: 1 }] }
         })
     ]),
 

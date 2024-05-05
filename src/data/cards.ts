@@ -50,7 +50,7 @@ class GICard implements Card {
             const el = Math.ceil((id - 580) / 2);
             this.description += `；(牌组中包含至少2个‹${el}${ELEMENT[el]}›角色，才能加入牌组)`;
         } else if (subType?.includes(6)) this.description += `；(牌组中包含【${herosTotal(userType).name}】，才能加入牌组)`;
-        this.src = src?.startsWith('https://') ? src : 'http://taim.3vhost.club/geniusInovakation/' + src;
+        this.src = src?.startsWith('https://') || src == '' ? src : 'http://taim.3vhost.club/geniusInovakation/' + src;
         this.cost = cost ?? 0;
         this.costType = costType ?? 8;
         this.type = type ?? -1;
@@ -234,7 +234,8 @@ const extraCards: CardObj = {
     905: new GICard(905, '圣俗杂座', '在｢始基力：荒性｣和｢始基力：芒性｣之中，切换【芙宁娜】的形态。；如果我方场上存在【沙龙成员】或【众水的歌者】，也切换其形态。',
         '',
         0, 8, 2, [], 0, 0, (_card, event) => {
-            const { heros = [], summons = [] } = event;
+            const { heros = [], summons = [], isExec = false } = event;
+            if (!isExec) return;
             const hero = heros.find(h => h.id == 1111);
             if (!hero) return;
             const nlocal = ((hero.local.pop() ?? 11) - 11) ^ 1;
@@ -2308,14 +2309,14 @@ const allCards: CardObj = {
 
     785: new GICard(785, '｢诸君听我颂，共举爱之杯！｣', '[战斗行动]：我方出战角色为【芙宁娜】时，装备此牌。；【芙宁娜】装备此牌后，立刻使用一次【孤心沙龙】。；装备有此牌的【芙宁娜】使用【孤心沙龙】时，会对自身附属【万众瞩目】。',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_Furina.webp',
-        3, 1, 0, [6, 7], 1111, 1, talentSkill(1), { expl: [...talentExplain(1111, 1), heroStatus(2186)] }),
+        3, 1, 0, [6, 7], 1111, 1, talentSkill(1), { expl: [...talentExplain(1111, 1), heroStatus(2196)] }),
 
     786: new GICard(786, '地狱里摇摆', '[战斗行动]：我方出战角色为【辛焱】时，装备此牌。；【辛焱】装备此牌后，立刻使用一次【炎舞】。；【装备有此牌的辛焱使用技能时：】如果我方手牌数量不多于1，则造成的伤害+2。(每回合1次)',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_Xinyan.webp',
         1, 2, 0, [6, 7], 1212, 1, (card, event) => talentHandle(event, 0, () => {
             const { hcards = [] } = event;
             if (hcards.length > 1 || card.perCnt == 0) return;
-            return [() => { --card.perCnt }, { addDmgCdt: 2 }]
+            return [() => { --card.perCnt; }, { addDmgCdt: 2 }]
         }, 'skill'), { pct: 1, expl: talentExplain(1212, 0), anydice: 2 }),
 
     787: new GICard(787, '庄谐并举', '[战斗行动]：我方出战角色为【云堇】时，装备此牌。；【云堇】装备此牌后，立刻使用一次【破嶂见旌仪】。；装备有此牌的【云堇】在场时，我方没有手牌，则【飞云旗阵】会使｢普通攻击｣造成的伤害额外+2。',

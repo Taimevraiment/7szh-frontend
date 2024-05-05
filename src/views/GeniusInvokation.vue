@@ -55,7 +55,7 @@
       @select-site="selectCardSite" @select-summon="selectCardSummon" @end-phase="endPhase"
       @show-history="showHistory" />
 
-    <div v-if="(client.player?.phase ?? 0) > 2 || client.isWin > -1" class="hand-card"
+    <div class="hand-card" v-if="(client.player?.phase ?? 0) > 2 || client.isWin > -1"
       :class="{ 'mobile-hand-card': isMobile }"
       :style="{ transform: `translateX(-${(24 * client.handCards.length) / 2}px)` }">
       <div v-for="(card, idx) in client.handCards" :key="idx * 1000 + (card?.id ?? 0) + 'myhandcard'" class="card"
@@ -127,10 +127,10 @@
       v-else-if="client.phase > 4 && client.player && client.player.phase > 4 && client.player.heros[client.player.hidx].hp > 0">
       <div class="skill" v-for="(skill, sidx) in client.skills.filter(sk => sk.type < 4)" :key="sidx">
         <div class="skill-btn" @click.stop="useSkill(sidx, false)"
-          :style="{ boxShadow: skill.type == 3 && client.player.heros[client.player.hidx].energy >= skill.cost[2].val ? `0px 0px 8px 3px ${ELEMENT_COLOR[skill.dmgElement]}` : '' }">
+          :style="{ boxShadow: skill.type == 3 && client.player.heros[client.player.hidx].energy >= skill.cost[2].val ? `0px 0px 8px 3px ${ELEMENT_COLOR[skill.cost[0].color]}` : '' }">
           <div class="skill3-bg"
             v-if="skill.type == 3 && client.player.heros[client.player.hidx].energy < skill.cost[2].val"
-            :style="{ background: `linear-gradient(to top, ${ELEMENT_COLOR[skill.dmgElement]} 0%, ${ELEMENT_COLOR[skill.dmgElement]} ${(client.player.heros[client.player.hidx].energy / skill.cost[2].val) * 100}%, transparent ${(client.player.heros[client.player.hidx].energy / skill.cost[2].val) * 100}%, transparent 100%)` }">
+            :style="{ background: `linear-gradient(to top, ${ELEMENT_COLOR[skill.cost[0].color]} 0%, ${ELEMENT_COLOR[skill.cost[0].color]} ${(client.player.heros[client.player.hidx].energy / skill.cost[2].val) * 100}%, transparent ${(client.player.heros[client.player.hidx].energy / skill.cost[2].val) * 100}%, transparent 100%)` }">
             <div class="skill-btn" style="transform: translate(1px, 1px)"></div>
           </div>
           <img class="skill-img" :src="skill.src" v-if="skill.src.length > 0" :alt="SKILL_TYPE_ABBR[skill.type]" />
@@ -468,7 +468,7 @@ const devOps = (cidx = 0) => {
         const hidx = rest.indexOf('h');
         const element = eidx == -1 ? 0 : (parseInt(rest.slice(eidx + 1)) || 0);
         const cnt = cidx == -1 ? 1 : (parseInt(rest.slice(cidx + 1)) || 1);
-        const card = cdidx == -1 ? undefined : (parseInt(rest.slice(cdidx + 1)) || undefined);
+        const card = cdidx == -1 ? undefined : (parseInt(rest.slice(cdidx + 2)) || undefined);
         const hidxs = hidx == -1 ? undefined : (parseInt(rest.slice(cdidx + 1)) || undefined)?.toString().split('').map(Number) || undefined;
         const dcmds: Cmds[] = [{ cmd: 'discard', element, cnt, card, hidxs }];
         client.value._doCmds(dcmds, { pidx: cpidx });

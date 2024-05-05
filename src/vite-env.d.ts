@@ -255,6 +255,7 @@ type GameInfo = {
     disCardCnt: number, // 每回合舍弃卡牌的数量
     reconcileCnt: number, // 每回合调和次数
     discardIds: number[], // 舍弃卡牌的id
+    initCardIds: number[], // 初始手牌id
 }
 
 type TrgElRe = 1 | 2 | 3 | 4;

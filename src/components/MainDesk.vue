@@ -109,7 +109,7 @@
 
     <div class="heros">
       <div class="hero" @click.stop="selectHero(hidx < 3 ? 0 : 1, hidx % 3)" v-if="!!opponent" :style="{
-        'background-color': hero.src.length == 0 ? ELEMENT_COLOR[hero?.element ?? 0] : '',
+        'background-color': hero.src == '' ? ELEMENT_COLOR[hero?.element ?? 0] : '',
         animation: hero?.isFront &&
           ((hidx > 2 && player.status == 1 && player.summon.every(s => !s.isSelected)) ||
             (hidx < 3 && opponent.status == 1 && opponent.summon.every(s => !s.isSelected))) &&
@@ -1068,6 +1068,7 @@ button:active {
   top: 0;
   width: 100%;
   height: 100%;
+  color: white;
   border-radius: 10px;
   overflow: hidden;
 }
@@ -1332,6 +1333,9 @@ button:active {
   height: 100%;
   object-fit: cover; */
   border-radius: 10px;
+}
+
+.card-img {
   border: 2px solid black;
 }
 

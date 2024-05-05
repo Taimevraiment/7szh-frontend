@@ -133,17 +133,17 @@ const statusTotal: StatusObj = {
     2001: () => new GIStatus(2001, '冰莲', '【我方出战角色受到伤害时：】抵消1点伤害。；【[可用次数]：{useCnt}】',
         '', 1, [2], 2, 0, -1, (status, event = {}) => {
             const { restDmg = 0 } = event;
-            if (restDmg <= 0) return { restDmg };
+            if (restDmg <= 0) return { restDmg }
             --status.useCnt;
-            return { restDmg: restDmg - 1 };
+            return { restDmg: restDmg - 1 }
         }),
 
     2002: (isTalent = false) => new GIStatus(2002, '雨帘剑', `【我方出战角色受到至少为${isTalent ? 2 : 3}的伤害时：】抵消1点伤害。；【[可用次数]：{useCnt}】`,
         '', 1, [2], isTalent ? 3 : 2, 0, -1, (status, event = {}) => {
             const { restDmg = 0 } = event;
-            if (restDmg < 3 - (status.isTalent ? 1 : 0)) return { restDmg };
+            if (restDmg < 3 - (status.isTalent ? 1 : 0)) return { restDmg }
             --status.useCnt;
-            return { restDmg: restDmg - 1 };
+            return { restDmg: restDmg - 1 }
         }, { isTalent }),
 
     2003: (icon = '') => new GIStatus(2003, '虹剑势', '【我方角色｢普通攻击｣后：】造成1点[水元素伤害]。；【[可用次数]：{useCnt}】',
@@ -220,10 +220,10 @@ const statusTotal: StatusObj = {
     2013: (summonId: number) => new GIStatus(2013, '虚影', '【我方出战角色受到伤害时：】抵消1点伤害。；【[可用次数]：{useCnt}】',
         '', 1, [2], 1, 0, 1, (status, event = {}) => {
             const { restDmg = 0, summon } = event;
-            if (restDmg <= 0) return { restDmg };
+            if (restDmg <= 0) return { restDmg }
             --status.useCnt;
             if (summon) --summon.useCnt;
-            return { restDmg: restDmg - 1 };
+            return { restDmg: restDmg - 1 }
         }, { smnId: summonId }),
 
     2014: () => new GIStatus(2014, '绝云锅巴(生效中)', '本回合中，目标角色下一次｢普通攻击｣造成的伤害+1。',
@@ -262,9 +262,9 @@ const statusTotal: StatusObj = {
     2018: () => new GIStatus(2018, '莲花酥(生效中)', '本回合中，目标角色下次受到的伤害-3。',
         '', 0, [2, 10], 1, 0, 1, (status, event = {}) => {
             const { restDmg = 0 } = event;
-            if (restDmg <= 0) return { restDmg };
+            if (restDmg <= 0) return { restDmg }
             --status.useCnt;
-            return { restDmg: Math.max(0, restDmg - 3) };
+            return { restDmg: Math.max(0, restDmg - 3) }
         }),
 
     2019: () => new GIStatus(2019, '兽肉薄荷卷(生效中)', '目标角色在本回合结束前，之后的三次｢普通攻击｣都少花费1个[无色元素骰]。',
@@ -316,9 +316,9 @@ const statusTotal: StatusObj = {
     2025: () => new GIStatus(2025, '黄油蟹蟹(生效中)', '本回合中，所附属角色下次受到伤害-2。',
         '', 0, [2, 10], 1, 0, 1, (status, event = {}) => {
             const { restDmg = 0 } = event;
-            if (restDmg <= 0) return { restDmg };
+            if (restDmg <= 0) return { restDmg }
             --status.useCnt;
-            return { restDmg: Math.max(0, restDmg - 2) };
+            return { restDmg: Math.max(0, restDmg - 2) }
         }),
 
     2026: (useCnt: number) => new GIStatus(2026, '千岩之护', '根据｢璃月｣角色的数量提供[护盾]，保护所附属角色。', '', 0, [7], useCnt, 0, -1),
@@ -327,9 +327,9 @@ const statusTotal: StatusObj = {
         '', 1, [2, 6], 2, 0, -1, (status, event = {}) => {
             const { restDmg = -1, heros = [] } = event;
             if (restDmg > -1) {
-                if (restDmg < 2) return { restDmg };
+                if (restDmg < 2) return { restDmg }
                 --status.useCnt;
-                return { restDmg: restDmg - 1 };
+                return { restDmg: restDmg - 1 }
             }
             if (!heros.find(h => h.id == 1501)?.talentSlot) return;
             return {
@@ -408,8 +408,8 @@ const statusTotal: StatusObj = {
     2036: () => new GIStatus(2036, '护体岩铠', '为我方出战角色提供2点[护盾]。此[护盾]耗尽前，我方受到的[物理伤害]减半。(向上取整)',
         '', 1, [7], 2, 0, -1, (_status, event = {}) => {
             const { restDmg = 0, willAttach = -1 } = event;
-            if (restDmg < 2 || willAttach > 0) return { restDmg };
-            return { restDmg: Math.ceil(restDmg / 2) };
+            if (restDmg < 2 || willAttach > 0) return { restDmg }
+            return { restDmg: Math.ceil(restDmg / 2) }
         }),
 
     2037: (icon = '') => new GIStatus(2037, '大扫除', '【角色使用｢普通攻击｣时：】少花费1个[岩元素骰]。(每回合1次)；角色｢普通攻击｣造成的伤害+2，造成的[物理伤害]变为[岩元素伤害]。；【[持续回合]：{roundCnt}】',
@@ -477,10 +477,10 @@ const statusTotal: StatusObj = {
     2042: (summonId: number) => new GIStatus(2042, '纯水幻形·蛙', '【我方出战角色受到伤害时：】抵消1点伤害。；【[可用次数]：{useCnt}】',
         '', 1, [2], 1, 0, -1, (status, event = {}) => {
             const { restDmg = 0, summon } = event;
-            if (restDmg <= 0) return { restDmg };
+            if (restDmg <= 0) return { restDmg }
             --status.useCnt;
             if (summon) --summon.useCnt;
-            return { restDmg: restDmg - 1 };
+            return { restDmg: restDmg - 1 }
         }, { smnId: summonId }),
 
     2043: (isTalent = false) => new GIStatus(2043, '水光破镜', '所附属角色受到的[水元素伤害]+1。；【[持续回合]：{roundCnt}】；(同一方场上最多存在一个此状态)',
@@ -529,7 +529,7 @@ const statusTotal: StatusObj = {
             exec: () => {
                 if (status.perCnt > 0) --status.perCnt;
             },
-        }), { pct: 1 }),
+        }), { pct: 1, icbg: STATUS_BG_COLOR[6] }),
 
     2047: () => new GIStatus(2047, '活化激能', '【本角色造成或受到元素伤害后：】累积1层｢活化激能｣。(最多累积3层)；【结束阶段：】如果｢活化激能｣层数已达到上限，就将其清空。同时，角色失去所有[充能]。',
         'sts2047', 0, [9], 0, 3, -1, (status, event = {}) => {
@@ -767,10 +767,10 @@ const statusTotal: StatusObj = {
     2070: (summonId: number) => new GIStatus(2070, '阿丑', '【我方出战角色受到伤害时：】抵消1点伤害。；【[可用次数]：{useCnt}】',
         '', 1, [2], 1, 0, -1, (status, event = {}) => {
             const { restDmg = 0, summon } = event;
-            if (restDmg <= 0) return { restDmg };
+            if (restDmg <= 0) return { restDmg }
             --status.useCnt;
             if (summon) --summon.useCnt;
-            return { restDmg: restDmg - 1 };
+            return { restDmg: restDmg - 1 }
         }, { smnId: summonId }),
 
     2071: () => new GIStatus(2071, '通塞识', '【所附属角色进行[重击]时：】造成的[物理伤害]变为[草元素伤害]，并且会在技能结算后召唤【藏蕴花矢】。；【[可用次数]：{useCnt}】',
@@ -861,10 +861,10 @@ const statusTotal: StatusObj = {
     2077: (summonId: number) => new GIStatus(2077, '兔兔伯爵', '【我方出战角色受到伤害时：】抵消2点伤害。；【[可用次数]：{useCnt}】',
         '', 1, [2], 1, 0, -1, (status, event = {}) => {
             const { restDmg = 0, summon } = event;
-            if (restDmg <= 0) return { restDmg };
+            if (restDmg <= 0) return { restDmg }
             --status.useCnt;
             if (summon) --summon.useCnt;
-            return { restDmg: Math.max(0, restDmg - 2) };
+            return { restDmg: Math.max(0, restDmg - 2) }
         }, { smnId: summonId }),
 
     2078: () => new GIStatus(2078, '彼岸蝶舞', '所附属角色造成的[物理伤害]变为[火元素伤害]，且角色造成的[火元素伤害]+1。；【所附属角色进行[重击]时：】目标角色附属【血梅香】。；【[持续回合]：{roundCnt}】',
@@ -1187,13 +1187,13 @@ const statusTotal: StatusObj = {
         '', 1, [2], 1, 0, -1, (status, event = {}) => {
             const { restDmg = 0, heros = [] } = event;
             const hero = heros.find(h => h.id == 1209);
-            if (restDmg <= 0 || !hero || heros[getAtkHidx(heros)]?.id == 1209) return { restDmg };
+            if (restDmg <= 0 || !hero || heros[getAtkHidx(heros)]?.id == 1209) return { restDmg }
             --status.useCnt;
             return {
                 pendamage: isCdt(hero.hp >= 7, 1),
                 hidxs: isCdt(hero.hp >= 7, [heros.findIndex(h => h.id == 1209)]),
                 restDmg: restDmg - 1,
-            };
+            }
         }, { smnId: summonId }),
 
     2106: () => shieldStatus(2106, '烈烧佑命护盾', 1, 3),
@@ -1434,9 +1434,9 @@ const statusTotal: StatusObj = {
     2134: (summonId: number) => new GIStatus(2134, '惊奇猫猫盒的嘲讽', '【我方出战角色受到伤害时：】抵消1点伤害。(每回合1次)',
         '', 1, [2], 1, 0, -1, (status, event = {}) => {
             const { restDmg = 0 } = event;
-            if (restDmg <= 0) return { restDmg };
+            if (restDmg <= 0) return { restDmg }
             --status.useCnt;
-            return { restDmg: restDmg - 1 };
+            return { restDmg: restDmg - 1 }
         }, { smnId: summonId }),
 
     2135: (icon = '') => new GIStatus(2135, '大将旗指物', '我方角色造成的[岩元素伤害]+1。；【[持续回合]：{roundCnt}】(可叠加，最多叠加到3回合)',
@@ -1496,9 +1496,9 @@ const statusTotal: StatusObj = {
     2139: (cnt = 1) => new GIStatus(2139, '炎之魔蝎·守势', '【附属角色受到伤害时：】抵消1点伤害。；【[可用次数]：{useCnt}】',
         '', 0, [2], cnt, 0, -1, (status, event = {}) => {
             const { restDmg = 0 } = event;
-            if (restDmg <= 0) return { restDmg };
+            if (restDmg <= 0) return { restDmg }
             --status.useCnt;
-            return { restDmg: restDmg - 1 };
+            return { restDmg: restDmg - 1 }
         }),
 
     2140: (icon = '') => new GIStatus(2140, '雷霆探针', '【所在阵营角色使用技能后：】对所在阵营出战角色附属【雷鸣探知】。(每回合1次)',
@@ -1770,7 +1770,7 @@ const statusTotal: StatusObj = {
         }),
 
     2162: () => new GIStatus(2162, '机关铸成之链(生效中)', '【所附属角色每次受到伤害或治疗后：】累积1点｢备战度｣(最多累积2点)。；【我方打出原本费用不多于｢备战度｣的｢武器｣或｢圣遗物｣时:】移除此状态，以免费打出该牌。',
-        'buff3', 1, [4, 9], 0, 0, -1, (status, event = {}) => {
+        'buff3', 0, [4, 9], 0, 0, -1, (status, event = {}) => {
             const { card, trigger = '', heal = [], hidx = -1, minusDiceCard: mdc = 0 } = event;
             const isMinus = card && card.subType.some(st => st < 2) && card.cost > mdc && status.useCnt >= card.cost;
             return {
@@ -1883,9 +1883,9 @@ const statusTotal: StatusObj = {
     2173: () => new GIStatus(2173, '抗争之日·碎梦之时(生效中)', '本回合中，所附属角色受到的伤害-1。；【[可用次数]：{useCnt}】',
         '', 0, [2], 4, 0, 1, (status, event = {}) => {
             const { restDmg = 0 } = event;
-            if (restDmg <= 0) return { restDmg };
+            if (restDmg <= 0) return { restDmg }
             --status.useCnt;
-            return { restDmg: Math.max(0, restDmg - 1) };
+            return { restDmg: Math.max(0, restDmg - 1) }
         }),
 
     2174: () => new GIStatus(2174, '严格禁令', '本回合中，所在阵营打出的事件牌无效。；【[可用次数]：{useCnt}】',
@@ -2071,7 +2071,7 @@ const statusTotal: StatusObj = {
             }
         }), { expl }),
 
-    2191: () => new GIStatus(2191, '火之新生·锐势', '角色造成的[火元素伤害]+1。', 'buff4', 0, [6, 10], 1, 0, -1, () => ({ addDmg: 1 })),
+    2191: () => new GIStatus(2191, '火之新生·锐势', '角色造成的[火元素伤害]+1。', 'buff4', 0, [6, 10], 1, 0, -1, () => ({ addDmg: 1 }), { icbg: STATUS_BG_COLOR[2] }),
 
     2192: (icon = '') => new GIStatus(2192, '寒烈的惩裁', '【角色进行｢普通攻击｣时：】如果角色生命至少为6，则此技能少花费1个[冰元素骰]，伤害+2，且对自身造成1点[穿透伤害]。；如果角色生命不多于5，则使此伤害+1，并且技能结算后治疗角色2点。；【[可用次数]：{useCnt}】',
         icon, 0, [1, 6], 2, 0, -1, (_status, event = {}) => {
@@ -2108,7 +2108,7 @@ const statusTotal: StatusObj = {
         }), { icbg: STATUS_BG_COLOR[4] }),
 
     2194: (icon = '') => new GIStatus(2194, '普世欢腾', '【我方出战角色受到伤害或治疗后：】叠加1点【狂欢值】。；【[持续回合]：{roundCnt}】',
-        icon, 1, [3, 4], -1, 0, 2, (_status, event = {}) => {
+        icon, 1, [4], -1, 0, 2, (_status, event = {}) => {
             const { heal = [], hidx = -1, trigger = '' } = event;
             const triggers: Trigger[] = ['getdmg'];
             if (trigger == 'heal' && (heal[hidx] ?? 0) > 0) triggers.push('heal');
@@ -2125,9 +2125,10 @@ const statusTotal: StatusObj = {
             exec: () => { --status.useCnt },
         })),
 
-    2196: (icon = '') => new GIStatus(2196, '万众瞩目', '【角色进行｢普通攻击｣时：】使角色造成的造成的[物理伤害]变为[水元素伤害]。如果角色处于｢荒｣形态，则治疗我方所有后台角色1点; 如果角色处于｢芒｣形态，则此伤害+2，但是对一位受伤最少的我方角色造成1点[穿透伤害]。【[可用次数]：{useCnt}】',
+    2196: (icon = '') => new GIStatus(2196, '万众瞩目', '【角色进行｢普通攻击｣时：】使角色造成的造成的[物理伤害]变为[水元素伤害]。如果角色处于｢荒｣形态，则治疗我方所有后台角色1点; 如果角色处于｢芒｣形态，则此伤害+2，但是对一位受伤最少的我方角色造成1点[穿透伤害]。；【[可用次数]：{useCnt}】',
         icon, 0, [1, 8], 1, 0, -1, (_status, event = {}) => {
             const { heros = [], hidx = -1 } = event;
+            if (hidx == -1) return;
             const { local } = heros[hidx];
             let res: StatusHandleRes = {};
             if (local.includes(11)) res = { heal: 1, hidxs: getBackHidxs(heros) };
@@ -2161,9 +2162,9 @@ const statusTotal: StatusObj = {
         }, { icbg: STATUS_BG_COLOR[6] }),
 
     2199: (icon = '') => new GIStatus(2199, '氛围烈焰', '【我方宣布结束时：】如果我方的手牌数量不多于1，则造成1点[火元素伤害]。；【[可用次数]：{useCnt}】',
-        icon, 1, [1, 4], 2, 0, -1, (_status, event = {}) => {
-            const { hcardsCnt = 10 } = event;
-            if (hcardsCnt > 1) return;
+        icon, 1, [1], 2, 0, -1, (_status, event = {}) => {
+            const { hcardsCnt = 10, force = false } = event;
+            if (hcardsCnt > 1 && !force) return;
             return {
                 trigger: ['end-phase'],
                 damage: 1,
@@ -2309,6 +2310,15 @@ const statusTotal: StatusObj = {
         }),
 
     2211: () => shieldStatus(2211, 'todo重燃的绿洲之心护盾'),
+
+    2212: (summonId: number) => new GIStatus(2212, '黑色幻影', '【我方出战角色受到伤害时：】抵消1点伤害。；【[可用次数]：{useCnt}】',
+        '', 1, [2], 1, 0, -1, (status, event = {}) => {
+            const { restDmg = 0, summon } = event;
+            if (restDmg <= 0) return { restDmg }
+            --status.useCnt;
+            if (summon) --summon.useCnt;
+            return { restDmg: restDmg - 1 }
+        }, { smnId: summonId }),
 
 };
 

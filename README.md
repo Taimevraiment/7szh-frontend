@@ -2914,3 +2914,27 @@ x取值为 any | water | fire | thunder | ice | wind | rock | grass 对应敌方
 类型：number
 
 解释：敌方受到元素伤害的种类(用位计数)
+
+## disCardCnt
+
+类型：number
+
+解释：每回合舍弃卡牌的数量
+
+## reconcileCnt
+
+类型：number
+
+解释：每回合调和次数
+
+## discardIds
+
+类型：number[]
+
+解释：舍弃卡牌的id
+
+## initCardIds
+
+类型：number[]
+
+解释：初始手牌id

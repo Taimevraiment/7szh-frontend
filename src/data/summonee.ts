@@ -31,7 +31,7 @@ class GISummonee implements Summonee {
         this.id = id;
         this.name = name;
         this.description = description;
-        this.src = src.startsWith('https://') ? src : 'http://taim.3vhost.club/geniusInovakation/' + src;
+        this.src = src.startsWith('https://') || src == '' ? src : 'http://taim.3vhost.club/geniusInovakation/' + src;
         this.useCnt = useCnt;
         this.maxUse = maxUse;
         this.shield = shield;
@@ -838,7 +838,7 @@ const summonTotal: SummoneeObj = {
                     const { summon: smn = summon } = execEvent;
                     if (!hasTround) smn.useCnt = Math.max(0, smn.useCnt - 1);
                     if (tround == 0) return { cmds: [{ cmd: 'attack' }] }
-                    return { cmds: [{ cmd: 'attack', element: -1, hidxs: getMinHertHidxs(heros), isOppo: true }, { cmd: 'attack', cnt: 1 }] }
+                    return { cmds: [{ cmd: 'attack', element: -1, hidxs: getMinHertHidxs(heros), cnt: 1, isOppo: true }, { cmd: 'attack', cnt: 1 }] }
                 },
             }
         }),
@@ -847,7 +847,7 @@ const summonTotal: SummoneeObj = {
         '',
         useCnt, 4, 1, 0, 0, (summon, event) => {
             const { tround = 0, heros = [] } = event;
-            const hasTround = tround == 0 && heros.some(h => h.hp <= 5);
+            const hasTround = tround == 0 && heros.some(h => h.hp <= 4);
             return {
                 trigger: ['phase-end'],
                 tround: isCdt(hasTround, 1),
@@ -872,7 +872,7 @@ const summonTotal: SummoneeObj = {
                     else return phaseEndAtk(execEvent.summon ?? summon);
                 }
             }
-        }),
+        }, { stsId: 2212 }),
 
     3063: () => new GISummonee(3063, '增殖生命体', '【结束阶段：】造成{dmg}点[草元素伤害]。；【[可用次数]：{useCnt}】',
         '',
