@@ -2149,13 +2149,16 @@ const statusTotal: StatusObj = {
     2198: (icon = '', useCnt = 1) => new GIStatus(2198, '飞云旗阵', '我方角色进行｢普通攻击｣时：造成的伤害+1。；如果我方手牌数量不多于1，则此技能少花费1个元素骰。；【[可用次数]：{useCnt}(可叠加，最多叠加到4次)】',
         icon, 1, [4, 6], useCnt, 4, -1, (status, event = {}) => {
             const { hcardsCnt = 10, heros = [], trigger = '' } = event;
-            if (trigger == 'calc' && hcardsCnt <= 1) {
-                const { minusSkillRes } = minusDiceSkillHandle(event, { skilltype1: [0, 0, 1] });
-                return { ...minusSkillRes }
+            if (trigger == 'calc') {
+                let res: StatusHandleRes = {};
+                if (hcardsCnt <= 1) {
+                    const { minusSkillRes } = minusDiceSkillHandle(event, { skilltype1: [0, 0, 1] });
+                    res = { ...minusSkillRes };
+                }
+                return { ...res, addDmgType1: 1 }
             }
             return {
                 trigger: ['skilltype1'],
-                addDmgType1: 1,
                 addDmgCdt: isCdt(hcardsCnt == 0 && !!heros.find(h => h.id == 1507)?.talentSlot, 2),
                 exec: () => { --status.useCnt }
             }
@@ -2163,8 +2166,8 @@ const statusTotal: StatusObj = {
 
     2199: (icon = '') => new GIStatus(2199, '氛围烈焰', '【我方宣布结束时：】如果我方的手牌数量不多于1，则造成1点[火元素伤害]。；【[可用次数]：{useCnt}】',
         icon, 1, [1], 2, 0, -1, (_status, event = {}) => {
-            const { hcardsCnt = 10, force = false } = event;
-            if (hcardsCnt > 1 && !force) return;
+            const { hcardsCnt = 10 } = event;
+            if (hcardsCnt > 1) return;
             return {
                 trigger: ['end-phase'],
                 damage: 1,
@@ -2192,20 +2195,23 @@ const statusTotal: StatusObj = {
     2202: (icon = '', useCnt = 1) => new GIStatus(2202, '迸发扫描', '【双方选择行动前：】如果我方场上存在草原核或丰穰之核，则使其[可用次数]-1，并[舍弃]我方牌库顶的1张卡牌。然后，造成所[舍弃]卡牌的元素骰费用+1的[草元素伤害]。；【[可用次数]：{useCnt}(可叠加，最多叠加到3次)】',
         icon, 1, [1], useCnt, 3, -1, (_status, event = {}) => {
             const { heros = [], hidx = -1, summons = [], pile = [] } = event;
-            if (pile.length == 0) return;
-            const sts2005 = heros[hidx].outStatus.find(ost => ost.id == 2005);
-            if (sts2005) --sts2005.useCnt;
-            else {
-                const summon = summons.find(smn => smn.id == 3043);
-                if (!summon) return;
-                --summon.useCnt;
-            }
+            if (pile.length == 0 || heros[hidx].outStatus.every(ost => ost.id != 2005) && summons.every(smn => smn.id != 3043)) return;
             return {
                 trigger: ['action-start', 'action-start-oppo'],
                 damage: pile[0].cost + pile[0].anydice + 1,
                 element: 7,
-                exec: eStatus => {
-                    if (eStatus) --eStatus.useCnt;
+                exec: (eStatus, execEvent = {}) => {
+                    if (eStatus) {
+                        --eStatus.useCnt;
+                        const { heros: hs = [], summons: smns = [] } = execEvent;
+                        const sts2005 = hs[hidx].outStatus.find(ost => ost.id == 2005);
+                        if (sts2005) --sts2005.useCnt;
+                        else {
+                            const summon = smns.find(smn => smn.id == 3043);
+                            --summon!.useCnt;
+                        }
+                        return { cmds: [{ cmd: 'discard', element: 2 }] }
+                    }
                 }
             }
         }, { icbg: STATUS_BG_COLOR[7] }),

@@ -1690,39 +1690,39 @@ svg {
 
 @keyframes discard-pile {
   20% {
-    transform: translate(500%, -10%);
+    transform: translate(800%, -10%);
     z-index: 5;
   }
 
   80% {
-    transform: translate(500%, -10%);
+    transform: translate(800%, -10%);
     z-index: 5;
   }
 
   100% {
     transform-origin: center center;
-    transform: translate(500%, -10%) scale(0);
+    transform: translate(800%, -10%) scale(0);
     z-index: 5;
   }
 }
 
 @keyframes discard-hcard-my {
   0% {
-    transform: translate(500%, 200%);
+    transform: translate(800%, 200%);
   }
 
   20% {
-    transform: translate(500%, -10%);
+    transform: translate(800%, -10%);
     z-index: 5;
   }
 
   80% {
-    transform: translate(500%, -10%);
+    transform: translate(800%, -10%);
     z-index: 5;
   }
 
   100% {
-    transform: translate(500%, -10%) scale(0);
+    transform: translate(800%, -10%) scale(0);
     z-index: 5;
   }
 }
@@ -1733,17 +1733,17 @@ svg {
   }
 
   20% {
-    transform: translate(500%, -10%);
+    transform: translate(800%, -10%);
     z-index: 5;
   }
 
   80% {
-    transform: translate(500%, -10%);
+    transform: translate(800%, -10%);
     z-index: 5;
   }
 
   100% {
-    transform: translate(500%, -10%) scale(0);
+    transform: translate(800%, -10%) scale(0);
     z-index: 5;
   }
 }

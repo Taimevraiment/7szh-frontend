@@ -695,16 +695,14 @@ export default class GeniusInvokationClient {
                 flag: 'diff-' + this.playerIdx,
             });
         }
-        if (players[this.playerIdx]?.phase != PHASE.CHOOSE_HERO ||
-            !chooseInitHero && !flag.startsWith('infoHandle:getServerInfo-changeTo')) {
+        if (players[this.playerIdx]?.phase != PHASE.CHOOSE_HERO || !chooseInitHero && !flag.startsWith('infoHandle:getServerInfo-changeTo')) {
             // if (flag != 'endPhase-hasStatusAtk') this.players = [...players];
             // else this.players.forEach(p => p.status = p.status ^ 1);
             this.players = [...players];
         }
         if (round > 1 || this.player?.phase != PHASE.CHOOSE_HERO || changeTo == this.playerIdx) {
             if (this.players.some(p => p.heros.some(h => {
-                return h.inStatus.some(ist => (ist.useCnt == 0 || ist.roundCnt == 0) && ist.type.every(t => ![1, 9, 15].includes(t))) ||
-                    h.outStatus.some(ost => (ost.useCnt == 0 || ost.roundCnt == 0) && ost.type.every(t => ![1, 9, 15].includes(t)))
+                return [...h.inStatus, ...h.outStatus].some(sts => (sts.useCnt == 0 || sts.roundCnt == 0) && sts.type.every(t => ![1, 9, 15].includes(t)));
             }))) {
                 this.players.forEach(p => p.heros.forEach((h, hi, ha) => {
                     const { nstatus: nist, nheros: inh } = this._updateStatus([], h.inStatus, ha, hi);
@@ -767,7 +765,7 @@ export default class GeniusInvokationClient {
             if (this.round == 1) this.phase = phase;
             setTimeout(async () => {
                 this.isReseted = false;
-                this.player.playerInfo.disCardCnt = 0;
+                this.player.playerInfo.discardCnt = 0;
                 this.player.playerInfo.reconcileCnt = 0;
                 this.player.heros.forEach(h => { // 重置技能
                     for (let i = 0; i < h.skills.length; ++i) {
@@ -806,6 +804,7 @@ export default class GeniusInvokationClient {
                     site: this.player.site,
                     summonee: this.player.summon,
                     cmds,
+                    playerInfo: this.player.playerInfo,
                     resetOnly: true,
                     flag: 'getServerInfo-phase-start-reset-' + this.playerIdx,
                 });
@@ -852,6 +851,7 @@ export default class GeniusInvokationClient {
         if (this.phase == PHASE.ACTION && phase == PHASE.ACTION_END && this.playerIdx == execIdx) { // 结束阶段
             await this._sendTip('结束阶段');
             setTimeout(async () => {
+                await this._wait(() => this.taskQueue.isTaskEmpty() && this.actionInfo == '');
                 this._doSlot('phase-end', { pidx: startIdx, hidxs: allHidxs(players[startIdx].heros, { isAll: true }) });
                 await this._execTask(true);
                 this._doStatus(startIdx, [1, 3, 9], 'phase-end', { intvl: [100, 500, 1000, 100] });
@@ -871,16 +871,14 @@ export default class GeniusInvokationClient {
                 this._wait(() => !this.taskQueue.isExecuting, { delay: 1100 });
                 if (this.taskQueue.hasStatusAtk() || this.isSwitchAtking) {
                     this.isSwitchAtking = true;
+                    // if (this.isSwitchAtking) {
                     await this._wait(() => !this.isSwitchAtking, { delay: 2300 });
                 }
                 if (this.players.every(p => p.heros.some(h => h.isFront))) {
                     this.players.forEach(p => {
                         p.heros.forEach((h, hi, a) => {
-                            h.inStatus.forEach(ist => {
-                                if (ist.roundCnt > 0) --ist.roundCnt;
-                            });
-                            h.outStatus.forEach(ost => {
-                                if (ost.roundCnt > 0) --ost.roundCnt;
+                            [...h.inStatus, ...h.outStatus].forEach(sts => {
+                                if (sts.roundCnt > 0) --sts.roundCnt;
                             });
                             const { nstatus: nist, nheros: inh } = this._updateStatus([], h.inStatus, a, hi);
                             const { nstatus: nost, nheros: onh } = this._updateStatus([], h.outStatus, inh, hi);
@@ -1231,12 +1229,14 @@ export default class GeniusInvokationClient {
                 });
                 const ndices = this.rollDice(dices);
                 this.handCards = this.handCards.filter(card => !card.selected);
+                ++this.player.playerInfo.reconcileCnt;
                 this.socket.emit('sendToServer', {
                     cpidx: this.playerIdx,
                     handCards: this.handCards,
                     currCard: this.currCard,
                     reconcile: true,
                     dices: ndices,
+                    playerInfo: this.player.playerInfo,
                     flag: 'reconcile-' + this.playerIdx,
                 });
                 this.cancel();
@@ -1637,10 +1637,13 @@ export default class GeniusInvokationClient {
                 doAfterStatus(h.inStatus, 0, afterASkillTrgs[hi], aswhidx, eswhidx);
                 if (hi == hidx) doAfterStatus(h.outStatus, 1, afterASkillTrgs[hi], aswhidx, eswhidx);
             });
-            for (const smn of clone(this.player.summon)) {
+            for (const smn of aSummon) {
                 ([`after-skilltype${skill.type}`, `after-skill`] as Trigger[]).forEach(trg => {
                     const smnres = newSummonee(smn.id).handle(smn, { heros: bHeros.at(-1) ?? [], trigger: trg, hcard: curCard });
-                    if (smnres?.trigger?.includes(trg)) calcAtk(smnres, 'summon', smn.id, aswhidx, eswhidx);
+                    if (smnres?.trigger?.includes(trg)) {
+                        calcAtk(smnres, 'summon', smn.id, aswhidx, eswhidx);
+                        this._doSummon(this.playerIdx, trg, { csummon: [smn], isExec });
+                    }
                 });
             }
         }
@@ -1996,23 +1999,17 @@ export default class GeniusInvokationClient {
     /**
      * 结束回合
      */
-    async endPhase() {
+    endPhase() {
         if (this.player.status == 0 || !this.canAction || this.phase > PHASE.ACTION) return;
-        let isEndAtk = true;
         this._doStatus(this.playerIdx, [1, 4], ['end-phase', 'any-end-phase'], { intvl: [100, 500, 500, 200], phase: PHASE.ACTION_END });
-        isEndAtk &&= this.taskQueue.isTaskEmpty();
-        await this._execTask();
         this._doStatus(this.playerIdx ^ 1, 4, 'any-end-phase', { intvl: [100, 500, 500, 200], phase: PHASE.ACTION_END });
-        isEndAtk &&= this.taskQueue.isTaskEmpty();
-        await this._execTask();
-        this._doSummon(this.playerIdx, 'end-phase', { isUnshift: true });
-        isEndAtk &&= this.taskQueue.isTaskEmpty();
-        await this._execTask();
+        this._doSummon(this.playerIdx, 'end-phase');
+        this._execTask();
         this.socket.emit('sendToServer', {
             endPhase: true,
             heros: this.player.heros,
             eheros: this.opponent.heros,
-            isEndAtk,
+            isEndAtk: this.taskQueue.isTaskEmpty(),
             flag: 'endPhase-' + this.playerIdx
         });
         this.cancel();
@@ -2994,8 +2991,6 @@ export default class GeniusInvokationClient {
                                         }
                                         currSummon = summon;
                                     }
-                                    // const willAttachs: number[][] = new Array(aheros.length + eheros.length).fill(0).map(() => []);
-                                    // willAttachs[eFrontIdx + (pidx ^ 1) * aheros.length].push(summon.element);
                                     fIsEndAtk = this.taskQueue.isTaskEmpty() && !isSwitchAtk;
                                     this.socket.emit('sendToServer', {
                                         cpidx: pidx,
@@ -3035,7 +3030,7 @@ export default class GeniusInvokationClient {
                                     summonee,
                                     outStatus,
                                     isEndAtk: isEndAtk && fIsEndAtk && tround == 0,
-                                    isQuickAction: state == 'action-start',
+                                    isQuickAction: state.startsWith('action-start'),
                                     step: 4,
                                     flag: `_doSummon4-${summon.name}-${pidx}`,
                                 });
@@ -3179,7 +3174,7 @@ export default class GeniusInvokationClient {
                                 },
                                 (isEndAtk = false) => { // 更新site数据
                                     siteexecres.isDestroy &&= (!siteres.isExchange || isExchange);
-                                    isQuickAction ||= state == 'action-start';
+                                    isQuickAction ||= state.startsWith('action-start');
                                     this.socket.emit('sendToServer', {
                                         cpidx: pidx,
                                         currSite: site,
@@ -3272,6 +3267,7 @@ export default class GeniusInvokationClient {
                     summons: p.summon,
                     esummons: players[pidx ^ 1].summon,
                     hcardsCnt: p.handCards.length,
+                    pile: p.pile,
                 });
                 if (this._hasNotTrigger(stsres.trigger, trigger)) continue;
                 if (group == 1) {
@@ -3285,7 +3281,7 @@ export default class GeniusInvokationClient {
                 if (types.includes(1) && (stsres.damage || stsres.pendamage || stsres.heal)) {
                     statusIdsAndPidx.push({
                         id: sts.id, type: group, pidx, isSelf: +!!stsres.isSelf, trigger, hidx,
-                        isQuickAction: isQuickAction == 2 || (!!card && !card.subType.includes(7)) || trigger == 'action-start', isSwitchAtk
+                        isQuickAction: isQuickAction == 2 || (!!card && !card.subType.includes(7)) || trigger.startsWith('action-start'), isSwitchAtk
                     });
                 }
                 if (isExec) {
@@ -3460,7 +3456,7 @@ export default class GeniusInvokationClient {
             const { id: sid, type: stype, pidx, isSelf = 0, trigger = '', hidx: ohidx = this.players[pidx].hidx,
                 isSwitchAtk: isa = false, isQuickAction = false, isAfterSwitch = false } = stsTask;
             if (isAfterSwitch) await this._delay(2300);
-            let { heros: aheros, hidx: ahidx, summon: aSummon } = this.players[pidx];
+            let { heros: aheros, hidx: ahidx, summon: aSummon, pile, handCards: { length: hcardsCnt } } = this.players[pidx];
             let { heros: eheros, hidx: eFrontIdx, summon: eSummon } = this.players[pidx ^ 1];
             ahidx = stype == 1 ? ahidx : ohidx;
             const getAtkStatus = () => (stype == 0 ? aheros[ahidx].inStatus : aheros[ahidx].outStatus).find(sts => sts.id == sid) ?? heroStatus(sid);
@@ -3470,6 +3466,9 @@ export default class GeniusInvokationClient {
                 eheros,
                 trigger,
                 hidx: ahidx,
+                pile,
+                summons: aSummon,
+                hcardsCnt,
                 force: true,
             });
             const stsreshidxs = stsres.hidxs ?? getBackHidxs(isSelf ? aheros : eheros);
@@ -3489,7 +3488,8 @@ export default class GeniusInvokationClient {
                 );
             aheros = isSelf ? eheros1 : aheros1;
             eheros = isSelf ? aheros1 : eheros1;
-            const { cmds: execmds = [] } = stsres.exec?.(getAtkStatus(), { heros: aheros }) ?? {};
+            let summonee = isSelf ? esummon : asummon;
+            const { cmds: execmds = [] } = stsres.exec?.(getAtkStatus(), { heros: aheros, summons: summonee }) ?? {};
             const aWillAttach: number[][] = new Array(aheros.length + eheros.length).fill(0).map(() => []);
             for (let i = 0; i < aheros.length; ++i) aWillAttach[i + (pidx ^ 1) * eheros.length].push(willAttachs1[i]);
             let willHeals: number[] | undefined;
@@ -3524,7 +3524,7 @@ export default class GeniusInvokationClient {
             this.socket.emit('sendToServer', {
                 statusId: [sid, stype, ahidx, isa, isQuickAction],
                 cpidx: pidx,
-                summonee: isSelf ? esummon : asummon,
+                summonee,
                 heros: aheros,
                 eheros,
                 esummon: isSelf ? asummon : esummon,
@@ -3538,7 +3538,7 @@ export default class GeniusInvokationClient {
                 playerInfo: this.players[pidx].playerInfo,
                 isEndAtk: this.taskQueue.isTaskEmpty() && !isSwitchAtk && !isa,
                 step: 1,
-                flag: `_dostatusAtk-${sid}-${pidx}`,
+                flag: `_doStatusAtk-${sid}-${pidx}`,
             });
             resolve(true);
         });
@@ -3803,6 +3803,9 @@ export default class GeniusInvokationClient {
             if (!isExec) this.siteCnt[pidx].forEach((_, i, a) => a[i] += siteCnt[pidx][i]);
         }
     }
+    _doDiscard() {
+
+    }
     /**
      * 执行命令集
      * @param cmds 命令集
@@ -3899,7 +3902,7 @@ export default class GeniusInvokationClient {
                         } else {
                             const hcardsSorted = player.handCards.slice().sort((a, b) => ((b.cost + b.anydice) - (a.cost + a.anydice)) || (Math.random() - 0.5));
                             const targetCnt = discardCnt;
-                            while (discardCnt-- > 0) {
+                            while (discardCnt > 0) {
                                 if (element == 0) {
                                     if (hcardsSorted.length == 0) break;
                                     const curDiscard = clone(hcardsSorted.shift()!)
@@ -3915,11 +3918,15 @@ export default class GeniusInvokationClient {
                                     discards.push(clone(player.pile[disIdx]));
                                     discardIdxs.push(disIdx);
                                 }
+                                --discardCnt;
                             }
                         }
                     }
                     cmds[i].hidxs = [...discardIdxs];
                 }
+                player.playerInfo.discardCnt += discards.length;
+                player.playerInfo.discardIds.push(...discards.map(c => c.id));
+                this._doDiscard();
             } else if (cmd == 'getDice' && isExec) {
                 ndices = this._getDice(dices, cnt, element, { pidx });
             } else if (cmd == 'getEnergy' && isExec) {
@@ -4488,7 +4495,7 @@ const NULL_PLAYER: Player = {
         usedCardIds: [],
         destroyedSite: 0,
         oppoGetElDmgType: 0,
-        disCardCnt: 0,
+        discardCnt: 0,
         reconcileCnt: 0,
         discardIds: [],
         initCardIds: [],

@@ -1,6 +1,6 @@
 <template>
   <div class="container" :class="{ 'mobile-container': isMobile }" @click.stop="cancel">
-    <button v-if="!client.isStart || isLookon > -1" class="exit" @click.stop="exit">
+    <button v-if="!client.isStart || isLookon > -1 || hasAI" class="exit" @click.stop="exit">
       返回
     </button>
     <div style="position: absolute;left: 60px;color: white;">房间号{{ roomId }}</div>
@@ -204,6 +204,7 @@ const client = ref(new GeniusInvokationClient(socket, userid, cplayers, isMobile
 
 const canAction = computed<boolean>(() => client.value.canAction && client.value.tip.content == '' && client.value.actionInfo == '' && !client.value.taskQueue.isExecuting); // 是否可以操作
 const afterWinHeros = ref<Hero[][]>([]); // 游戏结束后显示的角色信息
+const hasAI = ref<boolean>(false); // 是否有AI
 let clientAI: GeniusInvokationClient | null = null;
 
 // 获取骰子背景
@@ -343,7 +344,8 @@ const addAI = () => socket.emit('addAI');
 // 移除AI
 const removeAI = () => {
   socket.emit('removeAI');
-  clientAI = null
+  clientAI = null;
+  hasAI.value = false;
 }
 
 const getPlayerList = ({ plist }: { plist: Player[] }) => {
@@ -390,6 +392,7 @@ onMounted(() => {
     const AIDeck = [{ name: 'AIDeck', shareCode }];
     clientAI = new GeniusInvokationClient(socket, 1, cplayers, false, countdown, AIDeck, 0, -1);
     clientAI.startGame();
+    hasAI.value = true;
   });
 });
 
@@ -481,17 +484,17 @@ const devOps = (cidx = 0) => {
       const [stsid = 0, hidx = heros.findIndex(h => h.isFront)] = op.slice(1).split(/[:：]+/).map(h);
       if (stsid < 2000 || stsid > 3000) continue;
       const sts = heroStatus(stsid);
-      const cmd = `get${['In', 'Out'][sts.group]}Status` as Cmd;
-      const cmds: Cmds[] = [{ cmd, status: [sts], hidxs: [hidx] }];
+      const cmds: Cmds[] = [{ cmd: 'getStatus', status: [sts], hidxs: [hidx] }];
       client.value._doCmds(cmds, { heros, isEffectHero: true });
       flag.add('setStatus');
     } else { // 摸牌
-      const [cid = 0, cnt = 1] = op.split('*').map(h);
+      const isAttach = op.endsWith('~');
+      const [cid = 0, cnt = 1] = op.slice(0, isAttach ? -1 : undefined).split('*').map(h);
       if (cid == 0) {
         cards.push(cardTotal.find(c => c.userType == heros[client.value.players[cpidx].hidx].id)?.id ?? 0);
       }
       if (cid > 0) cards.push(...new Array(cnt).fill(cid));
-      cards = client.value._doCmds([{ cmd: 'getCard', cnt, card: cards }], { pidx: cpidx }).cmds?.[0].card as Card[];
+      cards = client.value._doCmds([{ cmd: 'getCard', cnt, card: cards, isAttach }], { pidx: cpidx }).cmds?.[0].card as Card[];
       flag.add('getCard');
       cmds.push({ cmd: 'getCard', cnt: cards.length, card: cards });
     }

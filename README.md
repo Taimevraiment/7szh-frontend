@@ -1613,6 +1613,12 @@ constructor(
 
 解释：切换角色减骰以后新的需要骰子数
 
+##### summons
+
+类型：Summonee[]
+
+解释：执行时我方召唤物
+
 #### StatusExecRes
 
 ##### cmds

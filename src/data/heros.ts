@@ -229,8 +229,8 @@ const readySkillTotal: { [key: number]: (...args: any) => Skill } = {
 
     21: () => new GISkill('长枪开相', '(需准备1个行动轮)；造成{dmg}点[岩元素伤害]; 如果本回合中我方[舍弃]或[调和]过至少1张牌，则此伤害+1。',
         2, 2, 0, 6, { ec: -2, rdskidx: 21 }, '', [], event => {
-            const { playerInfo: { disCardCnt = 0, reconcileCnt = 0 } = {} } = event;
-            return { addDmgCdt: isCdt(disCardCnt + reconcileCnt > 0, 1) }
+            const { playerInfo: { discardCnt = 0, reconcileCnt = 0 } = {} } = event;
+            return { addDmgCdt: isCdt(discardCnt + reconcileCnt > 0, 1) }
         }),
 }
 
@@ -1360,14 +1360,14 @@ const allHeros: HeroObj = {
     ]),
 
     1507: new GIHero(1507, '云堇', 2, 10, 6, 5,
-        '',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Char_Avatar_Yunjin.webp',
         skill1('拂云出手'), [
         new GISkill('旋云开相', '生成【飞云旗阵】，本角色附属【旋云护盾】并[准备技能]：【长枪开相】。', 2, 0, 3, 6, {}, [
             '',
             '',
-        ], [heroStatus(2198), heroStatus(2199), readySkill(21)], event => {
+        ], [heroStatus(2198), heroStatus(2200), readySkill(21)], event => {
             const { hero: { skills: [, { src }] } } = event;
-            return { outStatus: [heroStatus(2198, src)], inStatus: [heroStatus(2199), heroStatus(2201, [readySkill(21)])] }
+            return { outStatus: [heroStatus(2198, src)], inStatus: [heroStatus(2200), heroStatus(2201, [readySkill(21)])] }
         }),
         new GISkill('破嶂见旌仪', '造成{dmg}点[岩元素伤害]，生成3层【飞云旗阵】。', 3, 2, 3, 6, { ec: 2 }, [
             '',
@@ -1509,7 +1509,7 @@ const allHeros: HeroObj = {
     ]),
 
     1608: new GIHero(1608, '卡维', 4, 10, 7, 2,
-        '',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Char_Avatar_Kaveh.webp',
         skill1('旋规设矩'), [
         new GISkill('画则巧施', '造成{dmg}点[草元素伤害]，生成【迸发扫描】。', 2, 2, 3, 7, {}, [
             '',
@@ -1888,7 +1888,7 @@ const allHeros: HeroObj = {
     ]),
 
     1765: new GIHero(1765, '圣骸毒蝎', [0, 13], 10, 3, 0,
-        '',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Char_Monster_ScorpionSacred.webp',
         skill1('蝎爪钳击'), [
         new GISkill('蝎尾锥刺', '造成{dmg}点[雷元素伤害]。；生成1张【噬骸能量块】，随机置入我方牌库顶部2张牌之中。', 2, 3, 3, 3, {}, [
             '',
@@ -1954,7 +1954,7 @@ const allHeros: HeroObj = {
     ]),
 
     1783: new GIHero(1783, '圣骸飞蛇', [0, 13], 10, 5, 0,
-        '',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Char_Monster_ChrysopeleaSacred.webp',
         skill1('旋尾迅击'), [
         new GISkill('盘绕风引', '造成{dmg}点[风元素伤害]，摸1张【噬骸能量块】; 然后，手牌中每有1张【噬骸能量块】，摸1张牌(每回合最多抓2张)。', 2, 2, 3, 5, { pct: 2 }, [
             '',
@@ -2050,7 +2050,7 @@ const allHeros: HeroObj = {
     ]),
 
     1822: new GIHero(1822, '阿佩普的绿洲守望者', 0, 10, 7, 0,
-        '',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Char_Monster_Apep.webp',
         skill1('失乡重击'), [
         new GISkill('生命流束', '造成{dmg}点[草元素伤害]，摸1张【唤醒眷属】，生成1层【绿洲之滋养】。', 2, 2, 3, 7, {}, [
             '',

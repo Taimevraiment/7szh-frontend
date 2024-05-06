@@ -137,7 +137,7 @@ const summonTotal: SummoneeObj = {
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/12109492/19b63677c8f4e6cabed15711be406e09_2795447472820195792.png',
         2, 2, 0, 2, 2),
 
-    3008: (isTalent = false) => new GISummonee(3008, '奥兹', `【结束阶段：】造成{dmg}点[雷元素伤害]。；【[可用次数]：{useCnt}】${isTalent ? '；【菲谢尔】｢普通攻击｣后：造成2点[雷元素伤害]。(需消耗可用次数)' : ''}`,
+    3008: (isTalent = false) => new GISummonee(3008, '奥兹', `【结束阶段：】造成{dmg}点[雷元素伤害]。；【[可用次数]：{useCnt}】${isTalent ? '；【菲谢尔】｢普通攻击｣后：造成2点[雷元素伤害]。(需消耗[可用次数])' : ''}`,
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/12109492/ea0ab20ac46c334e1afd6483b28bb901_2978591195898491598.png',
         2, 2, 0, 1, 3, (summon, event) => {
             const { heros = [], trigger = '', isExec = true } = event;

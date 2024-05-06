@@ -97,10 +97,10 @@
               <div v-if="isEquipment[slidx]"
                 @click.stop="showRule((slot as Card).description, ...slotExplain[slidx].flat(2))">
                 <div class="equipment-desc" v-for="(desc, didx) in (slot as Card).descriptions" :key="didx"
-                  v-html="desc"></div>
+                  v-html="desc">
+                </div>
                 <div class="info-card-explain" v-for="(expl, eidx) in slotExplain[slidx]" :key="eidx">
                   <div v-for="(desc, didx) in expl" :key="didx" v-html="desc"></div>
-                  {{ slotExplain }}
                 </div>
               </div>
             </div>

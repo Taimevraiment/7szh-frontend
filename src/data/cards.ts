@@ -2316,12 +2316,16 @@ const allCards: CardObj = {
         1, 2, 0, [6, 7], 1212, 1, (card, event) => talentHandle(event, 0, () => {
             const { hcards = [] } = event;
             if (hcards.length > 1 || card.perCnt == 0) return;
-            return [() => { --card.perCnt; }, { addDmgCdt: 2 }]
+            return [() => { --card.perCnt }, { addDmgCdt: 2 }]
         }, 'skill'), { pct: 1, expl: talentExplain(1212, 0), anydice: 2 }),
 
     787: new GICard(787, '庄谐并举', '[战斗行动]：我方出战角色为【云堇】时，装备此牌。；【云堇】装备此牌后，立刻使用一次【破嶂见旌仪】。；装备有此牌的【云堇】在场时，我方没有手牌，则【飞云旗阵】会使｢普通攻击｣造成的伤害额外+2。',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_Yunjin.webp',
-        3, 6, 0, [6, 7], 1507, 1, talentSkill(2), { expl: talentExplain(1507, 2), energy: 2 }),
+        3, 6, 0, [6, 7], 1507, 1, (_card, event) => talentHandle(event, 2, () => {
+            const { hcards = [] } = event;
+            if (hcards.length > 0) return;
+            return [() => ({}), { addDmgCdt: 2 }]
+        }, ['skilltype1', 'other-skilltype1']), { expl: talentExplain(1507, 2), energy: 2 }),
 
     788: new GICard(788, '预算师的技艺', '[战斗行动]：我方出战角色为【卡维】时，装备此牌。；【卡维】装备此牌后，立刻使用一次【画则巧施】。；装备有此牌的【卡维】为出战角色，我方触发【迸发扫描】的效果后：将1张所[舍弃]卡牌的复制加入你的手牌。如果该牌为｢场地｣牌，则使本回合中我方下次打出｢场地｣时少花费2个元素骰。(每回合1次)',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_Kaveh.webp',

@@ -252,7 +252,7 @@ type GameInfo = {
     usedCardIds: number[], // 使用过的牌的id
     destroyedSite: number, // 我方被弃置的支援牌数量
     oppoGetElDmgType: number, // 敌方受到元素伤害的种类(用位计数)
-    disCardCnt: number, // 每回合舍弃卡牌的数量
+    discardCnt: number, // 每回合舍弃卡牌的数量
     reconcileCnt: number, // 每回合调和次数
     discardIds: number[], // 舍弃卡牌的id
     initCardIds: number[], // 初始手牌id
@@ -478,9 +478,9 @@ type StatusHandleRes = {
 }
 
 type StatusExecEvent = {
-    hidx?: number,
     changeHeroDiceCnt?: number,
     heros?: Hero[],
+    summons?: Summonee[],
 }
 
 type StatusExecRes = {
