@@ -1423,6 +1423,18 @@ constructor(
 
 解释：我方牌库
 
+##### playerInfo
+
+类型：GameInfo
+
+解释：一些游戏信息，详见类型
+
+##### getcard
+
+类型：number
+
+解释：本次摸牌数
+
 #### StatusHandleRes
 
 ##### restDmg
@@ -2240,7 +2252,7 @@ constructor(
 
 解释：是否为角色使用技能，-1为不是，否则为使用的技能的序号（从0开始）
 
-#### hidx
+##### hidx
 
 类型：number
 
@@ -2269,6 +2281,18 @@ constructor(
 类型：number[]
 
 解释：本次我方角色受到的伤害数
+
+##### getcard
+
+类型：number
+
+解释：本次摸牌数
+
+##### discard
+
+类型：number
+
+解释：本次舍弃牌数
 
 #### SiteHandleRes
 
@@ -2858,7 +2882,15 @@ x取值为 any | water | fire | thunder | ice | wind | rock | grass 对应敌方
 
 ### discard
 
-弃牌
+我方舍弃牌
+
+### getcard
+
+我方摸牌
+
+### getcard-oppo
+
+敌方摸牌
 
 
 # 文本解释 ExplainContent

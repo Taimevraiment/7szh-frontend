@@ -1702,6 +1702,7 @@ svg {
   100% {
     transform-origin: center center;
     transform: translate(800%, -10%) scale(0);
+    opacity: 0;
     z-index: 5;
   }
 }
@@ -1723,6 +1724,7 @@ svg {
 
   100% {
     transform: translate(800%, -10%) scale(0);
+    opacity: 0;
     z-index: 5;
   }
 }
@@ -1744,6 +1746,7 @@ svg {
 
   100% {
     transform: translate(800%, -10%) scale(0);
+    opacity: 0;
     z-index: 5;
   }
 }

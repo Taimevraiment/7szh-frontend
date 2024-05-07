@@ -854,7 +854,7 @@ export default class GeniusInvokationClient {
                 await this._wait(() => this.taskQueue.isTaskEmpty() && this.actionInfo == '');
                 this._doSlot('phase-end', { pidx: startIdx, hidxs: allHidxs(players[startIdx].heros, { isAll: true }) });
                 await this._execTask(true);
-                this._doStatus(startIdx, [1, 3, 9], 'phase-end', { intvl: [100, 500, 1000, 100] });
+                this._doStatus(startIdx, [1, 3, 9], 'phase-end', { intvl: [100, 500, 1000, 100], hidxs: allHidxs(players[startIdx].heros) });
                 await this._execTask(true);
                 this._doSummon(startIdx, 'phase-end');
                 await this._execTask(true);
@@ -862,7 +862,7 @@ export default class GeniusInvokationClient {
                 await this._execTask(true);
                 this._doSlot('phase-end', { pidx: startIdx ^ 1, hidxs: allHidxs(players[startIdx ^ 1].heros, { isAll: true }) });
                 await this._execTask(true);
-                this._doStatus(startIdx ^ 1, [1, 3, 9], 'phase-end', { intvl: [100, 500, 1000, 100] });
+                this._doStatus(startIdx ^ 1, [1, 3, 9], 'phase-end', { intvl: [100, 500, 1000, 100], hidxs: allHidxs(players[startIdx ^ 1].heros) });
                 await this._execTask(true);
                 this._doSummon(startIdx ^ 1, 'phase-end');
                 await this._execTask(true);
@@ -2580,6 +2580,7 @@ export default class GeniusInvokationClient {
                         dmgSource: skidx > -1 ? afhero.id : isSummon,
                         card: this.currCard,
                         minusDiceSkill: res.minusDiceSkill,
+                        playerInfo: this.players[pidx].playerInfo,
                     });
                     const skillAddDmgTrgs: Trigger[] = [`skilltype${sktype}` as Trigger, 'skill'];
                     if (sts.type.includes(6) && isReadySkill && skillAddDmgTrgs.some(trg => stsres.trigger?.includes(trg))) {
@@ -3057,7 +3058,7 @@ export default class GeniusInvokationClient {
      * @param time 当前时间
      * @param options intvl 间隔时间, changeHeroDiceCnt 切换需要的骰子, hcard 使用的牌, players 最新的玩家信息, summonDiffCnt 减少的召唤物数量, 
      *                hidx 将要切换的玩家, minusDiceSkill 用技能减骰子, isExecTask 是否执行任务队列, isExec 是否执行, firstPlayer 先手玩家pidx,
-     *                getdmg 受伤量, heal 回血量
+     *                getdmg 受伤量, heal 回血量, getcard 本次摸牌数, discard 本次舍弃牌数
      * @returns isQuickAction 是否快速行动, cmds 命令集, exchangeSite 交换的支援牌, outStatus 出战状态, minusDiceHero 减少切换角色骰子, siteCnt 支援区数量,
      *          minusDiceCard 减少使用卡骰子, minusDiceSkill 用技能减骰子
      */
@@ -3065,13 +3066,13 @@ export default class GeniusInvokationClient {
         options: {
             intvl?: number[], changeHeroDiceCnt?: number, hcard?: Card, players?: Player[], summonDiffCnt?: number, firstPlayer?: number,
             isExec?: boolean, isQuickAction?: boolean, minusDiceCard?: number, csite?: Site[], hidx?: number, isSkill?: number,
-            minusDiceSkill?: number[][], isExecTask?: boolean, getdmg?: number[], heal?: number[]
+            minusDiceSkill?: number[][], isExecTask?: boolean, getdmg?: number[], heal?: number[], getcard?: number, discard?: number,
         } = {}) {
         const states: Trigger[] = [];
         if (typeof ostates == 'string') states.push(ostates);
         else states.push(...ostates);
         const { intvl = [100, 500, 200, 100], hcard, players = this.players, isExec = true, firstPlayer = -1, hidx = -1, isSkill = -1,
-            isExecTask = false, csite, getdmg, heal } = options;
+            isExecTask = false, csite, getdmg, heal, getcard = 0, discard = 0 } = options;
         let { changeHeroDiceCnt = 0, summonDiffCnt = 0, isQuickAction = false, minusDiceCard = 0, minusDiceSkill } = options;
         let exchangeSite: [Site, number][] = [];
         const cmds: Cmds[] = [];
@@ -3104,6 +3105,8 @@ export default class GeniusInvokationClient {
                     minusDiceSkill,
                     getdmg,
                     heal,
+                    getcard,
+                    discard,
                 });
                 if (siteres.isLast && !isLast) lastSite.push(site);
                 if (this._hasNotTrigger(siteres.trigger, state) || (siteres.isLast && !isLast)) continue;
@@ -3210,7 +3213,7 @@ export default class GeniusInvokationClient {
      * @param options intvl 时间间隔, isQuickAction 是否有快速行动, isExec 是否执行, isOnlyFront 是否只执行出战角色, changeHeroDiceCnt 实际减少切换角色的骰子, heal 回血数,
      *                phase 当前最新阶段, players 最新玩家信息, hidxs 只执行某几个角色, hidx 用于指定角色(目前只用于断流),
      *                card 使用的卡, isOnlyInStatus 是否只执行角色状态, isOnlyOutStatus 是否只执行出战状态, heros 当前角色组,
-     *                isSwitchAtk 是否切换攻击角色, taskMark 任务标记
+     *                isSwitchAtk 是否切换攻击角色, taskMark 任务标记, getcard 本次摸牌数
      * @returns isQuickAction 是否有快速行动, minusDiceHero 减少切换角色的骰子,changeHeroDiceCnt 实际减少切换角色的骰子, cmds 要执行的命令, 
      *          statusIdsAndPidx 额外攻击, isInvalid 使用卡是否有效, minusDiceCard 使用卡减少骰子
     */
@@ -3219,7 +3222,7 @@ export default class GeniusInvokationClient {
             intvl?: number[], isQuickAction?: boolean | number, isExec?: boolean, isOnlyFront?: boolean, changeHeroDiceCnt?: number, heal?: number[],
             phase?: number, players?: Player[], hidxs?: number[], hidx?: number,
             card?: Card, discards?: Card[], isOnlyInStatus?: boolean, isOnlyOutStatus?: boolean, heros?: Hero[], minusDiceCard?: number,
-            dmgElement?: number, eheros?: Hero[], isUnshift?: boolean, isSwitchAtk?: boolean, taskMark?: number[],
+            dmgElement?: number, eheros?: Hero[], isUnshift?: boolean, isSwitchAtk?: boolean, taskMark?: number[], getcard?: number,
         } = {}) {
         const types: number[] = [];
         const triggers: Trigger[] = [];
@@ -3231,7 +3234,7 @@ export default class GeniusInvokationClient {
         let isQuickAction = Number(oiqa);
         const { intvl, isExec = true, isOnlyFront = false, players = this.players, phase = this.players[pidx].phase, dmgElement = 0,
             hidxs, hidx: ophidx = -1, card, isOnlyInStatus = false, isOnlyOutStatus = false, heal, discards = [],
-            isUnshift = false, isSwitchAtk = false, taskMark } = options;
+            isUnshift = false, isSwitchAtk = false, taskMark, getcard = 0 } = options;
         let addDiceHero = 0;
         let minusDiceHero = 0;
         let isInvalid = false;
@@ -3268,6 +3271,8 @@ export default class GeniusInvokationClient {
                     esummons: players[pidx ^ 1].summon,
                     hcardsCnt: p.handCards.length,
                     pile: p.pile,
+                    playerInfo: p.playerInfo,
+                    getcard,
                 });
                 if (this._hasNotTrigger(stsres.trigger, trigger)) continue;
                 if (group == 1) {
@@ -3669,6 +3674,7 @@ export default class GeniusInvokationClient {
                             minusDiceCard,
                             minusDiceSkill,
                             getdmg,
+                            playerInfo: this.players[pidx].playerInfo,
                         });
                         if (this._hasNotTrigger(slotres.trigger, trigger)) continue;
                         if (isExec) {

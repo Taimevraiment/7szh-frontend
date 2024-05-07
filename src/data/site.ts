@@ -807,6 +807,40 @@ const siteTotal: SiteObj = {
             return { cmds, isDestroy: --site.cnt == 0 }
         }
     })),
+    // 赤王陵
+    4052: (cardId: number) => new GISite(4052, cardId, 0, 0, 2, (site, event = {}) => {
+        const { getcard = 0, trigger = '' } = event;
+        return {
+            trigger: ['phase-start', 'getcard-oppo'],
+            exec: () => {
+                if (trigger == 'phase-start') site.cnt += 2;
+                else if (trigger == 'getcard-oppo') site.cnt += getcard;
+                if (site.cnt < 4) return { isDestroy: false }
+                return {
+                    cmds: [
+                        { cmd: 'addCard', cnt: 2, card: 908, hidxs: [2], isOppo: true },
+                        { cmds: 'getStatus', status: [heroStatus(2214)], isOppo: true },
+                    ],
+                    isDestroy: true,
+                }
+            },
+        }
+    }),
+    // 中央实验室遗址
+    4053: (cardId: number) => new GISite(4053, cardId, 0, 0, 2, (site, event = {}) => {
+        const { discard = 0, trigger = '' } = event;
+        return {
+            trigger: ['discard', 'reconcile'],
+            exec: () => {
+                const ocnt = site.cnt;
+                if (trigger == 'reconcile') ++site.cnt;
+                else if (trigger == 'discard') site.cnt += discard;
+                const dcnt = Math.floor(site.cnt / 3) - Math.floor(ocnt / 3);
+                if (dcnt == 0) return { isDestroy: false }
+                return { cmds: [{ cmd: 'getDice', cnt: 1, element: 0 }], isDestroy: site.cnt >= 9 }
+            },
+        }
+    }),
 }
 
 export const newSite = (id: number, ...args: any) => siteTotal[id](...args);

@@ -101,7 +101,7 @@ const jiliWeapon = (id: number, name: string, userType: number, src: string) => 
 
 const tiankongWeapon = (id: number, name: string, userType: number, src: string) => {
     return new GICard(id, name, '【角色造成的伤害+1】。；【每回合1次：】角色使用｢普通攻击｣造成的伤害额外+1。', src, 3, 8, 0, [0], userType, 1,
-        (card: Card) => ({
+        card => ({
             addDmg: 1,
             addDmgCdt: card.perCnt,
             trigger: ['skilltype1'],
@@ -255,12 +255,23 @@ const extraCards: CardObj = {
             const cmds: Cmds[] = [{ cmd: 'discard', element: 0 }, { cmd: 'getDice', cnt: 1, element: -2 }];
             const fhero = heros[hidxs[0]];
             if (fhero?.local.includes(13)) cmds.push({ cmd: 'getEnergy', cnt: 1 })
-            return { isValid: !fhero?.outStatus.some(ost => ost.id == 2207), cmds }
+            return { isValid: !fhero?.outStatus.some(ost => ost.id == 2207), cmds, outStatus: [heroStatus(2207)] }
         }),
 
     907: new GICard(907, '唤醒眷属', '【打出此牌或[舍弃]此牌时：】召唤一个独立的【增殖生命体】。',
         '',
         0, 8, 2, [], 0, 0, () => ({ summon: [newSummonee(3063)] }), { expl: [newSummonee(3063)] }),
+
+    908: new GICard(908, '禁忌知识', '无法使用此牌进行元素调和，且每回合最多只能打出1张｢禁忌知识｣。；对我方出战角色造成1点[穿透伤害]，摸1张牌。',
+        '',
+        0, 8, 2, [-5], 0, 0, (_card, event) => {
+            const { heros = [], hidxs = [] } = event;
+            return {
+                isValid: !heros[hidxs[0]]?.outStatus.some(ost => ost.id == 2215),
+                cmds: [{ cmd: 'attack', cnt: 1, element: -1, isOppo: true }, { cmd: 'getCard', cnt: 1 }],
+                outStatus: [heroStatus(2215)],
+            }
+        }),
 }
 
 const allCards: CardObj = {
@@ -274,7 +285,7 @@ const allCards: CardObj = {
 
     4: new GICard(4, '千夜浮梦', '【角色造成的伤害+1】。；【我方角色引发元素反应时：】造成的伤害+1。(每回合最多触发2次)',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/a56d5cf80b505c42a3643534d3dc2821_8758750260465224130.png',
-        3, 8, 0, [0], 4, 1, (card: Card) => ({
+        3, 8, 0, [0], 4, 1, card => ({
             addDmg: 1,
             addDmgCdt: isCdt(card.perCnt > 0, 1),
             trigger: ['elReaction'],
@@ -289,7 +300,7 @@ const allCards: CardObj = {
 
     6: new GICard(6, '四风原典', '【此牌每有1点｢伤害加成｣，角色造成的伤害+1】。；【结束阶段：】此牌累积1点｢伤害加成｣。(最多累积到2点)',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/20/258999284/c2774faa0cd618dddb0b7a641eede205_6906642161037931045.png',
-        3, 8, 0, [0], 4, 1, (card: Card) => ({
+        3, 8, 0, [0], 4, 1, card => ({
             addDmg: card.useCnt,
             trigger: ['phase-end'],
             exec: () => {
@@ -331,6 +342,21 @@ const allCards: CardObj = {
             }
         }, { pct: 1, uct: 0, isResetUct: true }),
 
+    9: new GICard(9, '金流监督', '【角色受到伤害或治疗后：】使角色本回合中下一次｢普通攻击｣少花费1个[无色元素骰]，且造成的伤害+1。(每回合至多2次)',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Weapon_Jinliujiandu.webp',
+        2, 8, 0, [0], 4, 1, (card, event) => {
+            const { heal = [], hidxs = [], trigger = '' } = event;
+            const isMinus = (trigger == 'getdmg' || trigger == 'heal' && heal[hidxs[0]] > 0) && card.perCnt > 0;
+            return {
+                trigger: ['getdmg', 'heal'],
+                exec: () => {
+                    if (!isMinus) return;
+                    --card.perCnt;
+                    return { inStatus: [heroStatus(2213)] }
+                }
+            }
+        }, { pct: 2 }),
+
     21: normalWeapon(21, '鸦羽弓', 3, 'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/75720734/e20881692f9c3dcb128e3768347af4c0_5029781426547880539.png'),
 
     22: jiliWeapon(22, '祭礼弓', 3, 'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/75720734/4adb0666f4e171943739e4baa0863b48_5457536750893996771.png'),
@@ -370,6 +396,24 @@ const allCards: CardObj = {
         }), { expl: [heroStatus(2048)] }),
 
     26: senlin1Weapon(26, '王下近侍', 3, 'https://act-upload.mihoyo.com/wiki-user-upload/2023/08/12/203927054/c667e01fa50b448958eff1d077a7ce1b_1806864451648421284.png'),
+
+    27: new GICard(27, '竭泽', '【我方打出名称不存在于初始牌组中的行动牌后：】此牌累积1点｢渔猎｣。(最多累积2点)；【角色使用技能时：】如果此牌已有｢渔猎｣，则消耗所有｢渔猎｣，使此技能伤害+1，并且每消耗1点｢渔猎｣就摸1张牌。',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Weapon_Jieze.webp',
+        2, 8, 0, [0], 3, 1, (card, event) => {
+            const { playerInfo: { initCardIds = [] } = {}, hcard, trigger = '' } = event;
+            const triggers: Trigger[] = [];
+            if (card.useCnt > 0) triggers.push('skill');
+            if (hcard && !initCardIds.includes(hcard.id) && card.useCnt < 2) triggers.push('card');
+            return {
+                trigger: triggers,
+                addDmgCdt: isCdt(card.useCnt > 0, 1),
+                execmds: isCdt<Cmds[]>(trigger == 'skill' && card.useCnt > 0, [{ cmd: 'getCard', cnt: card.useCnt }]),
+                exec: () => {
+                    if (trigger == 'card') ++card.useCnt;
+                    else if (trigger == 'skill') card.useCnt = 0;
+                }
+            }
+        }, { uct: 0 }),
 
     41: normalWeapon(41, '白铁大剑', 2, 'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/75720734/d8916ae5aaa5296a25c1f54713e2fd85_802175621117502141.png'),
 
@@ -420,6 +464,8 @@ const allCards: CardObj = {
             }
         }, { pct: 3 }),
 
+    47: senlin2Weapon(47, '森林王器', 2, 'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Weapon_Shenlinwangqi.webp'),
+
     61: normalWeapon(61, '白缨枪', 5, 'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/75720734/2618b55f8449904277794039473df17c_5042678227170067991.png'),
 
     62: new GICard(62, '千岩长枪', '【角色造成的伤害+1】。；【入场时：】队伍中每有一名｢璃月｣角色，此牌就为附属的角色提供1点[护盾]。(最多3点)',
@@ -465,7 +511,7 @@ const allCards: CardObj = {
 
     67: new GICard(67, '和璞鸢', '【角色造成的伤害+1】。；【角色使用技能后：】直到回合结束前，此牌所提供的伤害加成值额外+1。(最多累积到+2)',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/15/258999284/972e1ba2e544111bc0069697539b707e_7547101337974467153.png',
-        3, 8, 0, [0], 5, 1, (card: Card) => ({
+        3, 8, 0, [0], 5, 1, card => ({
             addDmg: 1 + card.useCnt,
             trigger: ['skill'],
             exec: () => {
@@ -515,7 +561,7 @@ const allCards: CardObj = {
 
     85: new GICard(85, '西风剑', '【角色造成的伤害+1】。；【角色使用｢元素战技｣后：】角色额外获得1点[充能]。(每回合1次)',
         'https://uploadstatic.mihoyo.com/ys-obc/2023/04/11/12109492/e1938c4cf6e50cfcb65d67ef10bc16a3_1486330508550781744.png',
-        3, 8, 0, [0], 1, 1, (card: Card) => ({
+        3, 8, 0, [0], 1, 1, card => ({
             addDmg: 1,
             trigger: ['skilltype2'],
             execmds: isCdt<Cmds[]>(card.perCnt > 0, [{ cmd: 'getEnergy', cnt: 1 }]),
@@ -526,7 +572,7 @@ const allCards: CardObj = {
 
     86: new GICard(86, '裁叶萃光', '【角色造成的伤害+1】。；【角色使用｢普通攻击｣后：】生成1个随机的基础元素骰。(每回合最多触发2次)',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/12/258999284/4d3935c7b67e051b02f9a525357b2fb0_8903486552471935304.png',
-        3, 8, 0, [0], 1, 1, (card: Card) => ({
+        3, 8, 0, [0], 1, 1, card => ({
             addDmg: 1,
             trigger: ['skilltype1'],
             execmds: isCdt<Cmds[]>(card.perCnt > 0, [{ cmd: 'getDice', cnt: 1, element: -1 }]),
@@ -536,6 +582,25 @@ const allCards: CardObj = {
         }), { pct: 2 }),
 
     87: senlin2Weapon(87, '原木刀', 1, 'https://act-upload.mihoyo.com/wiki-user-upload/2024/01/27/258999284/1f97927392b79a716430461251ff53e2_4196794667556484935.png'),
+
+    88: new GICard(88, '静水流涌之辉', '【我方角色受到伤害或治疗后：】此牌累积1点｢湖光｣。；【角色进行｢普通攻击｣时：】如果已有10点｢湖光｣，则消耗10点，使此技能少花费2个[无色元素骰]且造成的伤害+1，并且治疗所附属角色1点。',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Weapon_Jinshuiliuyong.webp',
+        3, 8, 0, [0], 1, 1, (card, event) => {
+            const { trigger = '' } = event;
+            const triggers: Trigger[] = ['getdmg', 'heal'];
+            if (card.useCnt >= 10) triggers.push('skilltype1');
+            const { minusSkillRes } = minusDiceSkillHandle(event, { skilltype1: [0, 2, 0] }, () => card.useCnt >= 10);
+            return {
+                trigger: triggers,
+                addDmgCdt: isCdt(trigger == 'skilltype1', 1),
+                execmds: isCdt<Cmds[]>(card.useCnt >= 10 && trigger == 'skilltype1', [{ cmd: 'heal', cnt: 1 }]),
+                ...minusSkillRes,
+                exec: () => {
+                    if (['getdmg', 'heal'].includes(trigger)) ++card.useCnt;
+                    else if (trigger == 'skilltype1') card.useCnt -= 10;
+                }
+            }
+        }, { uct: 0 }),
 
     101: new GICard(101, '冒险家头带', '【角色使用｢普通攻击｣后：】治疗自身1点(每回合至多3次)。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/75720734/c2617ba94c31d82bd4af6df8e74aac91_8306847584147063772.png',
@@ -583,7 +648,7 @@ const allCards: CardObj = {
 
     104: new GICard(104, '赌徒的耳环', '【敌方角色被击倒后：】如果所附属角色为｢出战角色｣，则生成2个[万能元素骰]。(整场牌局限制3次)',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/75720734/c36e23e6486cfc14ba1afac19d73620e_6020851449922266352.png',
-        1, 8, 0, [1], 0, 1, (card: Card) => ({
+        1, 8, 0, [1], 0, 1, card => ({
             trigger: ['kill'],
             execmds: isCdt<Cmds[]>(card.perCnt > 0, [{ cmd: 'getDice', cnt: 2, element: 0 }]),
             exec: () => {
@@ -593,7 +658,7 @@ const allCards: CardObj = {
 
     105: new GICard(105, '教官的帽子', '【角色引发元素反应后：】生成1个此角色元素类型的元素骰。(每回合至多3次)',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/75720734/66b3c1346a589e0dea45a58cd4d65c5a_3513743616827517581.png',
-        2, 0, 0, [1], 0, 1, (card: Card) => ({
+        2, 0, 0, [1], 0, 1, card => ({
             trigger: ['elReaction'],
             execmds: isCdt<Cmds[]>(card.perCnt > 0, [{ cmd: 'getDice', cnt: 1, element: -2 }]),
             exec: () => {
@@ -809,7 +874,7 @@ const allCards: CardObj = {
 
     119: new GICard(119, '浮溯之珏', '【角色使用｢普通攻击｣后：】摸1张牌。(每回合1次)',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/12/258999284/8ac2175960ea0dace83f9bd76efb70ef_3923530911851671969.png',
-        0, 8, 0, [1], 0, 1, (card: Card) => ({
+        0, 8, 0, [1], 0, 1, card => ({
             trigger: ['skilltype1'],
             execmds: isCdt<Cmds[]>(card.perCnt > 0, [{ cmd: 'getCard', cnt: 1 }]),
             exec: () => {
@@ -883,7 +948,24 @@ const allCards: CardObj = {
             }
         }, { uct: 0, pct: 1, isResetUct: true }),
 
-    124: new GICard(124, '黄金剧团的奖赏', '【结束阶段：】如果所附属的角色在后台，则此牌累积1点｢报酬｣。(最多累积2点)；【对角色打出｢天赋｣或角色使用｢元素战技｣时：】此牌每有1点｢报酬｣，就将其消耗，以少花费1个元素骰。',
+    124: new GICard(124, '逐影猎人', '【角色受到伤害或治疗后：】根据本回合触发此效果的次数，执行不同的效果。；【第一次触发：】生成1个此角色类型的元素骰。；【第二次触发：】摸1张牌。；【第三次触发：】生成1个此角色类型的元素骰。',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Artifact_ZhuYingDa.webp',
+        3, 0, 0, [1], 0, 1, (card, event) => {
+            const { heros = [], hidxs = [], heal = [], trigger = '' } = event;
+            const isTriggered = card.perCnt > 0 && (trigger == 'getdmg' || trigger == 'heal' && heal[hidxs[0]] > 0);
+            const execmds: Cmds[] = [{ cmd: 'getDice', element: heros[hidxs[0]].element, cnt: 1 }, { cmd: 'getCard', cnt: 1 }];
+            return {
+                trigger: ['getdmg', 'heal'],
+                execmds: isCdt(isTriggered, [execmds[card.useCnt % 2]]),
+                exec: () => {
+                    if (isTriggered && ++card.useCnt == 3) {
+                        --card.perCnt;
+                    }
+                }
+            }
+        }, { uct: 0, pct: 1, isResetUct: true }),
+
+    125: new GICard(125, '黄金剧团的奖赏', '【结束阶段：】如果所附属的角色在后台，则此牌累积1点｢报酬｣。(最多累积2点)；【对角色打出｢天赋｣或角色使用｢元素战技｣时：】此牌每有1点｢报酬｣，就将其消耗，以少花费1个元素骰。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/03/06/258999284/0f7dfce291215155b3a48a56c8c996c4_3799856037595257577.png',
         0, 8, 0, [1], 0, 1, (card, event) => {
             const { heros = [], hidxs = [], hcard, trigger = '', minusDiceCard: mdc = 0, isSkill = -1 } = event;
@@ -909,7 +991,33 @@ const allCards: CardObj = {
             }
         }, { uct: 0 }),
 
-    125: new GICard(125, '紫晶的花冠', '【所附属角色为出战角色，敌方受到[草元素伤害]后：】累积1枚｢花冠水晶｣。如果｢花冠水晶｣大于等于我方手牌数，则生成1个随机基础元素骰。(每回合至多生成2个)',
+    126: new GICard(126, '黄金剧团', '【结束阶段：】如果所附属的角色在后台，则此牌累积2点｢报酬｣。(最多累积4点)；【对角色打出｢天赋｣或角色使用｢元素战技｣时：】此牌每有1点｢报酬｣，就将其消耗，以少花费1个元素骰。',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Artifact_Huangjinjutuanda.webp',
+        2, 8, 0, [1], 0, 1, (card, event) => {
+            const { heros = [], hidxs = [], hcard, trigger = '', minusDiceCard: mdc = 0, isSkill = -1 } = event;
+            const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(event, { skilltype2: [0, 0, card.useCnt] });
+            const isCardMinus = hcard && hcard.subType.includes(6) && hcard.userType == heros[hidxs[0]]?.id && hcard.cost > mdc;
+            const isPhaseEnd = trigger == 'phase-end' && card.useCnt < 4 && !heros[hidxs[0]]?.isFront;
+            return {
+                ...minusSkillRes,
+                minusDiceCard: isCdt(isCardMinus, card.useCnt),
+                trigger: ['phase-end', 'card', 'skilltype2'],
+                execmds: isCdt<Cmds[]>(isPhaseEnd, [{ cmd: '' }]),
+                exec: () => {
+                    if (isPhaseEnd) {
+                        card.useCnt = Math.min(4, card.useCnt + 2);
+                    } else if (trigger == 'card' && isCardMinus) {
+                        card.useCnt -= hcard.cost - mdc;
+                    } else if (trigger == 'skilltype2' && isMinusSkill) {
+                        const skill = heros[hidxs[0]]?.skills[isSkill].cost ?? [{ val: 0 }, { val: 0 }];
+                        const skillcost = skill[0].val + skill[1].val;
+                        card.useCnt -= skillcost - mdc - minusSkillRes.minusDiceSkill[isSkill].reduce((a, b) => a + b);
+                    }
+                }
+            }
+        }, { uct: 0 }),
+
+    127: new GICard(127, '紫晶的花冠', '【所附属角色为出战角色，敌方受到[草元素伤害]后：】累积1枚｢花冠水晶｣。如果｢花冠水晶｣大于等于我方手牌数，则生成1个随机基础元素骰。(每回合至多生成2个)',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/e431910b741b3723c64334265ce3e93e_3262613974155239712.png',
         1, 8, 0, [1], 0, 1, (card, event) => {
             const { heros = [], hidxs = [], hcards: { length: hcardsCnt } = [] } = event;
@@ -919,6 +1027,21 @@ const allCards: CardObj = {
                 execmds: isCdt<Cmds[]>(card.useCnt + 1 >= hcardsCnt && card.perCnt > 0, [{ cmd: 'getDice', cnt: 1, element: -1 }], [{ cmd: '' }]),
                 exec: () => {
                     if (++card.useCnt >= hcardsCnt && card.perCnt > 0) --card.perCnt;
+                }
+            }
+        }, { uct: 0, pct: 2 }),
+
+    128: new GICard(128, '乐园遗落之花', '【所附属角色为出战角色，敌方受到[草元素伤害]或发生了[草元素相关反应]后：】累积2枚｢花冠水晶｣。如果｢花冠水晶｣大于等于我方手牌数，则生成1个[万能元素骰]。(每回合至多生成2个)',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Artifact_ZijinghuaguanDa.webp',
+        2, 8, 0, [1], 0, 1, (card, event) => {
+            const { heros = [], hidxs = [], hcards: { length: hcardsCnt } = [] } = event;
+            if (!heros[hidxs[0]]?.isFront) return;
+            return {
+                trigger: ['grass-getdmg-oppo', 'el7Reaction'],
+                execmds: isCdt<Cmds[]>(card.useCnt + 1 >= hcardsCnt && card.perCnt > 0, [{ cmd: 'getDice', cnt: 1, element: 0 }], [{ cmd: '' }]),
+                exec: () => {
+                    card.useCnt += 2;
+                    if (card.useCnt >= hcardsCnt && card.perCnt > 0) --card.perCnt;
                 }
             }
         }, { uct: 0, pct: 2 }),
@@ -1026,6 +1149,14 @@ const allCards: CardObj = {
     219: new GICard(219, '清籁岛', '【任意阵营的角色受到治疗后：】使该角色附属【悠远雷暴】。；[持续回合]：2',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/2bfc84b730feaf6a350373080d97c255_2788497572764739451.png',
         1, 8, 1, [2], 0, 0, () => ({ site: [newSite(4049, 219)] }), { expl: [heroStatus(2184)] }),
+
+    220: new GICard(220, '赤王陵', '【对方累积摸4张牌后：】弃置此牌，在对方牌库顶生成2张【禁忌知识】。然后直到本回合结束前，对方每摸2张牌，就立刻在对方牌库顶生成1张【禁忌知识】。',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Assist_Location_ChiWangLin.webp',
+        0, 8, 1, [2], 0, 0, () => ({ site: [newSite(4052, 220)] }), { expl: [extraCards[908]] }),
+
+    221: new GICard(221, '中央实验室遗址', '【我方[舍弃]或[调和]1张牌后：】此牌累积1点｢实验进展｣。每当｢实验进展｣达到3点、6点、9点时，就获得1个[万能元素骰]。然后，如果｢实验进展｣至少为9点，则弃置此牌。',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Assist_Location_FontaineSci.webp',
+        1, 8, 1, [2], 0, 0, () => ({ site: [newSite(4053, 221)] })),
 
     301: new GICard(301, '派蒙', '【行动阶段开始时：】生成2点[万能元素骰]。；[可用次数]：2。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/158741257/8b291b7aa846d8e987a9c7d60af3cffb_7229054083686130166.png',
@@ -2329,16 +2460,7 @@ const allCards: CardObj = {
 
     788: new GICard(788, '预算师的技艺', '[战斗行动]：我方出战角色为【卡维】时，装备此牌。；【卡维】装备此牌后，立刻使用一次【画则巧施】。；装备有此牌的【卡维】为出战角色，我方触发【迸发扫描】的效果后：将1张所[舍弃]卡牌的复制加入你的手牌。如果该牌为｢场地｣牌，则使本回合中我方下次打出｢场地｣时少花费2个元素骰。(每回合1次)',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_Kaveh.webp',
-        3, 7, 0, [6, 7], 1608, 1, (card, event) => talentHandle(event, 1, () => {
-            const { heros = [], hidxs = [], playerInfo: { discardIds = [] } = {} } = event;
-            const hero = heros[hidxs[0]];
-            if (card.perCnt == 0 || !hero.isFront || hero.outStatus.every(ost => ost.id != 2202)) return;
-            const addCardId = discardIds[Math.floor(Math.random() * discardIds.length)];
-            return [() => {
-                --card.perCnt;
-                return { outStatus: isCdt(Math.floor(addCardId / 100) == 2, [heroStatus(2204)]) }
-            }, { execmds: [{ cmd: 'getCard', cnt: 1, card: addCardId }] }]
-        }, 'skilltype1'), { pct: 1, expl: talentExplain(1608, 1) }),
+        3, 7, 0, [6, 7], 1608, 1, talentSkill(1), { pct: 1, expl: talentExplain(1608, 1) }),
 
     789: new GICard(789, '无光鲸噬', '[战斗行动]：我方出战角色为【吞星之鲸】时，装备此牌。；【吞星之鲸】装备此牌后，立刻使用一次【迸落星雨】。；装备有此牌的【吞星之鲸】使用【迸落星雨】[舍弃]1张手牌后：治疗此角色该手牌元素骰费用的点数。(每回合1次)',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_Ptahur.webp',

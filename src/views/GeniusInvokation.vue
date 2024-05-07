@@ -69,9 +69,10 @@
             <img class="cost-img hcard" :src="getDiceIcon(ELEMENT_ICON[card.costType])" />
             <span>{{ Math.max(0, card.cost - card.costChange) }}</span>
           </div>
-          <div class="card-energy" v-if="card.anydice > 0">
+          <div class="card-energy" v-if="card.anydice > 0"
+            :style="{ color: card.costChange > 0 ? CHANGE_GOOD_COLOR : 'white' }">
             <img class="cost-img hcard" :src="getDiceIcon(ELEMENT_ICON[0])" />
-            <span>{{ card.anydice }}</span>
+            <span>{{ Math.max(0, card.anydice - Math.max(0, card.costChange - card.cost)) }}</span>
           </div>
           <div class="card-energy" v-if="card.energy > 0">
             <img class="cost-img hcard" :src="getDiceIcon(ELEMENT_ICON[9])" />
@@ -487,6 +488,18 @@ const devOps = (cidx = 0) => {
       const cmds: Cmds[] = [{ cmd: 'getStatus', status: [sts], hidxs: [hidx] }];
       client.value._doCmds(cmds, { heros, isEffectHero: true });
       flag.add('setStatus');
+    } else if (op.startsWith('+')) { // 在牌库中加牌
+      const rest = op.slice(1);
+      const cid = parseInt(rest);
+      const cidx = rest.indexOf('c');
+      const elidx = rest.indexOf('el');
+      const hidx = rest.indexOf('h');
+      const element = elidx == -1 ? 0 : (parseInt(rest.slice(elidx + 1)) || 0);
+      const cnt = cidx == -1 ? 1 : (parseInt(rest.slice(cidx + 1)) || 1);
+      const hidxs = hidx == -1 ? undefined : (parseInt(rest.slice(hidx + 1)) || undefined)?.toString().split('```').map(Number) || undefined;
+      const { cmds: acmds = [] } = client.value._doCmds([{ cmd: 'addCard', card: cid, element, cnt, hidxs }]);
+      flag.add('addCard');
+      cmds.push(...acmds);
     } else { // 摸牌
       const isAttach = op.endsWith('~');
       const [cid = 0, cnt = 1] = op.slice(0, isAttach ? -1 : undefined).split('*').map(h);
@@ -494,9 +507,9 @@ const devOps = (cidx = 0) => {
         cards.push(cardTotal.find(c => c.userType == heros[client.value.players[cpidx].hidx].id)?.id ?? 0);
       }
       if (cid > 0) cards.push(...new Array(cnt).fill(cid));
-      cards = client.value._doCmds([{ cmd: 'getCard', cnt, card: cards, isAttach }], { pidx: cpidx }).cmds?.[0].card as Card[];
+      const { cmds: gcmds = [] } = client.value._doCmds([{ cmd: 'getCard', cnt, card: cards, isAttach }], { pidx: cpidx });
       flag.add('getCard');
-      cmds.push({ cmd: 'getCard', cnt: cards.length, card: cards });
+      cmds.push(...gcmds);
     }
   }
   socket.emit('sendToServer', { cpidx, heros, dices, cmds, handCards, flag: 'dev-' + [...flag].join('&') });

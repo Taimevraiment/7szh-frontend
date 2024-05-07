@@ -270,7 +270,7 @@ type Trigger = 'phase-start' | 'phase-end' | 'phase-dice' | 'game-start' | 'acti
     `other-el${TrgEl}Reaction` | 'other-elReaction' | 'ecard' | `el6Reaction:${TrgElRe}` | 'get-elReaction' | `get-el${TrgEl}Reaction` |
     'get-elReaction-oppo' | 'kill' | 'killed' | 'will-killed' | 'dmg' | `${TrgDmg}-dmg` | `${TrgElReDmg}-dmg-wind` | 'getdmg' | 'other-getdmg' |
     `${TrgDmg}-getdmg` | 'getdmg-oppo' | 'revive' | `${TrgDmg}-getdmg-oppo` | 'heal' | 'eheal' | 'useReadySkill' | 'status-destroy' |
-    'summon-destroy' | 'slot-destroy' | 'site-destroy' | 'calc' | 'reconcile' | 'discard' | '';
+    'summon-destroy' | 'slot-destroy' | 'site-destroy' | 'calc' | 'reconcile' | 'discard' | 'getcard' | 'getcard-oppo' | '';
 
 type ExplainContent = Skill | Status | Summonee | Card;
 
@@ -435,6 +435,8 @@ type StatusHandleEvent = {
     getDmgIdx?: number,
     hcardsCnt?: number,
     pile?: Card[],
+    playerInfo?: GameInfo,
+    getcard?: number,
 }
 
 type StatusHandleRes = {
@@ -511,6 +513,8 @@ type SiteHandleEvent = {
     minusDiceSkill?: number[][],
     heal?: number[],
     getdmg?: number[],
+    getcard?: number,
+    discard?: number,
 }
 
 type SiteHandleRes = {

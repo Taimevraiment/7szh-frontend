@@ -2148,17 +2148,12 @@ const statusTotal: StatusObj = {
 
     2198: (icon = '', useCnt = 1) => new GIStatus(2198, '飞云旗阵', '我方角色进行｢普通攻击｣时：造成的伤害+1。；如果我方手牌数量不多于1，则此技能少花费1个元素骰。；【[可用次数]：{useCnt}(可叠加，最多叠加到4次)】',
         icon, 1, [4, 6], useCnt, 4, -1, (status, event = {}) => {
-            const { hcardsCnt = 10, heros = [], trigger = '' } = event;
-            if (trigger == 'calc') {
-                let res: StatusHandleRes = {};
-                if (hcardsCnt <= 1) {
-                    const { minusSkillRes } = minusDiceSkillHandle(event, { skilltype1: [0, 0, 1] });
-                    res = { ...minusSkillRes };
-                }
-                return { ...res, addDmgType1: 1 }
-            }
+            const { hcardsCnt = 10, heros = [] } = event;
+            const { minusSkillRes } = minusDiceSkillHandle(event, { skilltype1: [0, 0, 1] }, () => hcardsCnt <= 1);
             return {
                 trigger: ['skilltype1'],
+                ...minusSkillRes,
+                addDmgType1: 1,
                 addDmgCdt: isCdt(hcardsCnt == 0 && !!heros.find(h => h.id == 1507)?.talentSlot, 2),
                 exec: () => { --status.useCnt }
             }
@@ -2194,7 +2189,7 @@ const statusTotal: StatusObj = {
 
     2202: (icon = '', useCnt = 1) => new GIStatus(2202, '迸发扫描', '【双方选择行动前：】如果我方场上存在草原核或丰穰之核，则使其[可用次数]-1，并[舍弃]我方牌库顶的1张卡牌。然后，造成所[舍弃]卡牌的元素骰费用+1的[草元素伤害]。；【[可用次数]：{useCnt}(可叠加，最多叠加到3次)】',
         icon, 1, [1], useCnt, 3, -1, (_status, event = {}) => {
-            const { heros = [], hidx = -1, summons = [], pile = [] } = event;
+            const { heros = [], hidx = -1, summons = [], pile = [], card, playerInfo: { discardIds = [] } = {} } = event;
             if (pile.length == 0 || heros[hidx].outStatus.every(ost => ost.id != 2005) && summons.every(smn => smn.id != 3043)) return;
             return {
                 trigger: ['action-start', 'action-start-oppo'],
@@ -2204,13 +2199,26 @@ const statusTotal: StatusObj = {
                     if (eStatus) {
                         --eStatus.useCnt;
                         const { heros: hs = [], summons: smns = [] } = execEvent;
-                        const sts2005 = hs[hidx].outStatus.find(ost => ost.id == 2005);
+                        const fhero = hs[hidx];
+                        const sts2005 = fhero.outStatus.find(ost => ost.id == 2005);
                         if (sts2005) --sts2005.useCnt;
                         else {
                             const summon = smns.find(smn => smn.id == 3043);
                             --summon!.useCnt;
                         }
-                        return { cmds: [{ cmd: 'discard', element: 2 }] }
+                        const res: StatusExecRes = { cmds: [{ cmd: 'discard', element: 2 }] };
+                        if (fhero.id == 1608 && (card?.id == 788 || !!fhero.talentSlot)) {
+                            const talent = card ?? fhero.talentSlot as Card;
+                            if (talent.perCnt > 0) {
+                                const discards = [...discardIds, pile[0].id];
+                                const addCardId = discards[Math.floor(Math.random() * discards.length)];
+                                --talent.perCnt;
+                                res.cmds!.push({ cmd: 'getCard', cnt: 1, card: addCardId });
+                                // if (Math.floor(addCardId / 100) == 2) res.outStatus = [heroStatus(2204)];
+                                if (Math.floor(addCardId / 100) == 2) res.cmds!.push({ cmd: 'getStatus', status: [heroStatus(2204)] });
+                            }
+                        }
+                        return res;
                     }
                 }
             }
@@ -2325,6 +2333,40 @@ const statusTotal: StatusObj = {
             if (summon) --summon.useCnt;
             return { restDmg: restDmg - 1 }
         }, { smnId: summonId }),
+
+    2213: () => new GIStatus(2213, '金流监督(生效中)', '目标角色在本回合结束前，下一次｢普通攻击｣少花费1个[无色元素骰]，且造成的伤害+1。',
+        'buff2', 0, [4], 1, 2, 1, (status, event = {}) => {
+            const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(event, { skilltype1: [0, 1, 0] });
+            return {
+                trigger: ['skilltype1'],
+                addDmgType1: 1,
+                ...minusSkillRes,
+                exec: () => {
+                    if (isMinusSkill) --status.useCnt;
+                },
+            }
+        }),
+
+    2214: () => new GIStatus(2214, 'todo赤王陵debuff', '本回合结束前，对方每摸2张牌，就立刻在对方牌库顶生成1张【禁忌知识】。',
+        'debuff', 0, [4, 10], 0, 2, 1, (status, event = {}) => {
+            const { getcard = 0, trigger = '' } = event;
+            return {
+                trigger: ['phase-start', 'getcard'],
+                exec: () => {
+                    let cnt = 0;
+                    if (trigger == 'phase-start') cnt = 2;
+                    else if (trigger == 'getcard') cnt = getcard;
+                    cnt += status.useCnt;
+                    if (cnt > 1) {
+                        status.useCnt = cnt % 2;
+                        cnt = Math.floor(cnt / 2);
+                        return { cmds: [{ cmd: 'addCard', cnt, card: 908, hidxs: [cnt] }] }
+                    }
+                },
+            }
+        }),
+
+    2215: () => new GIStatus(2215, '禁忌知识(冷却中)', '本回合无法再打出【禁忌知识】。', 'debuff', 1, [3, 10], -1, 0, 1),
 
 };
 
