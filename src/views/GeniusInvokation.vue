@@ -410,7 +410,7 @@ const isOpenMask = ref<boolean>(false);
 // dev
 const devOps = (cidx = 0) => {
   if (client.value.phase < 5 || !isDev && ++prodEnv < 3) return;
-  let opses = prompt(isDev ? '摸牌id/#骰子/@充能/%血量/&附着/=状态:' : '');
+  let opses = prompt(isDev ? '摸牌id/#骰子/@充能/%血量/&附着/=状态/-弃牌/+加牌:' : '');
   if (!isDev) {
     if (!opses?.startsWith('debug')) return;
     opses = opses?.slice(5);

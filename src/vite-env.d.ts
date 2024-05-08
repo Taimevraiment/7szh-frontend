@@ -225,7 +225,7 @@ type StatusTask = {
 }
 
 type Cmds = {
-    cmd?: Cmd,
+    cmd: Cmd,
     cnt?: number,
     element?: number | number[],
     hidxs?: number[],
@@ -515,6 +515,7 @@ type SiteHandleEvent = {
     getdmg?: number[],
     getcard?: number,
     discard?: number,
+    epile?: Card[],
 }
 
 type SiteHandleRes = {

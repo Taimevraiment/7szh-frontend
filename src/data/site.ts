@@ -819,7 +819,7 @@ const siteTotal: SiteObj = {
                 return {
                     cmds: [
                         { cmd: 'addCard', cnt: 2, card: 908, hidxs: [2], isOppo: true },
-                        { cmds: 'getStatus', status: [heroStatus(2214)], isOppo: true },
+                        { cmd: 'getStatus', status: [heroStatus(2214)], isOppo: true },
                     ],
                     isDestroy: true,
                 }
@@ -838,6 +838,44 @@ const siteTotal: SiteObj = {
                 const dcnt = Math.floor(site.cnt / 3) - Math.floor(ocnt / 3);
                 if (dcnt == 0) return { isDestroy: false }
                 return { cmds: [{ cmd: 'getDice', cnt: 1, element: 0 }], isDestroy: site.cnt >= 9 }
+            },
+        }
+    }),
+    // 亚瑟先生
+    4054: (cardId: number) => new GISite(4054, cardId, 0, 0, 2, (site, event = {}) => {
+        const { discard = 0, trigger = '', epile = [] } = event;
+        if (+(site.cnt >= 2) ^ +(trigger == 'phase-end' && epile.length > 0)) return;
+        return {
+            trigger: ['discard', 'reconcile', 'phase-end'],
+            exec: () => {
+                if (trigger == 'phase-end') {
+                    site.cnt = 0;
+                    return { cmds: [{ cmd: 'getCard', cnt: 1, card: epile[0].id }], isDestroy: false }
+                }
+                site.cnt = Math.min(2, site.cnt + (trigger == 'reconcile' ? 1 : discard));
+                return { isDestroy: false }
+            },
+        }
+    }),
+    // 苦舍桓
+    4055: (cardId: number) => new GISite(4055, cardId, 0, 1, 2, (site, event = {}) => {
+        const { hcards = [], trigger = '' } = event;
+        if (trigger == 'phase-start' && (site.cnt >= 2 || hcards.length == 0)) return;
+        if (site.perCnt == 0 && (trigger == 'card' || (trigger == 'skill' && site.cnt == 0))) return;
+        const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(event, { skill: [0, 0, 1] }, () => site.perCnt > 0 && site.cnt > 0);
+        return {
+            trigger: ['phase-start', 'skill', 'card'],
+            ...minusSkillRes,
+            isNotAddTask: trigger != 'phase-start',
+            exec: () => {
+                const cmds: Cmds[] = [];
+                if (trigger == 'card') --site.perCnt;
+                else if (trigger == 'phase-start') {
+                    const cnt = Math.min(hcards.length, 2 - site.cnt);
+                    site.cnt += cnt;
+                    cmds.push({ cmd: 'discard', cnt, element: 0 });
+                } else if (trigger == 'skill' && isMinusSkill) --site.cnt;
+                return { cmds, isDestroy: false }
             },
         }
     }),

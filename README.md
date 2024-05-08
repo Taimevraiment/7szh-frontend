@@ -2294,6 +2294,12 @@ constructor(
 
 解释：本次舍弃牌数
 
+##### epile
+
+类型：Card[]
+
+解释：对方牌库
+
 #### SiteHandleRes
 
 ##### trigger
@@ -2554,6 +2560,18 @@ element(number|number[]): 若为数字则所有附着同样元素，若为数组
 发动攻击
 
 cnt(number): 伤害数
+
+element(number|number[]): 若为数字则所有附着同样元素，若为数组则分别附着
+
+-2当前出战角色元素
+
+-1穿透伤害
+
+1~7对应元素类型
+
+isOppo(boolean): 是否攻击自己
+
+isAttach(boolean): 是否有给自己元素附着
 
 ### changeDice
 

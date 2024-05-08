@@ -207,10 +207,11 @@ export default class GeniusInvokationClient {
      * @returns  isValid: 选择的卡是否合法, diceSelect: 是否选择骰子的数组
      */
     checkCard() {
-        let { cost, costType, canSelectHero, type, userType, id, canSelectSite,
-            subType, anydice, costChange, canSelectSummon, energy } = this.currCard;
+        const { cost, canSelectHero, type, userType, id, canSelectSite,
+            subType, costChange, canSelectSummon, energy } = this.currCard;
         const { dice, heros, hidx, summon, isUsedSubType8 } = this.player;
-        cost = Math.max(0, cost - costChange);
+        let { costType, anydice } = this.currCard;
+        let ncost = Math.max(0, cost + anydice - costChange);
         let isValid: boolean = false;
         let diceSelect: boolean[] = [];
         const diceLen = dice.length;
@@ -267,12 +268,12 @@ export default class GeniusInvokationClient {
                 if (canSelectSite == -1 && p.site.length < 4) st.isSelected = false;
             });
         });
-        if (this.isReconcile) [cost, costType] = [1, 0];
-        if (cost <= 0) return { isValid: cost == 0, diceSelect: new Array(diceLen).fill(false) };
+        if (this.isReconcile) [ncost, costType] = [1, 0];
+        if (ncost <= 0) return { isValid: ncost == 0, diceSelect: new Array(diceLen).fill(false) };
         if (costType == 0) {
-            isValid = cost <= diceLen;
+            isValid = ncost <= diceLen;
             if (isValid) {
-                for (let i = 0, tmpcost = cost; i < diceLen; ++i) {
+                for (let i = 0, tmpcost = ncost; i < diceLen; ++i) {
                     diceSelect.unshift(tmpcost-- > 0);
                 }
             }
@@ -281,12 +282,14 @@ export default class GeniusInvokationClient {
         const diceCnt: number[] = new Array(8).fill(0);
         dice.forEach(d => ++diceCnt[d]);
         if (costType < 8) {
-            isValid = cost <= diceCnt[costType] + diceCnt[0] && anydice <= diceLen - cost;
+            ncost = Math.max(0, cost - costChange);
+            anydice = Math.max(0, anydice - Math.max(0, costChange - cost));
+            isValid = ncost <= diceCnt[costType] + diceCnt[0] && anydice <= diceLen - ncost;
             if (isValid) {
                 for (let i = 0, tmpcost = anydice; i < diceLen && tmpcost > 0; ++i) {
                     diceSelect.unshift(tmpcost-- > 0);
                 }
-                for (let i = diceLen - anydice - 1, tmpcnt = cost; i >= 0; --i) {
+                for (let i = diceLen - anydice - 1, tmpcnt = ncost; i >= 0; --i) {
                     const idx = dice[i];
                     if (idx != costType && idx > 0) diceSelect.unshift(false);
                     else diceSelect.unshift(tmpcnt-- > 0);
@@ -294,7 +297,7 @@ export default class GeniusInvokationClient {
             } else diceSelect = new Array(diceLen).fill(false);
             return { isValid, diceSelect };
         }
-        isValid = diceCnt.some((n, i) => (i > 0 ? n : 0) + diceCnt[0] >= cost);
+        isValid = diceCnt.some((n, i) => (i > 0 ? n : 0) + diceCnt[0] >= ncost);
         if (isValid) {
             let maxidx = -1;
             const frontIdx = this._getFrontHero().element;
@@ -302,17 +305,17 @@ export default class GeniusInvokationClient {
                 const idx = dice[i];
                 if (idx == 0) break;
                 const cnt = diceCnt[idx];
-                if (cnt >= cost) {
-                    if (idx == frontIdx && maxidx > -1 && max + diceCnt[0] >= cost) break;
+                if (cnt >= ncost) {
+                    if (idx == frontIdx && maxidx > -1 && max + diceCnt[0] >= ncost) break;
                     maxidx = idx;
                     break;
                 }
-                if (cnt > max && (diceCnt[frontIdx] <= cnt || cost - cnt <= diceCnt[frontIdx])) {
+                if (cnt > max && (diceCnt[frontIdx] <= cnt || ncost - cnt <= diceCnt[frontIdx])) {
                     max = cnt;
                     maxidx = idx;
                 }
             }
-            for (let i = diceLen - 1, tmpcnt = cost; i >= 0; --i) {
+            for (let i = diceLen - 1, tmpcnt = ncost; i >= 0; --i) {
                 const idx = dice[i];
                 if (idx != maxidx && idx > 0) diceSelect.unshift(false);
                 else diceSelect.unshift(tmpcnt-- > 0);
@@ -369,9 +372,13 @@ export default class GeniusInvokationClient {
             const { cmds: otherCmds } = this._doSite(this.playerIdx, 'card', { hcard: currCard, minusDiceCard: stsmdc, isQuickAction: !isAction });
             cardcmds.push(...otherCmds);
             let aHeros: Hero[] = clone(player.heros);
+            let eHeros: Hero[] = clone(opponent.heros);
             let aSummon: Summonee[] = this._updateSummon([], player.summon, this._getFrontHero().outStatus);
             let esummon: Summonee[] = this._updateSummon([], opponent.summon, this._getFrontHero(-1).outStatus);
-            let elTips: [string, number, number][] | undefined = undefined;
+            let elTips: [string, number, number][] | undefined;
+            let willDamage: number[][] | undefined;
+            let dmgElements: number[] | undefined;
+            let willAttachs: number[][] | undefined;
             if (currCard.type == 0) {
                 const explIdx = currCard.description.indexOf('；(');
                 currCard.description = currCard.description.slice(0, explIdx);
@@ -389,29 +396,61 @@ export default class GeniusInvokationClient {
             const { ndices, phase = player.phase, heros, willHeals, isSwitch = -1 } = this._doCmds(cardcmds, { isCard: true, isRollDice: true, hidxs: isCdt(hidxs.length > 0, hidxs) });
             this._doHeal(willHeals, aHeros, { isQuickAction: !currCard.subType.includes(7) });
             if (heros) aHeros = [...heros];
-            if (cardcmds.length > 0) {
-                for (let i = 0; i < cardcmds.length; ++i) {
-                    const { cmd = '', element = 0, hidxs: chidxs } = cardcmds[i];
-                    // if (!chidxs) cardcmds[i].hidxs = [...hidxs];
-                    if (cmd == 'attach') {
-                        (chidxs ?? []).forEach((hidx, hi) => {
-                            const { esummon: asummon1, eheros: eheros1, asummon: esummon1, elTips: elTips1 }
-                                = this._elementReaction(
-                                    typeof element == 'number' ? element == -1 ? aHeros[player.hidx].element : element : element[hi],
-                                    [],
-                                    hidx,
-                                    aHeros, aSummon,
-                                    opponent.heros, esummon,
-                                    { isAttach: true, elTips },
-                                );
-                            aHeros = [...eheros1];
-                            aSummon = [...asummon1];
-                            esummon = [...esummon1];
-                            elTips = [...elTips1];
+            cardcmds.filter(cmds => ['attach', 'attack'].includes(cmds.cmd)).forEach(cmds => {
+                const { cmd, element = 0, hidxs: chidxs, cnt = 0, isOppo = false } = cmds;
+                // if (!chidxs) cmds.hidxs = [...hidxs];
+                if (cmd == 'attach') {
+                    (chidxs ?? []).forEach((hidx, hi) => {
+                        const { esummon: asummon1, eheros: eheros1, asummon: esummon1, elTips: elTips1 }
+                            = this._elementReaction(
+                                typeof element == 'number' ? element == -1 ? aHeros[player.hidx].element : element : element[hi],
+                                [],
+                                hidx,
+                                aHeros, aSummon,
+                                opponent.heros, esummon,
+                                { isAttach: true, elTips },
+                            );
+                        aHeros = [...eheros1];
+                        aSummon = [...asummon1];
+                        esummon = [...esummon1];
+                        elTips = [...elTips1];
+                    });
+                } else if (cmd == 'attack') {
+                    if (!willDamage) willDamage = new Array(aHeros.length + eHeros.length).fill(0).map(() => [-1, 0]);;
+                    if (!dmgElements) dmgElements = new Array(eHeros.length).fill(0);
+                    if (!willAttachs) willAttachs = new Array(aHeros.length + eHeros.length).fill(0).map(() => []);
+                    eHeros = clone(opponent.heros);
+                    (chidxs ?? []).forEach((hidx, hi) => {
+                        const dmgElement = typeof element == 'number' ? element == -2 ? aHeros[player.hidx].element : element : element[hi];
+                        const { willDamage: willDamage1, willAttachs: willAttachs1, dmgElements: dmgElements1,
+                            aheros: aheros1, eheros: eheros1, asummon: asummon1, esummon: esummon1, elTips: elTips1,
+                        } = this._elementReaction(
+                            dmgElement,
+                            new Array((isOppo ? aHeros : eHeros).length).fill(0).map((_, i) => i == hidx ? [dmgElement != -1 ? cnt : -1, dmgElement == -1 ? cnt : 0] : [-1, 0]),
+                            hidx,
+                            isOppo ? aHeros : eHeros, isOppo ? aSummon : esummon,
+                            isOppo ? eHeros : aHeros, isOppo ? esummon : aSummon,
+                            { pidx: this.playerIdx ^ +isOppo, elTips },
+                        );
+                        willDamage!.forEach((wdmg, wdci) => {
+                            const [nwdmg, nwpdmg] = willDamage1[wdci];
+                            if (nwdmg > 0) wdmg[0] = Math.max(0, wdmg[0]) + nwdmg;
+                            wdmg[1] += nwpdmg;
                         });
-                    }
+                        dmgElements1.forEach((de, dei) => {
+                            if (de > 0) dmgElements![dei] = de;
+                        });
+                        for (let i = 0; i < aHeros.length; ++i) {
+                            willAttachs![i + (this.playerIdx ^ +isOppo) * (isOppo ? aHeros : eHeros).length].push(willAttachs1[i]);
+                        }
+                        aHeros = [...(isOppo ? eheros1 : aheros1)];
+                        eHeros = [...(isOppo ? aheros1 : eheros1)];
+                        aSummon = [...(isOppo ? esummon1 : asummon1)];
+                        esummon = [...(isOppo ? asummon1 : esummon1)];
+                        elTips = [...elTips1];
+                    });
                 }
-            }
+            });
             if (cardres.hidxs && currCard.type > 0) hidxs.splice(0, 20, ...cardres.hidxs);
             const site: Site[] = [...player.site];
             let isSiteDestroy = false;
@@ -430,6 +469,7 @@ export default class GeniusInvokationClient {
             aSummon = this._updateSummon(cardres.summon ?? [], aSummon, aHeros[player.hidx].outStatus);
             esummon = this._updateSummon([], esummon, opponent.heros[opponent.hidx].outStatus);
             player.heros = [...aHeros];
+            opponent.heros = [...eHeros];
             const cardrescmds: Cmds[] = [
                 { cmd: 'getStatus', status: [...(cardres.inStatus ?? []), ...(cardres.outStatus ?? [])], hidxs: cardres.hidxs ?? hidxs },
                 { cmd: 'getStatus', status: [...(cardres.inStatusOppo ?? []), ...(cardres.outStatusOppo ?? [])], hidxs: cardres.hidxs ?? hidxs, isOppo: true },
@@ -456,6 +496,7 @@ export default class GeniusInvokationClient {
                 summonee: isCdt(!isAction, aSummon),
                 esummon,
                 elTips,
+                ...isCdt(!isAction, { willDamage, dmgElements, willAttachs }, {}),
                 phase,
                 playerInfo: this.player.playerInfo,
                 flag: `useCard-${currCard.name}-${this.playerIdx}`,
@@ -869,9 +910,9 @@ export default class GeniusInvokationClient {
                 this._doSite(startIdx ^ 1, 'phase-end');
                 await this._execTask(true);
                 this._wait(() => !this.taskQueue.isExecuting, { delay: 1100 });
-                if (this.taskQueue.hasStatusAtk() || this.isSwitchAtking) {
-                    this.isSwitchAtking = true;
-                    // if (this.isSwitchAtking) {
+                // if (this.taskQueue.hasStatusAtk() || this.isSwitchAtking) {
+                // this.isSwitchAtking = true;
+                if (this.isSwitchAtking) {
                     await this._wait(() => !this.isSwitchAtking, { delay: 2300 });
                 }
                 if (this.players.every(p => p.heros.some(h => h.isFront))) {
@@ -3107,6 +3148,7 @@ export default class GeniusInvokationClient {
                     heal,
                     getcard,
                     discard,
+                    epile: players[pidx ^ 1].pile,
                 });
                 if (siteres.isLast && !isLast) lastSite.push(site);
                 if (this._hasNotTrigger(siteres.trigger, state) || (siteres.isLast && !isLast)) continue;
@@ -3126,7 +3168,7 @@ export default class GeniusInvokationClient {
                         if (siteexecres?.isDestroy && (!siteres.isExchange || isExchange)) destroys.push(stidx);
                     } else {
                         if (!isExecTask) {
-                            const args = Array.from(arguments);
+                            const args = clone(Array.from(arguments));
                             args[2] = clone(args[2]) ?? {};
                             args[2].isExecTask = true;
                             args[2].csite = [site];
@@ -3302,7 +3344,7 @@ export default class GeniusInvokationClient {
                         const tintvl = clone(intvl);
                         if (stsres.damage || stsres.pendamage) tintvl[2] = 2000;
                         if (!taskMark) {
-                            const args = Array.from(arguments);
+                            const args = clone(Array.from(arguments));
                             args[3] = clone(args[3]) ?? {};
                             args[3].taskMark = [hidx, group, sts.id];
                             this.taskQueue.addTask('status-' + sts.name, args, isUnshift);
@@ -3735,7 +3777,7 @@ export default class GeniusInvokationClient {
                 if (cmds[i].length == 0) continue;
                 if (isExec) {
                     if (!taskMark) {
-                        const args = Array.from(arguments);
+                        const args = clone(Array.from(arguments));
                         args[1] = clone(args[1]) ?? {};
                         args[1].pidx = pidx;
                         args[1].taskMark = [hidx, slotIds[hidx][i][1].subType[0]];
@@ -4421,7 +4463,7 @@ class TaskQueue {
     addStatusAtk(ststask: StatusTask[], isUnshift = false) {
         if (ststask.length == 0) return;
         for (const t of ststask) {
-            const atkname = 'statusAtk-' + heroStatus(t.id).name;
+            const atkname = 'statusAtk-' + heroStatus(t.id).name + 'h' + t.hidx;
             if (this.queue.some(([tpn]) => tpn == atkname)) continue;
             if (isUnshift) this.queue.unshift([atkname, t]);
             else this.queue.push([atkname, t]);

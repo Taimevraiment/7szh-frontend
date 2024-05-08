@@ -267,7 +267,7 @@ const statusTotal: StatusObj = {
             return { restDmg: Math.max(0, restDmg - 3) }
         }),
 
-    2019: () => new GIStatus(2019, '兽肉薄荷卷(生效中)', '目标角色在本回合结束前，之后的三次｢普通攻击｣都少花费1个[无色元素骰]。',
+    2019: () => new GIStatus(2019, '兽肉薄荷卷(生效中)', '本回合中，该角色｢普通攻击｣少花费1个[无色元素骰]。；【[可用次数]：{useCnt}】',
         'buff2', 0, [4], 3, 0, 1, (status, event = {}) => {
             const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(event, { skilltype1: [0, 1, 0] });
             return {
@@ -750,7 +750,7 @@ const statusTotal: StatusObj = {
                 trigger: ['skilltype1'],
                 exec: () => { --status.useCnt },
             }
-        }),
+        }, { icbg: STATUS_BG_COLOR[6] }),
 
     2069: (icon = '') => new GIStatus(2069, '怒目鬼王', '所附属角色｢普通攻击｣造成的伤害+1，造成的[物理伤害]变为[岩元素伤害]。；【[持续回合]：{roundCnt}】；【所附属角色｢普通攻击｣后：】为其附属【乱神之怪力】。(每回合1次)',
         icon, 0, [6, 8], -1, 0, 2, status => ({

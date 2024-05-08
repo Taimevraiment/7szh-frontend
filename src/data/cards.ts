@@ -166,6 +166,16 @@ const elCard = (id: number, element: number, src: string) => {
         src, 0, 8, 2, [9], 0, 0, () => ({ cmds: [{ cmd: 'getDice', cnt: 1, element }] }));
 }
 
+const magicCount = (cnt: number, id?: number) => new GICard(id ?? (909 + 2 - cnt), `幻戏倒计时：${cnt}`, '将我方所有元素骰转换为[万能元素骰]，摸4张牌。；此牌在手牌或牌库中被[舍弃]后：将1张元素骰费用比此卡少1个的｢幻戏倒计时｣放置到你的牌库顶。',
+    'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Event_Event_MagicCount3.webp',
+    cnt, 8, 2, [], 0, 0, (_card, event) => {
+        const { trigger = '' } = event;
+        const cmds: Cmds[] = trigger == 'discard' ?
+            [{ cmd: 'addCard', cnt: 1, card: 909 + 3 - cnt, hidxs: [1] }] :
+            [{ cmd: 'changeDice', element: 0 }, { cmd: 'getCard', cnt: 4 }];
+        return { trigger: isCdt(cnt > 0, ['discard']), cmds }
+    });
+
 const talentSkill = (skidx: number): () => ({ trigger: Trigger[], cmds: Cmds[] }) => {
     return () => ({ trigger: ['skill'], cmds: [{ cmd: 'useSkill', cnt: skidx }] });
 }
@@ -260,7 +270,7 @@ const extraCards: CardObj = {
 
     907: new GICard(907, '唤醒眷属', '【打出此牌或[舍弃]此牌时：】召唤一个独立的【增殖生命体】。',
         '',
-        0, 8, 2, [], 0, 0, () => ({ summon: [newSummonee(3063)] }), { expl: [newSummonee(3063)] }),
+        0, 8, 2, [], 0, 0, () => ({ trigger: ['discard'], summon: [newSummonee(3063)] }), { expl: [newSummonee(3063)] }),
 
     908: new GICard(908, '禁忌知识', '无法使用此牌进行元素调和，且每回合最多只能打出1张｢禁忌知识｣。；对我方出战角色造成1点[穿透伤害]，摸1张牌。',
         '',
@@ -272,6 +282,12 @@ const extraCards: CardObj = {
                 outStatus: [heroStatus(2215)],
             }
         }),
+
+    909: magicCount(2),
+
+    910: magicCount(1),
+
+    911: magicCount(0),
 }
 
 const allCards: CardObj = {
@@ -1283,6 +1299,10 @@ const allCards: CardObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/08e6d818575b52bd4459ec98798a799a_2502234583603653928.png',
         0, 8, 1, [3], 0, 0, () => ({ site: [newSite(4051, 325)] }), { expl: [extraCards[903]] }),
 
+    326: new GICard(326, '亚瑟先生', '【我方[舍弃]或[调和]1张牌后：】此牌累积1点｢新闻线索｣。(最多累积到2点)；【结束阶段：】如果此牌已累积2点｢新闻线索｣，则扣除2点，复制对方牌库顶的1张牌加入我方手牌。',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Assist_NPC_MrArthur.webp',
+        0, 8, 1, [3], 0, 0, () => ({ site: [newSite(4054, 326)] })),
+
     401: new GICard(401, '参量质变仪', '【双方角色使用技能后：】如果造成了元素伤害，此牌积累1个｢质变进度｣。；此牌已累积3个｢质变进度｣时，弃置此牌并生成3个不同的基础元素骰。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/158741257/380f0bb73ffac88a2e8b60a1069a8246_3779576916894165131.png',
         2, 0, 1, [4], 0, 0, () => ({ site: [newSite(4002, 401)] })),
@@ -1310,6 +1330,10 @@ const allCards: CardObj = {
     407: new GICard(407, '流明石触媒', '【我方打出行动牌后：】如果此牌在场期间本回合中我方已打出3张行动牌，则摸1张牌并生成1个[万能元素骰]。(每回合1次)；[可用次数]：3',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/03/06/258999284/f705b86904d8413be39df62741a8c81e_885257763287819413.png',
         2, 8, 1, [4], 0, 0, () => ({ site: [newSite(4048, 407)] })),
+
+    408: new GICard(408, '苦舍桓', '【行动阶段开始时：】[舍弃]最多2张原本元素骰费用最高的手牌，每[舍弃]1张，此牌就累积1点｢记忆和梦｣。(最多2点)；【我方角色使用技能时：】如果我方本回合未打出过行动牌，则消耗1点｢记忆和梦｣，以使此技能少花费1个元素骰。',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Assist_Prop_KuSheHeng.webp',
+        0, 8, 1, [4], 0, 0, () => ({ site: [newSite(4055, 408)] })),
 
     501: new GICard(501, '最好的伙伴！', '将所花费的元素骰转换为2个[万能元素骰]。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/79683714/3fc6d26bb7b306296834c0b14abd4bc6_3989407061293772527.png',
@@ -1590,6 +1614,8 @@ const allCards: CardObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/40001dfa11a6aa20be3de16e0c89d598_3587066228917552605.png',
         1, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'addCard', cnt: 6, card: 904 }] }), { expl: [extraCards[904]] }),
 
+    530: magicCount(3, 503),
+
     561: new GICard(561, '自由的新风', '【本回合中，轮到我方行动期间有对方角色被击倒时：】本次行动结束后，我方可以再连续行动一次。；【[可用次数]：】1',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/09/24/258999284/bccf12a9c926bec7203e543c469ac58d_1423280855629304603.png',
         0, 8, 2, [8], 0, 0, () => ({ outStatus: [heroStatus(2054)] })),
@@ -1666,6 +1692,24 @@ const allCards: CardObj = {
     574: new GICard(574, '草与智慧', '摸1张牌。然后，选择任意手牌替换。',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/23/1694811/1c656067801c6beb53803faefedd0a47_7333316108362576471.png',
         1, 8, 2, [-3], 0, 0, () => ({ cmds: [{ cmd: 'getCard', cnt: 1 }, { cmd: 'changeCard', cnt: 2500 }] })),
+
+    575: new GICard(575, '水与正义', '平均分配我方未被击倒的角色的生命值，然后治疗所有我方角色1点。',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Event_Event_WaterJustice.webp',
+        1, 8, 2, [-3], 0, 0, (_card, event) => {
+            const { heros = [] } = event;
+            const hidxs = allHidxs(heros);
+            if (hidxs.length > 1) {
+                const allHp = heros.reduce((a, c) => c.hp > 0 ? a + c.hp : a, 0);
+                const baseHp = Math.floor(allHp / hidxs.length);
+                let restHp = allHp - baseHp;
+                const hidx = heros.findIndex(h => h.isFront);
+                for (let i = 0; i < heros.length; ++i) {
+                    heros[hidx + i].hp = baseHp + (restHp > 0 ? 1 : 0);
+                    if (restHp > 0) --restHp;
+                }
+            }
+            return { cmds: [{ cmd: 'heal', cnt: 1, hidxs }] }
+        }),
 
     578: new GICard(578, '愚人众的阴谋', '在对方场上，生成1个随机类型的｢愚人众伏兵｣。',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/388f7b09c6abb51bf35cdf5799b20371_5031929258147413659.png',
