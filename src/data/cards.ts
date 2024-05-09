@@ -348,12 +348,11 @@ const allCards: CardObj = {
             return {
                 trigger: ['getdmg', 'heal'],
                 addDmg: 1,
+                execmds: isCdt<Cmds[]>(isMinus && card.useCnt == 1, [{ cmd: 'getStatus', status: [heroStatus(2172)] }]),
                 exec: () => {
                     if (!isMinus) return;
                     if (card.useCnt < 2) ++card.useCnt;
-                    if (card.perCnt == 0 || card.useCnt < 2) return;
-                    --card.perCnt;
-                    return { inStatus: [heroStatus(2172)] }
+                    else if (card.perCnt > 0) --card.perCnt;
                 }
             }
         }, { pct: 1, uct: 0, isResetUct: true }),
@@ -365,10 +364,9 @@ const allCards: CardObj = {
             const isMinus = (trigger == 'getdmg' || trigger == 'heal' && heal[hidxs[0]] > 0) && card.perCnt > 0;
             return {
                 trigger: ['getdmg', 'heal'],
+                execmds: isCdt<Cmds[]>(isMinus, [{ cmd: 'getStatus', status: [heroStatus(2213)] }]),
                 exec: () => {
-                    if (!isMinus) return;
-                    --card.perCnt;
-                    return { inStatus: [heroStatus(2213)] }
+                    if (isMinus) --card.perCnt;
                 }
             }
         }, { pct: 2 }),
@@ -408,7 +406,7 @@ const allCards: CardObj = {
         3, 8, 0, [0], 3, 1, () => ({
             addDmg: 1,
             trigger: ['skilltype3'],
-            exec: () => ({ outStatus: [heroStatus(2048)] })
+            execmds: [{ cmd: 'getStatus', status: [heroStatus(2048)] }],
         }), { expl: [heroStatus(2048)] }),
 
     26: senlin1Weapon(26, '王下近侍', 3, 'https://act-upload.mihoyo.com/wiki-user-upload/2023/08/12/203927054/c667e01fa50b448958eff1d077a7ce1b_1806864451648421284.png'),
@@ -449,13 +447,13 @@ const allCards: CardObj = {
         3, 8, 0, [0], 2, 1, (card, event) => {
             const { heros = [], hidxs = [] } = event;
             const shieldCnt = heros[hidxs[0]].outStatus.find(ost => ost.id == 2049)?.useCnt ?? 0;
+            const isTriggered = card.perCnt > 0 && shieldCnt < 2;
             return {
                 addDmg: 1,
                 trigger: ['skill'],
+                execmds: isCdt<Cmds[]>(isTriggered, [{ cmd: 'getStatus', status: [heroStatus(2049)] }]),
                 exec: () => {
-                    if (card.perCnt == 0 || shieldCnt >= 2) return;
-                    --card.perCnt;
-                    return { outStatus: [heroStatus(2049)] }
+                    if (isTriggered) --card.perCnt;
                 }
             }
         }, { pct: 1 }),
@@ -464,18 +462,17 @@ const allCards: CardObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/18/258999284/4148c247b2685dfcb305cc9b6c5e8cff_6450004800527281410.png',
         3, 8, 0, [0], 2, 1, (card, event) => {
             const { trigger = '' } = event;
+            const isTriggered1 = trigger == 'skilltype2' && (card.perCnt >> 0 & 1) == 1;
+            const isTriggered2 = trigger == 'getdmg' && (card.perCnt >> 1 & 1) == 1;
+            const execmds: Cmds[] | undefined = isTriggered1 ? [{ cmd: 'getStatus', status: [heroStatus(2149)] }] :
+                isTriggered2 ? [{ cmd: 'getStatus', status: [heroStatus(2150)] }] : undefined;
             return {
                 addDmg: 1,
                 trigger: ['skilltype2', 'getdmg'],
+                execmds,
                 exec: () => {
-                    if (trigger == 'skilltype2' && (card.perCnt >> 0 & 1) == 1) {
-                        card.perCnt &= ~(1 << 0);
-                        return { inStatus: [heroStatus(2149)] }
-                    }
-                    if (trigger == 'getdmg' && (card.perCnt >> 1 & 1) == 1) {
-                        card.perCnt &= ~(1 << 1);
-                        return { inStatus: [heroStatus(2150)] }
-                    }
+                    if (isTriggered1) card.perCnt &= ~(1 << 0);
+                    if (isTriggered2) card.perCnt &= ~(1 << 1);
                 }
             }
         }, { pct: 3 }),
@@ -2259,7 +2256,7 @@ const allCards: CardObj = {
         4, 5, 0, [6, 7], 1406, 1, (_card, event) => talentHandle(event, 1, () => {
             const { isChargedAtk = false, heros = [], hidxs = [] } = event;
             const hasSts2102 = heros[hidxs[0]].inStatus.some(ist => ist.id == 2102);
-            return [() => ({ inStatus: isCdt(isChargedAtk && hasSts2102, [heroStatus(2103)]) })]
+            return [() => ({}), { execmds: isCdt(isChargedAtk && hasSts2102, [{ cmd: 'getStatus', status: [heroStatus(2103)] }]) }]
         }, 'skilltype1'), { expl: talentExplain(1406, 1) }),
 
     756: new GICard(756, '崇诚之真', '[战斗行动]：我方出战角色为【迪希雅】时，装备此牌。；【迪希雅】装备此牌后，立刻使用一次【熔铁流狱】。；【结束阶段：】如果装备有此牌的【迪希雅】生命值不多于6，则治疗该角色2点。',
@@ -2461,7 +2458,7 @@ const allCards: CardObj = {
             return {
                 outStatusOppo: isCdt(isTriggered, [heroStatus(2180)]),
                 trigger: ['will-killed'],
-                exec: () => ({ outStatusOppo: [heroStatus(2180)] })
+                execmds: [{ cmd: 'getStatus', status: [heroStatus(2180)], isOppo: true }],
             }
         }, { expl: [heroStatus(2181)] }),
 

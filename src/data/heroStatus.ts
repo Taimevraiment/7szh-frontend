@@ -760,7 +760,7 @@ const statusTotal: StatusObj = {
             exec: () => {
                 if (status.perCnt <= 0) return;
                 --status.perCnt;
-                return { inStatus: [heroStatus(2068)] }
+                return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2068)] }] }
             }
         }), { icbg: STATUS_BG_COLOR[6], pct: 1 }),
 
@@ -808,7 +808,7 @@ const statusTotal: StatusObj = {
             trigger: ['skilltype1'],
             exec: () => {
                 const { isChargedAtk = false, heros = [], hidx = -1 } = event;
-                return { inStatusOppo: isCdt(isChargedAtk, [heroStatus(2076, heros[hidx].skills[2].src)]) }
+                return { cmds: isCdt<Cmds[]>(isChargedAtk, [{ cmd: 'getStatus', status: [heroStatus(2076, heros[hidx].skills[2].src)], isOppo: true }]) }
             }
         }), { icbg: STATUS_BG_COLOR[1] }),
 
@@ -832,7 +832,7 @@ const statusTotal: StatusObj = {
                         return { inStatus: [heroStatus(2074, heros[hidx].skills[3].src)] }
                     }
                     if (isPenDmg) --status.perCnt;
-                    return { inStatusOppo: isCdt(isChargedAtk, [heroStatus(2076, heros[hidx].skills[2].src)]) }
+                    return { cmds: isCdt<Cmds[]>(isChargedAtk, [{ cmd: 'getStatus', status: [heroStatus(2076, heros[hidx].skills[2].src)], isOppo: true }]) }
                 },
             }
         }, { icbg: STATUS_BG_COLOR[1], pct: 2 }),
@@ -872,7 +872,7 @@ const statusTotal: StatusObj = {
             addDmg: 1,
             attachEl: 2,
             trigger: ['skill'],
-            exec: () => ({ inStatusOppo: isCdt<Status[]>(event.isChargedAtk, [heroStatus(2079)]) })
+            exec: () => ({ cmds: isCdt<Cmds[]>(event.isChargedAtk, [{ cmd: 'getStatus', status: [heroStatus(2079)], isOppo: true }]) })
         }), { expl: [heroStatus(2079)] }),
 
     2079: () => new GIStatus(2079, '血梅香', '【结束阶段：】对所附属角色造成1点[火元素伤害]。；【[可用次数]：{useCnt}】',
@@ -1036,7 +1036,7 @@ const statusTotal: StatusObj = {
                     heros[hidx].talentSlot = null;
                     inStatus.push(heroStatus(2093))
                 }
-                return { inStatus }
+                return { cmds: [{ cmd: 'getStatus', status: inStatus }] }
             }
         })),
 
@@ -1098,7 +1098,7 @@ const statusTotal: StatusObj = {
                 trigger: ['skilltype1', 'phase-end'],
                 ...minusSkillRes,
                 exec: () => {
-                    if (trigger == 'phase-end') return { inStatus: [heroStatus(2096)] }
+                    if (trigger == 'phase-end') return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2096)] }] }
                     if (trigger == 'skilltype1' && isMinus && isMinusSkill) --status.perCnt;
                 }
             }
@@ -1274,7 +1274,7 @@ const statusTotal: StatusObj = {
                 if (eStatus) --eStatus.useCnt;
                 const { heros = [], hidx = -1 } = event;
                 const isExist = heros[hidx]?.outStatus?.some(ost => ost.id == 2114);
-                return { outStatus: [heroStatus(2114, isExist)] }
+                return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2114, isExist)] }] }
             },
         }), { icbg: STATUS_BG_COLOR[7], expl: [heroStatus(2114)] }),
 
@@ -1324,7 +1324,7 @@ const statusTotal: StatusObj = {
                 const { trigger = '' } = event;
                 --status.useCnt;
                 if (trigger == 'change-from') return;
-                return { inStatus: [heroStatus(2118, [status.addition?.[0]])] }
+                return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2118, [status.addition?.[0]])] }] }
             }
         }), { expl: [expl?.[0] as ExplainContent], add: [expl?.[1]] }),
 
@@ -1557,7 +1557,7 @@ const statusTotal: StatusObj = {
                 const { trigger = '' } = event;
                 --status.useCnt;
                 if (trigger == 'change-from') return;
-                return { inStatus: [heroStatus(2144, [status.explains?.[1]])] }
+                return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2144, [status.explains?.[1]])] }] }
             }
         }), { expl }),
 
@@ -1716,7 +1716,7 @@ const statusTotal: StatusObj = {
                     return;
                 }
                 if (!heros[hidx].talentSlot) return;
-                return { inStatusOppo: [heroStatus(2137)] }
+                return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2137)], isOppo: true }] }
             }
         })),
 
@@ -1944,7 +1944,7 @@ const statusTotal: StatusObj = {
                 attachEl: 5,
                 exec: () => {
                     --status.useCnt;
-                    return { inStatusOppo: [heroStatus(2178, heros[hidx].skills[1].src)] }
+                    return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2178, heros[hidx].skills[1].src)], isOppo: true }] }
                 }
             }
         }, { icbg: STATUS_BG_COLOR[5], expl: [heroStatus(2178)] }),
@@ -1986,7 +1986,7 @@ const statusTotal: StatusObj = {
                     --eStatus.useCnt;
                     return;
                 }
-                return { inStatus: [heroStatus(2187)] }
+                return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2187)] }] }
             }
         })),
 
@@ -2114,7 +2114,7 @@ const statusTotal: StatusObj = {
             if (trigger == 'heal' && (heal[hidx] ?? 0) > 0) triggers.push('heal');
             return {
                 trigger: triggers,
-                exec: () => ({ outStatus: [heroStatus(2195)] }),
+                exec: () => ({ cmds: [{ cmd: 'getStatus', status: [heroStatus(2195)] }] }),
             }
         }, { icbg: STATUS_BG_COLOR[4], expl: [heroStatus(2195)] }),
 
@@ -2231,7 +2231,7 @@ const statusTotal: StatusObj = {
                 trigger: ['skilltype1'],
                 attachEl: 7,
                 addDmgType1: 1,
-                exec: () => ({ outStatus: [heroStatus(2202, heros[hidx].skills[1].src)] })
+                exec: () => ({ cmds: [{ cmd: 'getStatus', status: [heroStatus(2202, heros[hidx].skills[1].src)] }] })
             }
         }, { icbg: STATUS_BG_COLOR[7] }),
 

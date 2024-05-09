@@ -218,7 +218,7 @@ type StatusTask = {
     pidx: number, // 攻击者pidx
     isSelf: number, // 是否为自伤
     trigger: Trigger, // 触发条件
-    hidx?: number, // 攻击者hidx
+    hidx: number, // 攻击者hidx
     isSwitchAtk?: boolean, // 是否为下落攻击/刻晴切换攻击
     isQuickAction?: boolean, // 是否为快速行动
     isAfterSwitch?: boolean, // 是否为后切换触发
@@ -396,10 +396,10 @@ type CardHandleRes = {
 }
 
 type CardExecRes = {
-    inStatus?: Status[],
-    outStatus?: Status[],
-    inStatusOppo?: Status[],
-    outStatusOppo?: Status[],
+    // inStatus?: Status[],
+    // outStatus?: Status[],
+    // inStatusOppo?: Status[],
+    // outStatusOppo?: Status[],
     hidxs?: number[],
     changeHeroDiceCnt?: number,
 }
@@ -487,11 +487,11 @@ type StatusExecEvent = {
 
 type StatusExecRes = {
     cmds?: Cmds[],
-    inStatus?: Status[],
-    outStatus?: Status[],
+    // inStatus?: Status[],
+    // outStatus?: Status[],
+    // inStatusOppo?: Status[],
+    // outStatusOppo?: Status[],
     changeHeroDiceCnt?: number,
-    inStatusOppo?: Status[],
-    outStatusOppo?: Status[],
     hidxs?: number[],
 }
 
@@ -547,7 +547,6 @@ type SiteExecRes = {
     cmds?: Cmds[],
     isDestroy: boolean,
     changeHeroDiceCnt?: number,
-    outStatus?: Status[],
     summon?: Summonee[],
 }
 

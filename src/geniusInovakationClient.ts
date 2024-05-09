@@ -1641,7 +1641,15 @@ export default class GeniusInvokationClient {
                     if (this._hasNotTrigger(stsres.trigger, state)) continue;
                     if (sts.type.includes(1) && (stsres.damage || stsres.pendamage || stsres.heal)) {
                         if (state.startsWith('after')) {
-                            statusIds.push({ id: sts.id, type: stype, pidx: this.playerIdx ^ isSelf, isSelf: isSelfAtk, trigger: state, isAfterSwitch });
+                            statusIds.push({
+                                id: sts.id,
+                                type: stype,
+                                pidx: this.playerIdx ^ isSelf,
+                                isSelf: isSelfAtk,
+                                trigger: state,
+                                isAfterSwitch,
+                                hidx: isSelf ? ehidx : ahidx,
+                            });
                         }
                         const dmg = new Array(ahlen + ehlen).fill(0).map((_, di) => bWillDamages.reduce((a, b) => a + b[di][0] + b[di][1], 0));
                         const willKill = isSelf ? dmg[(this.playerIdx ^ 1) * ehlen + ahidx] >= aHeros[ahidx].hp : dmg[this.playerIdx * ahlen + ehidx] >= eaHeros[ehidx].hp;
@@ -1870,7 +1878,6 @@ export default class GeniusInvokationClient {
         const dieChangeBack = [PHASE.DIE_CHANGE, PHASE.DIE_CHANGE_END].includes(this.player.phase);
         let isQuickAction = false;
         let stsIsEndAtk = true;
-        let outStatus: Status[] = [];
         const cmds: Cmds[] = [];
         if (dieChangeBack) {
             const { isQuickAction: slotiqa } = this._doSlot('kill', {
@@ -1894,14 +1901,12 @@ export default class GeniusInvokationClient {
             changeHeroDiceCnt = this._doSlot(['change-from'], { hidxs: this.player.hidx, changeHeroDiceCnt, summons: this.player.summon }).changeHeroDiceCnt;
             changeHeroDiceCnt = this._doSlot(['change'], { hidxs: getBackHidxs(this.player.heros), changeHeroDiceCnt, summons: this.player.summon }).changeHeroDiceCnt;
             changeHeroDiceCnt = this._doSlot(['change-to'], { hidxs: hidx, changeHeroDiceCnt, summons: this.player.summon }).changeHeroDiceCnt;
-            const { cmds: sitecmd, outStatus: siteost, isQuickAction: stiqa } = this._doSite(this.playerIdx, 'change', { isQuickAction, changeHeroDiceCnt, hidx });
+            const { cmds: sitecmd, isQuickAction: stiqa } = this._doSite(this.playerIdx, 'change', { isQuickAction, changeHeroDiceCnt, hidx });
             isQuickAction = stiqa;
             cmds.push(...sitecmd);
-            outStatus.push(...siteost);
             Array.from({ length: this.player.heros.length - 1 }, (_, i) => (this.player.hidx + i + 1) % this.player.heros.length);
         }
         this._doStatus(this.playerIdx, 1, 'change-from', { hidxs: [this.player.hidx], isQuickAction: isCdt(isQuickAction, 2) });
-        this.player.heros[this.player.hidx].outStatus = this._updateStatus(outStatus, this.player.heros[this.player.hidx].outStatus).nstatus;
         const { heros } = this._doCmds(cmds);
         if (heros) this.player.heros = heros;
         this.socket.emit('sendToServer', {
@@ -2656,18 +2661,20 @@ export default class GeniusInvokationClient {
                             type: sts.group,
                             pidx: isSelf ? pidx : epidx,
                             isSelf: +!!stsres.isSelf,
-                            trigger
+                            trigger,
+                            hidx: hi,
                         }], trigger == 'getdmg');
                     }
                     // else if (trigger.startsWith('skill')) {
                     //     (isSelf ? res.etriggers : res.atriggers)[hi].push('after-' + trigger as Trigger);
                     // }
                     if (stsres.exec && isWindExec && !sts.type.includes(11)) {
-                        const { inStatus = [], outStatus = [], inStatusOppo = [], outStatusOppo = [], hidxs, cmds = [] } = stsres.exec() ?? {};
-                        (hidxs ?? [aFrontIdx]).forEach(hi => aist[hi].push(...(isSelf ? inStatus : inStatusOppo)));
-                        aost.push(...(isSelf ? outStatus : outStatusOppo));
-                        (hidxs ?? [frontIdx]).forEach(hi => eist[hi].push(...(isSelf ? inStatusOppo : inStatus)));
-                        eost.push(...(isSelf ? outStatusOppo : outStatus));
+                        // const { inStatus = [], outStatus = [], inStatusOppo = [], outStatusOppo = [], hidxs, cmds = [] } = stsres.exec() ?? {};
+                        const { cmds = [] } = stsres.exec() ?? {};
+                        // (hidxs ?? [aFrontIdx]).forEach(hi => aist[hi].push(...(isSelf ? inStatus : inStatusOppo)));
+                        // aost.push(...(isSelf ? outStatus : outStatusOppo));
+                        // (hidxs ?? [frontIdx]).forEach(hi => eist[hi].push(...(isSelf ? inStatusOppo : inStatus)));
+                        // eost.push(...(isSelf ? outStatusOppo : outStatus));
                         res.elrcmds[+!isSelf].push(...cmds);
                     }
                 }
@@ -3117,11 +3124,10 @@ export default class GeniusInvokationClient {
         let { changeHeroDiceCnt = 0, summonDiffCnt = 0, isQuickAction = false, minusDiceCard = 0, minusDiceSkill } = options;
         let exchangeSite: [Site, number][] = [];
         const cmds: Cmds[] = [];
-        const outStatus: Status[] = [];
         let minusDiceHero = 0;
         const siteCnt = [[0, 0, 0, 0], [0, 0, 0, 0]];
         let task: [(() => void)[], number[]] | undefined;
-        if (players.some(p => p.hidx < 0)) return { isQuickAction, cmds, exchangeSite, outStatus, minusDiceHero, siteCnt, task }
+        if (players.some(p => p.hidx < 0)) return { isQuickAction, cmds, exchangeSite, minusDiceHero, siteCnt, task }
         const p = players[pidx];
         const imdices = [...players[pidx].dice];
         const destroys: number[] = [];
@@ -3164,7 +3170,6 @@ export default class GeniusInvokationClient {
                         const siteexecres = siteres.exec?.({ isQuickAction, changeHeroDiceCnt, summonDiffCnt, minusDiceCard });
                         changeHeroDiceCnt = siteexecres?.changeHeroDiceCnt ?? 0;
                         cmds.push(...(siteexecres?.cmds ?? []));
-                        outStatus.push(...(siteexecres?.outStatus ?? []));
                         if (siteexecres?.isDestroy && (!siteres.isExchange || isExchange)) destroys.push(stidx);
                     } else {
                         if (!isExecTask) {
@@ -3245,7 +3250,7 @@ export default class GeniusInvokationClient {
         isLast = true;
         lastSite.forEach(doSite);
         if (isExec) p.site = p.site.filter((_, stidx) => !destroys.includes(stidx));
-        return { isQuickAction, cmds, exchangeSite, outStatus, minusDiceHero, siteCnt, minusDiceCard, minusDiceSkill, task }
+        return { isQuickAction, cmds, exchangeSite, minusDiceHero, siteCnt, minusDiceCard, minusDiceSkill, task }
     }
     /**
      * 状态效果发动
@@ -3334,10 +3339,10 @@ export default class GeniusInvokationClient {
                 if (isExec) {
                     const stsexecres = stsres.exec?.(undefined, { changeHeroDiceCnt });
                     changeHeroDiceCnt = stsexecres?.changeHeroDiceCnt ?? 0;
-                    nost.push(...(stsexecres?.outStatus ?? []));
-                    nist.push(...(stsexecres?.inStatus ?? []));
-                    nistop.push(...(stsexecres?.inStatusOppo ?? []));
-                    nostop.push(...(stsexecres?.outStatusOppo ?? []));
+                    // nost.push(...(stsexecres?.outStatus ?? []));
+                    // nist.push(...(stsexecres?.inStatus ?? []));
+                    // nistop.push(...(stsexecres?.inStatusOppo ?? []));
+                    // nostop.push(...(stsexecres?.outStatusOppo ?? []));
                     const stscmds = [...(stsres.cmds ?? []), ...(stsexecres?.cmds ?? [])];
                     cmds.push(...stscmds);
                     if (intvl && (!types.includes(1) || !sts.type.includes(1)) && !stsres.damage && !stsres.pendamage && !stsres.heal) {
@@ -3719,26 +3724,26 @@ export default class GeniusInvokationClient {
                             playerInfo: this.players[pidx].playerInfo,
                         });
                         if (this._hasNotTrigger(slotres.trigger, trigger)) continue;
-                        if (isExec) {
-                            if (slotres.execmds) {
-                                cmds.push(slotres.execmds);
-                                slotIds[hidx].push([hidx, slot]);
-                            }
-                            if (!slotres.execmds?.length || taskMark) {
-                                const slotexecres = slotres.exec?.();
-                                if (slotexecres?.inStatus) inStatus.push(...slotexecres.inStatus);
-                                if (slotexecres?.outStatus) outStatus.push(...slotexecres.outStatus);
-                                if (slotexecres?.inStatusOppo) {
-                                    const ehidxs = slotexecres?.hidxs ?? [eheros.findIndex(h => h.isFront)];
-                                    for (const ehidx of ehidxs) {
-                                        eheros[ehidx].inStatus = this._updateStatus(slotexecres.inStatusOppo, eheros[ehidx].inStatus).nstatus;
-                                    }
-                                }
-                                if (slotexecres?.outStatusOppo) {
-                                    eheros[this.players[pidx ^ 1].hidx].outStatus = this._updateStatus(slotexecres.outStatusOppo, eheros[this.players[pidx ^ 1].hidx].outStatus).nstatus;
-                                }
-                            }
+                        // if (isExec) {
+                        if (isExec && slotres.execmds) {
+                            cmds.push(slotres.execmds);
+                            slotIds[hidx].push([hidx, slot]);
                         }
+                        // if (!slotres.execmds?.length || taskMark) {
+                        //     const slotexecres = slotres.exec?.();
+                        //     if (slotexecres?.inStatus) inStatus.push(...slotexecres.inStatus);
+                        //     if (slotexecres?.outStatus) outStatus.push(...slotexecres.outStatus);
+                        //     if (slotexecres?.inStatusOppo) {
+                        //         const ehidxs = slotexecres?.hidxs ?? [eheros.findIndex(h => h.isFront)];
+                        //         for (const ehidx of ehidxs) {
+                        //             eheros[ehidx].inStatus = this._updateStatus(slotexecres.inStatusOppo, eheros[ehidx].inStatus).nstatus;
+                        //         }
+                        //     }
+                        //     if (slotexecres?.outStatusOppo) {
+                        //         eheros[this.players[pidx ^ 1].hidx].outStatus = this._updateStatus(slotexecres.outStatusOppo, eheros[this.players[pidx ^ 1].hidx].outStatus).nstatus;
+                        //     }
+                        // }
+                        // }
                         changeHeroDiceCnt -= slotres.minusDiceHero ?? 0;
                         minusDiceHero += slotres.minusDiceHero ?? 0;
                         minusDiceCard += slotres.minusDiceCard ?? 0;
@@ -3851,8 +3856,32 @@ export default class GeniusInvokationClient {
             if (!isExec) this.siteCnt[pidx].forEach((_, i, a) => a[i] += siteCnt[pidx][i]);
         }
     }
-    _doDiscard() {
-
+    /**
+     * 弃牌后的处理
+     * @param cards 弃牌
+     * @param options pidx 玩家idx
+     */
+    _doDiscard(cards: Card[], options: { pidx?: number } = {}) {
+        const { pidx = this.playerIdx } = options;
+        const player = this.players[pidx];
+        let summonee = clone(player.summon);
+        const cmds: Cmds[] = [];
+        let isTriggered = false;
+        for (const card of cards) {
+            const cardres = cardsTotal(card.id).handle(card, { trigger: 'discard' });
+            if (this._hasNotTrigger(cardres.trigger, 'discard')) continue;
+            isTriggered = true;
+            const { cmds: cardcmds = [] } = this._doCmds(cardres.cmds, { pidx });
+            cmds.push(...cardcmds);
+            summonee = this._updateSummon(cardres.summon ?? [], summonee, player.heros[player.hidx].outStatus);
+        }
+        if (!isTriggered) return;
+        this.socket.emit('sendToServer', {
+            cpidx: pidx,
+            cmds,
+            summonee,
+            flag: `disard-[${cards.map(c => c.name).join(',')}]-${pidx}`,
+        });
     }
     /**
      * 执行命令集
@@ -3974,7 +4003,7 @@ export default class GeniusInvokationClient {
                 }
                 player.playerInfo.discardCnt += discards.length;
                 player.playerInfo.discardIds.push(...discards.map(c => c.id));
-                this._doDiscard();
+                if (isExec) this._doDiscard(discards, { pidx });
             } else if (cmd == 'getDice' && isExec) {
                 ndices = this._getDice(dices, cnt, element, { pidx });
             } else if (cmd == 'getEnergy' && isExec) {
@@ -4451,9 +4480,8 @@ class TaskQueue {
         });
     }
     getTask() {
-        const res = this.queue.shift()!;
-        // const [res] = this.queue;
-        if (res[0].startsWith('statusAtk-')) --this.statusAtk;
+        const res = this.queue.shift() ?? ['', undefined];
+        if (res?.[0].startsWith('statusAtk-')) --this.statusAtk;
         this._emit(`getTask:${res[0]}(queue=[${this.queue.map(v => v[0])}])`);
         return res;
     }

@@ -581,7 +581,7 @@ const siteTotal: SiteObj = {
         exec: () => {
             if (site.perCnt == 0) return { isDestroy: false }
             --site.perCnt;
-            return { outStatus: [heroStatus(2084)], isDestroy: false }
+            return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2084)] }], isDestroy: false }
         }
     })),
     // 寻宝仙灵

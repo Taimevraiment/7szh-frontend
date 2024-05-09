@@ -483,10 +483,14 @@ const devOps = (cidx = 0) => {
       flag.add('disCard');
     } else if (op.startsWith('=')) { // 状态
       const [stsid = 0, hidx = heros.findIndex(h => h.isFront)] = op.slice(1).split(/[:：]+/).map(h);
-      if (stsid < 2000 || stsid > 3000) continue;
-      const sts = heroStatus(stsid);
-      const cmds: Cmds[] = [{ cmd: 'getStatus', status: [sts], hidxs: [hidx] }];
-      client.value._doCmds(cmds, { heros, isEffectHero: true });
+      if (stsid < 2000 || stsid > 3000) {
+        heros[hidx].inStatus = [];
+        heros[hidx].outStatus = [];
+      } else {
+        const sts = heroStatus(stsid);
+        const cmds: Cmds[] = [{ cmd: 'getStatus', status: [sts], hidxs: [hidx] }];
+        client.value._doCmds(cmds, { heros, isEffectHero: true });
+      }
       flag.add('setStatus');
     } else if (op.startsWith('+')) { // 在牌库中加牌
       const rest = op.slice(1);
