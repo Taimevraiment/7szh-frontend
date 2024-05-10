@@ -431,7 +431,7 @@ const devOps = (cidx = 0) => {
   let heros = client.value.players[cpidx].heros;
   let dices;
   let flag = new Set<string>();
-  let cards: (number | Card)[] = [];
+  // let cards: (number | Card)[] = [];
   let handCards: Card[] | undefined;
   const cmds: Cmds[] = [];
   const h = (v: string) => (v == '' ? undefined : Number(v));
@@ -505,6 +505,7 @@ const devOps = (cidx = 0) => {
       flag.add('addCard');
       cmds.push(...acmds);
     } else { // 摸牌
+      const cards: (number | Card)[] = [];
       const isAttach = op.endsWith('~');
       const [cid = 0, cnt = 1] = op.slice(0, isAttach ? -1 : undefined).split('*').map(h);
       if (cid == 0) {
@@ -512,8 +513,8 @@ const devOps = (cidx = 0) => {
       }
       if (cid > 0) cards.push(...new Array(cnt).fill(cid));
       const { cmds: gcmds = [] } = client.value._doCmds([{ cmd: 'getCard', cnt, card: cards, isAttach }], { pidx: cpidx });
-      flag.add('getCard');
       cmds.push(...gcmds);
+      flag.add('getCard');
     }
   }
   socket.emit('sendToServer', { cpidx, heros, dices, cmds, handCards, flag: 'dev-' + [...flag].join('&') });

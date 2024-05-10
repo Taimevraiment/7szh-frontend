@@ -166,8 +166,8 @@ const elCard = (id: number, element: number, src: string) => {
         src, 0, 8, 2, [9], 0, 0, () => ({ cmds: [{ cmd: 'getDice', cnt: 1, element }] }));
 }
 
-const magicCount = (cnt: number, id?: number) => new GICard(id ?? (909 + 2 - cnt), `幻戏倒计时：${cnt}`, '将我方所有元素骰转换为[万能元素骰]，摸4张牌。；此牌在手牌或牌库中被[舍弃]后：将1张元素骰费用比此卡少1个的｢幻戏倒计时｣放置到你的牌库顶。',
-    'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Event_Event_MagicCount3.webp',
+const magicCount = (cnt: number, id?: number) => new GICard(id ?? (909 + 2 - cnt), `幻戏${cnt > 0 ? `倒计时：${cnt}` : '开始！'}`, `将我方所有元素骰转换为[万能元素骰]，摸4张牌。${cnt > 0 ? '；此牌在手牌或牌库中被[舍弃]后：将1张元素骰费用比此卡少1个的｢幻戏倒计时｣放置到你的牌库顶。' : ''}`,
+    `https://homdgcat.wiki/images/GCG/UI_Gcg_CardFace_Event_Event_MagicCount${cnt}.png`,
     cnt, 8, 2, [], 0, 0, (_card, event) => {
         const { trigger = '' } = event;
         const cmds: Cmds[] = trigger == 'discard' ?
@@ -218,7 +218,7 @@ type CardObj = {
 // id 7xx：天赋
 
 const extraCards: CardObj = {
-    901: new GICard(901, '雷楔', '[战斗行动]：将【刻晴】切换到场上，立刻使用【星斗归位】。本次【星斗归位】会为【刻晴】附属【雷元素附魔】，但是不会再生成【雷楔】。(【刻晴】使用【星斗归位】时，如果此牌在手中：不会再生成【雷楔】，而是改为弃置此牌，并为【刻晴】附属【雷元素附魔】)',
+    901: new GICard(901, '雷楔', '[战斗行动]：将【刻晴】切换到场上，立刻使用【星斗归位】。本次【星斗归位】会为【刻晴】附属【雷元素附魔】，但是不会再生成【雷楔】。(【刻晴】使用【星斗归位】时，如果此牌在手中：不会再生成【雷楔】，而是改为[舍弃]此牌，并为【刻晴】附属【雷元素附魔】)',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/12/12109492/3d370650e825a27046596aaf4a53bb8d_7172676693296305743.png',
         3, 3, 2, [7], 0, 0, (_card, event) => {
             const { heros = [] } = event;
@@ -230,19 +230,19 @@ const extraCards: CardObj = {
         }, { expl: talentExplain(1303, 2) }),
 
     902: new GICard(902, '太郎丸的存款', '生成1个[万能元素骰]。',
-        'mihoyo_tailangwandecunkuan.png',
+        'https://homdgcat.wiki/images/GCG/UI_Gcg_CardFace_Summon_Taroumaru.png',
         0, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'getDice', cnt: 1, element: 0 }] })),
 
     903: new GICard(903, '｢清洁工作｣', '我方出战角色下次造成伤害+1。(可叠加，最多叠加到+2)',
-        'mihoyo_qingjiegongzuo.png',
+        'https://homdgcat.wiki/images/GCG/UI_Gcg_CardFace_Summon_Baishoutao.png',
         0, 8, 2, [], 0, 0, () => ({ outStatus: [heroStatus(2185)] })),
 
     904: new GICard(904, '海底宝藏', '治疗我方出战角色1点，生成1个随机基础元素骰。',
-        'mihoyo_haidibaozang.png',
+        'https://homdgcat.wiki/images/GCG/UI_Gcg_CardFace_Summon_Xunbao.png',
         0, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'heal', cnt: 1 }, { cmd: 'getDice', cnt: 1, element: -1 }] })),
 
     905: new GICard(905, '圣俗杂座', '在｢始基力：荒性｣和｢始基力：芒性｣之中，切换【芙宁娜】的形态。；如果我方场上存在【沙龙成员】或【众水的歌者】，也切换其形态。',
-        '',
+        'https://homdgcat.wiki/images/GCG/UI_Gcg_CardFace_Event_Event_FurinaOusiaChange.png',
         0, 8, 2, [], 0, 0, (_card, event) => {
             const { heros = [], summons = [], isExec = false } = event;
             if (!isExec) return;
@@ -259,7 +259,7 @@ const extraCards: CardObj = {
         }),
 
     906: new GICard(906, '噬骸能量块', '随机[舍弃]1张原本元素骰费用最高的手牌，生成1个我方出战角色类型的元素骰。如果我方出战角色是｢圣骸兽｣角色，则使其获得1点[充能]。(每回合最多打出1张)',
-        '',
+        'https://homdgcat.wiki/images/GCG/UI_Gcg_CardFace_Summon_ScorpionSacred.png',
         0, 8, 2, [], 0, 0, (_card, event) => {
             const { heros = [], hidxs = [] } = event;
             const cmds: Cmds[] = [{ cmd: 'discard', element: 0 }, { cmd: 'getDice', cnt: 1, element: -2 }];
@@ -269,11 +269,11 @@ const extraCards: CardObj = {
         }),
 
     907: new GICard(907, '唤醒眷属', '【打出此牌或[舍弃]此牌时：】召唤一个独立的【增殖生命体】。',
-        '',
-        0, 8, 2, [], 0, 0, () => ({ trigger: ['discard'], summon: [newSummonee(3063)] }), { expl: [newSummonee(3063)] }),
+        'https://homdgcat.wiki/images/GCG/UI_Gcg_CardFace_Summon_Apep.png',
+        2, 7, 2, [], 0, 0, () => ({ trigger: ['discard'], summon: [newSummonee(3063)] }), { expl: [newSummonee(3063)] }),
 
     908: new GICard(908, '禁忌知识', '无法使用此牌进行元素调和，且每回合最多只能打出1张｢禁忌知识｣。；对我方出战角色造成1点[穿透伤害]，摸1张牌。',
-        '',
+        'https://homdgcat.wiki/images/GCG/UI_Gcg_CardFace_Summon_ChiWangLin.png',
         0, 8, 2, [-5], 0, 0, (_card, event) => {
             const { heros = [], hidxs = [] } = event;
             return {
@@ -348,11 +348,14 @@ const allCards: CardObj = {
             return {
                 trigger: ['getdmg', 'heal'],
                 addDmg: 1,
-                execmds: isCdt<Cmds[]>(isMinus && card.useCnt == 1, [{ cmd: 'getStatus', status: [heroStatus(2172)] }]),
+                // execmds: isCdt<Cmds[]>(isMinus && card.useCnt == 1, [{ cmd: 'getStatus', status: [heroStatus(2172)] }]),
                 exec: () => {
                     if (!isMinus) return;
                     if (card.useCnt < 2) ++card.useCnt;
-                    else if (card.perCnt > 0) --card.perCnt;
+                    if (card.useCnt >= 2) {
+                        --card.perCnt;
+                        return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2172)] }] }
+                    }
                 }
             }
         }, { pct: 1, uct: 0, isResetUct: true }),
@@ -1609,7 +1612,7 @@ const allCards: CardObj = {
 
     529: new GICard(529, '海中寻宝', '生成6张【海底宝藏】，随机地置入我方牌库中。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/40001dfa11a6aa20be3de16e0c89d598_3587066228917552605.png',
-        1, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'addCard', cnt: 6, card: 904 }] }), { expl: [extraCards[904]] }),
+        2, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'addCard', cnt: 6, card: 904 }] }), { expl: [extraCards[904]] }),
 
     530: magicCount(3, 503),
 

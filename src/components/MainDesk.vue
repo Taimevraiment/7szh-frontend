@@ -1433,7 +1433,7 @@ button:active {
   border: 2px solid black;
   border-radius: 10px;
   background-color: #14408c;
-  background-image: url('/image/card-back.png');
+  background-image: url('https://homdgcat.wiki/images/GCG/UI_Gcg_CardBack_01.png');
   background-size: 100% 100%;
   color: black;
   text-align: center;
@@ -1464,7 +1464,7 @@ button:active {
   border: 2px solid black;
   border-radius: 10px;
   background-color: #14408c;
-  background-image: url('@@/image/card-back.png');
+  background-image: url('https://homdgcat.wiki/images/GCG/UI_Gcg_CardBack_01.png');
   background-size: 100% 100%;
   color: black;
   text-align: center;

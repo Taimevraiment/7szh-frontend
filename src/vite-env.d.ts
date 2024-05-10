@@ -323,7 +323,7 @@ type SkillHandleRes = {
     cmds?: Cmds[],
     heal?: number,
     hidxs?: number[],
-    handCards?: Card[],
+    // handCards?: Card[],
     dmgElement?: number,
     atkBefore?: boolean,
     atkAfter?: boolean,
@@ -400,6 +400,7 @@ type CardExecRes = {
     // outStatus?: Status[],
     // inStatusOppo?: Status[],
     // outStatusOppo?: Status[],
+    cmds?: Cmds[],
     hidxs?: number[],
     changeHeroDiceCnt?: number,
 }

@@ -49,12 +49,20 @@ export const STATUS_BG_COLOR = ['#848484', '#003ab6', '#b46534', '#9956c8', '#00
 export const HERO_LOCAL = ['魔物', '蒙德', '璃月', '稻妻', '须弥', '枫丹', '纳塔', '至冬', '愚人众', '丘丘人', '镀金旅团', '始基力:荒性', '始基力:芒性', '圣骸兽'];
 
 export const HERO_LOCAL_URL = [
+    'https://homdgcat.wiki/images/GCG_UI/3503.png',
+    'https://homdgcat.wiki/images/GCG_UI/3401.png',
+    'https://homdgcat.wiki/images/GCG_UI/3402.png',
+    'https://homdgcat.wiki/images/GCG_UI/3403.png',
+    'https://homdgcat.wiki/images/GCG_UI/3404.png',
+    'https://homdgcat.wiki/images/GCG_UI/3405.png',
     '',
-    'https://patchwiki.biligame.com/images/ys/4/40/c3jm4aw9da3nah39decr7glx3bdzhaj.png',
-    'https://patchwiki.biligame.com/images/ys/1/18/7r57dkssmqbl3angtx9pgiot6n747ao.png',
-    'https://patchwiki.biligame.com/images/ys/5/5e/0xc630m3p140814rta3p5ru8q12o9sc.png',
-    'https://patchwiki.biligame.com/images/ys/d/d3/4okrhqrowvn5890jcyy4jkwa393buzw.png',
-    'https://patchwiki.biligame.com/images/ys/a/a7/ne21xojxglgzmnntsgspb56impcirvt.png',
+    '',
+    'https://homdgcat.wiki/images/GCG_UI/3501.png',
+    'https://homdgcat.wiki/images/GCG_UI/3502.png',
+    '',
+    'https://homdgcat.wiki/images/GCG_UI/3504.png',
+    'https://homdgcat.wiki/images/GCG_UI/3505.png',
+    'https://homdgcat.wiki/images/GCG_UI/3506.png',
 ]
 
 export const WEAPON_TYPE = ['其他武器', '单手剑', '双手剑', '弓', '法器', '长柄武器'];
@@ -131,3 +139,12 @@ export const RULE_EXPLAIN: { [title: string]: string } = {
     舍弃: '通过行动牌或角色技能的效果，将行动牌从手牌或牌库中弃置。',
     调和: '为了进行元素调和，而将行动牌从手牌中弃置。',
 }
+
+// 其他源的地区图标
+export const OTHER_HERO_LOCAL_URL = [
+    'https://patchwiki.biligame.com/images/ys/4/40/c3jm4aw9da3nah39decr7glx3bdzhaj.png',
+    'https://patchwiki.biligame.com/images/ys/1/18/7r57dkssmqbl3angtx9pgiot6n747ao.png',
+    'https://patchwiki.biligame.com/images/ys/5/5e/0xc630m3p140814rta3p5ru8q12o9sc.png',
+    'https://patchwiki.biligame.com/images/ys/d/d3/4okrhqrowvn5890jcyy4jkwa393buzw.png',
+    'https://patchwiki.biligame.com/images/ys/a/a7/ne21xojxglgzmnntsgspb56impcirvt.png',
+]

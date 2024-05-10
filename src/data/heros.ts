@@ -608,7 +608,7 @@ const allHeros: HeroObj = {
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/3fdd9553568d44d74d9719f3231b6a8d.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/05/258999284/3ed2b13a1d082aa48aadf38b12f2c0d4_7432676773939994875.png',
         ], [heroStatus(2130)], () => ({ inStatus: [heroStatus(2130, 2)] })),
-        new GISkill('渊图玲珑骰', '造成{dmg}点[水元素伤害]，生成【玄掷玲珑】。', 3, 1, 3, 1, { ec: 3 }, [
+        new GISkill('渊图玲珑骰', '造成{dmg}点[水元素伤害]，生成【玄掷玲珑】。', 3, 3, 3, 1, { ec: 3 }, [
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/b77306b0f53c2bfc141ccb93f866374d.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/05/258999284/8ef70a485219c07361bcfa62d01198a3_6128235753822442226.png',
         ], [heroStatus(2131)], event => ({ outStatus: [heroStatus(2131, event.hero.skills[2].src)] })),
@@ -633,7 +633,7 @@ const allHeros: HeroObj = {
 
     1111: new GIHero(1111, '芙宁娜', [5, 11], 10, 1, 1, [
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Char_Avatar_Furina.webp',
-        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Char_Avatar_Furina.webp',
+        'https://homdgcat.wiki/images/GCG/UI_Gcg_CardFace_Char_Avatar_FurinaOusia.png',
     ], skill1('独舞之邀', undefined, event => {
         const { hero: { skills: [skill1] }, hcards = [], isExec = false } = event;
         if (skill1.perCnt == 0 || hcards.some(c => c.id == 905) || !isExec) return;
@@ -912,15 +912,11 @@ const allHeros: HeroObj = {
             const isTalent = (!!talentSlot || card?.id == 720) ? 1 : 0;
             const inStatus: Status[] = [];
             const cmds: Cmds[] = [];
-            const card901 = hcards.find(c => c.id == 901);
-            let handCards: Card[] | undefined;
-            if (card901) {
-                card901.selected = true;
-                handCards = hcards;
-            }
-            if (card?.id == 901 || card901) inStatus.push(heroStatus(2008, 3, 2 + isTalent, isTalent));
+            const hasCard901 = hcards.some(c => c.id == 901);
+            if (card?.id == 901 || hasCard901) inStatus.push(heroStatus(2008, 3, 2 + isTalent, isTalent));
+            if (hasCard901) cmds.push({ cmd: 'discard', card: 901 });
             else cmds.push({ cmd: 'getCard', cnt: 1, card: 901 });
-            return { inStatus, cmds, handCards }
+            return { inStatus, cmds }
         }),
         new GISkill('天街巡游', '造成{dmg}点[雷元素伤害]，对所有敌方后台角色造成3点[穿透伤害]。', 3, 4, 4, 3, { ec: 3 }, [
             'https://patchwiki.biligame.com/images/ys/a/a0/hl9rfd4cwbif4a7gw3zmep0cdsgn6mu.png',

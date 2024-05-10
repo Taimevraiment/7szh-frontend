@@ -829,7 +829,7 @@ const statusTotal: StatusObj = {
                 attachEl: 1,
                 exec: () => {
                     if (trigger == 'phase-end' && status.roundCnt == 1) {
-                        return { inStatus: [heroStatus(2074, heros[hidx].skills[3].src)] }
+                        return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2074, heros[hidx].skills[3].src)] }] }
                     }
                     if (isPenDmg) --status.perCnt;
                     return { cmds: isCdt<Cmds[]>(isChargedAtk, [{ cmd: 'getStatus', status: [heroStatus(2076, heros[hidx].skills[2].src)], isOppo: true }]) }
@@ -1399,9 +1399,9 @@ const statusTotal: StatusObj = {
             }
         }, { icbg: STATUS_BG_COLOR[1], act }),
 
-    2131: (icon = '') => new GIStatus(2131, '玄掷玲珑', '【我方角色｢普通攻击｣后：】造成2点[水元素伤害]。；【[持续回合]：{roundCnt}】',
+    2131: (icon = '') => new GIStatus(2131, '玄掷玲珑', '【我方角色｢普通攻击｣后：】造成1点[水元素伤害]。；【[持续回合]：{roundCnt}】',
         icon, 1, [1], -1, 0, 2, () => ({
-            damage: 2,
+            damage: 1,
             element: 1,
             trigger: ['after-skilltype1'],
         }), { icbg: STATUS_BG_COLOR[1] }),
@@ -2249,7 +2249,7 @@ const statusTotal: StatusObj = {
         }),
 
     2205: (icon = '', useCnt = 0) => new GIStatus(2205, '深噬之域', '我方[舍弃]或[调和]的手牌，会被吞噬。；每吞噬3张牌：【吞星之鲸】获得1点额外最大生命; 如果其中存在原本元素骰费用值相同的牌，则额外获得1点; 如果3张均相同，再额外获得1点。',
-        icon, 1, [9, 12], useCnt, 0, -1, (status, event = {}) => {
+        icon, 1, [4, 9, 12], useCnt, 0, -1, (status, event = {}) => {
             const { heros = [], discards = [] } = event;
             return {
                 trigger: ['discard', 'reconcile'],
