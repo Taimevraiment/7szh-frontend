@@ -472,30 +472,6 @@ constructor(
 
 #### CardExecRes
 
-##### inStatus
-
-类型：Status[]
-
-解释：我方附属角色状态
-
-##### outStatus
-
-类型：Status[]
-
-解释：我方生成出战状态
-
-##### inStatusOppo
-
-类型：Status[]
-
-解释：敌方附属角色状态
-
-##### outStatusOppo
-
-类型：Status[]
-
-解释：敌方生成出战状态
-
 ##### hidxs
 
 类型：number[]
@@ -1073,12 +1049,6 @@ constructor(
 
 解释：配合heal/pendamage作用的目标角色的序号（从0开始），若不写则为出战角色
 
-##### handCards
-
-类型：Card[]
-
-解释：我方手牌
-
 ##### atkBefore
 
 类型：boolean
@@ -1639,30 +1609,6 @@ constructor(
 
 解释：状态发动时执行的命令
 
-##### inStatus
-
-类型：Status[]
-
-解释：我方附属角色状态
-
-##### outStatus
-
-类型：Status[]
-
-解释：我方生成出战状态
-
-##### inStatusOppo
-
-类型：Status[]
-
-解释：敌方附属角色状态
-
-##### outStatusOppo
-
-类型：Status[]
-
-解释：敌方生成出战状态
-
 ##### hidxs
 
 类型：number[]
@@ -1813,6 +1759,8 @@ constructor(
 类型：string[]
 
 解释：一些额外的信息
+
+     plus 召唤物伤害是否有+号
 
 ## handle
 

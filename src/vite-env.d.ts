@@ -323,7 +323,6 @@ type SkillHandleRes = {
     cmds?: Cmds[],
     heal?: number,
     hidxs?: number[],
-    // handCards?: Card[],
     dmgElement?: number,
     atkBefore?: boolean,
     atkAfter?: boolean,
@@ -396,11 +395,6 @@ type CardHandleRes = {
 }
 
 type CardExecRes = {
-    // inStatus?: Status[],
-    // outStatus?: Status[],
-    // inStatusOppo?: Status[],
-    // outStatusOppo?: Status[],
-    cmds?: Cmds[],
     hidxs?: number[],
     changeHeroDiceCnt?: number,
 }
@@ -488,10 +482,6 @@ type StatusExecEvent = {
 
 type StatusExecRes = {
     cmds?: Cmds[],
-    // inStatus?: Status[],
-    // outStatus?: Status[],
-    // inStatusOppo?: Status[],
-    // outStatusOppo?: Status[],
     changeHeroDiceCnt?: number,
     hidxs?: number[],
 }

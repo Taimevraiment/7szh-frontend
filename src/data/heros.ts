@@ -640,7 +640,7 @@ const allHeros: HeroObj = {
         --skill1.perCnt;
         return { cmds: [{ cmd: 'getCard', cnt: 1, card: 905 }] }
     }, '；【每回合1次：】如果手牌中没有【圣俗杂座】，则生成手牌【圣俗杂座】。', [], { pct: 1 }), [
-        new GISkill('孤心沙龙', '【芙宁娜】当前处于｢始基力：荒性｣形态，召唤【沙龙成员】。；(【芙宁娜】处于｢始基力：芒性｣形态时，会改为召唤【众水的歌者】。)', 2, 0, 3, 1, {}, [
+        new GISkill('孤心沙龙', '【芙宁娜】当前处于｢始基力:荒性｣形态，召唤【沙龙成员】。；(【芙宁娜】处于｢始基力:芒性｣形态时，会改为召唤【众水的歌者】。)', 2, 0, 3, 1, {}, [
             '',
             '',
         ], [newSummonee(3060), newSummonee(3061)], event => {
@@ -1952,7 +1952,7 @@ const allHeros: HeroObj = {
     1783: new GIHero(1783, '圣骸飞蛇', [0, 13], 10, 5, 0,
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Char_Monster_ChrysopeleaSacred.webp',
         skill1('旋尾迅击'), [
-        new GISkill('盘绕风引', '造成{dmg}点[风元素伤害]，摸1张【噬骸能量块】; 然后，手牌中每有1张【噬骸能量块】，摸1张牌(每回合最多抓2张)。', 2, 2, 3, 5, { pct: 2 }, [
+        new GISkill('盘绕风引', '造成{dmg}点[风元素伤害]，摸1张【噬骸能量块】; 然后，手牌中每有1张【噬骸能量块】，摸1张牌(每回合最多摸2张)。', 2, 2, 3, 5, { pct: 2 }, [
             '',
             '',
         ], [], event => {

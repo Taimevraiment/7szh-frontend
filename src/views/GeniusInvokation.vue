@@ -484,8 +484,8 @@ const devOps = (cidx = 0) => {
     } else if (op.startsWith('=')) { // 状态
       const [stsid = 0, hidx = heros.findIndex(h => h.isFront)] = op.slice(1).split(/[:：]+/).map(h);
       if (stsid < 2000 || stsid > 3000) {
-        heros[hidx].inStatus = [];
-        heros[hidx].outStatus = [];
+        if (stsid < 2000) heros[hidx].inStatus = [];
+        if (stsid > 3000 || stsid == 0) heros[hidx].outStatus = [];
       } else {
         const sts = heroStatus(stsid);
         const cmds: Cmds[] = [{ cmd: 'getStatus', status: [sts], hidxs: [hidx] }];

@@ -1885,7 +1885,7 @@ export default class GeniusInvokationClient {
                 isExec: false,
             });
             stsIsEndAtk &&= !slotiqa;
-            const { isQuickAction: stsiqa } = this._doStatus(this.playerIdx ^ 1, 4, 'kill', { intvl: [100, 100, 100, 100], isOnlyFront: true });
+            const { isQuickAction: stsiqa } = this._doStatus(this.playerIdx ^ 1, 4, 'kill', { intvl: [100, 100, 1000, 100], isOnlyFront: true });
             stsIsEndAtk &&= !stsiqa;
             const { cmds } = this._doStatus(this.playerIdx, 4, 'killed', { hidxs: [this.player.hidx], hidx });
             const { heros } = this._doCmds(cmds);
@@ -2813,7 +2813,7 @@ export default class GeniusInvokationClient {
                 if (willkilledhidxs.length > 0) {
                     const dieHeros: [Hero, number][] = clone(res.eheros.filter((_, hi) => willkilledhidxs.includes(hi)).map(h1 => [h1, res.eheros.findIndex(h2 => h2.id == h1.id)]));
                     const { nwkhidxs } = this._doSlot('will-killed', { pidx: epidx, hidxs: willkilledhidxs, heros: res.eheros, eheros: res.aheros, isUnshift: true });
-                    this._doStatus(epidx, 13, 'will-killed', { intvl: [100, 100, 100, 100], hidxs: nwkhidxs, heros: res.eheros, eheros: res.aheros, isUnshift: true });
+                    this._doStatus(epidx, 13, 'will-killed', { intvl: [100, 1500, 100, 500], hidxs: nwkhidxs, heros: res.eheros, eheros: res.aheros, isUnshift: true });
                     const slotDestroyHidxs = dieHeros.filter(([h]) => {
                         const isDie = h.inStatus.every(ist => !ist.type.includes(13)) &&
                             willkilledhidxs.length == nwkhidxs.length &&
@@ -3295,10 +3295,10 @@ export default class GeniusInvokationClient {
         const pheros = options.heros ?? p.heros;
         const peheros = options.eheros ?? players[pidx ^ 1].heros;
         const doStatus = (stses: Status[], group: number, hidx: number, trigger: Trigger) => {
-            const nist: Status[] = [];
-            const nost: Status[] = [];
-            const nistop: Status[] = [];
-            const nostop: Status[] = [];
+            // const nist: Status[] = [];
+            // const nost: Status[] = [];
+            // const nistop: Status[] = [];
+            // const nostop: Status[] = [];
             for (const sts of stses) {
                 if (!sts.type.some(t => types.includes(t)) || (taskMark && (taskMark[0] != hidx || taskMark[1] != group || taskMark[2] != sts.id))) continue;
                 const stsres = heroStatus(sts.id).handle(sts, {
@@ -3443,6 +3443,8 @@ export default class GeniusInvokationClient {
                             ];
                             task = [statusHandle, tintvl];
                         }
+                    } else {
+                        this._doCmds(stscmds, { pidx, heros: pheros, eheros: peheros, isEffectHero: true, hidxs: [hidx] });
                     }
                     if (trigger == 'useReadySkill') {
                         this.canAction = false;
@@ -3450,7 +3452,7 @@ export default class GeniusInvokationClient {
                     }
                 }
             }
-            return { nist, nost, nistop, nostop }
+            // return { nist, nost, nistop, nostop }
         }
         for (let i = 0; i < pheros.length; ++i) {
             const hidx = (i + p.hidx) % pheros.length;
@@ -3458,28 +3460,30 @@ export default class GeniusInvokationClient {
             if ((hidxs ?? [hidx]).includes(hidx) && (h.isFront || (!isOnlyOutStatus && !isOnlyFront))) {
                 for (const trigger of triggers) {
                     if (!isOnlyOutStatus) {
-                        const { nist, nistop } = doStatus(h.inStatus, 0, hidx, trigger);
-                        if (isExec) {
-                            const { nstatus: aist, nheros: ah } = this._updateStatus(nist, h.inStatus, pheros, hidx);
-                            h.inStatus = aist;
-                            if (ah) {
-                                pheros[hidx] = ah[hidx];
-                                pheros[hidx].inStatus = aist;
-                                h = ah[hidx];
-                            }
-                            const ehidx = peheros.findIndex(h => h.isFront);
-                            if (ehidx > -1) {
-                                const { nstatus: eist, nheros: eh } = this._updateStatus(nistop, peheros[ehidx].inStatus, peheros, ehidx);
-                                if (eh) {
-                                    eh[ehidx].inStatus = eist;
-                                    peheros[ehidx] = eh[ehidx];
-                                }
-                            }
-                        }
+                        doStatus(h.inStatus, 0, hidx, trigger);
+                        // const { nist, nistop } = doStatus(h.inStatus, 0, hidx, trigger);
+                        // if (isExec) {
+                        //     const { nstatus: aist, nheros: ah } = this._updateStatus(nist, h.inStatus, pheros, hidx);
+                        //     h.inStatus = aist;
+                        //     if (ah) {
+                        //         pheros[hidx] = ah[hidx];
+                        //         pheros[hidx].inStatus = aist;
+                        //         h = ah[hidx];
+                        //     }
+                        //     const ehidx = peheros.findIndex(h => h.isFront);
+                        //     if (ehidx > -1) {
+                        //         const { nstatus: eist, nheros: eh } = this._updateStatus(nistop, peheros[ehidx].inStatus, peheros, ehidx);
+                        //         if (eh) {
+                        //             eh[ehidx].inStatus = eist;
+                        //             peheros[ehidx] = eh[ehidx];
+                        //         }
+                        //     }
+                        // }
                     }
                     if (h.isFront && !isOnlyInStatus) {
-                        const { nost } = doStatus(h.outStatus, 1, hidx, trigger);
-                        if (isExec) h.outStatus = this._updateStatus(nost, h.outStatus).nstatus;
+                        doStatus(h.outStatus, 1, hidx, trigger);
+                        // const { nost } = doStatus(h.outStatus, 1, hidx, trigger);
+                        // if (isExec) h.outStatus = this._updateStatus(nost, h.outStatus).nstatus;
                     }
                 }
             }
@@ -3728,13 +3732,9 @@ export default class GeniusInvokationClient {
                                 cmds.push(slotres.execmds);
                                 slotIds[hidx].push([hidx, slot]);
                             }
-                            // if (!slotres.execmds?.length || taskMark) {
-                            if (!taskMark) {
-                                const slotexecres = slotres.exec?.();
-                                if (slotexecres?.cmds) {
-                                    cmds.push(slotexecres.cmds);
-                                    slotIds[hidx].push([hidx, slot]);
-                                }
+                            if (!slotres.execmds?.length || taskMark) {
+                                // if (!taskMark) {
+                                slotres.exec?.();
                                 //     if (slotexecres?.inStatus) inStatus.push(...slotexecres.inStatus);
                                 //     if (slotexecres?.outStatus) outStatus.push(...slotexecres.outStatus);
                                 //     if (slotexecres?.inStatusOppo) {
@@ -3846,7 +3846,7 @@ export default class GeniusInvokationClient {
                 if (h > 0) this._doSkill4(hi, 'heal', { pidx, heros, heal, isExec, isEffectHero: true })
             });
             this._doSlot('heal', { pidx, hidxs: allHidxs(heros, { isAll: true }), heal, heros, isExec, isQuickAction });
-            this._doStatus(pidx, 4, 'heal', { heal, isExec });
+            this._doStatus(pidx, 4, 'heal', { heal, heros, isExec });
             const { siteCnt } = this._doSite(pidx, 'heal', { heal, isExec, isQuickAction });
             this._doSite(pidx ^ 1, 'eheal', { heal, isExec, isQuickAction });
             if (!isExec) this.siteCnt[pidx].forEach((_, i, a) => a[i] += siteCnt[pidx][i]);

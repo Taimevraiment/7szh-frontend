@@ -27,7 +27,7 @@ class GIStatus implements Status {
         useCnt: number, maxCnt: number, roundCnt: number, handle?: (status: Status, event?: StatusHandleEvent) => StatusHandleRes | void,
         options: {
             smnId?: number, pct?: number, icbg?: string, expl?: ExplainContent[], act?: number,
-            isTalent?: boolean, isReset?: boolean, add?: any[]
+            isTalent?: boolean, isReset?: boolean, adt?: any[]
         } = {}
     ) {
         this.id = id;
@@ -39,14 +39,14 @@ class GIStatus implements Status {
         this.useCnt = useCnt;
         this.maxCnt = maxCnt;
         this.roundCnt = roundCnt;
-        const { smnId = -1, pct = 0, icbg = '', expl = [], act = Math.max(useCnt, roundCnt), isTalent = false, isReset = true, add = [] } = options;
+        const { smnId = -1, pct = 0, icbg = '', expl = [], act = Math.max(useCnt, roundCnt), isTalent = false, isReset = true, adt = [] } = options;
         this.addCnt = act;
         this.summonId = smnId;
         this.perCnt = pct;
         this.iconBg = icbg;
         this.explains = expl;
         this.isTalent = isTalent;
-        this.addition = add;
+        this.addition = adt;
         let thandle = handle ?? (() => ({}));
         if (type.includes(7)) {
             this.icon = 'shield2';
@@ -1326,7 +1326,7 @@ const statusTotal: StatusObj = {
                 if (trigger == 'change-from') return;
                 return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2118, [status.addition?.[0]])] }] }
             }
-        }), { expl: [expl?.[0] as ExplainContent], add: [expl?.[1]] }),
+        }), { expl: [expl?.[0]!], adt: [expl?.[1]] }),
 
     2118: (expl?: ExplainContent[]) => new GIStatus(2118, '猜拳三连击·布', '本角色将在下次行动时，直接使用技能：【猜拳三连击·布】。',
         'buff3', 0, [10, 11], 1, 0, -1, status => ({
@@ -1696,7 +1696,7 @@ const statusTotal: StatusObj = {
             trigger: ['change-from', 'useReadySkill'],
             skill: 12 + Number(status.addition[0]),
             exec: () => { --status.useCnt },
-        }), { expl, add: [windEl] }),
+        }), { expl, adt: [windEl] }),
 
     2156: () => new GIStatus(2156, '四迸冰锥', '【我方角色｢普通攻击｣时：】对所有敌方后台角色造成1点[穿透伤害]。；【[可用次数]：{useCnt}】',
         'buff6', 0, [], 1, 0, -1, status => ({
@@ -2073,7 +2073,7 @@ const statusTotal: StatusObj = {
 
     2191: () => new GIStatus(2191, '火之新生·锐势', '角色造成的[火元素伤害]+1。', 'buff4', 0, [6, 10], 1, 0, -1, () => ({ addDmg: 1 }), { icbg: STATUS_BG_COLOR[2] }),
 
-    2192: (icon = '') => new GIStatus(2192, '寒烈的惩裁', '【角色进行｢普通攻击｣时：】如果角色生命至少为6，则此技能少花费1个[冰元素骰]，伤害+2，且对自身造成1点[穿透伤害]。；如果角色生命不多于5，则使此伤害+1，并且技能结算后治疗角色2点。；【[可用次数]：{useCnt}】',
+    2192: (icon = '') => new GIStatus(2192, '寒烈的惩裁', '【角色进行｢普通攻击｣时：】如果角色生命至少为6，则此技能少花费1个[冰元素骰]，伤害+1，且对自身造成1点[穿透伤害]。；如果角色生命不多于5，则使此伤害+1，并且技能结算后治疗角色2点。；【[可用次数]：{useCnt}】',
         icon, 0, [1, 6], 2, 0, -1, (_status, event = {}) => {
             const { heros = [], hidx = -1, trigger = '' } = event;
             if (hidx == -1) return;
@@ -2083,11 +2083,8 @@ const statusTotal: StatusObj = {
                 return { ...minusSkillRes }
             }
             let res: StatusHandleRes = {};
-            if ((heros[hidx]?.hp ?? 0) >= 6) {
-                res = { addDmgCdt: 2, pendamage: 1, hidxs: [hidx], isSelf: true };
-            } else {
-                res = { addDmgCdt: 1, heal: 2 };
-            }
+            if ((heros[hidx]?.hp ?? 0) >= 6) res = { addDmgCdt: 1, pendamage: 1, hidxs: [hidx], isSelf: true };
+            else res = { addDmgCdt: 1, heal: 2 };
             return {
                 trigger: ['after-skilltype1', 'skilltype1'],
                 ...res,
@@ -2207,14 +2204,14 @@ const statusTotal: StatusObj = {
                             --summon!.useCnt;
                         }
                         const res: StatusExecRes = { cmds: [{ cmd: 'discard', element: 2 }] };
-                        if (fhero.id == 1608 && (card?.id == 788 || !!fhero.talentSlot)) {
-                            const talent = card ?? fhero.talentSlot as Card;
+                        const thero = hs.find(h => h.id == 1608)!;
+                        if (card?.id == 788 || !!thero.talentSlot) {
+                            const talent = card ?? thero.talentSlot as Card;
                             if (talent.perCnt > 0) {
                                 const discards = [...discardIds, pile[0].id];
                                 const addCardId = discards[Math.floor(Math.random() * discards.length)];
                                 --talent.perCnt;
                                 res.cmds!.push({ cmd: 'getCard', cnt: 1, card: addCardId });
-                                // if (Math.floor(addCardId / 100) == 2) res.outStatus = [heroStatus(2204)];
                                 if (Math.floor(addCardId / 100) == 2) res.cmds!.push({ cmd: 'getStatus', status: [heroStatus(2204)] });
                             }
                         }
@@ -2270,9 +2267,9 @@ const statusTotal: StatusObj = {
                     });
                 }
             }
-        }, { add: [[], []] }),
+        }, { adt: [[], []] }),
 
-    2206: (useCnt: number) => new GIStatus(2206, '雷锥陷阱', '【所在阵营的角色使用技能后：】对所在阵营的出战角色造成2点[雷元素伤害]。；【[可用次数]：初始为创建时所弃置的噬骸能量块张数。(最多叠加到3)】',
+    2206: (useCnt = -1) => new GIStatus(2206, '雷锥陷阱', `【所在阵营的角色使用技能后：】对所在阵营的出战角色造成2点[雷元素伤害]。；【[可用次数]：${useCnt == -1 ? '{useCnt}' : '初始为创建时所弃置的【噬骸能量块】张数。'}(最多叠加到3)】`,
         'debuff', 1, [1], useCnt, 3, -1, () => ({
             damage: 2,
             element: 3,
@@ -2325,12 +2322,12 @@ const statusTotal: StatusObj = {
 
     2211: () => shieldStatus(2211, 'todo重燃的绿洲之心护盾'),
 
-    2212: (summonId: number) => new GIStatus(2212, '黑色幻影', '【我方出战角色受到伤害时：】抵消1点伤害。；【[可用次数]：{useCnt}】',
-        '', 1, [2], 1, 0, -1, (status, event = {}) => {
+    2212: (summonId: number, useCnt = 1) => new GIStatus(2212, '黑色幻影', '【我方出战角色受到伤害时：】抵消1点伤害。；【[可用次数]：{useCnt}】',
+        '', 1, [2], useCnt, 0, -1, (status, event = {}) => {
             const { restDmg = 0, summon } = event;
             if (restDmg <= 0) return { restDmg }
             --status.useCnt;
-            if (summon) --summon.useCnt;
+            if (summon) summon.useCnt = Math.max(0, summon.useCnt - 2);
             return { restDmg: restDmg - 1 }
         }, { smnId: summonId }),
 

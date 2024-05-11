@@ -311,7 +311,8 @@ const wrapDesc = (desc: string, obj?: ExplainContent): string => {
       const iconUrl = sbtpIdx > -1 && !!CARD_SUBTYPE_URL[sbtpIdx] ? CARD_SUBTYPE_URL[sbtpIdx] : wpIdx > -1 ?
         WEAPON_TYPE_URL[wpIdx] : lcIdx > -1 && !!HERO_LOCAL_URL[lcIdx] ? HERO_LOCAL_URL[lcIdx] : '';
       if (iconUrl != '') {
-        icon = `<img style='width:18px;transform:translateY(20%);${lcIdx > -1 ? `filter:url(${getSvgIcon('filter')}#status-color-0)` : ''}' src='${iconUrl}'/>`;
+        // icon = `<img style='width:18px;transform:translateY(20%);${lcIdx > -1 ? `filter:url(${getSvgIcon('filter')}#status-color-0)` : ''}' src='${iconUrl}'/>`;
+        icon = `<img style='width:18px;transform:translateY(20%);' src='${iconUrl}'/>`;
       }
       return `<span style='color:white;'>${prefix}${icon}${word}${suffix}</span>`;
     })

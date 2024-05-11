@@ -241,7 +241,7 @@ const extraCards: CardObj = {
         'https://homdgcat.wiki/images/GCG/UI_Gcg_CardFace_Summon_Xunbao.png',
         0, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'heal', cnt: 1 }, { cmd: 'getDice', cnt: 1, element: -1 }] })),
 
-    905: new GICard(905, '圣俗杂座', '在｢始基力：荒性｣和｢始基力：芒性｣之中，切换【芙宁娜】的形态。；如果我方场上存在【沙龙成员】或【众水的歌者】，也切换其形态。',
+    905: new GICard(905, '圣俗杂座', '在｢始基力:荒性｣和｢始基力:芒性｣之中，切换【芙宁娜】的形态。；如果我方场上存在【沙龙成员】或【众水的歌者】，也切换其形态。',
         'https://homdgcat.wiki/images/GCG/UI_Gcg_CardFace_Event_Event_FurinaOusiaChange.png',
         0, 8, 2, [], 0, 0, (_card, event) => {
             const { heros = [], summons = [], isExec = false } = event;
@@ -251,6 +251,8 @@ const extraCards: CardObj = {
             const nlocal = ((hero.local.pop() ?? 11) - 11) ^ 1;
             hero.local.push(11 + nlocal);
             hero.src = hero.srcs[nlocal];
+            const [odesc, ndesc] = hero.skills[1].description.split('；');
+            hero.skills[1].description = `${ndesc.slice(1, -1)}；(${odesc})`;
             const smnIdx = summons.findIndex(smn => smn.id == 3060 + (nlocal ^ 1));
             if (smnIdx > -1) {
                 const useCnt = summons[smnIdx].useCnt;
@@ -348,14 +350,11 @@ const allCards: CardObj = {
             return {
                 trigger: ['getdmg', 'heal'],
                 addDmg: 1,
-                // execmds: isCdt<Cmds[]>(isMinus && card.useCnt == 1, [{ cmd: 'getStatus', status: [heroStatus(2172)] }]),
+                execmds: isCdt<Cmds[]>(isMinus && card.useCnt == 1, [{ cmd: 'getStatus', status: [heroStatus(2172)] }]),
                 exec: () => {
                     if (!isMinus) return;
                     if (card.useCnt < 2) ++card.useCnt;
-                    if (card.useCnt >= 2) {
-                        --card.perCnt;
-                        return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2172)] }] }
-                    }
+                    if (card.useCnt >= 2) --card.perCnt;
                 }
             }
         }, { pct: 1, uct: 0, isResetUct: true }),
@@ -599,24 +598,28 @@ const allCards: CardObj = {
 
     87: senlin2Weapon(87, '原木刀', 1, 'https://act-upload.mihoyo.com/wiki-user-upload/2024/01/27/258999284/1f97927392b79a716430461251ff53e2_4196794667556484935.png'),
 
-    88: new GICard(88, '静水流涌之辉', '【我方角色受到伤害或治疗后：】此牌累积1点｢湖光｣。；【角色进行｢普通攻击｣时：】如果已有10点｢湖光｣，则消耗10点，使此技能少花费2个[无色元素骰]且造成的伤害+1，并且治疗所附属角色1点。',
+    88: new GICard(88, '静水流涌之辉', '【我方角色受到伤害或治疗后：】此牌累积1点｢湖光｣。；【角色进行｢普通攻击｣时：】如果已有12点｢湖光｣，则消耗12点，使此技能少花费2个[无色元素骰]且造成的伤害+1，并且治疗所附属角色1点。(每回合1次)',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Weapon_Jinshuiliuyong.webp',
         3, 8, 0, [0], 1, 1, (card, event) => {
             const { trigger = '' } = event;
             const triggers: Trigger[] = ['getdmg', 'heal'];
-            if (card.useCnt >= 10) triggers.push('skilltype1');
-            const { minusSkillRes } = minusDiceSkillHandle(event, { skilltype1: [0, 2, 0] }, () => card.useCnt >= 10);
+            const isTriggered = card.useCnt >= 12 && card.perCnt > 0;
+            if (isTriggered) triggers.push('skilltype1');
+            const { minusSkillRes } = minusDiceSkillHandle(event, { skilltype1: [0, 2, 0] }, () => isTriggered);
             return {
                 trigger: triggers,
                 addDmgCdt: isCdt(trigger == 'skilltype1', 1),
-                execmds: isCdt<Cmds[]>(card.useCnt >= 10 && trigger == 'skilltype1', [{ cmd: 'heal', cnt: 1 }]),
+                execmds: isCdt<Cmds[]>(isTriggered && trigger == 'skilltype1', [{ cmd: 'heal', cnt: 1 }]),
                 ...minusSkillRes,
                 exec: () => {
                     if (['getdmg', 'heal'].includes(trigger)) ++card.useCnt;
-                    else if (trigger == 'skilltype1') card.useCnt -= 10;
+                    else if (trigger == 'skilltype1') {
+                        card.useCnt -= 12;
+                        --card.perCnt;
+                    }
                 }
             }
-        }, { uct: 0 }),
+        }, { uct: 0, pct: 1 }),
 
     101: new GICard(101, '冒险家头带', '【角色使用｢普通攻击｣后：】治疗自身1点(每回合至多3次)。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/75720734/c2617ba94c31d82bd4af6df8e74aac91_8306847584147063772.png',
@@ -964,17 +967,17 @@ const allCards: CardObj = {
             }
         }, { uct: 0, pct: 1, isResetUct: true }),
 
-    124: new GICard(124, '逐影猎人', '【角色受到伤害或治疗后：】根据本回合触发此效果的次数，执行不同的效果。；【第一次触发：】生成1个此角色类型的元素骰。；【第二次触发：】摸1张牌。；【第三次触发：】生成1个此角色类型的元素骰。',
+    124: new GICard(124, '逐影猎人', '【角色受到伤害或治疗后：】根据本回合触发此效果的次数，执行不同的效果。；【第一次触发：】生成1个此角色类型的元素骰。；【第二次触发：】摸1张牌。；【第四次触发：】生成1个此角色类型的元素骰。',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Artifact_ZhuYingDa.webp',
-        3, 0, 0, [1], 0, 1, (card, event) => {
+        3, 8, 0, [1], 0, 1, (card, event) => {
             const { heros = [], hidxs = [], heal = [], trigger = '' } = event;
-            const isTriggered = card.perCnt > 0 && (trigger == 'getdmg' || trigger == 'heal' && heal[hidxs[0]] > 0);
+            const isTriggered = card.perCnt > 0 && (trigger == 'getdmg' || trigger == 'heal' && heal[hidxs[0]] > 0) && card.useCnt != 2;
             const execmds: Cmds[] = [{ cmd: 'getDice', element: heros[hidxs[0]].element, cnt: 1 }, { cmd: 'getCard', cnt: 1 }];
             return {
                 trigger: ['getdmg', 'heal'],
-                execmds: isCdt(isTriggered, [execmds[card.useCnt % 2]]),
+                execmds: isCdt(isTriggered, [execmds[card.useCnt % 3]]),
                 exec: () => {
-                    if (isTriggered && ++card.useCnt == 3) {
+                    if (isTriggered && ++card.useCnt == 4) {
                         --card.perCnt;
                     }
                 }
@@ -1695,7 +1698,7 @@ const allCards: CardObj = {
 
     575: new GICard(575, '水与正义', '平均分配我方未被击倒的角色的生命值，然后治疗所有我方角色1点。',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Event_Event_WaterJustice.webp',
-        1, 8, 2, [-3], 0, 0, (_card, event) => {
+        2, 0, 2, [-3], 0, 0, (_card, event) => {
             const { heros = [] } = event;
             const hidxs = allHidxs(heros);
             if (hidxs.length > 1) {
@@ -2502,7 +2505,7 @@ const allCards: CardObj = {
             return [() => ({}), { addDmgCdt: 2 }]
         }, ['skilltype1', 'other-skilltype1']), { expl: talentExplain(1507, 2), energy: 2 }),
 
-    788: new GICard(788, '预算师的技艺', '[战斗行动]：我方出战角色为【卡维】时，装备此牌。；【卡维】装备此牌后，立刻使用一次【画则巧施】。；装备有此牌的【卡维】为出战角色，我方触发【迸发扫描】的效果后：将1张所[舍弃]卡牌的复制加入你的手牌。如果该牌为｢场地｣牌，则使本回合中我方下次打出｢场地｣时少花费2个元素骰。(每回合1次)',
+    788: new GICard(788, '预算师的技艺', '[战斗行动]：我方出战角色为【卡维】时，装备此牌。；【卡维】装备此牌后，立刻使用一次【画则巧施】。；装备有此牌的【卡维】在场时，我方触发【迸发扫描】的效果后：将1张所[舍弃]卡牌的复制加入你的手牌。如果该牌为｢场地｣牌，则使本回合中我方下次打出｢场地｣时少花费2个元素骰。(每回合1次)',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_Kaveh.webp',
         3, 7, 0, [6, 7], 1608, 1, talentSkill(1), { pct: 1, expl: talentExplain(1608, 1) }),
 
@@ -2525,7 +2528,7 @@ const allCards: CardObj = {
             }
         }),
 
-    791: new GICard(791, '亡风啸卷', '【入场时：】生成1张【噬骸能量块】，置入我方手牌。；装备有此牌的【圣骸毒蝎】在场时，我方打出【噬骸能量块】后：本回合中，我方下次切换角色后，生成1个出战角色类型的元素骰。',
+    791: new GICard(791, '亡风啸卷', '【入场时：】生成1张【噬骸能量块】，置入我方手牌。；装备有此牌的【圣骸飞蛇】在场时，我方打出【噬骸能量块】后：本回合中，我方下次切换角色后，生成1个出战角色类型的元素骰。',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_ChrysopeleaSacred.webp',
         1, 5, 0, [6], 1783, 1, (_card, event) => {
             const { hcard } = event;

@@ -860,7 +860,7 @@ const summonTotal: SummoneeObj = {
             }
         }),
 
-    3062: (dmg: number, useCnt: number) => new GISummonee(3062, '黑色幻影', '【入场时：】获得我方已吞噬卡牌中最高元素骰费用值的｢攻击力｣，获得该费用的已吞噬卡牌数量的[可用次数]。；【结束阶段和我方宣布结束时：】造成此牌｢攻击力｣值的[雷元素伤害]。；【我方出战角色受到伤害时：】如果此牌[可用次数]至少为3，则先消耗1次[可用次数]以抵消1点伤害。伤害结算后，此牌[可用次数]-1。',
+    3062: (dmg = -1, useCnt = -1) => new GISummonee(3062, '黑色幻影', `【入场时：】获得我方已吞噬卡牌中最高元素骰费用值的｢攻击力｣，获得该费用的已吞噬卡牌数量的[可用次数]。；【结束阶段和我方宣布结束时：】造成${dmg == -1 ? '此牌｢攻击力｣值的' : '{dmg}点'}[雷元素伤害]。；【我方出战角色受到伤害时：】抵消1点伤害，然后此牌[可用次数]-2。${useCnt == -1 ? '' : '；【[可用次数]：{useCnt}】'}`,
         '',
         useCnt, useCnt, 0, dmg, 3, (summon, event) => {
             const { trigger = '' } = event;
@@ -868,8 +868,8 @@ const summonTotal: SummoneeObj = {
                 trigger: ['phase-end', 'end-phase', 'getdmg'],
                 isNotAddTask: trigger == 'getdmg',
                 exec: execEvent => {
-                    if (trigger == 'getdmg') --summon.useCnt;
-                    else return phaseEndAtk(execEvent.summon ?? summon);
+                    if (trigger == 'getdmg') return;
+                    return phaseEndAtk(execEvent.summon ?? summon);
                 }
             }
         }, { stsId: 2212 }),
