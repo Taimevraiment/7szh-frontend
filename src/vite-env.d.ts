@@ -240,7 +240,7 @@ type Cmds = {
 
 type Cmd = 'getDice' | 'getCard' | 'getEnergy' | 'heal' | 'getStatus' | 'reroll' | 'revive' | 'switch-to' |
     'switch-before' | 'switch-after' | 'attach' | 'attack' | 'changeDice' | 'changeCard' | 'changeElement' | 'useSkill' |
-    'changePattern' | 'getSkill' | 'loseSkill' | 'addCard' | 'discard' | '';
+    'changePattern' | 'getSkill' | 'loseSkill' | 'addCard' | 'discard';
 
 type GameInfo = {
     artifactCnt: number, // 初始牌堆圣遗物数量
@@ -390,7 +390,7 @@ type CardHandleRes = {
     cnt?: number,
     isDestroy?: boolean,
     restDmg?: number,
-    isNotAddTask?: boolean,
+    isAddTask?: boolean,
     exec?: () => CardExecRes | void,
 }
 
@@ -471,6 +471,7 @@ type StatusHandleRes = {
     attachEl?: number,
     isUpdateAttachEl?: boolean,
     atkAfter?: boolean,
+    isAddTask?: boolean,
     exec?: (eStatus?: Status, event?: StatusExecEvent) => StatusExecRes | void,
 }
 

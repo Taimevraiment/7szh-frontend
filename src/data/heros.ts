@@ -1660,9 +1660,9 @@ const allHeros: HeroObj = {
             '',
             '',
         ], [heroStatus(2205)], event => {
-            const { hero: { inStatus } } = event;
+            const { hero: { outStatus } } = event;
             return {
-                addDmgCdt: Math.min(4, Math.floor((inStatus.find(ist => ist.id == 2205)?.useCnt ?? 0) / 3)),
+                addDmgCdt: Math.min(4, Math.floor((outStatus.find(ist => ist.id == 2205)?.useCnt ?? 0) / 3)),
                 cmds: [{ cmd: 'discard', element: 0 }],
             }
         }),

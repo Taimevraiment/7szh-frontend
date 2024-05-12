@@ -448,9 +448,9 @@ const statusTotal: StatusObj = {
         }, { icbg: STATUS_BG_COLOR[4], isTalent }),
 
     2040: (isTalent = false) => new GIStatus(2040, '庭火焰硝', `所附属角色｢普通攻击｣伤害+1，造成的[物理伤害]变为[火元素伤害]。${isTalent ? '；【所附属角色使用｢普通攻击｣后：】造成1点[火元素伤害]。' : ''}；【[可用次数]：{useCnt}】`,
-        'buff4', 0, isTalent ? [1, 6, 8] : [6, 8], isTalent ? 3 : 2, 0, -1, (status, event = {}) => {
+        'buff4', 0, [1, 6, 8], isTalent ? 3 : 2, 0, -1, (status, event = {}) => {
             const { trigger = '' } = event;
-            const dmgCdt = status.type.includes(1) && trigger == 'after-skilltype1';
+            const dmgCdt = status.isTalent && trigger == 'after-skilltype1';
             return {
                 trigger: ['skilltype1', 'after-skilltype1'],
                 addDmgType1: 1,
@@ -2246,28 +2246,31 @@ const statusTotal: StatusObj = {
         }),
 
     2205: (icon = '', useCnt = 0) => new GIStatus(2205, '深噬之域', '我方[舍弃]或[调和]的手牌，会被吞噬。；每吞噬3张牌：【吞星之鲸】获得1点额外最大生命; 如果其中存在原本元素骰费用值相同的牌，则额外获得1点; 如果3张均相同，再额外获得1点。',
-        icon, 1, [4, 9, 12], useCnt, 0, -1, (status, event = {}) => {
-            const { heros = [], discards = [] } = event;
+        icon, 1, [4, 9, 12], useCnt, 0, -1, (_status, event = {}) => {
+            const { discards = [] } = event;
             return {
                 trigger: ['discard', 'reconcile'],
-                exec: () => {
+                isAddTask: true,
+                exec: (eStatus, execEvent = {}) => {
+                    if (!eStatus) return;
+                    const { heros = [] } = execEvent;
                     const hidx = heros.findIndex(h => h.id == 1724);
                     if (hidx == -1) return;
-                    const [curDiscard, allDiscard] = status.addition;
+                    const [curDiscard, allDiscard] = eStatus.addition;
                     discards.forEach(c => {
                         const cost = c.cost + c.anydice;
                         curDiscard.push(cost);
                         allDiscard.push(cost);
-                        if (status.addition.length == 3) {
+                        if (curDiscard.length == 3) {
                             const cnt = 4 - new Set(curDiscard).size;
-                            status.useCnt += cnt;
+                            eStatus.useCnt += cnt;
                             heros[hidx].maxhp += cnt;
                             curDiscard.length = 0;
                         }
                     });
                 }
             }
-        }, { adt: [[], []] }),
+        }, { icbg: STATUS_BG_COLOR[1], adt: [[], []] }),
 
     2206: (useCnt = -1) => new GIStatus(2206, '雷锥陷阱', `【所在阵营的角色使用技能后：】对所在阵营的出战角色造成2点[雷元素伤害]。；【[可用次数]：${useCnt == -1 ? '{useCnt}' : '初始为创建时所弃置的【噬骸能量块】张数。'}(最多叠加到3)】`,
         'debuff', 1, [1], useCnt, 3, -1, () => ({

@@ -91,7 +91,7 @@ const jiliWeapon = (id: number, name: string, userType: number, src: string) => 
             return {
                 addDmg: 1,
                 trigger: ['skilltype2'],
-                execmds: isCdt<Cmds[]>(card.perCnt > 0, [{ cmd: 'getDice', cnt: 1, element: heros[hidxs[0]].element ?? 0 }]),
+                execmds: isCdt<Cmds[]>(card.perCnt > 0, [{ cmd: 'getDice', cnt: 1, element: heros[hidxs[0]]?.element ?? 0 }]),
                 exec: () => {
                     if (card.perCnt > 0) --card.perCnt;
                 }
@@ -543,11 +543,12 @@ const allCards: CardObj = {
             if (getdmg[fhidx] > 0) trigger.push('getdmg', 'other-getdmg');
             if (heal[fhidx] > 0) trigger.push('heal');
             const hero = heros[hidxs[0]];
-            const execmds = isCdt<Cmds[]>(card.useCnt >= 2 && hero.energy < hero.maxEnergy, [{ cmd: 'getEnergy', cnt: 1, hidxs }], [{ cmd: '' }]);
+            const execmds = isCdt<Cmds[]>(card.useCnt >= 2 && hero.energy < hero.maxEnergy, [{ cmd: 'getEnergy', cnt: 1, hidxs }]);
             return {
                 addDmgType3: 2,
                 trigger,
                 execmds,
+                isAddTask: true,
                 exec: () => {
                     if (++card.useCnt >= 3 && hero.energy < hero.maxEnergy) card.useCnt -= 3;
                 }
@@ -829,7 +830,7 @@ const allCards: CardObj = {
             return {
                 trigger: ['dmg', 'heal'],
                 addDmgCdt: Math.floor(card.useCnt),
-                execmds: isCdt<Cmds[]>(trigger == 'heal', [{ cmd: '' }]),
+                isAddTask: trigger == 'heal',
                 exec: () => {
                     if (trigger == 'heal') {
                         if (allHeal > 0) card.useCnt = Math.min(2, card.useCnt + allHeal * 0.34);
@@ -849,7 +850,7 @@ const allCards: CardObj = {
                 trigger: ['dmg', 'heal'],
                 addDmgCdt: Math.floor(card.useCnt),
                 cmds: [{ cmd: 'heal', cnt: 2 }],
-                execmds: isCdt<Cmds[]>(trigger == 'heal', [{ cmd: '' }]),
+                isAddTask: trigger == 'heal',
                 exec: () => {
                     if (trigger == 'heal') {
                         if (allHeal > 0) card.useCnt = Math.min(2, card.useCnt + allHeal * 0.34);
@@ -995,7 +996,7 @@ const allCards: CardObj = {
                 ...minusSkillRes,
                 minusDiceCard: isCdt(isCardMinus, card.useCnt),
                 trigger: ['phase-end', 'card', 'skilltype2'],
-                execmds: isCdt<Cmds[]>(isPhaseEnd, [{ cmd: '' }]),
+                isAddTask: isPhaseEnd,
                 exec: () => {
                     if (isPhaseEnd) {
                         ++card.useCnt;
@@ -1021,7 +1022,7 @@ const allCards: CardObj = {
                 ...minusSkillRes,
                 minusDiceCard: isCdt(isCardMinus, card.useCnt),
                 trigger: ['phase-end', 'card', 'skilltype2'],
-                execmds: isCdt<Cmds[]>(isPhaseEnd, [{ cmd: '' }]),
+                isAddTask: isPhaseEnd,
                 exec: () => {
                     if (isPhaseEnd) {
                         card.useCnt = Math.min(4, card.useCnt + 2);
@@ -1043,7 +1044,8 @@ const allCards: CardObj = {
             if (!heros[hidxs[0]]?.isFront) return;
             return {
                 trigger: ['grass-getdmg-oppo'],
-                execmds: isCdt<Cmds[]>(card.useCnt + 1 >= hcardsCnt && card.perCnt > 0, [{ cmd: 'getDice', cnt: 1, element: -1 }], [{ cmd: '' }]),
+                execmds: isCdt<Cmds[]>(card.useCnt + 1 >= hcardsCnt && card.perCnt > 0, [{ cmd: 'getDice', cnt: 1, element: -1 }]),
+                isAddTask: true,
                 exec: () => {
                     if (++card.useCnt >= hcardsCnt && card.perCnt > 0) --card.perCnt;
                 }
@@ -1057,7 +1059,8 @@ const allCards: CardObj = {
             if (!heros[hidxs[0]]?.isFront) return;
             return {
                 trigger: ['grass-getdmg-oppo', 'el7Reaction'],
-                execmds: isCdt<Cmds[]>(card.useCnt + 1 >= hcardsCnt && card.perCnt > 0, [{ cmd: 'getDice', cnt: 1, element: 0 }], [{ cmd: '' }]),
+                execmds: isCdt<Cmds[]>(card.useCnt + 1 >= hcardsCnt && card.perCnt > 0, [{ cmd: 'getDice', cnt: 1, element: 0 }]),
+                isAddTask: true,
                 exec: () => {
                     card.useCnt += 2;
                     if (card.useCnt >= hcardsCnt && card.perCnt > 0) --card.perCnt;
@@ -2338,11 +2341,7 @@ const allCards: CardObj = {
             if (restDmg > -1) {
                 if (restDmg < 3 || card.perCnt == 0) return { restDmg }
                 --card.perCnt;
-                return {
-                    restDmg: restDmg - 1,
-                    inStatusOppo: [heroStatus(2137, hero.element == 4 ? 0 : 1)],
-                    cmds: [{ cmd: '' }],
-                }
+                return { restDmg: restDmg - 1, inStatusOppo: [heroStatus(2137, hero.element == 4 ? 0 : 1)] }
             }
             return { isValid: hero?.isFront, cmds: [{ cmd: 'getDice', cnt: 3, element: hero.element }] }
         }, { pct: 1, expl: [heroStatus(2137), heroStatus(2137, 1)] }),
