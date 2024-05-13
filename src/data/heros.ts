@@ -64,7 +64,7 @@ class GISkill implements Skill {
     canSelect: boolean = false;
     isSelected: boolean = false;
     isForbidden: boolean = false;
-    isUsed: boolean = false;
+    isUsed: number = 0;
     descriptions: string[] = [];
     rdskidx: number = -1;
     handle: (event: SkillHandleEvent) => SkillHandleRes = () => ({});
@@ -114,7 +114,7 @@ class GISkill implements Skill {
                 exec: () => {
                     handleres.exec?.();
                     ++curskill.useCnt;
-                    if (!curskill.isUsed) curskill.isUsed = true;
+                    ++curskill.isUsed;
                 }
             }
         }
@@ -2066,12 +2066,12 @@ const allHeros: HeroObj = {
             '',
             '',
         ], [heroStatus(2210), heroStatus(2211)], event => {
-            const { card, trigger = '' } = event;
+            const { card, discards = [], hero: { skills: [, , , { isUsed }] }, trigger = '' } = event;
             const cmds: Cmds[] = [];
             if (trigger == 'game-start') {
                 cmds.push({ cmd: 'addCard', cnt: 6, card: 907 });
-            } else if (['card', 'discard'].includes(trigger) && card?.id == 907) {
-                cmds.push({ cmd: 'getStatus', status: [heroStatus(2211), heroStatus(2212)] });
+            } else if (['card', 'discard'].includes(trigger) && (card?.id == 907 || discards.some(c => c.id == 907)) && isUsed == 4) {
+                cmds.push({ cmd: 'getStatus', status: [heroStatus(2210), heroStatus(2211)] });
             }
             return { trigger: ['game-start', 'card', 'discard'], cmds }
         })

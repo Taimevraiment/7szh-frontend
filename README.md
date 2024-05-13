@@ -740,9 +740,9 @@ val为花费数量，color为花费颜色
 
 ## isUsed
 
-类型：boolean
+类型：number
 
-解释：本场游戏是否使用过该技能
+解释：整局技能使用次数
 
 ## explains
 
@@ -926,6 +926,12 @@ constructor(
 类型：GameInfo
 
 解释：一些游戏信息，详见类型
+
+##### discards
+
+类型：Card[]
+
+解释：我方弃牌
 
 #### SkillHandleRes
 
@@ -2772,7 +2778,11 @@ x取值为1~7 对应受到具体的元素反应
 
 x取值为 any | water | fire | thunder | ice | wind | rock | grass 对应造成具体的伤害
 
-#### {x}-dmg-wind
+#### dmg-wind
+
+我方造成扩散伤害
+
+##### {x}-dmg-wind
 
 x取值为 water | fire | thunder | ice  对应造成具体的扩散元素伤害
 

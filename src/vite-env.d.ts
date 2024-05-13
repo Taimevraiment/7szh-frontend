@@ -192,9 +192,9 @@ type Skill = {
     isForbidden: boolean, // 是否禁用
     dmgChange: number, // 伤害变化
     costChange: number[], // 费用变化 [元素骰, 任意骰]
-    useCnt: number, // 技能已使用次数
+    useCnt: number, // 本回合技能已使用次数
     perCnt: number, // 每回合使用次数
-    isUsed: boolean, // 本场游戏是否使用过
+    isUsed: number, // 整局技能使用次数
     rdskidx: number, // 准备技能的idx
     descriptions: string[], // 处理后的技能描述
     explains: ExplainContent[], // 要解释的文本
@@ -268,7 +268,7 @@ type Trigger = 'phase-start' | 'phase-end' | 'phase-dice' | 'game-start' | 'acti
     'skill' | `skilltype${TrgSkType}` | `other-skilltype${TrgSkType}` | `after-skilltype${TrgSkType}` | 'after-skill' | 'oppo-skill' | 'other-skill' |
     'change' | 'change-to' | 'change-from' | 'change-oppo' | 'card' | 'elReaction' | `el${TrgEl}Reaction` | `el5Reaction:${TrgElRe}` |
     `other-el${TrgEl}Reaction` | 'other-elReaction' | 'ecard' | `el6Reaction:${TrgElRe}` | 'get-elReaction' | `get-el${TrgEl}Reaction` |
-    'get-elReaction-oppo' | 'kill' | 'killed' | 'will-killed' | 'dmg' | `${TrgDmg}-dmg` | `${TrgElReDmg}-dmg-wind` | 'getdmg' | 'other-getdmg' |
+    'get-elReaction-oppo' | 'kill' | 'killed' | 'will-killed' | 'dmg' | `${TrgDmg}-dmg` | 'dmg-wind' | `${TrgElReDmg}-dmg-wind` | 'getdmg' | 'other-getdmg' |
     `${TrgDmg}-getdmg` | 'getdmg-oppo' | 'revive' | `${TrgDmg}-getdmg-oppo` | 'heal' | 'eheal' | 'useReadySkill' | 'status-destroy' |
     'summon-destroy' | 'slot-destroy' | 'site-destroy' | 'calc' | 'reconcile' | 'discard' | 'getcard' | 'getcard-oppo' | '';
 
@@ -299,7 +299,8 @@ type SkillHandleEvent = {
     trigger?: Trigger,
     minusDiceSkill?: number[][],
     heal?: number[],
-    playerInfo?: GameInfo
+    playerInfo?: GameInfo,
+    discards?: Card[],
 }
 
 type SkillHandleRes = {

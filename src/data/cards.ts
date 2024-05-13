@@ -87,11 +87,11 @@ const normalWeapon = (id: number, name: string, userType: number, src: string) =
 const jiliWeapon = (id: number, name: string, userType: number, src: string) => {
     return new GICard(id, name, '【角色造成的伤害+1】。；【角色使用｢元素战技｣后：】生成1个此角色类型的元素骰(每回合1次)。', src, 3, 8, 0, [0], userType, 1,
         (card, event) => {
-            const { heros = [], hidxs = [] } = event;
+            const { heros = [], hidxs: [hidx] = [] } = event;
             return {
                 addDmg: 1,
                 trigger: ['skilltype2'],
-                execmds: isCdt<Cmds[]>(card.perCnt > 0, [{ cmd: 'getDice', cnt: 1, element: heros[hidxs[0]]?.element ?? 0 }]),
+                execmds: isCdt<Cmds[]>(card.perCnt > 0, [{ cmd: 'getDice', cnt: 1, element: heros[hidx]?.element ?? 0 }]),
                 exec: () => {
                     if (card.perCnt > 0) --card.perCnt;
                 }
@@ -124,10 +124,10 @@ const senlin2Weapon = (id: number, name: string, userType: number, src: string) 
 const normalElArtifact = (id: number, name: string, element: number, src: string) => {
     return new GICard(id, name, `【对角色打出｢天赋｣或角色使用技能时：】少花费1个[${ELEMENT[element]}骰]。(每回合1次)`, src, 2, 0, 0, [1], 0, 1,
         (card, event) => {
-            const { heros = [], hidxs = [], hcard, trigger = '', minusDiceCard: mdc = 0 } = event;
+            const { heros = [], hidxs: [hidx] = [], hcard, trigger = '', minusDiceCard: mdc = 0 } = event;
             const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(event, { skill: [1, 0, 0] },
                 skill => skill?.cost[0].color == element && card.perCnt > 0);
-            const isCardMinus = hcard && hcard.subType.includes(6) && hcard.userType == heros[hidxs[0]]?.id && card.perCnt > 0 && hcard.cost > mdc;
+            const isCardMinus = hcard && hcard.subType.includes(6) && hcard.userType == heros[hidx]?.id && card.perCnt > 0 && hcard.cost + hcard.anydice > mdc;
             return {
                 ...minusSkillRes,
                 minusDiceCard: isCdt(isCardMinus, 1),
@@ -143,10 +143,10 @@ const normalElArtifact = (id: number, name: string, element: number, src: string
 const advancedElArtifact = (id: number, name: string, element: number, src: string) => {
     return new GICard(id, name, `【对角色打出｢天赋｣或角色使用技能时：】少花费1个[${ELEMENT[element]}骰]。(每回合1次)；【投掷阶段：】2个元素骰初始总是投出[${ELEMENT[element]}骰]。`, src, 2, 8, 0, [1], 0, 1,
         (card, event) => {
-            const { heros = [], hidxs = [], hcard, trigger = '', minusDiceCard: mdc = 0 } = event;
+            const { heros = [], hidxs: [hidx] = [], hcard, trigger = '', minusDiceCard: mdc = 0 } = event;
             const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(event, { skill: [1, 0, 0] },
                 skill => skill?.cost[0].color == element && card.perCnt > 0);
-            const isCardMinus = hcard && hcard.subType.includes(6) && hcard.userType == heros[hidxs[0]]?.id && card.perCnt > 0 && hcard.cost > mdc;
+            const isCardMinus = hcard && hcard.subType.includes(6) && hcard.userType == heros[hidx]?.id && card.perCnt > 0 && hcard.cost + hcard.anydice > mdc;
             return {
                 ...minusSkillRes,
                 minusDiceCard: isCdt(isCardMinus, 1),
@@ -168,8 +168,9 @@ const elCard = (id: number, element: number, src: string) => {
 
 const magicCount = (cnt: number, id?: number) => new GICard(id ?? (909 + 2 - cnt), `幻戏${cnt > 0 ? `倒计时：${cnt}` : '开始！'}`, `将我方所有元素骰转换为[万能元素骰]，摸4张牌。${cnt > 0 ? '；此牌在手牌或牌库中被[舍弃]后：将1张元素骰费用比此卡少1个的｢幻戏倒计时｣放置到你的牌库顶。' : ''}`,
     `https://homdgcat.wiki/images/GCG/UI_Gcg_CardFace_Event_Event_MagicCount${cnt}.png`,
-    cnt, 8, 2, [], 0, 0, (_card, event) => {
+    cnt, 8, 2, [], 0, 0, (card, event) => {
         const { trigger = '' } = event;
+        const cnt = +card.name.slice(-1) || 0;
         const cmds: Cmds[] = trigger == 'discard' ?
             [{ cmd: 'addCard', cnt: 1, card: 909 + 3 - cnt, hidxs: [1] }] :
             [{ cmd: 'changeDice', element: 0 }, { cmd: 'getCard', cnt: 4 }];
@@ -221,9 +222,8 @@ const extraCards: CardObj = {
     901: new GICard(901, '雷楔', '[战斗行动]：将【刻晴】切换到场上，立刻使用【星斗归位】。本次【星斗归位】会为【刻晴】附属【雷元素附魔】，但是不会再生成【雷楔】。(【刻晴】使用【星斗归位】时，如果此牌在手中：不会再生成【雷楔】，而是改为[舍弃]此牌，并为【刻晴】附属【雷元素附魔】)',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/12/12109492/3d370650e825a27046596aaf4a53bb8d_7172676693296305743.png',
         3, 3, 2, [7], 0, 0, (_card, event) => {
-            const { heros = [] } = event;
+            const { heros = [], hidxs: [fhidx] = [] } = event;
             const hidx = heros.findIndex(h => h.id == 1303);
-            const fhidx = heros.findIndex(h => h.isFront);
             const cmds: Cmds[] = [{ cmd: 'useSkill', cnt: 1 }];
             if (hidx != fhidx) cmds.unshift({ cmd: 'switch-to', hidxs: [hidx] });
             return { trigger: ['skilltype2'], cmds }
@@ -263,9 +263,9 @@ const extraCards: CardObj = {
     906: new GICard(906, '噬骸能量块', '随机[舍弃]1张原本元素骰费用最高的手牌，生成1个我方出战角色类型的元素骰。如果我方出战角色是｢圣骸兽｣角色，则使其获得1点[充能]。(每回合最多打出1张)',
         'https://homdgcat.wiki/images/GCG/UI_Gcg_CardFace_Summon_ScorpionSacred.png',
         0, 8, 2, [], 0, 0, (_card, event) => {
-            const { heros = [], hidxs = [] } = event;
+            const { heros = [], hidxs: [hidx] = [] } = event;
             const cmds: Cmds[] = [{ cmd: 'discard', element: 0 }, { cmd: 'getDice', cnt: 1, element: -2 }];
-            const fhero = heros[hidxs[0]];
+            const fhero = heros[hidx];
             if (fhero?.local.includes(13)) cmds.push({ cmd: 'getEnergy', cnt: 1 })
             return { isValid: !fhero?.outStatus.some(ost => ost.id == 2207), cmds, outStatus: [heroStatus(2207)] }
         }),
@@ -280,7 +280,7 @@ const extraCards: CardObj = {
             const { heros = [], hidxs = [] } = event;
             return {
                 isValid: !heros[hidxs[0]]?.outStatus.some(ost => ost.id == 2215),
-                cmds: [{ cmd: 'attack', cnt: 1, element: -1, isOppo: true }, { cmd: 'getCard', cnt: 1 }],
+                cmds: [{ cmd: 'attack', cnt: 1, element: -1, hidxs, isOppo: true }, { cmd: 'getCard', cnt: 1 }],
                 outStatus: [heroStatus(2215)],
             }
         }),
@@ -345,8 +345,8 @@ const allCards: CardObj = {
     8: new GICard(8, '万世流涌大典', '【角色造成的伤害+1】。；【角色受到伤害或治疗后：】如果本回合已受到伤害或治疗累积2次，则角色本回合中下次造成的伤害+2。(每回合1次)',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/03/06/258999284/9a6794d76b3ea150a101e354f9f5a162_9095966637954555968.png',
         3, 8, 0, [0], 4, 1, (card, event) => {
-            const { heal = [], hidxs = [], trigger = '' } = event;
-            const isMinus = (trigger == 'getdmg' || trigger == 'heal' && heal[hidxs[0]] > 0) && card.perCnt > 0;
+            const { heal = [], hidxs: [hidx] = [], trigger = '' } = event;
+            const isMinus = (trigger == 'getdmg' || trigger == 'heal' && heal[hidx] > 0) && card.perCnt > 0;
             return {
                 trigger: ['getdmg', 'heal'],
                 addDmg: 1,
@@ -362,8 +362,8 @@ const allCards: CardObj = {
     9: new GICard(9, '金流监督', '【角色受到伤害或治疗后：】使角色本回合中下一次｢普通攻击｣少花费1个[无色元素骰]，且造成的伤害+1。(每回合至多2次)',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Weapon_Jinliujiandu.webp',
         2, 8, 0, [0], 4, 1, (card, event) => {
-            const { heal = [], hidxs = [], trigger = '' } = event;
-            const isMinus = (trigger == 'getdmg' || trigger == 'heal' && heal[hidxs[0]] > 0) && card.perCnt > 0;
+            const { heal = [], hidxs: [hidx] = [], trigger = '' } = event;
+            const isMinus = (trigger == 'getdmg' || trigger == 'heal' && heal[hidx] > 0) && card.perCnt > 0;
             return {
                 trigger: ['getdmg', 'heal'],
                 execmds: isCdt<Cmds[]>(isMinus, [{ cmd: 'getStatus', status: [heroStatus(2213)] }]),
@@ -382,11 +382,11 @@ const allCards: CardObj = {
     24: new GICard(24, '阿莫斯之弓', '【角色造成的伤害+1】。；【角色使用原本元素骰费用+充能费用至少为5的技能时，】伤害额外+2。(每回合1次)',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/d974aa6b36205d2c4ee83900f6383f40_5244142374562514025.png',
         3, 8, 0, [0], 3, 1, (card, event) => {
-            const { heros = [], hidxs = [], isSkill = -1 } = event;
+            const { heros = [], hidxs: [hidx] = [], isSkill = -1 } = event;
             const skidxs: number[] = [];
             if (card.perCnt > 0) {
-                for (let i = 0; i < heros[hidxs[0]].skills.length; ++i) {
-                    const cskill = heros[hidxs[0]].skills[i];
+                for (let i = 0; i < heros[hidx].skills.length; ++i) {
+                    const cskill = heros[hidx].skills[i];
                     if (cskill.type == 4) continue;
                     if (cskill.cost.reduce((a, c) => a + c.val, 0) >= 5) {
                         skidxs.push(i);
@@ -447,8 +447,8 @@ const allCards: CardObj = {
     45: new GICard(45, '钟剑', '【角色造成的伤害+1】。；【角色使用技能后：】为我方出战角色提供1点[护盾]。(每回合1次，可叠加到2点)',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/e8bf7a38608cc3811f32f396ccea01d4_493091124030114777.png',
         3, 8, 0, [0], 2, 1, (card, event) => {
-            const { heros = [], hidxs = [] } = event;
-            const shieldCnt = heros[hidxs[0]].outStatus.find(ost => ost.id == 2049)?.useCnt ?? 0;
+            const { heros = [], hidxs: [hidx] = [] } = event;
+            const shieldCnt = heros[hidx].outStatus.find(ost => ost.id == 2049)?.useCnt ?? 0;
             const isTriggered = card.perCnt > 0 && shieldCnt < 2;
             return {
                 addDmg: 1,
@@ -496,8 +496,8 @@ const allCards: CardObj = {
     64: new GICard(64, '贯虹之槊', '【角色造成的伤害+1】。；角色如果在[护盾]角色状态或[护盾]出战状态的保护下，则造成的伤害额外+1。；【角色使用｢元素战技｣后：】如果我方存在提供[护盾]的出战状态，则为一个此类出战状态补充1点[护盾]。(每回合1次)',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/0a1242b4eeb9c6b6e731466fb182cb60_6226689090161933551.png',
         3, 8, 0, [0], 5, 1, (card, event) => {
-            const { heros = [], hidxs = [], trigger = '' } = event;
-            const fhero = heros[hidxs[0]];
+            const { heros = [], hidxs: [hidx] = [], trigger = '' } = event;
+            const fhero = heros[hidx];
             const isShieldStatus = fhero?.inStatus.some(ist => ist.type.includes(7)) || fhero?.outStatus.some(ost => ost.type.includes(7));
             return {
                 addDmg: 1,
@@ -625,8 +625,8 @@ const allCards: CardObj = {
     101: new GICard(101, '冒险家头带', '【角色使用｢普通攻击｣后：】治疗自身1点(每回合至多3次)。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/75720734/c2617ba94c31d82bd4af6df8e74aac91_8306847584147063772.png',
         1, 8, 0, [1], 0, 1, (card, event) => {
-            const { hidxs, heros = [] } = event;
-            const curHero = heros[hidxs?.[0] ?? -1];
+            const { hidxs = [], heros = [] } = event;
+            const curHero = heros[hidxs[0]];
             const notUse = card.perCnt <= 0 || curHero?.maxhp == curHero?.hp;
             return {
                 trigger: ['skilltype1'],
@@ -640,8 +640,8 @@ const allCards: CardObj = {
     102: new GICard(102, '幸运儿银冠', '【角色使用｢元素战技｣后：】治疗自身2点(每回合1次)。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/75720734/27d7021e8d3dc0ee1b6f271558179c77_4899141043311513249.png',
         2, 0, 0, [1], 0, 1, (card, event) => {
-            const { hidxs, heros = [] } = event;
-            const curHero = heros[hidxs?.[0] ?? -1];
+            const { hidxs = [], heros = [] } = event;
+            const curHero = heros[hidxs[0]];
             const notUse = card.perCnt <= 0 || curHero?.maxhp == curHero?.hp;
             return {
                 trigger: ['skilltype2'],
@@ -702,18 +702,15 @@ const allCards: CardObj = {
 
     107: new GICard(107, '华饰之兜', '【其他我方角色使用｢元素爆发｣后：】所附属角色获得1点[充能]。',
         'https://uploadstatic.mihoyo.com/ys-obc/2023/02/27/12109492/82dc7fbd9334da0ca277b234c902a394_6676194364878839414.png',
-        1, 8, 0, [1], 0, 1, (_card, event) => {
-            const { hidxs = [] } = event;
-            return {
-                trigger: ['other-skilltype3'],
-                execmds: [{ cmd: 'getEnergy', cnt: 1, hidxs }],
-            }
-        }),
+        1, 8, 0, [1], 0, 1, (_card, { hidxs }) => ({
+            trigger: ['other-skilltype3'],
+            execmds: [{ cmd: 'getEnergy', cnt: 1, hidxs }],
+        })),
 
     108: new GICard(108, '绝缘之旗印', '【其他我方角色使用｢元素爆发｣后：】所附属角色获得1点[充能]。；角色使用｢元素爆发｣造成的伤害+2。(每回合1次)',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/361399b0aa575a2805da6765d3c0e17c_4972333427190668688.png',
         2, 8, 0, [1], 0, 1, (card, event) => {
-            const { hidxs = [], trigger = '' } = event;
+            const { hidxs, trigger = '' } = event;
             return {
                 addDmgType3: isCdt(card.perCnt > 0, 2),
                 trigger: ['other-skilltype3', 'skilltype3'],
@@ -735,13 +732,13 @@ const allCards: CardObj = {
     110: new GICard(110, '千岩牢固', '【行动阶段开始时：】为角色附属｢重嶂不移｣。；【角色受到伤害后：】如果所附属角色为｢出战角色｣，则生成1个此角色元素类型的元素骰。(每回合1次)',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/6b1e8983b34f821da73f7a93076a501e_3915605735095366427.png',
         3, 8, 0, [1], 0, 1, (card, event) => {
-            const { heros = [], hidxs = [], trigger = '' } = event;
+            const { heros = [], hidxs: [hidx] = [], trigger = '' } = event;
             return {
                 trigger: ['phase-start', 'getdmg'],
                 execmds: isCdt<Cmds[]>(trigger == 'phase-start', [{ cmd: 'getStatus', status: [heroStatus(2050)] }],
-                    isCdt(card.perCnt > 0, [{ cmd: 'getDice', cnt: 1, element: heros[hidxs[0]]?.element ?? 0 }])),
+                    isCdt(card.perCnt > 0, [{ cmd: 'getDice', cnt: 1, element: heros[hidx]?.element ?? 0 }])),
                 exec: () => {
-                    if (trigger == 'getdmg' && card.perCnt > 0 || heros[hidxs[0]].isFront) --card.perCnt;
+                    if (trigger == 'getdmg' && card.perCnt > 0 || heros[hidx]?.isFront) --card.perCnt;
                 }
             }
         }, { pct: 1, expl: [heroStatus(2050)] }),
@@ -749,8 +746,8 @@ const allCards: CardObj = {
     111: new GICard(111, '虺雷之姿', '【对角色打出｢天赋｣或角色使用｢普通攻击｣时：】少花费1个元素骰。(每回合1次)',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/d136fc0fd368a268fe3adaba8c0e64bb_8574805937216108762.png',
         2, 0, 0, [1], 0, 1, (card, event) => {
-            const { hcard, heros = [], hidxs = [], trigger = '', minusDiceCard: mdc = 0 } = event;
-            const isMinusCard = hcard && hcard.subType.includes(6) && hcard.userType == heros[hidxs[0]]?.id && hcard.cost > mdc && card.perCnt > 0;
+            const { hcard, heros = [], hidxs: [hidx] = [], trigger = '', minusDiceCard: mdc = 0 } = event;
+            const isMinusCard = hcard && hcard.subType.includes(6) && hcard.userType == heros[hidx]?.id && card.perCnt > 0 && hcard.cost + hcard.anydice > mdc;
             const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(event, { skilltype1: [0, 0, 1] }, () => card.perCnt > 0);
             return {
                 ...minusSkillRes,
@@ -767,8 +764,8 @@ const allCards: CardObj = {
     112: new GICard(112, '辰砂往生录', '【对角色打出｢天赋｣或角色使用｢普通攻击｣时：】少花费1个元素骰。(每回合1次)；【角色被切换为｢出战角色｣后：】本回合中，角色｢普通攻击｣造成的伤害+1。',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/ad8e8b77b4efc4aabd42b7954fbc244c_7518202688884952912.png',
         3, 0, 0, [1], 0, 1, (card, event) => {
-            const { hcard, heros = [], hidxs = [], trigger = '', minusDiceCard: mdc = 0 } = event;
-            const isMinusCard = hcard && hcard.subType.includes(6) && hcard.userType == heros[hidxs[0]]?.id && hcard.cost > mdc && card.perCnt > 0;
+            const { hcard, heros = [], hidxs: [hidx] = [], trigger = '', minusDiceCard: mdc = 0 } = event;
+            const isMinusCard = hcard && hcard.subType.includes(6) && hcard.userType == heros[hidx]?.id && hcard.cost > mdc && card.perCnt > 0;
             const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(event, { skilltype1: [0, 0, 1] }, () => card.perCnt > 0);
             return {
                 ...minusSkillRes,
@@ -786,8 +783,8 @@ const allCards: CardObj = {
     113: new GICard(113, '无常之面', '【对角色打出｢天赋｣或角色使用｢元素战技｣时：】少花费1个元素骰。(每回合1次)',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/24/183046623/e2a6d4ad4958d5fff80bb17ec93189ab_7011820758446145491.png',
         2, 0, 0, [1], 0, 1, (card, event) => {
-            const { hcard, heros = [], hidxs = [], trigger = '', minusDiceCard: mdc = 0 } = event;
-            const isMinusCard = hcard && hcard.subType.includes(6) && hcard.userType == heros[hidxs[0]]?.id && hcard.cost > mdc && card.perCnt > 0;
+            const { hcard, heros = [], hidxs: [hidx] = [], trigger = '', minusDiceCard: mdc = 0 } = event;
+            const isMinusCard = hcard && hcard.subType.includes(6) && hcard.userType == heros[hidx]?.id && card.perCnt > 0 && hcard.cost + hcard.anydice > mdc;
             const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(event, { skilltype2: [0, 0, 1] }, () => card.perCnt > 0);
             return {
                 ...minusSkillRes,
@@ -804,9 +801,9 @@ const allCards: CardObj = {
     114: new GICard(114, '追忆之注连', '【对角色打出｢天赋｣或角色使用｢元素战技｣时：】少花费1个元素骰。(每回合1次)；【如果角色具有至少2点[充能]，】就使角色｢普通攻击｣和｢元素战技｣造成的伤害+1。',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/24/183046623/48be75f0a23375adb34789dcb1e95a97_850843251536084281.png',
         3, 0, 0, [1], 0, 1, (card, event) => {
-            const { hcard, heros = [], hidxs = [], trigger = '', minusDiceCard: mdc = 0 } = event;
-            const isMinusCard = hcard && hcard.subType.includes(6) && hcard.userType == heros[hidxs[0]]?.id && hcard.cost > mdc && card.perCnt > 0;
-            const isAddDmg = (heros[hidxs[0]]?.energy ?? 0) >= 2;
+            const { hcard, heros = [], hidxs: [hidx] = [], trigger = '', minusDiceCard: mdc = 0 } = event;
+            const isMinusCard = hcard && hcard.subType.includes(6) && hcard.userType == heros[hidx]?.id && card.perCnt > 0 && hcard.cost + hcard.anydice > mdc;
+            const isAddDmg = (heros[hidx]?.energy ?? 0) >= 2;
             const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(event, { skilltype2: [0, 0, 1] }, () => card.perCnt > 0);
             return {
                 addDmgType1: isCdt(isAddDmg, 1),
@@ -864,8 +861,8 @@ const allCards: CardObj = {
     117: new GICard(117, '沙王的投影', '【入场时：】摸1张牌。；【所附属角色为出战角色期间，敌方受到元素反应伤害时：】摸1张牌。(每回合1次)',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/11/07/258999284/fe25340f51936207ac2a9e71a8cad87e_3874053549243035788.png',
         1, 8, 0, [1], 0, 1, (card, event) => {
-            const { heros = [], hidxs = [] } = event;
-            const isUse = card.perCnt > 0 && heros[hidxs[0]].isFront;
+            const { heros = [], hidxs: [hidx] = [] } = event;
+            const isUse = card.perCnt > 0 && heros[hidx].isFront;
             return {
                 trigger: ['elReaction'],
                 cmds: [{ cmd: 'getCard', cnt: 1 }],
@@ -879,12 +876,12 @@ const allCards: CardObj = {
     118: new GICard(118, '饰金之梦', '【入场时：】生成1个所附属角色类型的元素骰。如果我方队伍中存在3种不同元素类型的角色，则改为生成2个。；【所附属角色为出战角色期间，敌方受到元素反应伤害时：】摸1张牌。(每回合1次)',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/18/258999284/b0f1283d8fec75259495c4ef24cc768a_277942760294951822.png',
         3, 8, 0, [1], 0, 1, (card, event) => {
-            const { heros = [], hidxs = [] } = event;
+            const { heros = [], hidxs: [hidx] = [] } = event;
             const isExtra = new Set(heros.map(h => h.element)).size == 3;
-            const isUse = card.perCnt > 0 && heros[hidxs[0]]?.isFront;
+            const isUse = card.perCnt > 0 && heros[hidx]?.isFront;
             return {
                 trigger: ['elReaction'],
-                cmds: [{ cmd: 'getDice', cnt: isExtra ? 2 : 1, element: heros[hidxs[0]].element }],
+                cmds: [{ cmd: 'getDice', cnt: isExtra ? 2 : 1, element: heros[hidx]?.element }],
                 execmds: isCdt<Cmds[]>(isUse, [{ cmd: 'getCard', cnt: 1 }]),
                 exec: () => {
                     if (isUse) --card.perCnt;
@@ -905,12 +902,12 @@ const allCards: CardObj = {
     120: new GICard(120, '来歆余响', '【角色使用｢普通攻击｣后：】摸1张牌。(每回合1次)；【角色使用技能后：】如果我方元素骰数量不多于手牌数量，则生成1个所附属角色类型的元素骰。(每回合1次)',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/18/258999284/d9db70a7475940b91d63699e1276678d_8473736559088406285.png',
         2, 8, 0, [1], 0, 1, (card, event) => {
-            const { heros = [], hidxs = [], hcards: { length: hcardsCnt } = [], dicesCnt = 0, trigger = '' } = event;
+            const { heros = [], hidxs: [hidx] = [], hcards: { length: hcardsCnt } = [], dicesCnt = 0, trigger = '' } = event;
             const isGetCard = trigger == 'skilltype1' && (card.perCnt >> 0 & 1) == 1;
             const isGetDice = trigger.startsWith('skill') && dicesCnt <= hcardsCnt && (card.perCnt >> 1 & 1) == 1;
             const execmds: Cmds[] = [];
             if (isGetCard) execmds.push({ cmd: 'getCard', cnt: 1 });
-            if (isGetDice) execmds.push({ cmd: 'getDice', cnt: 1, element: heros[hidxs[0]].element });
+            if (isGetDice) execmds.push({ cmd: 'getDice', cnt: 1, element: heros[hidx].element });
             return {
                 trigger: ['skill'],
                 execmds,
@@ -924,8 +921,8 @@ const allCards: CardObj = {
     121: new GICard(121, '灵光明烁之心', '【角色受到伤害后：】如果所附属角色为｢出战角色｣，则摸1张牌。(每回合1次)',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/18/258999284/3a2b86994907366639498965934b1d99_16804113149239958.png',
         0, 8, 0, [1], 0, 1, (card, event) => {
-            const { heros = [], hidxs = [] } = event;
-            const isGetCard = card.perCnt > 0 && heros[hidxs[0]].isFront;
+            const { heros = [], hidxs: [hidx] = [] } = event;
+            const isGetCard = card.perCnt > 0 && heros[hidx].isFront;
             return {
                 trigger: ['getdmg'],
                 cmds: isCdt<Cmds[]>(isGetCard, [{ cmd: 'getCard', cnt: 1 }]),
@@ -954,9 +951,9 @@ const allCards: CardObj = {
     123: new GICard(123, '老兵的容颜', '【角色受到伤害或治疗后：】根据本回合触发此效果的次数，执行不同的效果。；【第一次触发：】生成1个此角色类型的元素骰。；【第二次触发：】摸1张牌。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/01/27/258999284/166e56c3c68e531c97f4fdfde1adde06_4511818010196081435.png',
         2, 0, 0, [1], 0, 1, (card, event) => {
-            const { heros = [], hidxs = [], heal = [], trigger = '' } = event;
-            const isTriggered = card.perCnt > 0 && (trigger == 'getdmg' || trigger == 'heal' && heal[hidxs[0]] > 0);
-            const execmds: Cmds[] = [{ cmd: 'getDice', element: heros[hidxs[0]].element, cnt: 1 }, { cmd: 'getCard', cnt: 1 }];
+            const { heros = [], hidxs: [hidx] = [], heal = [], trigger = '' } = event;
+            const isTriggered = card.perCnt > 0 && (trigger == 'getdmg' || trigger == 'heal' && heal[hidx] > 0);
+            const execmds: Cmds[] = [{ cmd: 'getDice', element: heros[hidx].element, cnt: 1 }, { cmd: 'getCard', cnt: 1 }];
             return {
                 trigger: ['getdmg', 'heal'],
                 execmds: isCdt(isTriggered, [execmds[card.useCnt]]),
@@ -971,9 +968,9 @@ const allCards: CardObj = {
     124: new GICard(124, '逐影猎人', '【角色受到伤害或治疗后：】根据本回合触发此效果的次数，执行不同的效果。；【第一次触发：】生成1个此角色类型的元素骰。；【第二次触发：】摸1张牌。；【第四次触发：】生成1个此角色类型的元素骰。',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Artifact_ZhuYingDa.webp',
         3, 8, 0, [1], 0, 1, (card, event) => {
-            const { heros = [], hidxs = [], heal = [], trigger = '' } = event;
-            const isTriggered = card.perCnt > 0 && (trigger == 'getdmg' || trigger == 'heal' && heal[hidxs[0]] > 0) && card.useCnt != 2;
-            const execmds: Cmds[] = [{ cmd: 'getDice', element: heros[hidxs[0]].element, cnt: 1 }, { cmd: 'getCard', cnt: 1 }];
+            const { heros = [], hidxs: [hidx] = [], heal = [], trigger = '' } = event;
+            const isTriggered = card.perCnt > 0 && (trigger == 'getdmg' || trigger == 'heal' && heal[hidx] > 0) && card.useCnt != 2;
+            const execmds: Cmds[] = [{ cmd: 'getDice', element: heros[hidx].element, cnt: 1 }, { cmd: 'getCard', cnt: 1 }];
             return {
                 trigger: ['getdmg', 'heal'],
                 execmds: isCdt(isTriggered, [execmds[card.useCnt % 3]]),
@@ -988,10 +985,10 @@ const allCards: CardObj = {
     125: new GICard(125, '黄金剧团的奖赏', '【结束阶段：】如果所附属的角色在后台，则此牌累积1点｢报酬｣。(最多累积2点)；【对角色打出｢天赋｣或角色使用｢元素战技｣时：】此牌每有1点｢报酬｣，就将其消耗，以少花费1个元素骰。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/03/06/258999284/0f7dfce291215155b3a48a56c8c996c4_3799856037595257577.png',
         0, 8, 0, [1], 0, 1, (card, event) => {
-            const { heros = [], hidxs = [], hcard, trigger = '', minusDiceCard: mdc = 0, isSkill = -1 } = event;
+            const { heros = [], hidxs: [hidx] = [], hcard, trigger = '', minusDiceCard: mdc = 0, isSkill = -1 } = event;
             const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(event, { skilltype2: [0, 0, card.useCnt] });
-            const isCardMinus = hcard && hcard.subType.includes(6) && hcard.userType == heros[hidxs[0]]?.id && hcard.cost > mdc;
-            const isPhaseEnd = trigger == 'phase-end' && card.useCnt < 2 && !heros[hidxs[0]]?.isFront;
+            const isCardMinus = hcard && hcard.subType.includes(6) && hcard.userType == heros[hidx]?.id && hcard.cost + hcard.anydice > mdc;
+            const isPhaseEnd = trigger == 'phase-end' && card.useCnt < 2 && !heros[hidx]?.isFront;
             return {
                 ...minusSkillRes,
                 minusDiceCard: isCdt(isCardMinus, card.useCnt),
@@ -1003,7 +1000,7 @@ const allCards: CardObj = {
                     } else if (trigger == 'card' && isCardMinus) {
                         card.useCnt -= hcard.cost - mdc;
                     } else if (trigger == 'skilltype2' && isMinusSkill) {
-                        const skill = heros[hidxs[0]]?.skills[isSkill].cost ?? [{ val: 0 }, { val: 0 }];
+                        const skill = heros[hidx]?.skills[isSkill].cost ?? [{ val: 0 }, { val: 0 }];
                         const skillcost = skill[0].val + skill[1].val;
                         card.useCnt -= skillcost - mdc - minusSkillRes.minusDiceSkill[isSkill].reduce((a, b) => a + b);
                     }
@@ -1014,10 +1011,10 @@ const allCards: CardObj = {
     126: new GICard(126, '黄金剧团', '【结束阶段：】如果所附属的角色在后台，则此牌累积2点｢报酬｣。(最多累积4点)；【对角色打出｢天赋｣或角色使用｢元素战技｣时：】此牌每有1点｢报酬｣，就将其消耗，以少花费1个元素骰。',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Artifact_Huangjinjutuanda.webp',
         2, 8, 0, [1], 0, 1, (card, event) => {
-            const { heros = [], hidxs = [], hcard, trigger = '', minusDiceCard: mdc = 0, isSkill = -1 } = event;
+            const { heros = [], hidxs: [hidx] = [], hcard, trigger = '', minusDiceCard: mdc = 0, isSkill = -1 } = event;
             const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(event, { skilltype2: [0, 0, card.useCnt] });
-            const isCardMinus = hcard && hcard.subType.includes(6) && hcard.userType == heros[hidxs[0]]?.id && hcard.cost > mdc;
-            const isPhaseEnd = trigger == 'phase-end' && card.useCnt < 4 && !heros[hidxs[0]]?.isFront;
+            const isCardMinus = hcard && hcard.subType.includes(6) && hcard.userType == heros[hidx]?.id && hcard.cost + hcard.anydice > mdc;
+            const isPhaseEnd = trigger == 'phase-end' && card.useCnt < 4 && !heros[hidx]?.isFront;
             return {
                 ...minusSkillRes,
                 minusDiceCard: isCdt(isCardMinus, card.useCnt),
@@ -1029,7 +1026,7 @@ const allCards: CardObj = {
                     } else if (trigger == 'card' && isCardMinus) {
                         card.useCnt -= hcard.cost - mdc;
                     } else if (trigger == 'skilltype2' && isMinusSkill) {
-                        const skill = heros[hidxs[0]]?.skills[isSkill].cost ?? [{ val: 0 }, { val: 0 }];
+                        const skill = heros[hidx]?.skills[isSkill].cost ?? [{ val: 0 }, { val: 0 }];
                         const skillcost = skill[0].val + skill[1].val;
                         card.useCnt -= skillcost - mdc - minusSkillRes.minusDiceSkill[isSkill].reduce((a, b) => a + b);
                     }
@@ -1040,8 +1037,8 @@ const allCards: CardObj = {
     127: new GICard(127, '紫晶的花冠', '【所附属角色为出战角色，敌方受到[草元素伤害]后：】累积1枚｢花冠水晶｣。如果｢花冠水晶｣大于等于我方手牌数，则生成1个随机基础元素骰。(每回合至多生成2个)',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/e431910b741b3723c64334265ce3e93e_3262613974155239712.png',
         1, 8, 0, [1], 0, 1, (card, event) => {
-            const { heros = [], hidxs = [], hcards: { length: hcardsCnt } = [] } = event;
-            if (!heros[hidxs[0]]?.isFront) return;
+            const { heros = [], hidxs: [hidx] = [], hcards: { length: hcardsCnt } = [] } = event;
+            if (!heros[hidx]?.isFront) return;
             return {
                 trigger: ['grass-getdmg-oppo'],
                 execmds: isCdt<Cmds[]>(card.useCnt + 1 >= hcardsCnt && card.perCnt > 0, [{ cmd: 'getDice', cnt: 1, element: -1 }]),
@@ -1055,8 +1052,8 @@ const allCards: CardObj = {
     128: new GICard(128, '乐园遗落之花', '【所附属角色为出战角色，敌方受到[草元素伤害]或发生了[草元素相关反应]后：】累积2枚｢花冠水晶｣。如果｢花冠水晶｣大于等于我方手牌数，则生成1个[万能元素骰]。(每回合至多生成2个)',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Artifact_ZijinghuaguanDa.webp',
         2, 8, 0, [1], 0, 1, (card, event) => {
-            const { heros = [], hidxs = [], hcards: { length: hcardsCnt } = [] } = event;
-            if (!heros[hidxs[0]]?.isFront) return;
+            const { heros = [], hidxs: [hidx] = [], hcards: { length: hcardsCnt } = [] } = event;
+            if (!heros[hidx]?.isFront) return;
             return {
                 trigger: ['grass-getdmg-oppo', 'el7Reaction'],
                 execmds: isCdt<Cmds[]>(card.useCnt + 1 >= hcardsCnt && card.perCnt > 0, [{ cmd: 'getDice', cnt: 1, element: 0 }]),
@@ -1360,9 +1357,9 @@ const allCards: CardObj = {
     505: new GICard(505, '本大爷还没有输！', '【本回合有我方角色被击倒，才能打出：】生成1个[万能元素骰]，我方当前出战角色获得1点[充能]。(每回合中，最多只能打出1张此牌)',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/79683714/a1ae1067afcf9899a958c166b7b32fa0_5333005492197066238.png',
         0, 8, 2, [], 0, 0, (_card, event) => {
-            const { heros = [], hidxs = [] } = event;
+            const { heros = [], hidxs: [hidx] = [] } = event;
             return {
-                isValid: !heros[hidxs[0]]?.outStatus.some(ost => ost.id == 2116) && heros.some(h => h.hp == 0),
+                isValid: !heros[hidx]?.outStatus.some(ost => ost.id == 2116) && heros.some(h => h.hp == 0),
                 cmds: [{ cmd: 'getDice', cnt: 1, element: 0 }, { cmd: 'getEnergy', cnt: 1 }],
                 outStatus: [heroStatus(2116)],
             }
@@ -1379,15 +1376,15 @@ const allCards: CardObj = {
     508: new GICard(508, '星天之兆', '我方当前出战角色【获得1点[充能]】。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/79683714/e6e557f4dd2762ecb727e14c66bafb57_828613557415004800.png',
         2, 0, 2, [], 0, 0, (_card, event) => {
-            const { heros = [], hidxs = [] } = event;
-            const hero = heros[hidxs[0]];
+            const { heros = [], hidxs: [hidx] = [] } = event;
+            const hero = heros[hidx];
             return { cmds: [{ cmd: 'getEnergy', cnt: 1 }], isValid: (hero?.energy ?? 0) < (hero?.maxEnergy ?? 0) }
         }),
 
     509: new GICard(509, '白垩之术', '从最多2个我方后台角色身上，转移1点[充能]到我方出战角色。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/79683714/567c17051137fdd9e5c981ea584df298_4305321690584111415.png',
         1, 8, 2, [], 0, 0, (_card, event) => {
-            const { heros = [] } = event;
+            const { heros = [], hidxs: [fhidx] = [] } = event;
             let isNeedEnergy = true;
             let hasEnergy = false;
             heros.forEach(h => {
@@ -1397,7 +1394,6 @@ const allCards: CardObj = {
             return {
                 isValid: isNeedEnergy && hasEnergy,
                 exec: () => {
-                    const fhidx = heros.findIndex(h => h.isFront);
                     let getEnergy = 0;
                     let needEnergy = heros[fhidx].maxEnergy - heros[fhidx].energy;
                     for (let i = 1; i < heros.length; ++i) {
@@ -1498,7 +1494,7 @@ const allCards: CardObj = {
     515: new GICard(515, '下落斩', '[战斗行动]：切换到目标角色，然后该角色进行｢普通攻击｣。',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/20/1694811/a3aa3a8c13499a0c999fc765c4a0623d_2838069371786460200.png',
         3, 8, 2, [7], 0, 1, (_card, event) => {
-            const { heros = [], hidxs = [] } = event;
+            const { heros = [], hidxs } = event;
             return {
                 cmds: [{ cmd: 'switch-to', hidxs }, { cmd: 'useSkill', cnt: 0 }],
                 canSelectHero: heros.map(h => !h.isFront && h.hp > 0),
@@ -1507,10 +1503,7 @@ const allCards: CardObj = {
 
     516: new GICard(516, '重攻击', '本回合中，当前我方出战角色下次｢普通攻击｣造成的伤害+1。；【此次｢普通攻击｣为[重击]时：】伤害额外+1。',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/20/1694811/563473c5f59960d334e2105c1571a982_2028527927557315162.png',
-        1, 8, 2, [], 0, 0, (_card, event) => {
-            const { heros = [] } = event;
-            return { inStatus: [heroStatus(2051)], hidxs: [heros?.findIndex(h => h.isFront)] }
-        }),
+        1, 8, 2, [], 0, 0, (_card, { hidxs }) => ({ inStatus: [heroStatus(2051)], hidxs })),
 
     517: new GICard(517, '温妮莎传奇', '生成4个不同类型的基础元素骰。',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/20/1694811/e8473742fd9e3966ccba393f52a1915a_7280949762836305617.png',
@@ -1533,8 +1526,8 @@ const allCards: CardObj = {
     520: new GICard(520, '藏锋何处', '将一个我方角色所装备的｢武器｣返回手牌。；【本回合中，我方下一次打出｢武器｣手牌时：】少花费2个元素骰。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/08/12/203927054/888e75a6b80b0f407683eb2af7d25882_7417759921565488584.png',
         0, 8, 2, [], 0, 1, (_card, event) => {
-            const { heros = [], hidxs = [] } = event;
-            const hero = heros[hidxs[0]];
+            const { heros = [], hidxs: [hidx] = [] } = event;
+            const hero = heros[hidx];
             return {
                 outStatus: [heroStatus(2053)],
                 canSelectHero: heros.map(h => h.weaponSlot != null),
@@ -1554,8 +1547,8 @@ const allCards: CardObj = {
     522: new GICard(522, '琴音之诗', '将一个我方角色所装备的｢圣遗物｣返回手牌。；【本回合中，我方下一次打出｢圣遗物｣手牌时：】少花费2个元素骰。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/11/07/258999284/4c4a398dfed6fe5486f64725f89bb76c_6509340727185201552.png',
         0, 8, 2, [], 0, 1, (_card, event) => {
-            const { heros = [], hidxs = [] } = event;
-            const hero = heros[hidxs[0]];
+            const { heros = [], hidxs: [hidx] = [] } = event;
+            const hero = heros[hidx];
             return {
                 outStatus: [heroStatus(2110)],
                 canSelectHero: heros.map(h => h.artifactSlot != null),
@@ -1620,7 +1613,7 @@ const allCards: CardObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/40001dfa11a6aa20be3de16e0c89d598_3587066228917552605.png',
         2, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'addCard', cnt: 6, card: 904 }] }), { expl: [extraCards[904]] }),
 
-    530: magicCount(3, 503),
+    530: magicCount(3, 530),
 
     561: new GICard(561, '自由的新风', '【本回合中，轮到我方行动期间有对方角色被击倒时：】本次行动结束后，我方可以再连续行动一次。；【[可用次数]：】1',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/09/24/258999284/bccf12a9c926bec7203e543c469ac58d_1423280855629304603.png',
@@ -1702,13 +1695,12 @@ const allCards: CardObj = {
     575: new GICard(575, '水与正义', '平均分配我方未被击倒的角色的生命值，然后治疗所有我方角色1点。',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Event_Event_WaterJustice.webp',
         2, 0, 2, [-3], 0, 0, (_card, event) => {
-            const { heros = [] } = event;
+            const { heros = [], hidxs: [hidx] = [] } = event;
             const hidxs = allHidxs(heros);
             if (hidxs.length > 1) {
                 const allHp = heros.reduce((a, c) => c.hp > 0 ? a + c.hp : a, 0);
                 const baseHp = Math.floor(allHp / hidxs.length);
                 let restHp = allHp - baseHp;
-                const hidx = heros.findIndex(h => h.isFront);
                 for (let i = 0; i < heros.length; ++i) {
                     heros[hidx + i].hp = baseHp + (restHp > 0 ? 1 : 0);
                     if (restHp > 0) --restHp;
@@ -1750,21 +1742,17 @@ const allCards: CardObj = {
 
     584: new GICard(584, '元素共鸣：热诚之火', '本回合中，我方当前出战角色下一次引发[火元素相关反应]时，造成的伤害+3。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/75833613/82515ce0a16de7f3fba6e02232545230_5475039957819136120.png',
-        1, 2, 2, [9], 0, 0, (_card, event) => {
-            const hidxs: number[] = [event?.heros?.findIndex(h => h.isFront) ?? -1];
-            return { inStatus: [heroStatus(2029)], hidxs }
-        }),
+        1, 2, 2, [9], 0, 0, (_card, { hidxs }) => ({ inStatus: [heroStatus(2029)], hidxs })),
 
     585: elCard(585, 3, 'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/75833613/d7a7653168cd80943a50578aa1251f7a_1527724411934371635.png'),
 
     586: new GICard(586, '元素共鸣：强能之雷', '我方一名充能未满的角色获得1点[充能]。(出战角色优先)',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/75833613/24c0eec5aa696696abeacd2a9ab2e443_2548840222933909920.png',
         1, 3, 2, [9], 0, 0, (_card, event) => {
-            const { heros = [] } = event;
+            const { heros = [], hidxs: [fhidx] = [] } = event;
             const hidxs: number[] = [];
-            const frontHeroIdx = heros.findIndex(h => h.isFront);
-            if (frontHeroIdx > -1 && heros[frontHeroIdx].energy < heros[frontHeroIdx].maxEnergy) {
-                hidxs.push(frontHeroIdx);
+            if (heros[fhidx].energy < heros[fhidx].maxEnergy) {
+                hidxs.push(fhidx);
             } else {
                 const hidx = heros.findIndex(h => h.energy < h.maxEnergy);
                 if (hidx > -1) hidxs.push(hidx);
@@ -1776,17 +1764,14 @@ const allCards: CardObj = {
 
     588: new GICard(588, '元素共鸣：粉碎之冰', '本回合中，我方当前出战角色下一次造成的伤害+2。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/75833613/4bbbf27e898aeace567039c5c2bb2a7c_4533106343661611310.png',
-        1, 4, 2, [9], 0, 0, (_card, event) => {
-            const hidxs: number[] = [event?.heros?.findIndex(h => h.isFront) ?? -1];
-            return { inStatus: [heroStatus(2030)], hidxs }
-        }),
+        1, 4, 2, [9], 0, 0, (_card, { hidxs }) => ({ inStatus: [heroStatus(2030)], hidxs })),
 
     589: elCard(589, 5, 'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/75833613/f3fdbb9e308bfd69c04aa4e6681ad71d_7543590216853591638.png'),
 
     590: new GICard(590, '元素共鸣：迅捷之风', '切换到目标角色，并生成1点[万能元素骰]。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/75833613/707f537df32de90d61b3ac8e8dcd4daf_7351067372939949818.png',
         1, 5, 2, [9], 0, 1, (_card, event) => {
-            const { hidxs = [], heros = [] } = event;
+            const { heros = [], hidxs } = event;
             return {
                 cmds: [{ cmd: 'switch-to', hidxs }, { cmd: 'getDice', cnt: 1, element: 0 }],
                 canSelectHero: heros.map(h => !h.isFront && h.hp > 0),
@@ -1863,11 +1848,11 @@ const allCards: CardObj = {
     609: new GICard(609, '提瓦特煎蛋', '复苏目标角色，并治疗此角色1点。',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/20/1694811/981cc0d2da6a2dc2b535b1ee25a77622_592021532068551671.png',
         2, 8, 2, [-2, 5], 0, 1, (_card, event) => {
-            const { heros = [], hidxs = [] } = event;
-            const isRevived = heros[hidxs[0]].outStatus.some(ist => ist.id == 2022);
+            const { heros = [], hidxs } = event;
+            const isRevived = heros.find(h => h.isFront)?.outStatus.some(ist => ist.id == 2022);
             const canSelectHero = heros.map(h => h.hp <= 0 && !isRevived);
             return {
-                cmds: [{ cmd: 'revive', cnt: 1 }],
+                cmds: [{ cmd: 'revive', cnt: 1, hidxs }],
                 inStatus: [heroStatus(2009)],
                 outStatus: [heroStatus(2022)],
                 canSelectHero,
@@ -1947,15 +1932,15 @@ const allCards: CardObj = {
     704: new GICard(704, '沉没的预言', '[战斗行动]：我方出战角色为【莫娜】时，装备此牌。；【莫娜】装备此牌后，立刻使用一次【命定星轨】。；装备有此牌的【莫娜】出战期间，我方引发的[水元素相关反应]伤害额外+2。',
         'https://patchwiki.biligame.com/images/ys/d/de/1o1lt07ey988flsh538t7ywvnpzvzjk.png',
         3, 1, 0, [6, 7], 1103, 1, (_card, event) => talentHandle(event, 2, () => {
-            const { heros = [], hidxs = [] } = event;
-            return [() => ({}), { addDmgCdt: isCdt(heros[hidxs[0]]?.isFront, 2) }]
+            const { heros = [], hidxs: [hidx] = [] } = event;
+            return [, { addDmgCdt: isCdt(heros[hidx]?.isFront, 2) }]
         }, 'el1Reaction'), { expl: talentExplain(1103, 2), energy: 3 }),
 
     705: new GICard(705, '流火焦灼', '[战斗行动]：我方出战角色为【迪卢克】时，装备此牌。；【迪卢克】装备此牌后，立刻使用一次【逆焰之刃】。；装备有此牌的【迪卢克】每回合第2次使用【逆焰之刃】时，少花费1个[火元素骰]。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/75720734/5d72a776e175c52de3c4ebb113f2b9e7_2138984540269318755.png',
         3, 2, 0, [6, 7], 1201, 1, (_card, event) => talentHandle(event, 1, () => {
             const { minusSkillRes } = minusDiceSkillHandle(event, { skilltype2: [0, 0, 1] }, skill => skill.useCnt == 1);
-            return [() => ({}), { ...minusSkillRes }]
+            return [, { ...minusSkillRes }]
         }), { expl: talentExplain(1201, 1) }),
 
     706: new GICard(706, '混元熵增论', '[战斗行动]：我方出战角色为【砂糖】时，装备此牌。；【砂糖】装备此牌后，立刻使用一次【禁·风灵作成·柒伍同构贰型】。；装备有此牌的【砂糖】生成的【大型风灵】已转换成另一种元素后：我方造成的此类元素伤害+1。',
@@ -1994,10 +1979,10 @@ const allCards: CardObj = {
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/07/183046623/7b07468873ea01ee319208a3e1f608e3_1769364352128477547.png',
         3, 3, 0, [6, 7], 1302, 1,
         (card, event) => talentHandle(event, 1, () => {
-            const { heros = [], hidxs = [] } = event;
+            const { heros = [], hidxs: [fhidx] = [] } = event;
             const nhidxs: number[] = [];
             for (let i = 0; i < heros.length; ++i) {
-                const hidx = (i + hidxs[0]) % heros.length;
+                const hidx = (i + fhidx) % heros.length;
                 const hero = heros[hidx];
                 if (hero.hp > 0 && hero.element == 3 && hero.energy < hero.maxEnergy) {
                     nhidxs.push(hidx);
@@ -2041,7 +2026,7 @@ const allCards: CardObj = {
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/07/183046623/616ba40396a3998560d79d3e720dbfd2_3275119808720081204.png',
         4, 4, 0, [6, 7], 1003, 1,
         (card, event) => talentHandle(event, 1, () => {
-            const { hidxs = [] } = event;
+            const { hidxs } = event;
             const hdres = card.perCnt > 0 ? { heal: 2, hidxs } : {}
             return [() => {
                 if (card.perCnt <= 0) return;
@@ -2081,7 +2066,7 @@ const allCards: CardObj = {
     725: new GICard(725, '重铸：岩盔', '[战斗行动]：我方出战角色为【丘丘岩盔王】时，装备此牌。；【丘丘岩盔王】装备此牌后，立刻使用一次【Upa Shato】。；装备有此牌的【丘丘岩盔王】击倒地方角色后：【丘丘岩盔王】重新附属【岩盔】和【坚岩之力】。',
         'https://patchwiki.biligame.com/images/ys/9/9f/ijpaagvk7o9jh1pzb933vl9l2l4islk.png',
         4, 6, 0, [6, 7], 1801, 1, (_card, event) => talentHandle(event, 2, () =>
-            [() => ({}), { execmds: [{ cmd: 'getStatus', status: [heroStatus(2045), heroStatus(2046)] }] }], 'kill'), { expl: talentExplain(1801, 2), energy: 2 }),
+            [, { execmds: [{ cmd: 'getStatus', status: [heroStatus(2045), heroStatus(2046)] }] }], 'kill'), { expl: talentExplain(1801, 2), energy: 2 }),
 
     726: new GICard(726, '孢子增殖', '[战斗行动]：我方出战角色为【翠翎恐蕈】时，装备此牌。；【翠翎恐蕈】装备此牌后，立刻使用一次【不稳定孢子云】。；装备有此牌的【翠翎恐蕈】可累积的｢活化激能｣层数+1。',
         'https://patchwiki.biligame.com/images/ys/4/41/bj27pgk1uzd78oc9twitrw7aj1fzatb.png',
@@ -2106,7 +2091,7 @@ const allCards: CardObj = {
             const hero = heros.find(h => h.isFront);
             if (!hero) throw new Error('hero not found: heros=' + heros);
             const isAdd = hero.element == 3 && hero.inStatus.some(ist => ist.id == 2064);
-            return [() => ({}), { addDmgCdt: isCdt(isAdd, 1) }]
+            return [, { addDmgCdt: isCdt(isAdd, 1) }]
         }, ['skilltype2', 'skilltype3', 'other-skilltype2', 'other-skilltype3']), { expl: talentExplain(1306, 1) }),
 
     731: new GICard(731, '匣中玉栉', '[战斗行动]：我方出战角色为【珊瑚宫心海】时，装备此牌。；【珊瑚宫心海】装备此牌后，立刻使用一次【海人化羽】。；装备有此牌的【珊瑚宫心海】使用【海人化羽】时：召唤一个[可用次数]为1的【化海月】; 如果【化海月】已在场，则改为使其[可用次数]+1。；【仪来羽衣】存在期间，【化海月】造成的伤害+1。',
@@ -2120,26 +2105,26 @@ const allCards: CardObj = {
     733: new GICard(733, '镜华风姿', '[战斗行动]：我方出战角色为【神里绫人】时，装备此牌。；【神里绫人】装备此牌后，立刻使用一次【神里流·镜花】。；装备有此牌的【神里绫人】触发【泷廻鉴花】的效果时，对于生命值不多于6的敌人伤害+1。',
         'https://uploadstatic.mihoyo.com/ys-obc/2023/04/11/12109492/a222141c6f996c368c642afe39572e9f_2099787104835776248.png',
         3, 1, 0, [6, 7], 1105, 1, (_card, event) => talentHandle(event, 1, () => {
-            const { eheros = [], heros = [], hidxs = [] } = event;
-            const isAdd = (eheros.find(h => h.isFront)?.hp ?? 10) <= 6 && heros[hidxs[0]].inStatus.some(ist => ist.id == 2067);
-            return [() => ({}), { addDmgCdt: isCdt(isAdd, 1) }]
+            const { eheros = [], heros = [], hidxs: [hidx] = [] } = event;
+            const isAdd = (eheros.find(h => h.isFront)?.hp ?? 10) <= 6 && heros[hidx].inStatus.some(ist => ist.id == 2067);
+            return [, { addDmgCdt: isCdt(isAdd, 1) }]
         }, 'skilltype1'), { expl: talentExplain(1105, 1) }),
 
     734: new GICard(734, '荒泷第一', '[战斗行动]：我方出战角色为【荒泷一斗】时，装备此牌。；【荒泷一斗】装备此牌后，立刻使用一次【喧哗屋传说】。；装备有此牌的【荒泷一斗】每回合第2次及以后使用【喧哗屋传说】时：如果触发【乱神之怪力】，伤害额外+1。',
         'https://uploadstatic.mihoyo.com/ys-obc/2023/04/11/12109492/46588f6b5a254be9e797cc0cfe050dc7_8733062928845037185.png',
         1, 6, 0, [6, 7], 1503, 1, (_card, event) => talentHandle(event, 0, () => {
-            const { heros = [], hidxs = [], isChargedAtk = false } = event;
-            const { inStatus, skills: [{ useCnt }] } = heros[hidxs[0]];
-            return [() => ({}), { addDmgCdt: isCdt(isChargedAtk && useCnt >= 1 && inStatus.some(ist => ist.id == 2068), 1) }]
+            const { heros = [], hidxs: [hidx] = [], isChargedAtk = false } = event;
+            const { inStatus, skills: [{ useCnt }] } = heros[hidx];
+            return [, { addDmgCdt: isCdt(isChargedAtk && useCnt >= 1 && inStatus.some(ist => ist.id == 2068), 1) }]
         }, 'skilltype1'), { expl: talentExplain(1503, 0), anydice: 2 }),
 
     735: new GICard(735, '眼识殊明', '[战斗行动]：我方出战角色为【提纳里】时，装备此牌。；【提纳里】装备此牌后，立刻使用一次【识果种雷】。；装备有此牌的【提纳里】在附属【通塞识】期间，进行[重击]时少花费1个[无色元素骰]。',
         'https://uploadstatic.mihoyo.com/ys-obc/2023/04/11/12109492/e949b69145f320ae71ce466813339573_5047924760236436750.png',
         4, 7, 0, [6, 7], 1602, 1, (_card, event) => talentHandle(event, 1, () => {
-            const { isChargedAtk = false, heros = [], hidxs = [] } = event;
+            const { isChargedAtk = false, heros = [], hidxs: [hidx] = [] } = event;
             const { minusSkillRes } = minusDiceSkillHandle(event, { skilltype1: [0, 0, 1] },
-                () => isChargedAtk && heros[hidxs[0]].inStatus.some(ist => ist.id == 2071));
-            return [() => ({}), { ...minusSkillRes }]
+                () => isChargedAtk && heros[hidx].inStatus.some(ist => ist.id == 2071));
+            return [, { ...minusSkillRes }]
         }, ''), { expl: talentExplain(1602, 1) }),
 
     736: new GICard(736, '忘玄', '[战斗行动]：我方出战角色为【申鹤】时，装备此牌。；【申鹤】装备此牌后，立刻使用一次【仰灵威召将役咒】。；装备有此牌的【申鹤】生成的【冰翎】被我方角色的｢普通攻击｣触发时：不消耗[可用次数]。(每回合1次)。',
@@ -2159,7 +2144,7 @@ const allCards: CardObj = {
         2, 2, 0, [6, 7], 1207, 1, (_card, event) => talentHandle(event, 1, () => {
             const { heros = [] } = event;
             const isTalent = (heros.find(h => h.id == 1207)?.hp ?? 10) <= 6;
-            return [() => ({}), { addDmgCdt: isCdt(isTalent, 1) }]
+            return [, { addDmgCdt: isCdt(isTalent, 1) }]
         }, 'fire-dmg'), { expl: talentExplain(1207, 1) }),
 
     740: new GICard(740, '万千的愿望', '[战斗行动]：我方出战角色为【雷电将军】时，装备此牌。；【雷电将军】装备此牌后，立刻使用一次【奥义·梦想真说】。；装备有此牌的【雷电将军】使用【奥义·梦想真说】时每消耗1点｢愿力｣，都使造成的伤害额外+1。',
@@ -2181,10 +2166,10 @@ const allCards: CardObj = {
     744: new GICard(744, '炊金馔玉', '[战斗行动]：我方出战角色为【钟离】时，装备此牌。；【钟离】装备此牌后，立刻使用一次【地心·磐礴】。；装备有此牌的【钟离】在场时，我方出战角色在[护盾]角色状态或[护盾]出战状态的保护下时，我方召唤物造成的[岩元素伤害]+1。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/05/24/255120502/1742e240e25035ec13155e7975f7fe3e_495500543253279445.png',
         5, 6, 0, [6, 7], 1504, 1, (_card, event) => talentHandle(event, 2, () => {
-            const { heros = [], hidxs = [] } = event;
-            const istShield = heros[hidxs[0]]?.inStatus.some(ist => ist.type.includes(7));
+            const { heros = [], hidxs: [hidx] = [] } = event;
+            const istShield = heros[hidx]?.inStatus.some(ist => ist.type.includes(7));
             const ostShield = heros.find(h => h.isFront)?.outStatus.some(ost => ost.type.includes(7));
-            return [() => ({}), { addDmgSummon: isCdt(istShield || ostShield, 1) }]
+            return [, { addDmgSummon: isCdt(istShield || ostShield, 1) }]
         }, 'rock-dmg'), { expl: talentExplain(1504, 2) }),
 
     745: new GICard(745, '心识蕴藏之种', '[战斗行动]：我方出战角色为【纳西妲】时，装备此牌。；【纳西妲】装备此牌后，立刻使用一次【心景幻成】。；装备有此牌的【纳西妲】在场时，根据我方队伍中存在的元素类型提供效果：；‹2火元素›：【摩耶之殿】在场时，自身受到元素反应触发【蕴种印】的敌方角色，所受【蕴种印】的[穿透伤害]改为[草元素伤害];；‹3雷元素›：【摩耶之殿】入场时，使当前对方场上【蕴种印】的[可用次数]+1;；‹1水元素›：装备有此牌的【纳西妲】所生成的【摩耶之殿】初始持续回合+1。',
@@ -2206,8 +2191,8 @@ const allCards: CardObj = {
     748: new GICard(748, '烬火重燃', '【入场时：】如果装备有此牌的【深渊咏者·渊火】已触发过【火之新生】，就立刻弃置此牌，为角色附属【渊火加护】。；装备有此牌的【深渊咏者·渊火】触发【火之新生】时：弃置此牌，为角色附属【渊火加护】。',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/c065153c09a84ed9d7c358c8cc61171f_8734243408282507546.png',
         2, 2, 0, [6], 1742, 1, (_card, event) => {
-            const { heros = [], hidxs = [] } = event;
-            const isTriggered = heros[hidxs[0]]?.inStatus.every(ist => ist.id != 2092);
+            const { heros = [], hidxs: [hidx] = [] } = event;
+            const isTriggered = heros[hidx]?.inStatus.every(ist => ist.id != 2092);
             return {
                 inStatus: isCdt(isTriggered, [heroStatus(2093)]),
                 isDestroy: isTriggered,
@@ -2221,10 +2206,10 @@ const allCards: CardObj = {
     750: new GICard(750, '最终解释权', '[战斗行动]：我方出战角色为【烟绯】时，装备此牌。；【烟绯】装备此牌后，立刻使用一次【火漆印制】。；装备有此牌的【烟绯】进行[重击]时：对生命值不多于6的敌人造成的伤害+1。；如果触发了【丹火印】，则在技能结算后摸1张牌。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/07/14/183046623/ad8a2130c54da3c3f25d094b7019cb69_4536540887547691720.png',
         1, 2, 0, [6, 7], 1208, 1, (_card, event) => talentHandle(event, 0, () => {
-            const { isChargedAtk = false, heros = [], hidxs = [], eheros = [] } = event;
-            return [() => ({}), {
-                addDmgCdt: isCdt(isChargedAtk && (eheros.find(h => h.isFront)?.hp ?? 10) <= 6, 1),
-                execmds: isCdt(isChargedAtk && heros[hidxs[0]].inStatus.some(ist => ist.id == 2096), [{ cmd: 'getCard', cnt: 1 }])
+            const { isChargedAtk = false, heros = [], hidxs: [hidx] = [], eheros = [], ehidx = -1 } = event;
+            return [, {
+                addDmgCdt: isCdt(isChargedAtk && (eheros[ehidx]?.hp ?? 10) <= 6, 1),
+                execmds: isCdt(isChargedAtk && heros[hidx]?.inStatus.some(ist => ist.id == 2096), [{ cmd: 'getCard', cnt: 1 }])
             }]
         }, 'skilltype1'), { expl: talentExplain(1208, 0), anydice: 2 }),
 
@@ -2233,18 +2218,18 @@ const allCards: CardObj = {
         3, 5, 0, [6, 7], 1405, 1, (_card, event) => talentHandle(event, 1, () => {
             const { trigger = '' } = event;
             const windEl = trigger.startsWith('el5Reaction') ? Number(trigger.slice(trigger.indexOf(':') + 1)) : 5;
-            return [() => ({}), { outStatus: isCdt(windEl < 5, [heroStatus(2118 + windEl)]) }]
+            return [, { outStatus: isCdt(windEl < 5, [heroStatus(2118 + windEl)]) }]
         }, 'el5Reaction'), { expl: talentExplain(1405, 1) }),
 
     752: new GICard(752, '脉冲的魔女', '切换到装备有此牌的【丽莎】后：使敌方出战角色附属【引雷】。(每回合1次)',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/08/12/203927054/608b48c391745b8cbae976d971b8b8c0_2956537094434701939.png',
         1, 3, 0, [6], 1309, 1, (card, event) => {
-            const { heros = [], hidxs = [], eheros = [] } = event;
+            const { heros = [], hidxs: [hidx] = [], ehidx = -1 } = event;
             return {
                 trigger: isCdt(card.perCnt > 0, ['change-to']),
                 exec: () => {
                     --card.perCnt;
-                    return { inStatusOppo: [heroStatus(2099, [heros[hidxs[0]].skills[1]])], hidxs: [eheros.findIndex(h => h.isFront)] }
+                    return { inStatusOppo: [heroStatus(2099, [heros[hidx].skills[1]])], hidxs: [ehidx] }
                 },
             }
         }, { pct: 1, expl: [heroStatus(2099)] }),
@@ -2257,22 +2242,22 @@ const allCards: CardObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/08/12/82503813/d10a709aa03d497521636f9ef39ee531_3239361065263302475.png',
         3, 6, 0, [6, 7], 1505, 1, (_card, event) => talentHandle(event, 1, () => {
             const { summons = [], isFallAtk = false } = event;
-            return [() => ({}), { addDmgCdt: isCdt(summons.some(smn => smn.id == 3040) && isFallAtk, 1) }]
+            return [, { addDmgCdt: isCdt(summons.some(smn => smn.id == 3040) && isFallAtk, 1) }]
         }, ['skilltype1', 'other-skilltype1']), { expl: talentExplain(1505, 1) }),
 
     755: new GICard(755, '梦迹一风', '[战斗行动]：我方出战角色为【流浪者】时，装备此牌。；【流浪者】装备此牌后，立刻使用一次【羽画·风姿华歌】。；装备有此牌的【流浪者】在【优风倾姿】状态下进行[重击]后：下次从该角色执行｢切换角色｣行动时少花费1个元素骰，并且造成1点[风元素伤害]。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/09/25/258999284/08a42903fcff2a5249ef1fc4021ecf7a_492792879105973370.png',
         4, 5, 0, [6, 7], 1406, 1, (_card, event) => talentHandle(event, 1, () => {
-            const { isChargedAtk = false, heros = [], hidxs = [] } = event;
-            const hasSts2102 = heros[hidxs[0]].inStatus.some(ist => ist.id == 2102);
-            return [() => ({}), { execmds: isCdt(isChargedAtk && hasSts2102, [{ cmd: 'getStatus', status: [heroStatus(2103)] }]) }]
+            const { isChargedAtk = false, heros = [], hidxs: [hidx] = [] } = event;
+            const hasSts2102 = heros[hidx]?.inStatus.some(ist => ist.id == 2102);
+            return [, { execmds: isCdt(isChargedAtk && hasSts2102, [{ cmd: 'getStatus', status: [heroStatus(2103)] }]) }]
         }, 'skilltype1'), { expl: talentExplain(1406, 1) }),
 
     756: new GICard(756, '崇诚之真', '[战斗行动]：我方出战角色为【迪希雅】时，装备此牌。；【迪希雅】装备此牌后，立刻使用一次【熔铁流狱】。；【结束阶段：】如果装备有此牌的【迪希雅】生命值不多于6，则治疗该角色2点。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/09/25/258999284/161a55bb8e3e5141557f38536579e897_3725263134237782114.png',
         4, 2, 0, [6, 7], 1209, 1, (_card, event) => talentHandle(event, 1, () => {
             const { heros = [], hidxs = [] } = event;
-            return [() => ({}), { execmds: isCdt<Cmds[]>((heros[hidxs[0]]?.hp ?? 10) <= 6, [{ cmd: 'heal', cnt: 2, hidxs }]) }]
+            return [, { execmds: isCdt<Cmds[]>((heros[hidxs[0]]?.hp ?? 10) <= 6, [{ cmd: 'heal', cnt: 2, hidxs }]) }]
         }, 'phase-end'), { expl: talentExplain(1209, 1) }),
 
     757: new GICard(757, '慈惠仁心', '[战斗行动]：我方出战角色为【瑶瑶】时，装备此牌。；【瑶瑶】装备此牌后，立刻使用一次【云台团团降芦菔】。；装备有此牌的【瑶瑶】生成的【月桂·抛掷型】，在[可用次数]仅剩余最后1次时造成的伤害和治疗各+1。',
@@ -2299,17 +2284,17 @@ const allCards: CardObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/09/258999284/3914bb6ef21abc1f7e373cfe38d8be27_3734095446197720091.png',
         3, 1, 0, [6, 7], 1109, 1, (_card, event) => talentHandle(event, 1, () => {
             const { heros = [] } = event;
-            return [() => ({}), { element: 0, cnt: Math.min(3, new Set(heros.map(h => h.element)).size) }]
+            return [, { element: 0, cnt: Math.min(3, new Set(heros.map(h => h.element)).size) }]
         }, 'phase-dice'), { expl: talentExplain(1109, 1) }),
 
     763: new GICard(763, '完场喝彩', '[战斗行动]：我方出战角色为【林尼】时，装备此牌。；【林尼】装备此牌后，立刻使用一次【隐具魔术箭】。；装备有此牌的【林尼】在场时，【林尼】自身和【怪笑猫猫帽】对具有‹2火元素附着›的角色造成的伤害+2。(每回合1次)',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/19/258999284/be471c09e294aaf12766ee17b624ddcc_5013564012859422460.png',
         3, 2, 0, [6, 7], 1210, 1, (card, event) => talentHandle(event, 1, () => {
-            const { heros = [], eheros = [], hidxs = [] } = event;
+            const { heros = [], eheros = [], hidxs: [hidx] = [] } = event;
             const isAttachEl2 = eheros.find(h => h.isFront)?.attachElement.includes(2);
             return [() => {
                 --card.perCnt;
-            }, { addDmgCdt: isCdt(card.perCnt > 0 && heros[hidxs[0]].isFront && isAttachEl2, 2) }]
+            }, { addDmgCdt: isCdt(card.perCnt > 0 && heros[hidx]?.isFront && isAttachEl2, 2) }]
         }, ['skill']), { pct: 1, expl: talentExplain(1210, 1) }),
 
     764: new GICard(764, '如影流露的冷刃', '[战斗行动]：我方出战角色为【琳妮特】时，装备此牌。；【琳妮特】装备此牌后，立刻使用一次【谜影障身法】。；装备有此牌的【琳妮特】每回合第二次使用【谜影障身法】时：伤害+2，并强制敌方切换到前一个角色。',
@@ -2321,11 +2306,8 @@ const allCards: CardObj = {
         3, 6, 0, [6, 7], 1506, 1, (card, event) => talentHandle(event, 1, () => {
             const { heros = [], isSkill = -1 } = event;
             const isUse = isSkill > -1 && heros.find(h => h.isFront)?.outStatus.some(ost => ost.id == 2135) && card.perCnt > 0;
-            if (!isUse) return [() => ({})]
-            return [() => {
-                --card.perCnt;
-                return { cmds: [{ cmd: 'getCard', cnt: 1 }] }
-            }]
+            if (!isUse) return;
+            return [() => { --card.perCnt }, { execmds: [{ cmd: 'getCard', cnt: 1 }] }]
         }, ['rock-dmg']), { pct: 1, expl: talentExplain(1506, 1) }),
 
     766: new GICard(766, '正理', '[战斗行动]：我方出战角色为【艾尔海森】时，装备此牌。；【艾尔海森】装备此牌后，立刻使用一次【殊境·显象缚结】。；装备有此牌的【艾尔海森】使用【殊境·显象缚结】时，如果消耗了持续回合至少为1的【琢光镜】，则总是附属持续回合为3的【琢光镜】，并且摸1张牌。',
@@ -2335,9 +2317,9 @@ const allCards: CardObj = {
     767: new GICard(767, '苦痛奉还', '我方出战角色为「女士」时，才能打出：入场时，生成3个「女士」当前元素类型的元素骰。；角色受到至少为3点的伤害时：抵消1点伤害，然后根据「女士」的形态对敌方出战角色附属【严寒】或【炽热】。(每回合1次)',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/19/258999284/b053865b60ec217331ea86ff7fb8789c_3260337021267875040.png',
         3, 8, 0, [-1, 6], 1702, 1, (card, event) => {
-            const { heros = [], hidxs = [], restDmg = -1 } = event;
-            if (hidxs.length == 0) return;
-            const hero = heros[hidxs[0]];
+            const { heros = [], hidxs: [hidx] = [], restDmg = -1 } = event;
+            if (hidx == undefined) return;
+            const hero = heros[hidx];
             if (restDmg > -1) {
                 if (restDmg < 3 || card.perCnt == 0) return { restDmg }
                 --card.perCnt;
@@ -2361,9 +2343,9 @@ const allCards: CardObj = {
     771: new GICard(771, '晦朔千引', '[战斗行动]：我方出战角色为【若陀龙王】时，对该角色打出。使若陀龙王附属【磐岩百相·元素凝晶】，然后生成每种我方角色所具有的元素类型的元素骰各1个。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/19/258999284/5fd09f6cb9ecdc308105a2965989fdec_6866194267097059630.png',
         2, 8, 2, [6, 7], 1802, 1, (_card, event) => {
-            const { heros = [], hidxs = [] } = event;
+            const { heros = [], hidxs: [hidx] = [] } = event;
             const element = [...new Set(heros.map(h => h.element))];
-            return { inStatus: [heroStatus(2145, heros[hidxs[0]].skills[1].src)], cmds: [{ cmd: 'getDice', cnt: heros.length, element }] }
+            return { inStatus: [heroStatus(2145, heros[hidx].skills[1].src)], cmds: [{ cmd: 'getDice', cnt: heros.length, element }] }
         }, { expl: [heroStatus(2145)] }),
 
     772: new GICard(772, '僚佐的才巧', '[战斗行动]：我方出战角色为【托马】时，装备此牌。；【托马】装备此牌后，立刻使用一次【真红炽火之大铠】。；装备有此牌的【托马】生成的【炽火大铠】，初始[可用次数]+1。',
@@ -2373,8 +2355,8 @@ const allCards: CardObj = {
     773: new GICard(773, '偷懒的新方法', '[战斗行动]：我方出战角色为【早柚】时，装备此牌。；【早柚】装备此牌后，立刻使用一次【呜呼流·风隐急进】。；装备有此牌的【早柚】为出战角色期间，我方引发扩散反应时：摸2张牌。(每回合1次)',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/01/27/258999284/8399149d2618f3566580df22b153579a_4849308244790424730.png',
         3, 5, 0, [6, 7], 1408, 1, (card, event) => talentHandle(event, 1, () => {
-            const { heros = [], hidxs = [] } = event;
-            const isUse = heros[hidxs[0]]?.isFront && card.perCnt > 0;
+            const { heros = [], hidxs: [hidx] = [] } = event;
+            const isUse = heros[hidx]?.isFront && card.perCnt > 0;
             return [() => {
                 if (isUse) --card.perCnt;
             }, { execmds: isCdt<Cmds[]>(isUse, [{ cmd: 'getCard', cnt: 2 }]) }]
@@ -2383,15 +2365,15 @@ const allCards: CardObj = {
     774: new GICard(774, '严霜棱晶', '我方出战角色为【无相之冰】时，才能打出：使其附属【冰晶核心】。；装备有此牌的【无相之冰】触发【冰晶核心】后：对敌方出战角色附属【严寒】。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/01/27/258999284/71d1da569b1927b33c9cd1dcf04c7ab1_880598011600009874.png',
         1, 4, 0, [6], 1703, 1, (_card, event) => {
-            const { heros = [], hidxs = [] } = event;
-            return { isValid: heros[hidxs[0]]?.isFront, inStatus: [heroStatus(2157)] }
+            const { heros = [], hidxs: [hidx] = [] } = event;
+            return { isValid: heros[hidx]?.isFront, inStatus: [heroStatus(2157)] }
         }, { expl: [...talentExplain(1703, 3), heroStatus(2137)] }),
 
     775: new GICard(775, '明珠固化', '我方出战角色为【千年珍珠骏麟】时，才能打出：入场时，使【千年珍珠骏麟】附属[可用次数]为1的【原海明珠】; 如果已附属【原海明珠】，则使其[可用次数]+1。；装备有此牌的【千年珍珠骏麟】所附属的【原海明珠】抵消召唤物造成的伤害时，改为每回合2次不消耗[可用次数]。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/01/25/258999284/ec966272143de66e191950a6016cf14f_3693512171806066057.png',
         0, 8, 0, [6], 1763, 1, (_card, event) => {
-            const { heros = [], hidxs = [] } = event;
-            const hero = heros[hidxs[0]];
+            const { heros = [], hidxs: [hidx] = [] } = event;
+            const hero = heros[hidx];
             const cnt = (hero.inStatus.find(ist => ist.id == 2158)?.useCnt ?? 0) + 1;
             return { isValid: hero?.isFront, inStatus: [heroStatus(2158, true, cnt, 1)] }
         }, { expl: [heroStatus(2158)] }),
@@ -2409,8 +2391,8 @@ const allCards: CardObj = {
     777: new GICard(777, '古海孑遗的权柄', '[战斗行动]：我方出战角色为【那维莱特】时，装备此牌。；【那维莱特】装备此牌后，立刻使用一次【如水从平】。；我方角色引发[水元素相关反应]后：装备有此牌的【那维莱特】接下来2次造成的伤害+1。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/03/06/258999284/d419604605c1acde00b841ecf8c82864_58733338663118408.png',
         1, 1, 0, [6, 7], 1110, 1, (_card, event) => talentHandle(event, 0, () => {
-            const { isSkill = -1, hidxs = [] } = event;
-            return [() => ({}), { inStatus: isCdt(isSkill > -1, [heroStatus(2166)]), hidxs }]
+            const { isSkill = -1, hidxs } = event;
+            return [, { inStatus: isCdt(isSkill > -1, [heroStatus(2166)]), hidxs }]
         }, ['el1Reaction', 'other-el1Reaction']), { expl: talentExplain(1110, 0), anydice: 2 }),
 
     778: new GICard(778, '沿途百景会心', '[战斗行动]：我方出战角色为【绮良良】时，装备此牌。；【绮良良】装备此牌后，立刻使用一次【呜喵町飞足】。；装备有此牌的【绮良良】为出战角色，我方进行｢切换角色｣行动时：少花费1个元素骰。(每回合1次)',
@@ -2434,7 +2416,7 @@ const allCards: CardObj = {
     780: new GICard(780, '割舍软弱之心', '[战斗行动]：我方出战角色为【久岐忍】时，装备此牌。；【久岐忍】装备此牌后，立刻使用一次【御咏鸣神刈山祭】。；装备有此牌的【久岐忍】被击倒时：角色[免于被击倒]，并治疗该角色到1点生命值。(每回合1次)；如果装备有此牌的【久岐忍】生命值不多于5，则该角色造成的伤害+1。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/b53d6688202a139f452bda31939162f8_3511216535123780784.png',
         3, 3, 0, [6, 7, -4], 1311, 1, (card, event) => talentHandle(event, 2, () => {
-            const { heros = [], hidxs = [], trigger = '', reset = false } = event;
+            const { heros = [], hidxs: [hidx] = [], trigger = '', reset = false } = event;
             if (reset) {
                 if (!card.subType.includes(-4)) card.subType.push(-4);
                 return;
@@ -2445,7 +2427,7 @@ const allCards: CardObj = {
                     card.subType.pop();
                 }
             }, {
-                addDmgCdt: isCdt((heros[hidxs[0]]?.hp ?? 10) <= 5, 1),
+                addDmgCdt: isCdt((heros[hidx]?.hp ?? 10) <= 5, 1),
                 execmds: isCdt(card.perCnt > 0 && trigger == 'will-killed', [{ cmd: 'revive', cnt: 1 }])
             }]
         }, [...((event.trigger == 'skill' ? ['skill'] : []) as Trigger[]), ...((card.perCnt > 0 ? ['will-killed'] : []) as Trigger[])]),
@@ -2458,8 +2440,8 @@ const allCards: CardObj = {
     782: new GICard(782, '暗流涌动', '【入场时：】如果装备有此牌的【深渊使徒·激流】已触发过【水之新生】，则在对方场上生成【暗流的诅咒】。；装备有此牌的【深渊使徒·激流】被击倒或触发【水之新生】时：在对方场上生成【暗流的诅咒】。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/1dc62c9d9244cd9d63b6f01253ca9533_7942036787353741713.png',
         1, 1, 0, [6], 1723, 1, (_card, event) => {
-            const { heros = [], hidxs = [] } = event;
-            const isTriggered = heros[hidxs[0]]?.inStatus.every(ist => ist.id != 2181);
+            const { heros = [], hidxs: [hidx] = [] } = event;
+            const isTriggered = heros[hidx]?.inStatus.every(ist => ist.id != 2181);
             return {
                 outStatusOppo: isCdt(isTriggered, [heroStatus(2180)]),
                 trigger: ['will-killed'],
@@ -2469,17 +2451,14 @@ const allCards: CardObj = {
 
     783: new GICard(783, '熔火铁甲', '【入场时：】对装备有此牌的【铁甲熔火帝皇】[附着火元素]。；我方除【重甲蟹壳】以外的[护盾]状态或[护盾]出战状态被移除后：装备有此牌的【铁甲熔火帝皇】附属2层【重甲蟹壳】。(每回合1次)',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/c6d40de0f6da94fb8a8ddeccc458e5f0_8856536643600313687.png',
-        1, 2, 0, [6], 1744, 1, (_card, event) => {
-            const { hidxs = [] } = event;
-            return { cmds: [{ cmd: 'attach', hidxs, element: 2 }] }
-        }, { expl: [heroStatus(2182)], pct: 1 }),
+        1, 2, 0, [6], 1744, 1, (_card, { hidxs }) => ({ cmds: [{ cmd: 'attach', hidxs, element: 2 }] }), { expl: [heroStatus(2182)], pct: 1 }),
 
     784: new GICard(784, '予行恶者以惩惧', '[战斗行动]：我方出战角色为【莱欧斯利】时，装备此牌。；【莱欧斯利】装备此牌后，立刻使用一次【迅烈倾霜拳】。；装备有此牌的【莱欧斯利】受到伤害或治疗后，此牌累积1点｢惩戒计数｣。；装备有此牌的【莱欧斯利】使用技能时：如果已有3点｢惩戒计数｣，则消耗3点使此技能伤害+1。',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_Wriothesley.webp',
         1, 4, 0, [6, 7], 1011, 1, (card, event) => talentHandle(event, 0, () => {
-            const { hidxs = [], heal = [], trigger = '' } = event;
+            const { hidxs: [hidx] = [], heal = [], trigger = '' } = event;
             return [() => {
-                if (trigger == 'getdmg' || trigger == 'heal' && heal[hidxs[0]] > 0) ++card.useCnt;
+                if (trigger == 'getdmg' || trigger == 'heal' && heal[hidx] > 0) ++card.useCnt;
                 else if (trigger == 'skill' && card.useCnt >= 3) card.useCnt -= 3;
             }, { addDmgCdt: isCdt(card.useCnt >= 3, 1) }]
         }, ['getdmg', 'heal', 'skill']), { expl: talentExplain(1011, 0), anydice: 2 }),
@@ -2501,7 +2480,7 @@ const allCards: CardObj = {
         3, 6, 0, [6, 7], 1507, 1, (_card, event) => talentHandle(event, 2, () => {
             const { hcards = [] } = event;
             if (hcards.length > 0) return;
-            return [() => ({}), { addDmgCdt: 2 }]
+            return [, { addDmgCdt: 2 }]
         }, ['skilltype1', 'other-skilltype1']), { expl: talentExplain(1507, 2), energy: 2 }),
 
     788: new GICard(788, '预算师的技艺', '[战斗行动]：我方出战角色为【卡维】时，装备此牌。；【卡维】装备此牌后，立刻使用一次【画则巧施】。；装备有此牌的【卡维】在场时，我方触发【迸发扫描】的效果后：将1张所[舍弃]卡牌的复制加入你的手牌。如果该牌为｢场地｣牌，则使本回合中我方下次打出｢场地｣时少花费2个元素骰。(每回合1次)',

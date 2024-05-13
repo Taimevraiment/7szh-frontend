@@ -38,6 +38,16 @@ type SiteObj = {
     [id: string]: (...args: any) => GISite
 }
 
+const DICE_WEIGHT = [8, 2, 3, 4, 1, 7, 5, 6]; // 吃骰子的优先级权重(越低越优先)
+
+const getSortedDices = (dices: number[]) => {
+    const diceCnt = new Map();
+    dices.forEach(d => diceCnt.set(d, (diceCnt.get(d) ?? 0) + 1));
+    return [...diceCnt]
+        .sort((a, b) => b[1] * Math.sign(b[0]) - a[1] * Math.sign(a[0]) || DICE_WEIGHT[a[0]] - DICE_WEIGHT[b[0]])
+        .flatMap(([d, cnt]) => new Array(cnt).fill(d));
+}
+
 const siteTotal: SiteObj = {
     // 派蒙
     4001: (cardId: number) => new GISite(4001, cardId, 2, 0, 1, site => ({
@@ -90,18 +100,20 @@ const siteTotal: SiteObj = {
             trigger: ['phase-end', 'phase-start'],
             exec: () => {
                 if (trigger == 'phase-end') {
-                    const tmpdices: number[] = [];
-                    const newdices: number[] = [];
-                    while (dices.length > 0) {
-                        const dice = dices.pop() ?? 0;
-                        if (dice > 0 && tmpdices.includes(dice) || site.cnt >= 3) {
-                            newdices.push(dice);
-                        } else {
-                            ++site.cnt;
-                            tmpdices.push(dice);
+                    const pdices = getSortedDices(dices);
+                    dices.length = 0;
+                    while (pdices.length > 0) {
+                        if (site.cnt >= 3) {
+                            dices.push(...pdices);
+                            break;
+                        }
+                        const pdice = pdices!.shift();
+                        ++site.cnt;
+                        while (pdices[0] == pdice && pdice > 0) {
+                            pdices.shift();
+                            dices.push(pdice);
                         }
                     }
-                    dices.push(...newdices);
                     return { isDestroy: false }
                 }
                 if (trigger == 'phase-start' && site.cnt >= 3) {
@@ -377,7 +389,7 @@ const siteTotal: SiteObj = {
         const { dices = [], hcards = [], card, trigger = '', minusDiceCard: mdc = 0 } = event;
         const isMinus = dices.length <= hcards.length && site.perCnt > 0;
         const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(event, { skill: [0, 0, 1] }, () => isMinus);
-        const isCard = card && card.subType.includes(6) && card.cost > mdc;
+        const isCard = card && card.subType.includes(6) && card.cost + card.anydice > mdc;
         return {
             ...minusSkillRes,
             minusDiceCard: isCdt(isMinus && isCard, 1),
@@ -398,17 +410,11 @@ const siteTotal: SiteObj = {
             trigger: ['phase-end', 'phase-start'],
             exec: () => {
                 if (trigger == 'phase-end') {
-                    const tmpdices: number[] = [];
-                    const newdices: number[] = [];
-                    while (dices.length > 0) {
-                        const dice = dices.shift() ?? 0;
-                        if (site.cnt < 2) {
-                            tmpdices.push(dice);
-                            ++site.cnt;
-                        } else newdices.push(dice);
-                    }
-                    dices.push(...newdices);
-                    site.perCnt = -tmpdices.map(v => v == 0 ? 8 : v).join('');
+                    const pdices = getSortedDices(dices);
+                    dices.length = 0;
+                    dices.push(...pdices.slice(2));
+                    site.perCnt = -pdices.slice(0, 2).map(v => v == 0 ? 8 : v).join('');
+                    site.cnt = pdices.slice(0, 2).length;
                     return { isDestroy: false }
                 } else if (trigger == 'phase-start') {
                     const element = site.perCnt.toString().slice(1).split('').map(v => Number(v) % 8);

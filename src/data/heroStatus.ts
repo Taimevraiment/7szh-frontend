@@ -126,6 +126,8 @@ const shieldStatus = (id: number, name: string, cnt = 2, mcnt = 0) => new GIStat
 
 const readySkillShieldStatus = (id: number, name: string) => new GIStatus(id, name, '准备技能期间，提供2点[护盾]，保护所附属角色。', '', 0, [7], 2, 0, -1);
 
+const oncePerRound = (id: number, name: string) => new GIStatus(id, `${name}(冷却中)`, `本回合无法再打出【${name}】。`, 'debuff', 1, [3, 10], -1, 0, 1);
+
 
 const statusTotal: StatusObj = {
     2000: () => new GIStatus(2000, '', '', '', -1, [], 0, 0, 0),
@@ -387,7 +389,7 @@ const statusTotal: StatusObj = {
     2033: (useCnt: number = 1) => new GIStatus(2033, '猫爪护盾', '为我方出战角色提供1点[护盾]。', '', 1, [7], useCnt, 0, -1),
 
     2034: (icon = '', isTalent = false) => new GIStatus(2034, '鼓舞领域', '【我方角色使用技能时：】如果该角色生命值至少为7，则使此伤害额外+2; 技能结算后，如果该角色生命值不多于6，则治疗该角色2点。；【[持续回合]：{roundCnt}】',
-        icon, 1, [1, 4], -1, 0, 2, (status, event = {}) => {
+        icon, 1, [1, 4, 6], -1, 0, 2, (status, event = {}) => {
             const { heros = [], hidx = -1, trigger = '' } = event;
             if (hidx == -1) return;
             const fHero = heros[hidx];
@@ -570,26 +572,24 @@ const statusTotal: StatusObj = {
     2052: () => new GIStatus(2052, '大梦的曲调(生效中)', '【我方下次打出｢武器｣或｢圣遗物｣手牌时：】少花费1个元素骰。',
         'buff2', 1, [4, 10], 1, 0, -1, (status, event = {}) => {
             const { card, minusDiceCard: mdc = 0 } = event;
-            const isMinus = card && [0, 1].some(v => card.subType.includes(v)) && card.cost > mdc;
-            return {
-                minusDiceCard: isCdt(isMinus, 1),
-                trigger: ['card'],
-                exec: () => {
-                    if (isMinus) --status.useCnt;
-                },
+            if (card && [0, 1].some(v => card.subType.includes(v)) && card.cost > mdc) {
+                return {
+                    minusDiceCard: 1,
+                    trigger: ['card'],
+                    exec: () => { --status.useCnt },
+                }
             }
         }),
 
     2053: () => new GIStatus(2053, '藏锋何处(生效中)', '【本回合中，我方下一次打出｢武器｣手牌时：】少花费2个元素骰。',
         'buff2', 1, [4, 10], 1, 0, 1, (status, event = {}) => {
             const { card, minusDiceCard: mdc = 0 } = event;
-            const isMinus = card && card.subType.includes(0) && card.cost > mdc;
-            return {
-                minusDiceCard: isCdt(isMinus, 2),
-                trigger: ['card'],
-                exec: () => {
-                    if (isMinus) --status.useCnt;
-                },
+            if (card && card.subType.includes(0) && card.cost > mdc) {
+                return {
+                    minusDiceCard: 2,
+                    trigger: ['card'],
+                    exec: () => { --status.useCnt },
+                }
             }
         }),
 
@@ -603,13 +603,12 @@ const statusTotal: StatusObj = {
     2055: () => new GIStatus(2055, '旧时庭园(生效中)', '本回合中，我方下次打出｢武器｣或｢圣遗物｣装备牌时少花费2个元素骰。',
         'buff2', 1, [4, 10], 1, 0, 1, (status, event = {}) => {
             const { card, minusDiceCard: mdc = 0 } = event;
-            const isMinus = card && card.subType.some(v => v < 2) && card.cost > mdc;
-            return {
-                minusDiceCard: isCdt(isMinus, 2),
-                trigger: ['card'],
-                exec: () => {
-                    if (isMinus) --status.useCnt;
-                },
+            if (card && card.subType.some(v => v < 2) && card.cost > mdc) {
+                return {
+                    minusDiceCard: 2,
+                    trigger: ['card'],
+                    exec: () => { --status.useCnt },
+                }
             }
         }),
 
@@ -672,7 +671,7 @@ const statusTotal: StatusObj = {
     2061: (name: string) => new GIStatus(2061, name + '(生效中)', '【角色在本回合中，下次对角色打出｢天赋｣或使用｢元素战技｣时：】少花费2个元素骰。',
         'buff2', 0, [3, 4, 10], 1, 0, 1, (status, event = {}) => {
             const { card, heros = [], hidx = -1, trigger = '', minusDiceCard: mdc = 0 } = event;
-            const isMinusCard = card && card.subType.includes(6) && card.userType == heros[hidx]?.id && card.cost > mdc;
+            const isMinusCard = card && card.subType.includes(6) && card.userType == heros[hidx]?.id && card.cost + card.anydice > mdc;
             const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(event, { skilltype2: [0, 0, 2] });
             return {
                 ...minusSkillRes,
@@ -1237,13 +1236,12 @@ const statusTotal: StatusObj = {
     2110: () => new GIStatus(2110, '琴音之诗(生效中)', '【本回合中，我方下一次打出｢圣遗物｣手牌时：】少花费2个元素骰。',
         'buff2', 1, [4, 10], 1, 0, 1, (status, event = {}) => {
             const { card, minusDiceCard: mdc = 0 } = event;
-            const isMinus = card && card.subType.includes(1) && card.cost > mdc;
-            return {
-                minusDiceCard: isCdt(isMinus, 2),
-                trigger: ['card'],
-                exec: () => {
-                    if (isMinus) --status.useCnt;
-                },
+            if (card && card.subType.includes(1) && card.cost > mdc) {
+                return {
+                    minusDiceCard: 2,
+                    trigger: ['card'],
+                    exec: () => { --status.useCnt },
+                }
             }
         }),
 
@@ -1314,7 +1312,7 @@ const statusTotal: StatusObj = {
             }
         }, { expl }),
 
-    2116: () => new GIStatus(2116, '本大爷还没有输！(冷却中)', '本回合无法再打出【本大爷还没有输！】。', 'debuff', 1, [3, 10], -1, 0, 1),
+    2116: () => oncePerRound(2116, '本大爷还没有输！'),
 
     2117: (expl?: ExplainContent[]) => new GIStatus(2117, '猜拳三连击·剪刀', '本角色将在下次行动时，直接使用技能：【猜拳三连击·剪刀】。',
         'buff3', 0, [10, 11], 1, 0, -1, (status, event = {}) => ({
@@ -1759,13 +1757,12 @@ const statusTotal: StatusObj = {
     2161: () => new GIStatus(2161, '净觉花(生效中)', '【本回合中，我方下次打出支援牌时：】少花费1个元素骰。',
         'buff2', 1, [4, 10], 1, 0, 1, (status, event = {}) => {
             const { card, minusDiceCard: mdc = 0 } = event;
-            const isMinus = card && card.type == 1 && card.cost > mdc;
-            return {
-                minusDiceCard: isCdt(isMinus, 1),
-                trigger: ['card'],
-                exec: () => {
-                    if (isMinus) --status.useCnt;
-                },
+            if (card && card.type == 1 && card.cost > mdc) {
+                return {
+                    minusDiceCard: 1,
+                    trigger: ['card'],
+                    exec: () => { --status.useCnt },
+                }
             }
         }),
 
@@ -2036,7 +2033,7 @@ const statusTotal: StatusObj = {
         'buff2', 0, [4], 1, 0, -1, (status, event = {}) => {
             const { card, heros = [], hidx = -1, trigger = '', minusDiceCard: mdc = 0 } = event;
             const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(event, { skill: [0, 0, 3] });
-            const isCardMinus = card && card.subType.includes(6) && card.userType == heros[hidx]?.id && card.cost > mdc;
+            const isCardMinus = card && card.subType.includes(6) && card.userType == heros[hidx]?.id && card.cost + card.anydice > mdc;
             return {
                 ...minusSkillRes,
                 minusDiceCard: isCdt(isCardMinus, 3),
@@ -2116,10 +2113,12 @@ const statusTotal: StatusObj = {
         }, { icbg: STATUS_BG_COLOR[4], expl: [heroStatus(2195)] }),
 
     2195: () => new GIStatus(2195, '狂欢值', '我方造成的伤害+1。(包括角色引发的扩散伤害)；【[可用次数]：{useCnt}(可叠加，没有上限)】',
-        'buff5', 1, [4, 6], 1, 1000, 1, status => ({
-            trigger: ['getdmg-oppo'],
+        'buff5', 1, [4, 6], 1, 1000, 1, (status, { trigger } = {}) => ({
+            trigger: ['dmg', 'dmg-wind'],
             addDmgCdt: 1,
-            exec: () => { --status.useCnt },
+            exec: () => {
+                if (trigger == 'dmg') --status.useCnt
+            },
         })),
 
     2196: (icon = '') => new GIStatus(2196, '万众瞩目', '【角色进行｢普通攻击｣时：】使角色造成的造成的[物理伤害]变为[水元素伤害]。如果角色处于｢荒｣形态，则治疗我方所有后台角色1点; 如果角色处于｢芒｣形态，则此伤害+2，但是对一位受伤最少的我方角色造成1点[穿透伤害]。；【[可用次数]：{useCnt}】',
@@ -2235,13 +2234,12 @@ const statusTotal: StatusObj = {
     2204: () => new GIStatus(2204, '预算师的技艺todo名字待定', '【本回合中，我方下次打出场地牌时：】少花费2个元素骰。',
         'buff2', 1, [4, 10], 1, 0, 1, (status, event = {}) => {
             const { card, minusDiceCard: mdc = 0 } = event;
-            const isMinus = card && card.subType.includes(2) && card.cost > mdc;
-            return {
-                minusDiceCard: isCdt(isMinus, 2),
-                trigger: ['card'],
-                exec: () => {
-                    if (isMinus) --status.useCnt;
-                },
+            if (card && card.subType.includes(2) && card.cost > mdc) {
+                return {
+                    minusDiceCard: 2,
+                    trigger: ['card'],
+                    exec: () => { --status.useCnt },
+                }
             }
         }),
 
@@ -2283,7 +2281,7 @@ const statusTotal: StatusObj = {
             }
         })),
 
-    2207: () => new GIStatus(2207, '噬骸能量块(冷却中)', '本回合无法再打出【噬骸能量块】。', 'debuff', 1, [3, 10], -1, 0, 1),
+    2207: () => oncePerRound(2207, '噬骸能量块'),
 
     2208: () => new GIStatus(2208, '亡风啸卷(生效中)', '本回合中，我方下次切换角色后，生成1个出战角色类型的元素骰。',
         'buff2', 1, [4, 10], 1, 0, 1, status => ({
@@ -2297,12 +2295,11 @@ const statusTotal: StatusObj = {
     2209: (icon = '', useCnt = 1) => new GIStatus(2209, '绿洲之滋养', '我方打出【唤醒眷属】时：少花费1个元素骰。；【[可用次数]：{useCnt}(可叠加，最多到3)】',
         icon, 1, [4], useCnt, 3, -1, (status, event = {}) => {
             const { card, minusDiceCard: mdc = 0 } = event;
-            const isMinus = card && card.id == 907 && card.cost > mdc;
-            return {
-                trigger: ['card'],
-                minusDiceCard: isCdt(isMinus, 1),
-                exec: () => {
-                    if (isMinus) --status.useCnt;
+            if (card && card.id == 907 && card.cost > mdc) {
+                return {
+                    trigger: ['card'],
+                    minusDiceCard: 1,
+                    exec: () => { --status.useCnt }
                 }
             }
         }),
@@ -2329,7 +2326,7 @@ const statusTotal: StatusObj = {
         '', 1, [2], useCnt, 0, -1, (status, event = {}) => {
             const { restDmg = 0, summon } = event;
             if (restDmg <= 0) return { restDmg }
-            --status.useCnt;
+            status.useCnt = Math.max(0, status.useCnt - 2);
             if (summon) summon.useCnt = Math.max(0, summon.useCnt - 2);
             return { restDmg: restDmg - 1 }
         }, { smnId: summonId }),
@@ -2366,7 +2363,7 @@ const statusTotal: StatusObj = {
             }
         }),
 
-    2215: () => new GIStatus(2215, '禁忌知识(冷却中)', '本回合无法再打出【禁忌知识】。', 'debuff', 1, [3, 10], -1, 0, 1),
+    2215: () => oncePerRound(2215, '禁忌知识'),
 
 };
 
