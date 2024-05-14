@@ -247,7 +247,7 @@ const allHeros: HeroObj = {
         new GISkill('山泽麟迹', '造成{dmg}点[冰元素伤害]，生成【冰莲】。', 2, 1, 3, 4, {}, [
             'https://patchwiki.biligame.com/images/ys/f/f8/0pge9o51iepqfdd3n8zu9uxfmo08t4u.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/24/12109492/6e5de97b92327dc32895d68abb2f74ea_9018514544637920379.png',
-        ], [heroStatus(2001)], () => ({ outStatus: [heroStatus(2001)] })),
+        ], ['sts2001'], () => ({ outStatus: [heroStatus(2001)] })),
         new GISkill('霜华矢', '造成{dmg}点[冰元素伤害]，对所有敌方后台角色造成2点[穿透伤害]。', 1, 2, 5, 4, {}, [
             'https://patchwiki.biligame.com/images/ys/d/de/d7vartodjuo8s7k0fkp6qsl09brzcvy.png',
             'https://act-upload.mihoyo.com/ys-obc/2023/05/24/183046623/a4c1f60fc2461f2853edb4e765ba4262_6013693059397455292.png',
@@ -259,7 +259,7 @@ const allHeros: HeroObj = {
         new GISkill('降众天华', '造成{dmg}点[冰元素伤害]，对所有敌方后台角色造成1点[穿透伤害]，召唤【冰灵珠】。', 3, 2, 3, 4, { ec: 3 }, [
             'https://patchwiki.biligame.com/images/ys/f/fc/jwj2u3ksefltv5hz9y5zjz3p1p7f8n7.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/24/12109492/c6917b506b4c303677c6246ee11049f3_937074104802749278.png',
-        ], [newSummonee(3001)], () => ({ summon: [newSummonee(3001)], pendamage: 1 }))
+        ], ['smn3001'], () => ({ summon: [newSummonee(3001)], pendamage: 1 }))
     ]),
 
     1002: new GIHero(1002, '迪奥娜', 3, 10, 4, 3,
@@ -320,7 +320,7 @@ const allHeros: HeroObj = {
         new GISkill('神里流·霰步', '此角色被切换为\\｢出战角色｣时，附属【冰元素附魔】。', 4, 0, 0, 0, {}, [
             'https://patchwiki.biligame.com/images/ys/b/bf/35ci2ri2f4j1n844qgcfu6mltipvy6o.png',
             'https://uploadstatic.mihoyo.com/ys-obc/2022/11/26/12109492/0e41ec30bd552ebdca2caf26a53ff3c4_7388012937739952914.png',
-        ], [heroStatus(2008, 4, 1)], event => {
+        ], ['sts2008,4,1'], event => {
             const { hero: { talentSlot } } = event;
             return {
                 trigger: ['change-to'],
@@ -639,7 +639,7 @@ const allHeros: HeroObj = {
         if (skill1.perCnt == 0 || hcards.some(c => c.id == 905) || !isExec) return;
         --skill1.perCnt;
         return { cmds: [{ cmd: 'getCard', cnt: 1, card: 905 }] }
-    }, '；【每回合1次：】如果手牌中没有【圣俗杂座】，则生成手牌【圣俗杂座】。', [], { pct: 1 }), [
+    }, '；【每回合1次：】如果手牌中没有【圣俗杂座】，则生成手牌【圣俗杂座】。', ['crd905'], { pct: 1 }), [
         new GISkill('孤心沙龙', '【芙宁娜】当前处于｢始基力:荒性｣形态，召唤【沙龙成员】。；(【芙宁娜】处于｢始基力:芒性｣形态时，会改为召唤【众水的歌者】。)', 2, 0, 3, 1, {}, [
             '',
             '',
@@ -655,7 +655,7 @@ const allHeros: HeroObj = {
         new GISkill('始基力：圣俗杂座', '战斗开始时，生成手牌【圣俗杂座】。', 4, 0, 0, 0, {}, [
             '',
             '',
-        ], [], () => ({ trigger: ['game-start'], cmds: [{ cmd: 'getCard', cnt: 1, card: 905 }] })),
+        ], ['crd905'], () => ({ trigger: ['game-start'], cmds: [{ cmd: 'getCard', cnt: 1, card: 905 }] })),
     ]),
 
     1201: new GIHero(1201, '迪卢克', 1, 10, 2, 2,
@@ -1889,11 +1889,11 @@ const allHeros: HeroObj = {
         new GISkill('蝎尾锥刺', '造成{dmg}点[雷元素伤害]。；生成1张【噬骸能量块】，随机置入我方牌库顶部2张牌之中。', 2, 3, 3, 3, {}, [
             '',
             '',
-        ], [], () => ({ cmds: [{ cmd: 'addCard', card: 906, cnt: 1, hidxs: [2] }] })),
+        ], ['crd906'], () => ({ cmds: [{ cmd: 'addCard', card: 906, cnt: 1, hidxs: [2] }] })),
         new GISkill('雷锥散射', '造成{dmg}点[雷元素伤害]，弃置手牌中最多3张【噬骸能量块】，在对方场上生成【雷锥陷阱】。', 3, 3, 3, 3, { ec: 2 }, [
             '',
             '',
-        ], [heroStatus(2206)], event => {
+        ], ['crd906', heroStatus(2206)], event => {
             const { hcards = [] } = event;
             const cnt = Math.min(3, hcards.filter(c => c.id == 906).length);
             if (cnt == 0) return;
@@ -1955,11 +1955,11 @@ const allHeros: HeroObj = {
         new GISkill('盘绕风引', '造成{dmg}点[风元素伤害]，摸1张【噬骸能量块】; 然后，手牌中每有1张【噬骸能量块】，摸1张牌(每回合最多摸2张)。', 2, 2, 3, 5, { pct: 2 }, [
             '',
             '',
-        ], [], event => {
+        ], ['crd906'], event => {
             const { hcards = [], hero: { skills: [, skill1] } } = event;
             const cmds: Cmds[] = [{ cmd: 'getCard', cnt: 1, card: 906, isAttach: true }];
-            if (skill1.perCnt < 2) {
-                const cnt = Math.min(2 - skill1.perCnt, hcards.filter(c => c.id == 906).length) + (hcards.length < 10 ? 1 : 0);
+            if (skill1.perCnt > 0) {
+                const cnt = Math.min(skill1.perCnt, hcards.filter(c => c.id == 906).length) + (hcards.length < 10 ? 1 : 0);
                 skill1.perCnt -= cnt;
                 cmds.push({ cmd: 'getCard', cnt });
             }
@@ -1968,7 +1968,7 @@ const allHeros: HeroObj = {
         new GISkill('错落风涡', '造成{dmg}点[风元素伤害]，[舍弃]手牌中所有的【噬骸能量块】，每[舍弃]2张，此次伤害翻倍1次。', 3, 2, 3, 5, { ec: 2 }, [
             '',
             '',
-        ], [], event => {
+        ], ['crd906'], event => {
             const { hcards = [] } = event;
             const cnt = hcards.filter(c => c.id == 906).length;
             return { cmds: [{ cmd: 'discard', cnt, card: 906 }], multiDmgCdt: 2 ** Math.floor(cnt / 2) }
@@ -1976,7 +1976,7 @@ const allHeros: HeroObj = {
         new GISkill('不朽亡骸·风', '战斗开始时，生成6张【噬骸能量块】，均匀放入牌库。', 4, 0, 0, 0, {}, [
             '',
             '',
-        ], [], () => ({ trigger: ['game-start'], cmds: [{ cmd: 'addCard', cnt: 6, card: 906, element: 1 }] })),
+        ], ['crd906'], () => ({ trigger: ['game-start'], cmds: [{ cmd: 'addCard', cnt: 6, card: 906, element: 1 }] })),
     ]),
 
     1801: new GIHero(1801, '丘丘岩盔王', [0, 9], 8, 6, 0,
@@ -2051,14 +2051,14 @@ const allHeros: HeroObj = {
         new GISkill('生命流束', '造成{dmg}点[草元素伤害]，摸1张【唤醒眷属】，生成1层【绿洲之滋养】。', 2, 2, 3, 7, {}, [
             '',
             '',
-        ], [heroStatus(2209)], event => {
+        ], ['crd907', heroStatus(2209)], event => {
             const { hero: { skills: [, { src }] } } = event;
             return { cmds: [{ cmd: 'getCard', cnt: 1, card: 907, isAttach: true }], outStatus: [heroStatus(2209, src)] }
         }),
         new GISkill('终景迸落', '造成{dmg}点[草元素伤害]，摸1张【唤醒眷属】，生成2层【绿洲之滋养】。', 3, 2, 3, 7, { ec: 2 }, [
             '',
             '',
-        ], [heroStatus(2209)], event => {
+        ], ['crd907', heroStatus(2209)], event => {
             const { hero: { skills: [, { src }] } } = event;
             return { cmds: [{ cmd: 'getCard', cnt: 1, card: 907, isAttach: true }], outStatus: [heroStatus(2209, src, 2)] }
         }),

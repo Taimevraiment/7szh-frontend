@@ -272,7 +272,7 @@ type Trigger = 'phase-start' | 'phase-end' | 'phase-dice' | 'game-start' | 'acti
     `${TrgDmg}-getdmg` | 'getdmg-oppo' | 'revive' | `${TrgDmg}-getdmg-oppo` | 'heal' | 'eheal' | 'useReadySkill' | 'status-destroy' |
     'summon-destroy' | 'slot-destroy' | 'site-destroy' | 'calc' | 'reconcile' | 'discard' | 'getcard' | 'getcard-oppo' | '';
 
-type ExplainContent = Skill | Status | Summonee | Card;
+type ExplainContent = Skill | Status | Summonee | Card | string;
 
 type Countdown = {
     limit: number, // 倒计时配置

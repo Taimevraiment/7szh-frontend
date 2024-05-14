@@ -2270,7 +2270,7 @@ const statusTotal: StatusObj = {
             }
         }, { icbg: STATUS_BG_COLOR[1], adt: [[], []] }),
 
-    2206: (useCnt = -1) => new GIStatus(2206, '雷锥陷阱', `【所在阵营的角色使用技能后：】对所在阵营的出战角色造成2点[雷元素伤害]。；【[可用次数]：${useCnt == -1 ? '{useCnt}' : '初始为创建时所弃置的【噬骸能量块】张数。'}(最多叠加到3)】`,
+    2206: (useCnt = -1) => new GIStatus(2206, '雷锥陷阱', `【所在阵营的角色使用技能后：】对所在阵营的出战角色造成2点[雷元素伤害]。；【[可用次数]：${useCnt > 0 ? '{useCnt}' : '初始为创建时所弃置的噬骸能量块张数。'}(最多叠加到3)】`,
         'debuff', 1, [1], useCnt, 3, -1, () => ({
             damage: 2,
             element: 3,
@@ -2302,7 +2302,7 @@ const statusTotal: StatusObj = {
                     exec: () => { --status.useCnt }
                 }
             }
-        }),
+        }, { icbg: STATUS_BG_COLOR[7] }),
 
     2210: (icon = '') => new GIStatus(2210, '重燃的绿洲之心', '所附属角色造成的伤害+3。；【所附属角色使用技能后：】移除我方场上的【绿洲之滋养】，每移除1层就治疗所附属角色1点。',
         icon, 0, [6, 10], -1, 0, -1, (_status, event = {}) => {

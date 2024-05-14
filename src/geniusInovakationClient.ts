@@ -1507,11 +1507,6 @@ export default class GeniusInvokationClient {
                 aWillDamages[di] = allHeros[di].hp > 0 ? [...dmg] : [-1, 0];
             });
             if (skillres.summon) aSummon = this._updateSummon(skillres.summon, aSummon, aHeros[hidx].outStatus);
-            const stscmds: Cmds[] = [
-                { cmd: 'getStatus', status: [...(skillres.inStatus ?? []), ...(skillres.outStatus ?? [])], hidxs: skillres.hidxs },
-                { cmd: 'getStatus', status: [...(skillres.inStatusOppo ?? []), ...(skillres.outStatusOppo ?? [])], hidxs: skillres.hidxs, isOppo: true },
-            ];
-            this._doCmds(stscmds, { heros: aHeros, eheros: eaHeros, ahidx: hidx, ehidx: eFrontIdx, isEffectHero: true, isSkill: sidx });
             if (skillres.isAttach) {
                 const { eheros: aheros2, esummon: asummon2, aheros: eheros2, elrcmds: elrcmds2, willAttachs: willAttachs2,
                     asummon: esummon2, elTips: elTips2, atriggers: etriggers2, etriggers: atriggers2,
@@ -1712,6 +1707,11 @@ export default class GeniusInvokationClient {
             doAfterStatus(aHeros[ahidx].inStatus, 0, triggers, aswhidx, eswhidx, 0, true);
             doAfterStatus(aHeros[hidx].outStatus, 1, triggers, aswhidx, eswhidx, 0, true);
         }
+        const stscmds: Cmds[] = [
+            { cmd: 'getStatus', status: [...(skillres.inStatus ?? []), ...(skillres.outStatus ?? [])], hidxs: skillres.hidxs },
+            { cmd: 'getStatus', status: [...(skillres.inStatusOppo ?? []), ...(skillres.outStatusOppo ?? [])], hidxs: skillres.hidxs, isOppo: true },
+        ];
+        this._doCmds(stscmds, { heros: aHeros, eheros: eaHeros, ahidx: hidx, ehidx: eFrontIdx, isEffectHero: true, isSkill: sidx });
         if (!isExec) {
             this.willHp = new Array(ahlen + ehlen).fill(0).map((_, i) => {
                 const allHeal = bWillHeal.reduce((a, b) => a + Math.max(0, b[i]), 0);

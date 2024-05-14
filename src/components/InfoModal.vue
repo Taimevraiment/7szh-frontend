@@ -8,7 +8,7 @@
             <img class="cost-img" :src="getDiceIcon(ELEMENT_ICON[(info as Card).costType])" />
             <span>{{ (info as Card).cost }}</span>
           </div>
-          <div class="info-card-energy" v-if="(info as Card).anydice > 0">
+          <div class="info-card-anydice" v-if="(info as Card).anydice > 0">
             <img class="cost-img" :src="getDiceIcon(ELEMENT_ICON[0])" />
             <span>{{ (info as Card).anydice }}</span>
           </div>
@@ -275,6 +275,10 @@ import {
   WEAPON_TYPE, HERO_LOCAL, ELEMENT_ICON, STATUS_BG_COLOR, SKILL_TYPE_ABBR, RULE_EXPLAIN,
   CARD_SUBTYPE_URL, WEAPON_TYPE_URL, ELEMENT_URL, HERO_LOCAL_URL, CHANGE_BAD_COLOR,
 } from '@/data/constant';
+import { cardsTotal } from '@/data/cards';
+import { heroStatus } from '@/data/heroStatus';
+import { readySkill } from '@/data/heros';
+import { newSummonee } from '@/data/summonee';
 
 const props = defineProps(['info', 'isMobile']);
 
@@ -325,7 +329,7 @@ const wrapDesc = (desc: string, obj?: ExplainContent): string => {
       return `${wpicon}<span style='color:${c};${underline}margin-right:2px;${[-1, 8, 10].includes(el) ? 'margin-left:2px;' : ''}'>${ctt}</span>`;
     })
     .replace(/\\/g, '');
-  if (obj) {
+  if (obj && typeof obj != 'string') {
     if ('dmgChange' in obj) { // Skill
       const isChange = obj.dmgChange > 0;
       const dmg = Number(res.match(/{dmg\+?(\d*)}/)?.[1]) || 0;
@@ -348,13 +352,34 @@ const wrapDesc = (desc: string, obj?: ExplainContent): string => {
 // 有某些特殊颜色（如 冰/水/火/雷）：‹nxxx› n为字体元素颜色 + 前面的图标 xxx为内容
 // 一些参考括号类型｢｣﹝﹞«»‹›〔〕〖〗『』〈〉《》【】[]｢｣
 
-const wrapExpl = (expls: ExplainContent[]): string[][] => {
+const wrapExpl = (expls: ExplainContent[], memo: string | string[]): string[][] => {
   const container: string[][] = [];
-  for (const expl of expls) {
+  if (typeof memo == 'string') memo = [memo];
+  for (let expl of expls) {
     const explains: string[] = [];
-    explains.push(`<span style='font-weight:bold;color:white;'>${expl.name}</span>`);
+    if (typeof expl == 'string') {
+      const [a1, a2, a3] = expl.slice(3).split(',').map(Number);
+      const type = expl.slice(0, 3);
+      if (type == 'crd') expl = cardsTotal(a1);
+      else if (type == 'sts') expl = heroStatus(a1, a2, a3);
+      else if (type == 'rsk') expl = readySkill(a1, a2, a3);
+      else if (type == 'smn') expl = newSummonee(a1, a2, a3);
+      else continue;
+    }
+    if (memo.includes(expl.name)) continue;
+    memo.push(expl.name);
+    explains.push(`<span style="font-weight:bold;color:white;">${expl.name}</span>`);
+    if ('costType' in expl) {
+      explains.push(`
+        <div data-v-c8bc3e29 class="skill-cost">
+          <img data-v-c8bc3e29 class="cost-img" src="${getDiceIcon(ELEMENT_ICON[expl.costType])}" />
+          <span data-v-c8bc3e29>${expl.cost}</span>
+        </div>
+      `);
+    }
     explains.push(...expl.description.split('；').map(desc => wrapDesc(desc, expl)));
     container.push(explains);
+    if ('explains' in expl && expl.explains.length > 0) container.push(...wrapExpl(expl.explains, memo));
   }
   return container;
 };
@@ -399,7 +424,7 @@ watchEffect(() => {
   ruleExplain.value = [];
   if (info.value && 'costType' in info.value) {
     info.value.descriptions = info.value.description.split('；').map(desc => wrapDesc(desc));
-    skillExplain.value = wrapExpl(info.value.explains);
+    skillExplain.value = wrapExpl(info.value.explains, info.value.name);
   }
   if (info.value && 'card' in info.value) {
     info.value.card.descriptions = info.value.card.description.split('；').map(desc => wrapDesc(desc));
@@ -409,11 +434,11 @@ watchEffect(() => {
     outStatusExplain.value = [];
     info.value.inStatus.forEach(ist => {
       ist.descriptions = ist.description.split('；').map(desc => wrapDesc(desc, ist));
-      inStatusExplain.value.push(wrapExpl(ist.explains));
+      inStatusExplain.value.push(wrapExpl(ist.explains, ist.name));
     });
     info.value.outStatus.forEach(ost => {
       ost.descriptions = ost.description.split('；').map(desc => wrapDesc(desc, ost));
-      outStatusExplain.value.push(wrapExpl(ost.explains));
+      outStatusExplain.value.push(wrapExpl(ost.explains, ost.name));
     });
     slotExplain.value = [];
     [info.value.weaponSlot, info.value.artifactSlot, info.value.talentSlot].forEach(slot => {
@@ -423,7 +448,7 @@ watchEffect(() => {
         slot.descriptions = isActionTalent ? desc.slice(2) : desc;
         const onceDesc = slot.descriptions.findIndex(v => v.includes('入场时：'));
         if (onceDesc > -1) slot.descriptions.splice(onceDesc, 1);
-        slotExplain.value.push(wrapExpl(slot.explains).slice(isActionTalent ? 1 : 0));
+        slotExplain.value.push(wrapExpl(slot.explains, slot.name).slice(isActionTalent ? 1 : 0));
       }
     });
     skills.value = [];
@@ -436,7 +461,7 @@ watchEffect(() => {
     }
     skills.value.forEach(skill => {
       skill.descriptions = skill.description.split('；').map(desc => wrapDesc(desc, skill));
-      skillExplain.value.push(wrapExpl(skill.explains));
+      skillExplain.value.push(wrapExpl(skill.explains, skill.name));
     });
     isInStatus.value = new Array(info.value.inStatus.length).fill(false);
     isOutStatus.value = new Array(info.value.outStatus.length).fill(false);
@@ -523,7 +548,8 @@ const showRule = (...desc: string[]) => {
   top: 3px;
 }
 
-.info-card-energy {
+.info-card-energy,
+.info-card-anydice {
   position: relative;
   width: 20px;
   height: 20px;
@@ -538,7 +564,8 @@ const showRule = (...desc: string[]) => {
   -webkit-text-stroke: 1px black;
 }
 
-.info-card-energy>span {
+.info-card-energy>span,
+.info-card-anydice>span {
   position: absolute;
   left: 18px;
   top: 3px;
