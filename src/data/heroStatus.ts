@@ -44,7 +44,7 @@ class GIStatus implements Status {
         this.summonId = smnId;
         this.perCnt = pct;
         this.iconBg = icbg;
-        this.explains = expl;
+        this.explains = [...(description.match(/(?<=【)[^【】]+\d(?=】)/g) ?? []), ...expl];
         this.isTalent = isTalent;
         this.addition = adt;
         let thandle = handle ?? (() => ({}));
@@ -148,8 +148,8 @@ const statusTotal: StatusObj = {
             return { restDmg: restDmg - 1 }
         }, { isTalent }),
 
-    2003: (icon = '') => new GIStatus(2003, '虹剑势', '【我方角色｢普通攻击｣后：】造成1点[水元素伤害]。；【[可用次数]：{useCnt}】',
-        icon, 1, [1], 3, 0, -1, () => ({
+    2003: () => new GIStatus(2003, '虹剑势', '【我方角色｢普通攻击｣后：】造成1点[水元素伤害]。；【[可用次数]：{useCnt}】',
+        'ski1102,2', 1, [1], 3, 0, -1, () => ({
             damage: 1,
             element: 1,
             trigger: ['after-skilltype1'],
@@ -213,8 +213,8 @@ const statusTotal: StatusObj = {
             exec: () => { --status.useCnt },
         })),
 
-    2012: (icon = '') => new GIStatus(2012, '泡影', '【我方造成技能伤害时：】移除此状态，使本次伤害加倍。',
-        icon, 1, [5, 10], 1, 0, -1, status => {
+    2012: () => new GIStatus(2012, '泡影', '【我方造成技能伤害时：】移除此状态，使本次伤害加倍。',
+        'ski1103,2', 1, [5, 10], 1, 0, -1, status => {
             --status.useCnt;
             return { multiDmgCdt: 2 }
         }, { icbg: STATUS_BG_COLOR[1] }),
@@ -281,8 +281,8 @@ const statusTotal: StatusObj = {
             }
         }),
 
-    2020: (icon = '') => new GIStatus(2020, '旋火轮', '【我方角色使用技能后：】造成2点[火元素伤害]。；【[可用次数]：{useCnt}】',
-        icon, 1, [1], 2, 0, -1, () => ({
+    2020: () => new GIStatus(2020, '旋火轮', '【我方角色使用技能后：】造成2点[火元素伤害]。；【[可用次数]：{useCnt}】',
+        'ski1202,2', 1, [1], 2, 0, -1, () => ({
             damage: 2,
             element: 2,
             trigger: ['after-skill'],
@@ -388,8 +388,8 @@ const statusTotal: StatusObj = {
 
     2033: (useCnt: number = 1) => new GIStatus(2033, '猫爪护盾', '为我方出战角色提供1点[护盾]。', '', 1, [7], useCnt, 0, -1),
 
-    2034: (icon = '', isTalent = false) => new GIStatus(2034, '鼓舞领域', '【我方角色使用技能时：】如果该角色生命值至少为7，则使此伤害额外+2; 技能结算后，如果该角色生命值不多于6，则治疗该角色2点。；【[持续回合]：{roundCnt}】',
-        icon, 1, [1, 4, 6], -1, 0, 2, (status, event = {}) => {
+    2034: (isTalent = false) => new GIStatus(2034, '鼓舞领域', '【我方角色使用技能时：】如果该角色生命值至少为7，则使此伤害额外+2; 技能结算后，如果该角色生命值不多于6，则治疗该角色2点。；【[持续回合]：{roundCnt}】',
+        'ski1203,2', 1, [1, 4, 6], -1, 0, 2, (status, event = {}) => {
             const { heros = [], hidx = -1, trigger = '' } = event;
             if (hidx == -1) return;
             const fHero = heros[hidx];
@@ -400,8 +400,8 @@ const statusTotal: StatusObj = {
             }
         }, { icbg: STATUS_BG_COLOR[2], isTalent }),
 
-    2035: (icon = '') => new GIStatus(2035, '雷狼', '【所附属角色使用｢普通攻击｣或｢元素战技｣后：】造成2点[雷元素伤害]。；【[持续回合]：{roundCnt}】',
-        icon, 0, [1], -1, 0, 2, () => ({
+    2035: () => new GIStatus(2035, '雷狼', '【所附属角色使用｢普通攻击｣或｢元素战技｣后：】造成2点[雷元素伤害]。；【[持续回合]：{roundCnt}】',
+        'ski1302,2', 0, [1], -1, 0, 2, () => ({
             damage: 2,
             element: 3,
             trigger: ['after-skilltype1', 'after-skilltype2'],
@@ -414,8 +414,8 @@ const statusTotal: StatusObj = {
             return { restDmg: Math.ceil(restDmg / 2) }
         }),
 
-    2037: (icon = '') => new GIStatus(2037, '大扫除', '【角色使用｢普通攻击｣时：】少花费1个[岩元素骰]。(每回合1次)；角色｢普通攻击｣造成的伤害+2，造成的[物理伤害]变为[岩元素伤害]。；【[持续回合]：{roundCnt}】',
-        icon, 0, [6, 8], -1, 0, 2, (status, event = {}) => {
+    2037: () => new GIStatus(2037, '大扫除', '【角色使用｢普通攻击｣时：】少花费1个[岩元素骰]。(每回合1次)；角色｢普通攻击｣造成的伤害+2，造成的[物理伤害]变为[岩元素伤害]。；【[持续回合]：{roundCnt}】',
+        'ski1502,2', 0, [6, 8], -1, 0, 2, (status, event = {}) => {
             const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(event, { skilltype1: [0, 0, 1] }, () => status.perCnt > 0);
             return {
                 addDmgType1: 2,
@@ -428,8 +428,8 @@ const statusTotal: StatusObj = {
             }
         }, { pct: 1, icbg: STATUS_BG_COLOR[6] }),
 
-    2038: (icon = '') => new GIStatus(2038, '寒冰之棱', '【我方切换角色后：】造成2点[冰元素伤害]。；【[可用次数]：{useCnt}】',
-        icon, 1, [1], 3, 0, -1, () => ({
+    2038: () => new GIStatus(2038, '寒冰之棱', '【我方切换角色后：】造成2点[冰元素伤害]。；【[可用次数]：{useCnt}】',
+        'ski1003,2', 1, [1], 3, 0, -1, () => ({
             damage: 2,
             element: 4,
             trigger: ['change-from'],
@@ -466,8 +466,8 @@ const statusTotal: StatusObj = {
             }
         }, { icbg: STATUS_BG_COLOR[2], isTalent }),
 
-    2041: (icon = '') => new GIStatus(2041, '琉金火光', '宵宫以外的我方角色使用技能后：造成1点[火元素伤害]。；【[持续回合]：{roundCnt}】',
-        icon, 1, [1], -1, 0, 2, (_status, event = {}) => {
+    2041: () => new GIStatus(2041, '琉金火光', '宵宫以外的我方角色使用技能后：造成1点[火元素伤害]。；【[持续回合]：{roundCnt}】',
+        'ski1204,2', 1, [1], -1, 0, 2, (_status, event = {}) => {
             const { heros = [], hidx = -1 } = event;
             return {
                 damage: 1,
@@ -640,8 +640,8 @@ const statusTotal: StatusObj = {
             }
         }, { isTalent }),
 
-    2059: (icon = '') => new GIStatus(2059, '轰轰火花', '【所在阵营的角色使用技能后：】对所在阵营的出战角色造成2点[火元素伤害]。；【[可用次数]：{useCnt}】',
-        icon, 1, [1], 2, 0, -1, () => ({
+    2059: () => new GIStatus(2059, '轰轰火花', '【所在阵营的角色使用技能后：】对所在阵营的出战角色造成2点[火元素伤害]。；【[可用次数]：{useCnt}】',
+        'ski1205,2', 1, [1], 2, 0, -1, () => ({
             damage: 2,
             element: 2,
             isSelf: true,
@@ -651,8 +651,8 @@ const statusTotal: StatusObj = {
             }
         }), { icbg: DEBUFF_BG_COLOR }),
 
-    2060: (icon = '') => new GIStatus(2060, '启途誓使', '【结束阶段：】累积1级｢凭依｣。；【根据｢凭依｣级数，提供效果：】；大于等于2级：[物理伤害]转化为[雷元素伤害];；大于等于4级：造成的伤害+2;；大于等于6级：｢凭依｣级数-4。',
-        icon, 0, [8, 9], 0, 6, -1, (status, event = {}) => {
+    2060: () => new GIStatus(2060, '启途誓使', '【结束阶段：】累积1级｢凭依｣。；【根据｢凭依｣级数，提供效果：】；大于等于2级：[物理伤害]转化为[雷元素伤害];；大于等于4级：造成的伤害+2;；大于等于6级：｢凭依｣级数-4。',
+        'ski1304,2', 0, [8, 9], 0, 6, -1, (status, event = {}) => {
             const { trigger = '' } = event;
             const isAttachEl = status.useCnt >= 2;
             return {
@@ -687,8 +687,8 @@ const statusTotal: StatusObj = {
 
     2062: () => readySkillShieldStatus(2062, '捉浪·涛拥之守'),
 
-    2063: (icon = '') => new GIStatus(2063, '雷兽之盾', '【我方角色｢普通攻击｣后：】造成1点[雷元素伤害]。；【我方角色受到至少为3的伤害时：】抵消其中1点伤害。；【[持续回合]：{roundCnt}】',
-        icon, 0, [1, 2], -1, 0, 2, (_status, event = {}) => {
+    2063: () => new GIStatus(2063, '雷兽之盾', '【我方角色｢普通攻击｣后：】造成1点[雷元素伤害]。；【我方角色受到至少为3的伤害时：】抵消其中1点伤害。；【[持续回合]：{roundCnt}】',
+        'ski1305,2', 0, [1, 2], -1, 0, 2, (_status, event = {}) => {
             const { restDmg = 0 } = event;
             return {
                 damage: 1,
@@ -711,8 +711,8 @@ const statusTotal: StatusObj = {
             }
         }),
 
-    2065: (icon = '') => new GIStatus(2065, '仪来羽衣', '所附属角色｢普通攻击｣造成的伤害+1。；【所附属角色｢普通攻击｣后：】治疗所有我方角色1点。；【[持续回合]：{roundCnt}】',
-        icon, 0, [1, 6], -1, 0, 2, (_status, event = {}) => {
+    2065: () => new GIStatus(2065, '仪来羽衣', '所附属角色｢普通攻击｣造成的伤害+1。；【所附属角色｢普通攻击｣后：】治疗所有我方角色1点。；【[持续回合]：{roundCnt}】',
+        'ski1104,2', 0, [1, 6], -1, 0, 2, (_status, event = {}) => {
             const { heros = [], trigger = '' } = event;
             return {
                 addDmgType1: 1,
@@ -751,8 +751,8 @@ const statusTotal: StatusObj = {
             }
         }, { icbg: STATUS_BG_COLOR[6] }),
 
-    2069: (icon = '') => new GIStatus(2069, '怒目鬼王', '所附属角色｢普通攻击｣造成的伤害+1，造成的[物理伤害]变为[岩元素伤害]。；【[持续回合]：{roundCnt}】；【所附属角色｢普通攻击｣后：】为其附属【乱神之怪力】。(每回合1次)',
-        icon, 0, [6, 8], -1, 0, 2, status => ({
+    2069: () => new GIStatus(2069, '怒目鬼王', '所附属角色｢普通攻击｣造成的伤害+1，造成的[物理伤害]变为[岩元素伤害]。；【[持续回合]：{roundCnt}】；【所附属角色｢普通攻击｣后：】为其附属【sts2068】。(每回合1次)',
+        'ski1503,2', 0, [6, 8], -1, 0, 2, status => ({
             addDmgType1: 1,
             attachEl: 6,
             trigger: ['skilltype1'],
@@ -802,8 +802,8 @@ const statusTotal: StatusObj = {
             }
         }, { icbg: STATUS_BG_COLOR[4], pct: isCdt(isTalent, 1), isTalent }),
 
-    2074: (icon = '') => new GIStatus(2074, '远程状态', '【所附属角色进行[重击]后：】目标角色附属【断流】。',
-        icon, 0, [10], -1, 0, -1, (_status, event = {}) => ({
+    2074: () => new GIStatus(2074, '远程状态', '【所附属角色进行[重击]后：】目标角色附属【断流】。',
+        'ski1106,3', 0, [10], -1, 0, -1, (_status, event = {}) => ({
             trigger: ['skilltype1'],
             exec: () => {
                 const { isChargedAtk = false, heros = [], hidx = -1 } = event;
@@ -811,8 +811,8 @@ const statusTotal: StatusObj = {
             }
         }), { icbg: STATUS_BG_COLOR[1] }),
 
-    2075: (icon = '') => new GIStatus(2075, '近战状态', '角色造成的[物理伤害]转换为[水元素伤害]。；【角色进行[重击]后：】目标角色附属【断流】。；角色对附属有【断流】的角色造成的伤害+1;；【角色对已附属有断流的角色使用技能后：】对下一个敌方后台角色造成1点[穿透伤害]。(每回合至多2次)；【[持续回合]：{roundCnt}】',
-        icon, 0, [3, 6, 8], -1, 0, 2, (status, event = {}) => {
+    2075: () => new GIStatus(2075, '近战状态', '角色造成的[物理伤害]转换为[水元素伤害]。；【角色进行[重击]后：】目标角色附属【断流】。；角色对附属有【断流】的角色造成的伤害+1;；【角色对已附属有断流的角色使用技能后：】对下一个敌方后台角色造成1点[穿透伤害]。(每回合至多2次)；【[持续回合]：{roundCnt}】',
+        'ski1106,1', 0, [3, 6, 8], -1, 0, 2, (status, event = {}) => {
             const { isChargedAtk, heros = [], hidx = -1, eheros = [], trigger = '' } = event;
             const efHero = eheros.find(h => h.isFront);
             const isDuanliu = efHero?.inStatus.some(ist => ist.id == 2076);
@@ -836,8 +836,8 @@ const statusTotal: StatusObj = {
             }
         }, { icbg: STATUS_BG_COLOR[1], pct: 2 }),
 
-    2076: (icon = '') => new GIStatus(2076, '断流', '【所附属角色被击倒后：】对所在阵营的出战角色附属【断流】。',
-        icon, 0, [1, 4, 10, 12], -1, 0, -1, (status, event = {}) => {
+    2076: () => new GIStatus(2076, '断流', '【所附属角色被击倒后：】对所在阵营的出战角色附属【断流】。',
+        'ski1106,2', 0, [1, 4, 10, 12], -1, 0, -1, (status, event = {}) => {
             const { heros = [], hidx = -1, eheros = [], hidxs, trigger = '' } = event;
             const triggers: Trigger[] = ['killed'];
             const isTalent = trigger == 'phase-end' && !!eheros.find(h => h.id == 1106)?.talentSlot && heros[hidx].isFront;
@@ -866,13 +866,13 @@ const statusTotal: StatusObj = {
             return { restDmg: Math.max(0, restDmg - 2) }
         }, { smnId: summonId }),
 
-    2078: () => new GIStatus(2078, '彼岸蝶舞', '所附属角色造成的[物理伤害]变为[火元素伤害]，且角色造成的[火元素伤害]+1。；【所附属角色进行[重击]时：】目标角色附属【血梅香】。；【[持续回合]：{roundCnt}】',
+    2078: () => new GIStatus(2078, '彼岸蝶舞', '所附属角色造成的[物理伤害]变为[火元素伤害]，且角色造成的[火元素伤害]+1。；【所附属角色进行[重击]时：】目标角色附属【sts2079】。；【[持续回合]：{roundCnt}】',
         'buff5', 0, [8], -1, 0, 2, (_status, event = {}) => ({
             addDmg: 1,
             attachEl: 2,
             trigger: ['skill'],
             exec: () => ({ cmds: isCdt<Cmds[]>(event.isChargedAtk, [{ cmd: 'getStatus', status: [heroStatus(2079)], isOppo: true }]) })
-        }), { expl: [heroStatus(2079)] }),
+        })),
 
     2079: () => new GIStatus(2079, '血梅香', '【结束阶段：】对所附属角色造成1点[火元素伤害]。；【[可用次数]：{useCnt}】',
         'sts2079', 0, [1], 1, 0, -1, () => ({
@@ -885,8 +885,8 @@ const statusTotal: StatusObj = {
             },
         }), { icbg: DEBUFF_BG_COLOR }),
 
-    2080: (icon = '', expl?: ExplainContent[]) => new GIStatus(2080, '诸愿百眼之轮', '【其他我方角色使用｢元素爆发｣后：】累积1点｢愿力｣。(最多累积3点)；【所附属角色使用奥义·梦想真说时：】消耗所有｢愿力｣，每点｢愿力｣使造成的伤害+1。',
-        icon, 0, [6, 9], 0, 3, -1, (status, event = {}) => {
+    2080: () => new GIStatus(2080, '诸愿百眼之轮', '【其他我方角色使用｢元素爆发｣后：】累积1点｢愿力｣。(最多累积3点)；【所附属角色使用〖ski1307,2〗时：】消耗所有｢愿力｣，每点｢愿力｣使造成的伤害+1。',
+        'ski1307,2', 0, [6, 9], 0, 3, -1, (status, event = {}) => {
             const { trigger = '' } = event;
             return {
                 trigger: ['other-skilltype3', 'skilltype3'],
@@ -898,10 +898,10 @@ const statusTotal: StatusObj = {
                     }
                 }
             }
-        }, { icbg: STATUS_BG_COLOR[3], expl }),
+        }, { icbg: STATUS_BG_COLOR[3] }),
 
-    2081: (icon = '') => new GIStatus(2081, '天狐霆雷', '【我方选择行动前：】造成3点[雷元素伤害]。；【[可用次数]：{useCnt}】',
-        icon, 1, [1, 10], 1, 0, -1, () => ({
+    2081: () => new GIStatus(2081, '天狐霆雷', '【我方选择行动前：】造成3点[雷元素伤害]。；【[可用次数]：{useCnt}】',
+        'ski1308,2', 1, [1, 10], 1, 0, -1, () => ({
             damage: 3,
             element: 3,
             trigger: ['action-start'],
@@ -938,8 +938,8 @@ const statusTotal: StatusObj = {
             }
         })),
 
-    2085: (icon = '') => new GIStatus(2085, '夜叉傩面', '所附属角色造成的[物理伤害]变为[风元素伤害]，且角色造成的[风元素伤害]+1。；【所附属角色进行[下落攻击]时：】伤害额外+2。；【所附属角色为出战角色，我方执行｢切换角色｣行动时：】少花费1个元素骰。(每回合1次)；【[持续回合]：{roundCnt}】',
-        icon, 0, [4, 6, 8], -1, 0, 2, (status, event = {}) => {
+    2085: () => new GIStatus(2085, '夜叉傩面', '所附属角色造成的[物理伤害]变为[风元素伤害]，且角色造成的[风元素伤害]+1。；【所附属角色进行[下落攻击]时：】伤害额外+2。；【所附属角色为出战角色，我方执行｢切换角色｣行动时：】少花费1个元素骰。(每回合1次)；【[持续回合]：{roundCnt}】',
+        'ski1404,2', 0, [4, 6, 8], -1, 0, 2, (status, event = {}) => {
             const { isFallAtk = false, trigger = '' } = event;
             return {
                 addDmg: 1,
@@ -960,7 +960,7 @@ const statusTotal: StatusObj = {
 
     2086: () => shieldStatus(2086, '玉璋护盾'),
 
-    2087: (icon = '') => new GIStatus(2087, '石化', '【角色无法使用技能。】(持续到回合结束)', icon, 0, [3, 10, 14], -1, 0, 1, undefined, { icbg: DEBUFF_BG_COLOR }),
+    2087: () => new GIStatus(2087, '石化', '【角色无法使用技能。】(持续到回合结束)', 'ski1504,3', 0, [3, 10, 14], -1, 0, 1, undefined, { icbg: DEBUFF_BG_COLOR }),
 
     2088: () => new GIStatus(2088, '蕴种印', '【任意具有蕴种印的所在阵营角色受到元素反应伤害后：】对所有附属角色1点[穿透伤害]。；【[可用次数]：{useCnt}】',
         'sts2088', 0, [1], 2, 0, -1, (_status, event = {}) => {
@@ -1002,8 +1002,8 @@ const statusTotal: StatusObj = {
             }
         }, { icbg: DEBUFF_BG_COLOR }),
 
-    2089: (icon = '', isTalent = false) => new GIStatus(2089, '摩耶之殿', '【我方引发元素反应时：】伤害额外+1。；【[持续回合]：{roundCnt}】',
-        icon, 1, [6], -1, 0, isTalent ? 3 : 2, () => ({
+    2089: (isTalent = false) => new GIStatus(2089, '摩耶之殿', '【我方引发元素反应时：】伤害额外+1。；【[持续回合]：{roundCnt}】',
+        'ski1603,3', 1, [6], -1, 0, isTalent ? 3 : 2, () => ({
             addDmgCdt: 1,
             trigger: ['elReaction'],
         }), { icbg: STATUS_BG_COLOR[7], isTalent }),
@@ -1052,8 +1052,8 @@ const statusTotal: StatusObj = {
 
     2094: () => readySkillShieldStatus(2094, '苍鹭护盾'),
 
-    2095: (icon = '', isTalent = false) => new GIStatus(2095, '赤冕祝祷', `我方角色｢普通攻击｣造成的伤害+1。；我方单手剑、双手剑或长柄武器角色造成的[物理伤害]变为[水元素伤害]。；【我方切换角色后：】造成1点[水元素伤害]。(每回合1次)；${isTalent ? '【我方角色｢普通攻击｣后：】造成1点[水元素伤害]。(每回合1次)；' : ''}【[持续回合]：{roundCnt}】`,
-        icon, 1, [1, 6, 8], -1, 0, 2, (status, event = {}) => {
+    2095: (isTalent = false) => new GIStatus(2095, '赤冕祝祷', `我方角色｢普通攻击｣造成的伤害+1。；我方单手剑、双手剑或长柄武器角色造成的[物理伤害]变为[水元素伤害]。；【我方切换角色后：】造成1点[水元素伤害]。(每回合1次)；${isTalent ? '【我方角色｢普通攻击｣后：】造成1点[水元素伤害]。(每回合1次)；' : ''}【[持续回合]：{roundCnt}】`,
+        'ski1107,2', 1, [1, 6, 8], -1, 0, 2, (status, event = {}) => {
             const { heros = [], hidx = -1, trigger = '' } = event;
             const isWeapon = hidx > -1 && [1, 2, 5].includes(heros[hidx]?.weaponType ?? 0);
             let isDmg = true;
@@ -1088,8 +1088,8 @@ const statusTotal: StatusObj = {
             }
         }),
 
-    2097: (icon = '') => new GIStatus(2097, '灼灼', '【角色进行[重击]时：】少花费1个[火元素骰]。(每回合1次)；【结束阶段：】角色附属【丹火印】。；【[持续回合]：{roundCnt}】',
-        icon, 0, [3, 4], -1, 0, 2, (status, event = {}) => {
+    2097: () => new GIStatus(2097, '灼灼', '【角色进行[重击]时：】少花费1个[火元素骰]。(每回合1次)；【结束阶段：】角色附属【丹火印】。；【[持续回合]：{roundCnt}】',
+        'ski1208,2', 0, [3, 4], -1, 0, 2, (status, event = {}) => {
             const { isChargedAtk = false, trigger = '' } = event;
             const isMinus = isChargedAtk && status.perCnt > 0;
             const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(event, { skilltype1: [0, 0, 1] }, () => isMinus);
@@ -1115,14 +1115,14 @@ const statusTotal: StatusObj = {
             }
         }, { icbg: STATUS_BG_COLOR[windEl] }),
 
-    2099: (expl?: ExplainContent[]) => new GIStatus(2099, '引雷', '此状态初始具有2层｢引雷｣; 重复附属时，叠加1层｢引雷｣。｢引雷｣最多可以叠加到4层。；【结束阶段：】叠加1层｢引雷｣。；【所附属角色受到苍雷伤害时：】移除此状态，每层｢引雷｣使此伤害+1。',
+    2099: () => new GIStatus(2099, '引雷', '此状态初始具有2层｢引雷｣; 重复附属时，叠加1层｢引雷｣。｢引雷｣最多可以叠加到4层。；【结束阶段：】叠加1层｢引雷｣。；【所附属角色受到〖ski1309,1〗伤害时：】移除此状态，每层｢引雷｣使此伤害+1。',
         'debuff', 0, [6], 2, 4, -1, status => ({
             trigger: ['phase-end'],
             exec: () => { status.useCnt = Math.min(status.maxCnt, status.useCnt + 1) },
-        }), { act: 1, expl }),
+        }), { act: 1 }),
 
-    2100: (icon = '') => new GIStatus(2100, '度厄真符', '【我方角色使用技能后：】如果该角色生命值未满，则治疗该角色2点。；【[可用次数]：{useCnt}】',
-        icon, 1, [1], 3, 0, -1, (_status, event = {}) => {
+    2100: () => new GIStatus(2100, '度厄真符', '【我方角色使用技能后：】如果该角色生命值未满，则治疗该角色2点。；【[可用次数]：{useCnt}】',
+        'ski1008,2', 1, [1], 3, 0, -1, (_status, event = {}) => {
             const { heros = [], hidx = -1 } = event;
             const fhero = heros[hidx];
             const isHeal = (fhero?.hp ?? 0) < (fhero?.maxhp ?? 0);
@@ -1171,8 +1171,8 @@ const statusTotal: StatusObj = {
             }
         })),
 
-    2104: (icon = '') => new GIStatus(2104, '桂子仙机', '【我方切换角色后：】造成1点[草元素伤害]，治疗我方出战角色1点。；【[可用次数]：{useCnt}】',
-        icon, 1, [1], 3, 0, -1, () => ({
+    2104: () => new GIStatus(2104, '桂子仙机', '【我方切换角色后：】造成1点[草元素伤害]，治疗我方出战角色1点。；【[可用次数]：{useCnt}】',
+        'ski1604,2', 1, [1], 3, 0, -1, () => ({
             damage: 1,
             element: 7,
             heal: 1,
@@ -1221,7 +1221,7 @@ const statusTotal: StatusObj = {
             }
         }),
 
-    2109: (expl?: ExplainContent[]) => new GIStatus(2109, '遣役之仪', '本回合中，所附属角色下次施放【野千役咒·杀生樱】时少花费2个元素骰。',
+    2109: () => new GIStatus(2109, '遣役之仪', '本回合中，所附属角色下次施放【ski1308,1】时少花费2个元素骰。',
         'buff3', 0, [3, 4, 10], 1, 0, 1, (status, event = {}) => {
             const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(event, { skilltype2: [0, 0, 2] });
             return {
@@ -1231,7 +1231,7 @@ const statusTotal: StatusObj = {
                     if (isMinusSkill) --status.useCnt;
                 }
             }
-        }, { expl }),
+        }),
 
     2110: () => new GIStatus(2110, '琴音之诗(生效中)', '【本回合中，我方下一次打出｢圣遗物｣手牌时：】少花费2个元素骰。',
         'buff2', 1, [4, 10], 1, 0, 1, (status, event = {}) => {
@@ -1245,17 +1245,17 @@ const statusTotal: StatusObj = {
             }
         }),
 
-    2111: (icon = '') => new GIStatus(2111, '金杯的丰馈', '【敌方角色受到绽放反应时：】我方不再生成【草原核】，而是改为召唤【丰穰之核】。',
-        icon, 1, [4, 10], -1, 0, -1, (_status, event = {}) => {
+    2111: () => new GIStatus(2111, '金杯的丰馈', '【敌方角色受到绽放反应时：】我方不再生成【草原核】，而是改为召唤【smn3043】。',
+        'ski1108,1', 1, [4, 10], -1, 0, -1, (_status, event = {}) => {
             const { isElStatus = [] } = event;
             return {
                 trigger: ['get-elReaction-oppo'],
                 summon: isCdt(isElStatus[0], [newSummonee(3043)]),
             }
-        }, { icbg: STATUS_BG_COLOR[1], expl: [newSummonee(3043)] }),
+        }, { icbg: STATUS_BG_COLOR[1] }),
 
-    2112: (icon = '') => new GIStatus(2112, '永世流沔', '【结束阶段：】对所附属角色造成3点[水元素伤害]。；【[可用次数]：{useCnt}】',
-        icon, 0, [1], 1, 0, -1, () => ({
+    2112: () => new GIStatus(2112, '永世流沔', '【结束阶段：】对所附属角色造成3点[水元素伤害]。；【[可用次数]：{useCnt}】',
+        'ski1108,2', 0, [1], 1, 0, -1, () => ({
             damage: 3,
             element: 1,
             isSelf: true,
@@ -1265,8 +1265,8 @@ const statusTotal: StatusObj = {
             },
         }), { icbg: DEBUFF_BG_COLOR }),
 
-    2113: (icon = '') => new GIStatus(2113, '脉摄宣明', '【行动阶段开始时：】生成【无欲气护盾】。；【[可用次数]：{useCnt}】',
-        icon, 1, [4], 2, 0, -1, (_status, event = {}) => ({
+    2113: () => new GIStatus(2113, '脉摄宣明', '【行动阶段开始时：】生成【无欲气护盾】。；【[可用次数]：{useCnt}】',
+        'ski1605,2', 1, [4], 2, 0, -1, (_status, event = {}) => ({
             trigger: ['phase-start'],
             exec: eStatus => {
                 if (eStatus) --eStatus.useCnt;
@@ -1295,7 +1295,7 @@ const statusTotal: StatusObj = {
             }
         }),
 
-    2115: (expl?: ExplainContent[]) => new GIStatus(2115, '降魔·忿怒显相', '【所附属角色使用风轮两立时：】少花费1个[风元素骰]。；【[可用次数]：{useCnt}】；【所附属角色不再附属夜叉傩面时：】移除此效果。',
+    2115: () => new GIStatus(2115, '降魔·忿怒显相', '【所附属角色使用〖ski1404,1〗时：】少花费1个[风元素骰]。；【[可用次数]：{useCnt}】；【所附属角色不再附属〖sts2085〗时：】移除此效果。',
         'buff2', 0, [3, 4], 2, 0, -1, (status, event = {}) => {
             const { heros = [], trigger = '' } = event;
             const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(event, { skilltype2: [0, 0, 1] });
@@ -1310,11 +1310,11 @@ const statusTotal: StatusObj = {
                     else if (isMinusSkill) --status.useCnt;
                 }
             }
-        }, { expl }),
+        }),
 
     2116: () => oncePerRound(2116, '本大爷还没有输！'),
 
-    2117: (expl?: ExplainContent[]) => new GIStatus(2117, '猜拳三连击·剪刀', '本角色将在下次行动时，直接使用技能：【猜拳三连击·剪刀】。',
+    2117: () => new GIStatus(2117, '猜拳三连击·剪刀', '本角色将在下次行动时，直接使用技能：【rsk2】。',
         'buff3', 0, [10, 11], 1, 0, -1, (status, event = {}) => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 2,
@@ -1322,16 +1322,16 @@ const statusTotal: StatusObj = {
                 const { trigger = '' } = event;
                 --status.useCnt;
                 if (trigger == 'change-from') return;
-                return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2118, [status.addition?.[0]])] }] }
+                return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2118)] }] }
             }
-        }), { expl: [expl?.[0]!], adt: [expl?.[1]] }),
+        })),
 
-    2118: (expl?: ExplainContent[]) => new GIStatus(2118, '猜拳三连击·布', '本角色将在下次行动时，直接使用技能：【猜拳三连击·布】。',
+    2118: () => new GIStatus(2118, '猜拳三连击·布', '本角色将在下次行动时，直接使用技能：【rsk3】。',
         'buff3', 0, [10, 11], 1, 0, -1, status => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 3,
             exec: () => { --status.useCnt },
-        }), { expl }),
+        })),
 
     2119: () => card751sts(1),
 
@@ -1341,12 +1341,12 @@ const statusTotal: StatusObj = {
 
     2122: () => card751sts(4),
 
-    2123: (icon = '', expl?: ExplainContent[]) => new GIStatus(2123, '焚落踢', '本角色将在下次行动时，直接使用技能：【焚落踢】。',
-        icon, 0, [10, 11], 1, 0, -1, status => ({
+    2123: () => new GIStatus(2123, '焚落踢', '本角色将在下次行动时，直接使用技能：【rsk5】。',
+        'ski1209,2', 0, [10, 11], 1, 0, -1, status => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 5,
             exec: () => { --status.useCnt },
-        }), { icbg: STATUS_BG_COLOR[2], expl }),
+        }), { icbg: STATUS_BG_COLOR[2] }),
 
     2124: () => card587sts(1),
 
@@ -1358,8 +1358,8 @@ const statusTotal: StatusObj = {
 
     2128: () => shieldStatus(2128, '安眠帷幕护盾'),
 
-    2129: (icon = '') => new GIStatus(2129, '飞星', '【我方角色使用技能后：】累积1枚｢晚星｣。；如果｢晚星｣已有至少4枚，则消耗4枚｢晚星｣，造成1点[冰元素伤害]。(生成此出战状态的技能，也会触发此效果)；【重复生成此出战状态时：】累积2枚｢晚星｣。',
-        icon, 1, [1, 9], 1, 16, -1, (status, event = {}) => {
+    2129: () => new GIStatus(2129, '飞星', '【我方角色使用技能后：】累积1枚｢晚星｣。；如果｢晚星｣已有至少4枚，则消耗4枚｢晚星｣，造成1点[冰元素伤害]。(生成此出战状态的技能，也会触发此效果)；【重复生成此出战状态时：】累积2枚｢晚星｣。',
+        'ski1009,1', 1, [1, 9], 1, 16, -1, (status, event = {}) => {
             const { heros = [], hidx = -1, trigger = '', card } = event;
             const addCnt = heros[hidx]?.id == 1009 && trigger == 'skilltype2' ? 2 : 0;
             const isDmg = status.useCnt + addCnt >= 4;
@@ -1397,14 +1397,14 @@ const statusTotal: StatusObj = {
             }
         }, { icbg: STATUS_BG_COLOR[1], act }),
 
-    2131: (icon = '') => new GIStatus(2131, '玄掷玲珑', '【我方角色｢普通攻击｣后：】造成1点[水元素伤害]。；【[持续回合]：{roundCnt}】',
-        icon, 1, [1], -1, 0, 2, () => ({
+    2131: () => new GIStatus(2131, '玄掷玲珑', '【我方角色｢普通攻击｣后：】造成1点[水元素伤害]。；【[持续回合]：{roundCnt}】',
+        'ski1109,2', 1, [1], -1, 0, 2, () => ({
             damage: 1,
             element: 1,
             trigger: ['after-skilltype1'],
         }), { icbg: STATUS_BG_COLOR[1] }),
 
-    2132: (expl?: ExplainContent[]) => new GIStatus(2132, '隐具余数', '｢隐具余数｣最多可以叠加到3层。；【角色使用眩惑光戏法时：】每层｢隐具余数｣使伤害+1。技能结算后，耗尽｢隐具余数｣，每层治疗角色1点。',
+    2132: () => new GIStatus(2132, '隐具余数', '｢隐具余数｣最多可以叠加到3层。；【角色使用〖ski1210,2〗时：】每层｢隐具余数｣使伤害+1。技能结算后，耗尽｢隐具余数｣，每层治疗角色1点。',
         'buff2', 0, [1, 6], 1, 3, -1, (status, event = {}) => ({
             trigger: ['skilltype2', 'after-skilltype2'],
             addDmgCdt: status.useCnt,
@@ -1412,7 +1412,7 @@ const statusTotal: StatusObj = {
             exec: eStatus => {
                 if (eStatus) eStatus.useCnt = 0;
             }
-        }), { expl }),
+        })),
 
     2133: () => new GIStatus(2133, '攻袭余威', '【结束阶段：】如果角色生命值至少为6，则受到2点[穿透伤害]。；【[持续回合]：{roundCnt}】',
         'debuff', 0, [1, 3], 1, 0, 1, (_status, event = {}) => {
@@ -1437,8 +1437,8 @@ const statusTotal: StatusObj = {
             return { restDmg: restDmg - 1 }
         }, { smnId: summonId }),
 
-    2135: (icon = '') => new GIStatus(2135, '大将旗指物', '我方角色造成的[岩元素伤害]+1。；【[持续回合]：{roundCnt}】(可叠加，最多叠加到3回合)',
-        icon, 0, [3, 6], -1, 3, 2, (_status, event = {}) => {
+    2135: () => new GIStatus(2135, '大将旗指物', '我方角色造成的[岩元素伤害]+1。；【[持续回合]：{roundCnt}】(可叠加，最多叠加到3回合)',
+        'ski1506,1', 0, [3, 6], -1, 3, 2, (_status, event = {}) => {
             const { isSkill = -1 } = event;
             return {
                 trigger: isSkill > -1 ? ['rock-dmg'] : [],
@@ -1446,8 +1446,8 @@ const statusTotal: StatusObj = {
             }
         }, { icbg: STATUS_BG_COLOR[6] }),
 
-    2136: (icon = '', rcnt = 2) => new GIStatus(2136, '琢光镜', '角色造成的[物理伤害]变为[草元素伤害]。；【角色｢普通攻击｣后：】造成1点[草元素伤害]。如果此技能为[重击]，则使此状态的[持续回合]+1。；【[持续回合]：{roundCnt}】(可叠加，最多叠加到3回合)',
-        icon, 0, [1, 8], -1, 3, rcnt, (status, event = {}) => {
+    2136: (rcnt = 2) => new GIStatus(2136, '琢光镜', '角色造成的[物理伤害]变为[草元素伤害]。；【角色｢普通攻击｣后：】造成1点[草元素伤害]。如果此技能为[重击]，则使此状态的[持续回合]+1。；【[持续回合]：{roundCnt}】(可叠加，最多叠加到3回合)',
+        'ski1606,2', 0, [1, 8], -1, 3, rcnt, (status, event = {}) => {
             const { isChargedAtk = false, trigger = '' } = event;
             return {
                 attachEl: 7,
@@ -1473,8 +1473,8 @@ const statusTotal: StatusObj = {
             },
         }), { icbg: DEBUFF_BG_COLOR, pct: -type, expl: isExpl ? [heroStatus(2137, type ^ 1, false)] : [] }),
 
-    2138: (icon = '') => new GIStatus(2138, '冰封的炽炎魔女', '【行动阶段开始时：】如果所附属角色生命值不多于4，则移除此效果。；【所附属角色被击倒时：】移除此效果，使角色[免于被击倒]，并治疗该角色到1点生命值。【此效果被移除时：】所附属角色转换为[｢焚尽的炽炎魔女｣]形态。',
-        icon, 0, [4, 10, 13], 1, 0, -1, (_status, event = {}) => {
+    2138: () => new GIStatus(2138, '冰封的炽炎魔女', '【行动阶段开始时：】如果所附属角色生命值不多于4，则移除此效果。；【所附属角色被击倒时：】移除此效果，使角色[免于被击倒]，并治疗该角色到1点生命值。【此效果被移除时：】所附属角色转换为[｢焚尽的炽炎魔女｣]形态。',
+        'ski1702,3', 0, [4, 10, 13], 1, 0, -1, (_status, event = {}) => {
             const { heros = [], hidx = -1, trigger = '' } = event;
             const triggers: Trigger[] = ['will-killed', 'skilltype3'];
             if ((heros[hidx]?.hp ?? 10) <= 4) triggers.push('phase-start');
@@ -1499,8 +1499,8 @@ const statusTotal: StatusObj = {
             return { restDmg: restDmg - 1 }
         }),
 
-    2140: (icon = '') => new GIStatus(2140, '雷霆探针', '【所在阵营角色使用技能后：】对所在阵营出战角色附属【雷鸣探知】。(每回合1次)',
-        icon, 1, [10], -1, 0, -1, status => ({
+    2140: () => new GIStatus(2140, '雷霆探针', '【所在阵营角色使用技能后：】对所在阵营出战角色附属【雷鸣探知】。(每回合1次)',
+        'ski1762,3', 1, [10], -1, 0, -1, status => ({
             trigger: ['skill'],
             exec: () => {
                 if (status.perCnt <= 0) return;
@@ -1547,7 +1547,7 @@ const statusTotal: StatusObj = {
             }
         }),
 
-    2143: (expl?: ExplainContent[]) => new GIStatus(2143, '风龙吐息', '本角色将在下次行动时，直接使用技能：【长延涤流】。',
+    2143: () => new GIStatus(2143, '风龙吐息', '本角色将在下次行动时，直接使用技能：【rsk6】。',
         'buff3', 0, [11], 1, 0, -1, (status, event = {}) => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 6,
@@ -1557,17 +1557,17 @@ const statusTotal: StatusObj = {
                 if (trigger == 'change-from') return;
                 return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2144, [status.explains?.[1]])] }] }
             }
-        }), { expl }),
+        })),
 
-    2144: (expl?: ExplainContent[]) => new GIStatus(2144, '风龙吐息', '本角色将在下次行动时，直接使用技能：【终幕涤流】。',
+    2144: () => new GIStatus(2144, '风龙吐息', '本角色将在下次行动时，直接使用技能：【rsk7】。',
         'buff3', 0, [11], 1, 0, -1, status => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 7,
             exec: () => { --status.useCnt },
-        }), { expl }),
+        })),
 
-    2145: (icon = '') => new GIStatus(2145, '磐岩百相·元素凝晶', '【角色受到‹4冰›/‹1水›/‹2火›/‹3雷›元素伤害后：】如果角色当前未汲取该元素的力量，则移除此状态，然后角色[汲取对应元素的力量]。',
-        icon, 0, [10], 1, 0, -1, (status, event = {}) => {
+    2145: () => new GIStatus(2145, '磐岩百相·元素凝晶', '【角色受到‹4冰›/‹1水›/‹2火›/‹3雷›元素伤害后：】如果角色当前未汲取该元素的力量，则移除此状态，然后角色[汲取对应元素的力量]。',
+        'ski1802,1', 0, [10], 1, 0, -1, (status, event = {}) => {
             const { heros = [], hidx = -1, trigger = '' } = event;
             if (hidx == -1) return;
             const hero = heros[hidx];
@@ -1584,7 +1584,7 @@ const statusTotal: StatusObj = {
                     }
                 }
             }
-        }, { icbg: STATUS_BG_COLOR[6] }),
+        }, { icbg: STATUS_BG_COLOR[6], expl: ['rsk8', 'rsk9', 'rsk10', 'rsk11'] }),
 
     2146: () => new GIStatus(2146, '裁定之时(生效中)', '本回合中，我方打出的事件牌无效。；【[可用次数]：{useCnt}】',
         'debuff', 1, [4], 3, 0, 1, (status, event = {}) => {
@@ -1655,7 +1655,7 @@ const statusTotal: StatusObj = {
             }
         }),
 
-    2153: (expl?: ExplainContent[]) => new GIStatus(2153, '磐岩百相·元素汲取', '角色可以汲取‹4冰›/‹1水›/‹2火›/‹3雷›元素的力量，然后根据所汲取的元素类型，获得技能‹4霜刺破袭›/‹1洪流重斥›/‹2炽焰重斥›/‹3霆雷破袭›。(角色同时只能汲取一种元素，此状态会记录角色已汲取过的元素类型数量)；【角色汲取了一种和当前不同的元素后：】生成1个所汲取元素类型的元素骰。',
+    2153: () => new GIStatus(2153, '磐岩百相·元素汲取', '角色可以汲取‹4冰›/‹1水›/‹2火›/‹3雷›元素的力量，然后根据所汲取的元素类型，获得技能‹4霜刺破袭›/‹1洪流重斥›/‹2炽焰重斥›/‹3霆雷破袭›。(角色同时只能汲取一种元素，此状态会记录角色已汲取过的元素类型数量)；【角色汲取了一种和当前不同的元素后：】生成1个所汲取元素类型的元素骰。',
         'buff2', 0, [9, 12], 0, 4, -1, (status, event = {}) => ({
             trigger: ['el6Reaction'],
             exec: () => {
@@ -1676,10 +1676,10 @@ const statusTotal: StatusObj = {
                 if (isDrawed) cmds.splice(1, 0, { cmd: 'loseSkill', hidxs: [hidx], element: 2 });
                 return { cmds }
             }
-        }), { expl }),
+        }), { expl: ['rsk8', 'rsk9', 'rsk10', 'rsk11'] }),
 
-    2154: (icon = '', isTalent = false) => new GIStatus(2154, '炽火大铠', '【我方角色｢普通攻击｣后：】造成1点[火元素伤害]，生成【烈烧佑命护盾】。；【[可用次数]：{useCnt}】',
-        icon, 1, [1], isTalent ? 3 : 2, 0, -1, (_status: Status) => ({
+    2154: (isTalent = false) => new GIStatus(2154, '炽火大铠', '【我方角色｢普通攻击｣后：】造成1点[火元素伤害]，生成【sts2106】。；【[可用次数]：{useCnt}】',
+        'ski1211,2', 1, [1], isTalent ? 3 : 2, 0, -1, (_status: Status) => ({
             damage: 1,
             element: 2,
             trigger: ['after-skilltype1'],
@@ -1687,14 +1687,14 @@ const statusTotal: StatusObj = {
                 if (eStatus) --eStatus.useCnt;
                 return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2106)] }] }
             },
-        }), { icbg: STATUS_BG_COLOR[2], expl: [heroStatus(2106)], isTalent }),
+        }), { icbg: STATUS_BG_COLOR[2], isTalent }),
 
-    2155: (windEl = 0, expl?: ExplainContent[]) => new GIStatus(2155, '风风轮', '本角色将在下次行动时，直接使用技能：【风风轮舞踢】。',
+    2155: (windEl = 0) => new GIStatus(2155, '风风轮', '本角色将在下次行动时，直接使用技能：【rsk12】。',
         'buff3', 0, [10, 11], 1, 0, -1, status => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 12 + Number(status.addition[0]),
             exec: () => { --status.useCnt },
-        }), { expl, adt: [windEl] }),
+        }), { adt: [windEl] }),
 
     2156: () => new GIStatus(2156, '四迸冰锥', '【我方角色｢普通攻击｣时：】对所有敌方后台角色造成1点[穿透伤害]。；【[可用次数]：{useCnt}】',
         'buff6', 0, [], 1, 0, -1, status => ({
@@ -1799,8 +1799,8 @@ const statusTotal: StatusObj = {
             }
         }, { icbg: DEBUFF_BG_COLOR }),
 
-    2164: (expl?: ExplainContent[], cnt = 1) => new GIStatus(2164, '源水之滴', `【那维莱特进行｢普通攻击｣后：】治疗角色2点，然后角色[准备技能]：【衡平推裁】。；【[可用次数]：{useCnt}】(可叠加，最多叠加到3次)`,
-        'sts2164', 1, [1], cnt, 3, -1, (status, event = {}) => {
+    2164: (cnt = 1) => new GIStatus(2164, '源水之滴', `【那维莱特进行｢普通攻击｣后：】治疗角色2点，然后角色[准备技能]：【rsk17】。；【[可用次数]：{useCnt}】(可叠加，最多叠加到3次)`,
+        'sts2164', 1, [1], cnt, 3, -1, (_status, event = {}) => {
             const { heros = [], hidx = -1 } = event;
             if (heros[hidx]?.id != 1110) return;
             return {
@@ -1808,17 +1808,17 @@ const statusTotal: StatusObj = {
                 trigger: ['after-skilltype1'],
                 exec: eStatus => {
                     if (eStatus) --eStatus.useCnt;
-                    return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2165, status.explains)] }] }
+                    return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2165)] }] }
                 },
             }
-        }, { expl, icbg: STATUS_BG_COLOR[1] }),
+        }, { icbg: STATUS_BG_COLOR[1] }),
 
-    2165: (expl?: ExplainContent[]) => new GIStatus(2165, '衡平推裁', `本角色将在下次行动时，直接使用技能：【衡平推裁】。`,
+    2165: () => new GIStatus(2165, '衡平推裁', `本角色将在下次行动时，直接使用技能：【rsk17】。`,
         'buff3', 0, [10, 11], 1, 0, -1, status => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 17,
             exec: () => { --status.useCnt },
-        }), { expl }),
+        })),
 
     2166: () => new GIStatus(2166, '遗龙之荣', '角色造成的伤害+1。【[可用次数]:{useCnt}】',
         'buff2', 0, [4, 6], 2, 0, -1, status => ({
@@ -1827,8 +1827,8 @@ const statusTotal: StatusObj = {
             exec: () => { --status.useCnt },
         })),
 
-    2167: (icon = '') => new GIStatus(2167, '猫箱急件', '【绮良良为出战角色时，我方切换角色后：】造成1点[草元素伤害]，摸1张牌。；【[可用次数]：{useCnt}】(可叠加，最多叠加到2次)',
-        icon, 1, [1], 1, 2, -1, (_status, event = {}) => {
+    2167: () => new GIStatus(2167, '猫箱急件', '【绮良良为出战角色时，我方切换角色后：】造成1点[草元素伤害]，摸1张牌。；【[可用次数]：{useCnt}】(可叠加，最多叠加到2次)',
+        'ski1607,1', 1, [1], 1, 2, -1, (_status, event = {}) => {
             const { heros = [], force = false } = event;
             if (!heros.find(h => h.id == 1607)?.isFront && !force) return;
             return {
@@ -1845,8 +1845,8 @@ const statusTotal: StatusObj = {
 
     2168: () => shieldStatus(2168, '安全运输护盾'),
 
-    2169: (icon = '') => new GIStatus(2169, '猫草豆蔻', '【所在阵营打出2张行动牌后：】对所在阵营的出战角色造成1点[草元素伤害]。；【[可用次数]：{useCnt}】',
-        icon, 1, [1, 4], 2, 0, -1, status => ({
+    2169: () => new GIStatus(2169, '猫草豆蔻', '【所在阵营打出2张行动牌后：】对所在阵营的出战角色造成1点[草元素伤害]。；【[可用次数]：{useCnt}】',
+        'ski1607,2', 1, [1, 4], 2, 0, -1, status => ({
             damage: isCdt(status.perCnt <= -1, 1),
             element: 7,
             isSelf: true,
@@ -1863,7 +1863,7 @@ const statusTotal: StatusObj = {
     2170: (useCnt = 0) => new GIStatus(2170, '雷萤护罩', '为我方出战角色提供1点[护盾]。；【创建时：】如果我方场上存在【雷萤】，则额外提供其[可用次数]的[护盾]。(最多额外提供3点[护盾])',
         '', 1, [7], 1 + Math.min(3, useCnt), 0, -1),
 
-    2171: (expl?: ExplainContent[]) => new GIStatus(2171, '霆电迸发', '本角色将在下次行动时，直接使用技能：【霆电迸发】。',
+    2171: (expl?: ExplainContent[]) => new GIStatus(2171, '霆电迸发', '本角色将在下次行动时，直接使用技能：【rsk18】。',
         'buff3', 0, [10, 11], 1, 0, -1, status => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 18,
@@ -1898,7 +1898,7 @@ const statusTotal: StatusObj = {
             }
         }),
 
-    2175: (expl?: ExplainContent[]) => new GIStatus(2175, '雷压', '每当我方累积打出3张行动牌，就会触发敌方场上【雷萤】的效果。(使【雷萤】的[可用次数]+1)',
+    2175: () => new GIStatus(2175, '雷压', '每当我方累积打出3张行动牌，就会触发敌方场上【smn3057】的效果。(使【smn3057】的[可用次数]+1)',
         'debuff', 1, [4, 9], 0, 3, -1, (status, event = {}) => ({
             trigger: ['card'],
             exec: () => {
@@ -1910,10 +1910,10 @@ const statusTotal: StatusObj = {
                     status.useCnt = 0;
                 }
             },
-        }), { expl }),
+        })),
 
-    2176: (icon = '') => new GIStatus(2176, '越袚草轮', '【我方切换角色后：】造成1点[雷元素伤害]，治疗我方受伤最多的角色1点。(每回合1次)；【[可用次数]：{useCnt}】',
-        icon, 1, [1], 3, 0, -1, (status, event = {}) => {
+    2176: () => new GIStatus(2176, '越袚草轮', '【我方切换角色后：】造成1点[雷元素伤害]，治疗我方受伤最多的角色1点。(每回合1次)；【[可用次数]：{useCnt}】',
+        'ski1311,1', 1, [1], 3, 0, -1, (status, event = {}) => {
             if (status.perCnt == 0) return;
             return {
                 damage: 1,
@@ -1930,10 +1930,10 @@ const statusTotal: StatusObj = {
             }
         }, { icbg: STATUS_BG_COLOR[3], pct: 1 }),
 
-    2177: () => new GIStatus(2177, '疾风示现', '【所附属角色进行[重击]时：】少花费1个[无色元素骰]，造成的[物理伤害]变为[风元素伤害]，并且使目标角色附属【风压坍陷】；【[可用次数]：{useCnt}】',
+    2177: () => new GIStatus(2177, '疾风示现', '【所附属角色进行[重击]时：】少花费1个[无色元素骰]，造成的[物理伤害]变为[风元素伤害]，并且使目标角色附属【sts2178】；【[可用次数]：{useCnt}】',
         'buff', 0, [16], 1, 0, -1, (status, event = {}) => {
-            const { heros = [], hidx = -1, isChargedAtk = false } = event;
-            if (!isChargedAtk || hidx == -1) return;
+            const { isChargedAtk = false } = event;
+            if (!isChargedAtk) return;
             const { minusSkillRes } = minusDiceSkillHandle(event, { skilltype1: [0, 1, 0] });
             return {
                 trigger: ['skilltype1'],
@@ -1941,13 +1941,13 @@ const statusTotal: StatusObj = {
                 attachEl: 5,
                 exec: () => {
                     --status.useCnt;
-                    return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2178, heros[hidx].skills[1].src)], isOppo: true }] }
+                    return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2178)], isOppo: true }] }
                 }
             }
-        }, { icbg: STATUS_BG_COLOR[5], expl: [heroStatus(2178)] }),
+        }, { icbg: STATUS_BG_COLOR[5] }),
 
-    2178: (icon = '') => new GIStatus(2178, '风压坍陷', '【结束阶段：】将附属角色切换为｢出战角色｣。；【[可用次数]：{useCnt}】；(同一方场上最多存在一个此状态)',
-        icon, 0, [3], 1, 0, -1, (_status, event = {}) => ({
+    2178: () => new GIStatus(2178, '风压坍陷', '【结束阶段：】将附属角色切换为｢出战角色｣。；【[可用次数]：{useCnt}】；(同一方场上最多存在一个此状态)',
+        'ski1409,1', 0, [3], 1, 0, -1, (_status, event = {}) => ({
             trigger: ['phase-end'],
             onlyOne: true,
             exec: eStatus => {
@@ -1957,12 +1957,12 @@ const statusTotal: StatusObj = {
             }
         }), { icbg: DEBUFF_BG_COLOR }),
 
-    2179: (expl?: ExplainContent[]) => new GIStatus(2179, '涟锋旋刃', '本角色将在下次行动时，直接使用技能：【涟锋旋刃】。',
+    2179: () => new GIStatus(2179, '涟锋旋刃', '本角色将在下次行动时，直接使用技能：【rsk19】。',
         'buff3', 0, [10, 11], 1, 0, -1, status => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 19,
             exec: () => { --status.useCnt },
-        }), { expl }),
+        })),
 
     2180: () => new GIStatus(2180, '暗流的诅咒', '【所在阵营的角色使用｢元素战技｣或｢元素爆发｣时：】需要多花费1个元素骰。；【[可用次数]：{useCnt}】',
         'sts2180', 1, [4], 2, 0, -1, status => ({
@@ -1989,12 +1989,12 @@ const statusTotal: StatusObj = {
 
     2182: (useCnt = 1) => new GIStatus(2182, '重甲蟹壳', '每层提供1点[护盾]，保护所附属角色。', '', 0, [7], useCnt, 1000, -1),
 
-    2183: (expl?: ExplainContent[]) => new GIStatus(2183, '积蓄烈威', '本角色将在下次行动时，直接使用技能：【炽烈轰破】。',
+    2183: () => new GIStatus(2183, '积蓄烈威', '本角色将在下次行动时，直接使用技能：【rsk20】。',
         'buff3', 0, [10, 11], 1, 0, -1, status => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 20,
             exec: () => { --status.useCnt },
-        }), { expl }),
+        })),
 
     2184: () => new GIStatus(2184, '悠远雷暴', '【结束阶段：】对所附属角色造成2点[穿透伤害]。；【[可用次数]：{useCnt}】',
         'sts2079', 0, [1], 1, 0, -1, (_status, event = {}) => {
@@ -2044,7 +2044,7 @@ const statusTotal: StatusObj = {
             }
         }),
 
-    2189: (expl?: ExplainContent[]) => new GIStatus(2189, '踏潮', '本角色将在下次行动时，直接使用技能：【踏潮】。',
+    2189: () => new GIStatus(2189, '踏潮', '本角色将在下次行动时，直接使用技能：【rsk1】。',
         'buff3', 0, [10, 11], 1, 0, -1, (status, event = {}) => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 1,
@@ -2054,7 +2054,7 @@ const statusTotal: StatusObj = {
                 const sts2062 = heros[hidx].inStatus.find(ist => ist.id == 2062);
                 if (sts2062) sts2062.useCnt = 0;
             }
-        }), { expl }),
+        })),
 
     2190: (expl?: ExplainContent[]) => new GIStatus(2190, '苍鹭震击', '本角色将在下次行动时，直接使用技能：【苍鹭震击】。',
         'buff3', 0, [10, 11], 1, 0, -1, (status, event = {}) => ({
@@ -2070,8 +2070,8 @@ const statusTotal: StatusObj = {
 
     2191: () => new GIStatus(2191, '火之新生·锐势', '角色造成的[火元素伤害]+1。', 'buff4', 0, [6, 10], 1, 0, -1, () => ({ addDmg: 1 }), { icbg: STATUS_BG_COLOR[2] }),
 
-    2192: (icon = '') => new GIStatus(2192, '寒烈的惩裁', '【角色进行｢普通攻击｣时：】如果角色生命至少为6，则此技能少花费1个[冰元素骰]，伤害+1，且对自身造成1点[穿透伤害]。；如果角色生命不多于5，则使此伤害+1，并且技能结算后治疗角色2点。；【[可用次数]：{useCnt}】',
-        icon, 0, [1, 6], 2, 0, -1, (_status, event = {}) => {
+    2192: () => new GIStatus(2192, '寒烈的惩裁', '【角色进行｢普通攻击｣时：】如果角色生命至少为6，则此技能少花费1个[冰元素骰]，伤害+1，且对自身造成1点[穿透伤害]。；如果角色生命不多于5，则使此伤害+1，并且技能结算后治疗角色2点。；【[可用次数]：{useCnt}】',
+        'ski1011,1', 0, [1, 6], 2, 0, -1, (_status, event = {}) => {
             const { heros = [], hidx = -1, trigger = '' } = event;
             if (hidx == -1) return;
             if (trigger == 'calc') {
@@ -2091,8 +2091,8 @@ const statusTotal: StatusObj = {
             }
         }, { icbg: STATUS_BG_COLOR[4] }),
 
-    2193: (icon = '') => new GIStatus(2193, '余威冰锥', '【我方选择行动前：】造成2点[冰元素伤害]。；【[可用次数]：{useCnt}】',
-        icon, 1, [1, 10], 1, 0, -1, () => ({
+    2193: () => new GIStatus(2193, '余威冰锥', '【我方选择行动前：】造成2点[冰元素伤害]。；【[可用次数]：{useCnt}】',
+        'ski1011,2', 1, [1, 10], 1, 0, -1, () => ({
             damage: 2,
             element: 4,
             trigger: ['action-start'],
@@ -2101,7 +2101,7 @@ const statusTotal: StatusObj = {
             },
         }), { icbg: STATUS_BG_COLOR[4] }),
 
-    2194: (icon = '') => new GIStatus(2194, '普世欢腾', '【我方出战角色受到伤害或治疗后：】叠加1点【狂欢值】。；【[持续回合]：{roundCnt}】',
+    2194: (icon = '') => new GIStatus(2194, '普世欢腾', '【我方出战角色受到伤害或治疗后：】叠加1点【sts2195】。；【[持续回合]：{roundCnt}】',
         icon, 1, [4], -1, 0, 2, (_status, event = {}) => {
             const { heal = [], hidx = -1, trigger = '' } = event;
             const triggers: Trigger[] = ['getdmg'];
@@ -2110,7 +2110,7 @@ const statusTotal: StatusObj = {
                 trigger: triggers,
                 exec: () => ({ cmds: [{ cmd: 'getStatus', status: [heroStatus(2195)] }] }),
             }
-        }, { icbg: STATUS_BG_COLOR[4], expl: [heroStatus(2195)] }),
+        }, { icbg: STATUS_BG_COLOR[4] }),
 
     2195: () => new GIStatus(2195, '狂欢值', '我方造成的伤害+1。(包括角色引发的扩散伤害)；【[可用次数]：{useCnt}(可叠加，没有上限)】',
         'buff5', 1, [4, 6], 1, 1000, 1, (status, { trigger } = {}) => ({
@@ -2142,8 +2142,8 @@ const statusTotal: StatusObj = {
 
     2197: () => shieldStatus(2197, '热情护盾'),
 
-    2198: (icon = '', useCnt = 1) => new GIStatus(2198, '飞云旗阵', '我方角色进行｢普通攻击｣时：造成的伤害+1。；如果我方手牌数量不多于1，则此技能少花费1个元素骰。；【[可用次数]：{useCnt}(可叠加，最多叠加到4次)】',
-        icon, 1, [4, 6], useCnt, 4, -1, (status, event = {}) => {
+    2198: (useCnt = 1) => new GIStatus(2198, '飞云旗阵', '我方角色进行｢普通攻击｣时：造成的伤害+1。；如果我方手牌数量不多于1，则此技能少花费1个元素骰。；【[可用次数]：{useCnt}(可叠加，最多叠加到4次)】',
+        'ski1507,1', 1, [4, 6], useCnt, 4, -1, (status, event = {}) => {
             const { hcardsCnt = 10, heros = [] } = event;
             const { minusSkillRes } = minusDiceSkillHandle(event, { skilltype1: [0, 0, 1] }, () => hcardsCnt <= 1);
             return {
@@ -2155,8 +2155,8 @@ const statusTotal: StatusObj = {
             }
         }, { icbg: STATUS_BG_COLOR[6] }),
 
-    2199: (icon = '') => new GIStatus(2199, '氛围烈焰', '【我方宣布结束时：】如果我方的手牌数量不多于1，则造成1点[火元素伤害]。；【[可用次数]：{useCnt}】',
-        icon, 1, [1], 2, 0, -1, (_status, event = {}) => {
+    2199: () => new GIStatus(2199, '氛围烈焰', '【我方宣布结束时：】如果我方的手牌数量不多于1，则造成1点[火元素伤害]。；【[可用次数]：{useCnt}】',
+        'ski1212,2', 1, [1], 2, 0, -1, (_status, event = {}) => {
             const { hcardsCnt = 10 } = event;
             if (hcardsCnt > 1) return;
             return {
@@ -2171,7 +2171,7 @@ const statusTotal: StatusObj = {
 
     2200: () => readySkillShieldStatus(2200, '旋云护盾'),
 
-    2201: (expl?: ExplainContent[]) => new GIStatus(2201, '长枪开相', '本角色将在下次行动时，直接使用技能：【长枪开相】。',
+    2201: () => new GIStatus(2201, '长枪开相', '本角色将在下次行动时，直接使用技能：【rsk21】。',
         'buff3', 0, [10, 11], 1, 0, -1, (status, event = {}) => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 21,
@@ -2181,10 +2181,10 @@ const statusTotal: StatusObj = {
                 const sts2200 = heros[hidx].inStatus.find(ist => ist.id == 2200);
                 if (sts2200) sts2200.useCnt = 0;
             }
-        }), { expl }),
+        })),
 
-    2202: (icon = '', useCnt = 1) => new GIStatus(2202, '迸发扫描', '【双方选择行动前：】如果我方场上存在草原核或丰穰之核，则使其[可用次数]-1，并[舍弃]我方牌库顶的1张卡牌。然后，造成所[舍弃]卡牌的元素骰费用+1的[草元素伤害]。；【[可用次数]：{useCnt}(可叠加，最多叠加到3次)】',
-        icon, 1, [1], useCnt, 3, -1, (_status, event = {}) => {
+    2202: (useCnt = 1) => new GIStatus(2202, '迸发扫描', '【双方选择行动前：】如果我方场上存在草原核或丰穰之核，则使其[可用次数]-1，并[舍弃]我方牌库顶的1张卡牌。然后，造成所[舍弃]卡牌的元素骰费用+1的[草元素伤害]。；【[可用次数]：{useCnt}(可叠加，最多叠加到3次)】',
+        'ski1608,1', 1, [1], useCnt, 3, -1, (_status, event = {}) => {
             const { heros = [], hidx = -1, summons = [], pile = [], card, playerInfo: { discardIds = [] } = {} } = event;
             if (pile.length == 0 || heros[hidx].outStatus.every(ost => ost.id != 2005) && summons.every(smn => smn.id != 3043)) return;
             return {
@@ -2243,8 +2243,8 @@ const statusTotal: StatusObj = {
             }
         }),
 
-    2205: (icon = '', useCnt = 0) => new GIStatus(2205, '深噬之域', '我方[舍弃]或[调和]的手牌，会被吞噬。；每吞噬3张牌：【吞星之鲸】获得1点额外最大生命; 如果其中存在原本元素骰费用值相同的牌，则额外获得1点; 如果3张均相同，再额外获得1点。',
-        icon, 1, [4, 9, 12], useCnt, 0, -1, (_status, event = {}) => {
+    2205: (useCnt = 0) => new GIStatus(2205, '深噬之域', '我方[舍弃]或[调和]的手牌，会被吞噬。；每吞噬3张牌：【吞星之鲸】获得1点额外最大生命; 如果其中存在原本元素骰费用值相同的牌，则额外获得1点; 如果3张均相同，再额外获得1点。',
+        'ski1724,3', 1, [4, 9, 12], useCnt, 0, -1, (_status, event = {}) => {
             const { discards = [] } = event;
             return {
                 trigger: ['discard', 'reconcile'],
@@ -2292,8 +2292,8 @@ const statusTotal: StatusObj = {
             }
         })),
 
-    2209: (icon = '', useCnt = 1) => new GIStatus(2209, '绿洲之滋养', '我方打出【唤醒眷属】时：少花费1个元素骰。；【[可用次数]：{useCnt}(可叠加，最多到3)】',
-        icon, 1, [4], useCnt, 3, -1, (status, event = {}) => {
+    2209: (useCnt = 1) => new GIStatus(2209, '绿洲之滋养', '我方打出【crd907】时：少花费1个元素骰。；【[可用次数]：{useCnt}(可叠加，最多到3)】',
+        'ski1822,1', 1, [4], useCnt, 3, -1, (status, event = {}) => {
             const { card, minusDiceCard: mdc = 0 } = event;
             if (card && card.id == 907 && card.cost > mdc) {
                 return {
@@ -2367,4 +2367,4 @@ const statusTotal: StatusObj = {
 
 };
 
-export const heroStatus = (id: number, ...args: any) => statusTotal[id](...args);
+export const heroStatus = (id: number, ...args: any) => statusTotal[id](...args) ?? statusTotal[2000]();

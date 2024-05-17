@@ -30,7 +30,7 @@ class GICard implements Card {
     descriptions: string[] = [];
     explains: ExplainContent[];
     constructor(
-        id: number, name: string, description?: string, src?: string, cost?: number, costType?: number, type?: number, subType?: number[],
+        id: number, name: string, description: string, src?: string, cost?: number, costType?: number, type?: number, subType?: number[],
         userType: number = 0, canSelectHero?: number, handle?: (card: Card, event: CardHandleEvent) => CardHandleRes | void,
         options: {
             uct?: number, pct?: number, expl?: ExplainContent[], energy?: number, anydice?: number, canSelectSummon?: number,
@@ -50,7 +50,7 @@ class GICard implements Card {
             const el = Math.ceil((id - 580) / 2);
             this.description += `；(牌组中包含至少2个‹${el}${ELEMENT[el]}›角色，才能加入牌组)`;
         } else if (subType?.includes(6)) this.description += `；(牌组中包含【${herosTotal(userType).name}】，才能加入牌组)`;
-        this.src = src?.startsWith('https://') || src == '' ? src : 'http://taim.3vhost.club/geniusInovakation/' + src;
+        this.src = src ?? '';
         this.cost = cost ?? 0;
         this.costType = costType ?? 8;
         this.type = type ?? -1;
@@ -72,7 +72,7 @@ class GICard implements Card {
         }
         this.useCnt = uct;
         this.perCnt = pct;
-        this.explains = expl;
+        this.explains = [...(description.match(/(?<=【)[^【】]+\d(?=】)/g) ?? []), ...expl];
         this.energy = energy;
         this.anydice = anydice;
         this.canSelectSummon = canSelectSummon;
@@ -167,7 +167,7 @@ const elCard = (id: number, element: number, src: string) => {
 }
 
 const magicCount = (cnt: number, id?: number) => new GICard(id ?? (909 + 2 - cnt), `幻戏${cnt > 0 ? `倒计时：${cnt}` : '开始！'}`, `将我方所有元素骰转换为[万能元素骰]，摸4张牌。${cnt > 0 ? '；此牌在手牌或牌库中被[舍弃]后：将1张元素骰费用比此卡少1个的｢幻戏倒计时｣放置到你的牌库顶。' : ''}`,
-    `https://homdgcat.wiki/images/GCG/UI_Gcg_CardFace_Event_Event_MagicCount${cnt}.png`,
+    `/image/crd${id ?? (909 + 2 - cnt)}.png`,
     cnt, 8, 2, [], 0, 0, (card, event) => {
         const { trigger = '' } = event;
         const cnt = +card.name.slice(-1) || 0;
@@ -219,7 +219,7 @@ type CardObj = {
 // id 7xx：天赋
 
 const allCards: CardObj = {
-    0: new GICard(0, '无'),
+    0: new GICard(0, '无', ''),
 
     1: normalWeapon(1, '魔导绪论', 4, 'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/75720734/1abc432f853c6fa24624a92646c62237_7336928583967273301.png'),
 
@@ -329,13 +329,13 @@ const allCards: CardObj = {
             }
         }, { pct: 1 }),
 
-    25: new GICard(25, '终末嗟叹之诗', '【角色造成的伤害+1】。；【角色使用｢元素爆发｣后：】生成【千年的大乐章·别离之歌】。',
+    25: new GICard(25, '终末嗟叹之诗', '【角色造成的伤害+1】。；【角色使用｢元素爆发｣后：】生成【sts2048】。',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/fc5f899e61c9236a1319ea0f3c8b7a64_3821389462721294816.png',
         3, 8, 0, [0], 3, 1, () => ({
             addDmg: 1,
             trigger: ['skilltype3'],
             execmds: [{ cmd: 'getStatus', status: [heroStatus(2048)] }],
-        }), { expl: [heroStatus(2048)] }),
+        })),
 
     26: senlin1Weapon(26, '王下近侍', 3, 'https://act-upload.mihoyo.com/wiki-user-upload/2023/08/12/203927054/c667e01fa50b448958eff1d077a7ce1b_1806864451648421284.png'),
 
@@ -648,14 +648,14 @@ const allCards: CardObj = {
             }
         }, { pct: 1 }),
 
-    109: new GICard(109, '将帅兜鍪', '【行动阶段开始时：】为角色附属｢重嶂不移｣。',
+    109: new GICard(109, '将帅兜鍪', '【行动阶段开始时：】为角色附属｢【sts2050】｣。',
         'https://uploadstatic.mihoyo.com/ys-obc/2023/02/27/12109492/86ed124f5715f96604248a48a57de351_6600927335776465307.png',
         2, 8, 0, [1], 0, 1, () => ({
             trigger: ['phase-start'],
             execmds: [{ cmd: 'getStatus', status: [heroStatus(2050)] }],
-        }), { expl: [heroStatus(2050)] }),
+        })),
 
-    110: new GICard(110, '千岩牢固', '【行动阶段开始时：】为角色附属｢重嶂不移｣。；【角色受到伤害后：】如果所附属角色为｢出战角色｣，则生成1个此角色元素类型的元素骰。(每回合1次)',
+    110: new GICard(110, '千岩牢固', '【行动阶段开始时：】为角色附属｢【sts2050】｣。；【角色受到伤害后：】如果所附属角色为｢出战角色｣，则生成1个此角色元素类型的元素骰。(每回合1次)',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/6b1e8983b34f821da73f7a93076a501e_3915605735095366427.png',
         3, 8, 0, [1], 0, 1, (card, event) => {
             const { heros = [], hidxs: [hidx] = [], trigger = '' } = event;
@@ -667,7 +667,7 @@ const allCards: CardObj = {
                     if (trigger == 'getdmg' && card.perCnt > 0 || heros[hidx]?.isFront) --card.perCnt;
                 }
             }
-        }, { pct: 1, expl: [heroStatus(2050)] }),
+        }, { pct: 1 }),
 
     111: new GICard(111, '虺雷之姿', '【对角色打出｢天赋｣或角色使用｢普通攻击｣时：】少花费1个元素骰。(每回合1次)',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/d136fc0fd368a268fe3adaba8c0e64bb_8574805937216108762.png',
@@ -1087,17 +1087,17 @@ const allCards: CardObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/17/258999284/d34719921cedd17675f38dccc24ebf43_8000545229587575448.png',
         1, 8, 1, [2], 0, 0, () => ({ site: [newSite(4041, 217)] })),
 
-    218: new GICard(218, '梅洛彼得堡', '【我方出战角色受到伤害或治疗后：】此牌累积1点｢禁令｣。(最多累积到4点)；【行动阶段开始时：】如果此牌已有4点｢禁令｣，则消耗4点，在敌方场上生成【严格禁令】。',
+    218: new GICard(218, '梅洛彼得堡', '【我方出战角色受到伤害或治疗后：】此牌累积1点｢禁令｣。(最多累积到4点)；【行动阶段开始时：】如果此牌已有4点｢禁令｣，则消耗4点，在敌方场上生成【sts2174】。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/03/06/258999284/41b42ed41f27f21f01858c0cdacd6286_8391561387795885599.png',
         1, 8, 1, [2], 0, 0, () => ({ site: [newSite(4047, 218)] })),
 
-    219: new GICard(219, '清籁岛', '【任意阵营的角色受到治疗后：】使该角色附属【悠远雷暴】。；[持续回合]：2',
+    219: new GICard(219, '清籁岛', '【任意阵营的角色受到治疗后：】使该角色附属【sts2184】。；[持续回合]：2',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/2bfc84b730feaf6a350373080d97c255_2788497572764739451.png',
-        1, 8, 1, [2], 0, 0, () => ({ site: [newSite(4049, 219)] }), { expl: [heroStatus(2184)] }),
+        1, 8, 1, [2], 0, 0, () => ({ site: [newSite(4049, 219)] })),
 
-    220: new GICard(220, '赤王陵', '【对方累积摸4张牌后：】弃置此牌，在对方牌库顶生成2张【禁忌知识】。然后直到本回合结束前，对方每摸2张牌，就立刻在对方牌库顶生成1张【禁忌知识】。',
+    220: new GICard(220, '赤王陵', '【对方累积摸4张牌后：】弃置此牌，在对方牌库顶生成2张【crd908】。然后直到本回合结束前，对方每摸2张牌，就立刻在对方牌库顶生成1张【crd908】。',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Assist_Location_ChiWangLin.webp',
-        0, 8, 1, [2], 0, 0, () => ({ site: [newSite(4052, 220)] }), { expl: ['crd908'] }),
+        0, 8, 1, [2], 0, 0, () => ({ site: [newSite(4052, 220)] })),
 
     221: new GICard(221, '中央实验室遗址', '【我方[舍弃]或[调和]1张牌后：】此牌累积1点｢实验进展｣。每当｢实验进展｣达到3点、6点、9点时，就获得1个[万能元素骰]。然后，如果｢实验进展｣至少为9点，则弃置此牌。',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Assist_Location_FontaineSci.webp',
@@ -1199,12 +1199,12 @@ const allCards: CardObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/17/258999284/eb0cb5b32a8c816b7f13c3d44d0a0fe4_6830305949958078300.png',
         0, 8, 1, [3], 0, 0, () => ({ site: [newSite(4042, 321)] })),
 
-    322: new GICard(322, '婕德', '此牌会记录本场对局中我方支援区弃置卡牌的数量，称为｢阅历｣。(最多6点)；【我方角色使用｢元素爆发｣后：】如果｢阅历｣至少为6，则弃置此牌，对我方出战角色附属【沙与梦】。',
+    322: new GICard(322, '婕德', '此牌会记录本场对局中我方支援区弃置卡牌的数量，称为｢阅历｣。(最多6点)；【我方角色使用｢元素爆发｣后：】如果｢阅历｣至少为6，则弃置此牌，对我方出战角色附属【sts2188】。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/01/27/258999284/8931597db1022094e0ebdf3e91f5f44c_6917553066022383928.png',
         1, 8, 1, [3], 0, 0, (_card, event) => {
             const { playerInfo: { destroyedSite = 0 } = {} } = event;
             return { site: [newSite(4045, 322, destroyedSite)] }
-        }, { expl: [heroStatus(2188)] }),
+        }),
 
     323: new GICard(323, '西尔弗和迈勒斯', '此牌会记录本场对局中敌方角色受到过的元素伤害种类数，称为｢侍从的周到｣。(最多4点)；【结束阶段：】如果｢侍从的周到｣至少为3，则弃置此牌，然后摸｢侍从的周到｣点数的牌。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/01/27/258999284/e160832e6337e402fc01d5f89c042aa3_8868205734801507533.png',
@@ -1219,14 +1219,13 @@ const allCards: CardObj = {
             return { site: [newSite(4046, 323, Math.min(4, elcnt))] }
         }),
 
-    324: new GICard(324, '太郎丸', '【入场时：】生成4张【太郎丸的存款】，均匀地置入我方牌库中。；我方打出2张【太郎丸的存款】后：弃置此牌，召唤【愤怒的太郎丸】。',
+    324: new GICard(324, '太郎丸', '【入场时：】生成4张【crd902】，均匀地置入我方牌库中。；我方打出2张【crd902】后：弃置此牌，召唤【smn3059】。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/21981b1c1976bec9d767097aa861227d_6685318429748077021.png',
-        2, 0, 1, [3], 0, 0, () => ({ cmds: [{ cmd: 'addCard', cnt: 4, card: 902, element: 1 }], site: [newSite(4050, 324)] }),
-        { expl: ['crd902', newSummonee(3059)] }),
+        2, 0, 1, [3], 0, 0, () => ({ cmds: [{ cmd: 'addCard', cnt: 4, card: 902, element: 1 }], site: [newSite(4050, 324)] })),
 
-    325: new GICard(325, '白手套和渔夫', '【结束阶段：】生成1张｢清洁工作｣，随机将其置入我方牌库顶部5张牌之中。；如果此牌的[可用次数]仅剩1次，则摸1张牌。；[可用次数]：2',
+    325: new GICard(325, '白手套和渔夫', '【结束阶段：】生成1张【crd903】，随机将其置入我方牌库顶部5张牌之中。；如果此牌的[可用次数]仅剩1次，则摸1张牌。；[可用次数]：2',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/08e6d818575b52bd4459ec98798a799a_2502234583603653928.png',
-        0, 8, 1, [3], 0, 0, () => ({ site: [newSite(4051, 325)] }), { expl: ['crd903'] }),
+        0, 8, 1, [3], 0, 0, () => ({ site: [newSite(4051, 325)] })),
 
     326: new GICard(326, '亚瑟先生', '【我方[舍弃]或[调和]1张牌后：】此牌累积1点｢新闻线索｣。(最多累积到2点)；【结束阶段：】如果此牌已累积2点｢新闻线索｣，则扣除2点，复制对方牌库顶的1张牌加入我方手牌。',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Assist_NPC_MrArthur.webp',
@@ -1535,9 +1534,9 @@ const allCards: CardObj = {
             }
         }),
 
-    529: new GICard(529, '海中寻宝', '生成6张【海底宝藏】，随机地置入我方牌库中。',
+    529: new GICard(529, '海中寻宝', '生成6张【crd904】，随机地置入我方牌库中。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/40001dfa11a6aa20be3de16e0c89d598_3587066228917552605.png',
-        2, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'addCard', cnt: 6, card: 904 }] }), { expl: ['crd904'] }),
+        2, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'addCard', cnt: 6, card: 904 }] })),
 
     530: magicCount(3, 530),
 
@@ -1600,7 +1599,7 @@ const allCards: CardObj = {
             const smnIds = [3010, 3011, 3012, 3013].filter(sid => !summons.some(smn => smn.id === sid));
             return { summon: [newSummonee(smnIds[Math.floor(Math.random() * smnIds.length)])] }
         },
-        { expl: [newSummonee(3010), newSummonee(3011), newSummonee(3012), newSummonee(3013)] }),
+        { expl: ['smn3010', 'smn3011', 'smn3012', 'smn3013'] }),
 
     571: new GICard(571, '风与自由', '【本回合中，我方角色使用技能后：】将下一个我方后台角色切换到场上。',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/23/1694811/5a34fd4bfa32edfe062f0f6eb76106f4_4397297165227014906.png',
@@ -1641,7 +1640,7 @@ const allCards: CardObj = {
             const { eheros = [] } = event;
             const stsIds = [2124, 2125, 2126, 2127].filter(sid => !eheros.find(h => h.isFront)?.outStatus.some(sts => sts.id === sid));
             return { outStatusOppo: [heroStatus(stsIds[Math.floor(Math.random() * stsIds.length)])] }
-        }, { expl: [heroStatus(2124), heroStatus(2125), heroStatus(2126), heroStatus(2127)] }),
+        }, { expl: ['sts2124', 'sts2125', 'sts2126', 'sts2127'] }),
 
     581: elCard(581, 1, 'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/75833613/4111a176d3936db8220047ff52e37c40_264497451263620555.png'),
 
@@ -1832,9 +1831,9 @@ const allCards: CardObj = {
             return { cmds: [{ cmd: 'heal', cnt: 1 }], inStatus: [heroStatus(2186), heroStatus(2009)], canSelectHero }
         }),
 
-    701: new GICard(701, '唯此一心', '[战斗行动]：我方出战角色为【甘雨】时，装备此牌。；【甘雨】装备此牌后，立刻使用一次【霜华矢】。；装备有此牌的【甘雨】使用【霜华矢】时：如果此技能在本场对局中曾经被使用过，则其对敌方后台角色造成的[穿透伤害]改为3点。',
+    701: new GICard(701, '唯此一心', '[战斗行动]：我方出战角色为【甘雨】时，装备此牌。；【甘雨】装备此牌后，立刻使用一次【ski1001,2】。；装备有此牌的【甘雨】使用【ski1001,2】时：如果此技能在本场对局中曾经被使用过，则其对敌方后台角色造成的[穿透伤害]改为3点。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/12109492/15a100ee0285878fc5749663031fa05a_7762319984393418259.png',
-        5, 4, 0, [6, 7], 1001, 1, talentSkill(2), { expl: talentExplain(1001, 2) }),
+        5, 4, 0, [6, 7], 1001, 1, talentSkill(2)),
 
     702: new GICard(702, '寒天宣命祝词', '装备有此牌的【神里绫华】生成的[冰元素附魔]会使所附魔角色造成的[冰元素伤害]+1。；切换到装备有此牌的【神里绫华】时：少花费1个元素骰。(每回合1次)',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/07/183046623/7d706fd25ab0b3c4f8cca3af08d8a07b_2913232629544868049.png',
@@ -1851,60 +1850,59 @@ const allCards: CardObj = {
             },
         }), { pct: 1 }),
 
-    703: new GICard(703, '重帘留香', '[战斗行动]：我方出战角色为【行秋】时，装备此牌。；【行秋】装备此牌后，立刻使用一次【画雨笼山】。；装备有此牌的【行秋】生成的【雨帘剑】，会在我方出战角色受到至少为2的伤害时抵消伤害，并且初始[可用次数]+1。',
+    703: new GICard(703, '重帘留香', '[战斗行动]：我方出战角色为【行秋】时，装备此牌。；【行秋】装备此牌后，立刻使用一次【ski1102,1】。；装备有此牌的【行秋】生成的【sts2002】，会在我方出战角色受到至少为2的伤害时抵消伤害，并且初始[可用次数]+1。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/07/183046623/eb3cd31f7a2c433499221b5664a264f3_3086723857644931388.png',
-        3, 1, 0, [6, 7], 1102, 1, talentSkill(1), { expl: talentExplain(1102, 1) }),
+        3, 1, 0, [6, 7], 1102, 1, talentSkill(1)),
 
-    704: new GICard(704, '沉没的预言', '[战斗行动]：我方出战角色为【莫娜】时，装备此牌。；【莫娜】装备此牌后，立刻使用一次【命定星轨】。；装备有此牌的【莫娜】出战期间，我方引发的[水元素相关反应]伤害额外+2。',
+    704: new GICard(704, '沉没的预言', '[战斗行动]：我方出战角色为【莫娜】时，装备此牌。；【莫娜】装备此牌后，立刻使用一次【ski1103,2】。；装备有此牌的【莫娜】出战期间，我方引发的[水元素相关反应]伤害额外+2。',
         'https://patchwiki.biligame.com/images/ys/d/de/1o1lt07ey988flsh538t7ywvnpzvzjk.png',
         3, 1, 0, [6, 7], 1103, 1, (_card, event) => talentHandle(event, 2, () => {
             const { heros = [], hidxs: [hidx] = [] } = event;
             return [, { addDmgCdt: isCdt(heros[hidx]?.isFront, 2) }]
-        }, 'el1Reaction'), { expl: talentExplain(1103, 2), energy: 3 }),
+        }, 'el1Reaction'), { energy: 3 }),
 
-    705: new GICard(705, '流火焦灼', '[战斗行动]：我方出战角色为【迪卢克】时，装备此牌。；【迪卢克】装备此牌后，立刻使用一次【逆焰之刃】。；装备有此牌的【迪卢克】每回合第2次使用【逆焰之刃】时，少花费1个[火元素骰]。',
+    705: new GICard(705, '流火焦灼', '[战斗行动]：我方出战角色为【迪卢克】时，装备此牌。；【迪卢克】装备此牌后，立刻使用一次【ski1201,1】。；装备有此牌的【迪卢克】每回合第2次使用【ski1201,1】时，少花费1个[火元素骰]。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/75720734/5d72a776e175c52de3c4ebb113f2b9e7_2138984540269318755.png',
         3, 2, 0, [6, 7], 1201, 1, (_card, event) => talentHandle(event, 1, () => {
             const { minusSkillRes } = minusDiceSkillHandle(event, { skilltype2: [0, 0, 1] }, skill => skill.useCnt == 1);
             return [, { ...minusSkillRes }]
-        }), { expl: talentExplain(1201, 1) }),
+        })),
 
-    706: new GICard(706, '混元熵增论', '[战斗行动]：我方出战角色为【砂糖】时，装备此牌。；【砂糖】装备此牌后，立刻使用一次【禁·风灵作成·柒伍同构贰型】。；装备有此牌的【砂糖】生成的【大型风灵】已转换成另一种元素后：我方造成的此类元素伤害+1。',
+    706: new GICard(706, '混元熵增论', '[战斗行动]：我方出战角色为【砂糖】时，装备此牌。；【砂糖】装备此牌后，立刻使用一次【ski1401,2】。；装备有此牌的【砂糖】生成的【smn3005】已转换成另一种元素后：我方造成的此类元素伤害+1。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/07/183046623/93fb13495601c24680e2299f9ed4f582_2499309288429565866.png',
-        3, 5, 0, [6, 7], 1401, 1, talentSkill(2), { expl: talentExplain(1401, 2), energy: 2 }),
+        3, 5, 0, [6, 7], 1401, 1, talentSkill(2), { energy: 2 }),
 
-    707: new GICard(707, '蒲公英的国土', '[战斗行动]：我方出战角色为【琴】时，装备此牌。；【琴】装备此牌后，立刻使用一次【蒲公英之风】。；装备有此牌的【琴】在场时，【蒲公英领域】会使我方造成的[风元素伤害]+1。',
+    707: new GICard(707, '蒲公英的国土', '[战斗行动]：我方出战角色为【琴】时，装备此牌。；【琴】装备此牌后，立刻使用一次【ski1402,2】。；装备有此牌的【琴】在场时，【smn3006】会使我方造成的[风元素伤害]+1。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/07/183046623/4e162cfa636a6db51f166d7d82fbad4f_6452993893511545582.png',
-        4, 5, 0, [6, 7], 1402, 1, talentSkill(2), { expl: talentExplain(1402, 2), energy: 2 }),
+        4, 5, 0, [6, 7], 1402, 1, talentSkill(2), { energy: 2 }),
 
-    708: new GICard(708, '交叉火力', '[战斗行动]：我方出战角色为【香菱】时，装备此牌。；【香菱】装备此牌后，立刻使用一次【锅巴出击】。；装备有此牌的【香菱】施放【锅巴出击】时，自身也会造成1点[火元素伤害]。',
+    708: new GICard(708, '交叉火力', '[战斗行动]：我方出战角色为【香菱】时，装备此牌。；【香菱】装备此牌后，立刻使用一次【ski1202,1】。；装备有此牌的【香菱】施放【ski1202,1】时，自身也会造成1点[火元素伤害]。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/07/183046623/101e8ef859847643178755f3bcacbad5_4705629747924939707.png',
-        3, 2, 0, [6, 7], 1202, 1, talentSkill(1), { expl: talentExplain(1202, 1) }),
+        3, 2, 0, [6, 7], 1202, 1, talentSkill(1)),
 
-    709: new GICard(709, '噬星魔鸦', '[战斗行动]：我方出战角色为【菲谢尔】时，装备此牌。；【菲谢尔】装备此牌后，立刻使用一次【夜巡影翼】。；装备有此牌的【菲谢尔】生成的【奥兹】，会在【菲谢尔】｢普通攻击｣后造成2点[雷元素伤害]。(需消耗[可用次数])',
+    709: new GICard(709, '噬星魔鸦', '[战斗行动]：我方出战角色为【菲谢尔】时，装备此牌。；【菲谢尔】装备此牌后，立刻使用一次【ski1301,1】。；装备有此牌的【菲谢尔】生成的【smn3008】，会在【菲谢尔】｢普通攻击｣后造成2点[雷元素伤害]。(需消耗[可用次数])',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/07/183046623/95879bb5f97234a4af1210b522e2c948_1206699082030452030.png',
-        3, 3, 0, [6, 7], 1301, 1, talentSkill(1), { expl: talentExplain(1301, 1) }),
+        3, 3, 0, [6, 7], 1301, 1, talentSkill(1)),
 
-    710: new GICard(710, '储之千日，用之一刻', '[战斗行动]：我方出战角色为【凝光】时，装备此牌。；【凝光】装备此牌后，立刻使用一次【璇玑屏】。；装备有此牌的【凝光】在场时，【璇玑屏】会使我方造成的[岩元素伤害]+1。',
+    710: new GICard(710, '储之千日，用之一刻', '[战斗行动]：我方出战角色为【凝光】时，装备此牌。；【凝光】装备此牌后，立刻使用一次【ski1501,1】。；装备有此牌的【凝光】在场时，【sts2027】会使我方造成的[岩元素伤害]+1。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/07/183046623/8b72e98d01d978567eac5b3ad09d7ec1_7682448375697308965.png',
-        4, 6, 0, [6, 7], 1501, 1, talentSkill(1), { expl: talentExplain(1501, 1) }),
+        4, 6, 0, [6, 7], 1501, 1, talentSkill(1)),
 
-    711: new GICard(711, '飞叶迴斜', '[战斗行动]：我方出战角色为【柯莱】时，装备此牌。；【柯莱】装备此牌后，立刻使用一次【拂花偈叶】。；装备有此牌的【柯莱】使用了【拂花偈叶】的回合中，我方角色的技能引发[草元素相关反应]后：造成1点[草元素伤害]。(每回合1次)',
+    711: new GICard(711, '飞叶迴斜', '[战斗行动]：我方出战角色为【柯莱】时，装备此牌。；【柯莱】装备此牌后，立刻使用一次【ski1601,1】。；装备有此牌的【柯莱】使用了【ski1601,1】的回合中，我方角色的技能引发[草元素相关反应]后：造成1点[草元素伤害]。(每回合1次)',
         'https://patchwiki.biligame.com/images/ys/0/01/6f79lc4y34av8nsfwxiwtbir2g9b93e.png',
-        4, 7, 0, [6, 7], 1601, 1, talentSkill(1), { expl: talentExplain(1601, 1) }),
+        4, 7, 0, [6, 7], 1601, 1, talentSkill(1)),
 
-    712: new GICard(712, '猫爪冰摇', '[战斗行动]：我方出战角色为【迪奥娜】时，装备此牌。；【迪奥娜】装备此牌后，立刻使用一次【猫爪冻冻】。；装备有此牌的【迪奥娜】生成的【猫爪护盾】，所提供的[护盾]值+1。',
+    712: new GICard(712, '猫爪冰摇', '[战斗行动]：我方出战角色为【迪奥娜】时，装备此牌。；【迪奥娜】装备此牌后，立刻使用一次【ski1002,1】。；装备有此牌的【迪奥娜】生成的【sts2033】，所提供的[护盾]值+1。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/07/183046623/cb37f02217bcd8ae5f6e4a6eb9bae539_3357631204660850476.png',
-        3, 4, 0, [6, 7], 1002, 1, talentSkill(1), { expl: talentExplain(1002, 1) }),
+        3, 4, 0, [6, 7], 1002, 1, talentSkill(1)),
 
-    713: new GICard(713, '冒险憧憬', '[战斗行动]：我方出战角色为【班尼特】时，装备此牌。；【班尼特】装备此牌后，立刻使用一次【美妙旅程】。；装备有此牌的【班尼特】生成的【鼓舞领域】，其伤害提升效果改为总是生效，不再具有生命值限制。',
+    713: new GICard(713, '冒险憧憬', '[战斗行动]：我方出战角色为【班尼特】时，装备此牌。；【班尼特】装备此牌后，立刻使用一次【ski1203,2】。；装备有此牌的【班尼特】生成的【sts2034】，其伤害提升效果改为总是生效，不再具有生命值限制。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/12109492/044617980be5a70980f7826036963e74_8167452876830335549.png',
-        4, 2, 0, [6, 7], 1203, 1, talentSkill(2), { expl: talentExplain(1203, 2), energy: 2 }),
+        4, 2, 0, [6, 7], 1203, 1, talentSkill(2), { energy: 2 }),
 
-    714: new GICard(714, '觉醒', '[战斗行动]：我方出战角色为【雷泽】时，装备此牌。；【雷泽】装备此牌后，立刻使用一次【利爪与苍雷】。；装备有此牌的【雷泽】使用【利爪与苍雷】后：使我方一个‹3雷元素›角色获得1点[充能]。(出战角色优先，每回合1次)',
+    714: new GICard(714, '觉醒', '[战斗行动]：我方出战角色为【雷泽】时，装备此牌。；【雷泽】装备此牌后，立刻使用一次【ski1302,1】。；装备有此牌的【雷泽】使用【ski1302,1】后：使我方一个‹3雷元素›角色获得1点[充能]。(出战角色优先，每回合1次)',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/07/183046623/7b07468873ea01ee319208a3e1f608e3_1769364352128477547.png',
-        3, 3, 0, [6, 7], 1302, 1,
-        (card, event) => talentHandle(event, 1, () => {
+        3, 3, 0, [6, 7], 1302, 1, (card, event) => talentHandle(event, 1, () => {
             const { heros = [], hidxs: [fhidx] = [] } = event;
             const nhidxs: number[] = [];
             for (let i = 0; i < heros.length; ++i) {
@@ -1915,291 +1913,286 @@ const allCards: CardObj = {
                     break;
                 }
             }
-            const isUse = card.perCnt > 0 && nhidxs.length > 0;
-            return [() => {
-                if (isUse) --card.perCnt;
-            }, { execmds: isCdt<Cmds[]>(isUse, [{ cmd: 'getEnergy', cnt: 1, hidxs: nhidxs }]) }]
-        }), { pct: 1, expl: talentExplain(1302, 1) }),
+            if (card.perCnt > 0 && nhidxs.length > 0) {
+                return [() => { --card.perCnt }, { execmds: [{ cmd: 'getEnergy', cnt: 1, hidxs: nhidxs }] }]
+            }
+        }), { pct: 1 }),
 
-    715: new GICard(715, '支援就交给我吧', '[战斗行动]：我方出战角色为【诺艾尔】时，装备此牌。；【诺艾尔】装备此牌后，立刻使用一次【护心铠】。；装备有此牌的【诺艾尔】｢普通攻击｣后：如果此牌和【护体岩铠】仍在场，治疗我方所有角色1点。(每回合1次)',
+    715: new GICard(715, '支援就交给我吧', '[战斗行动]：我方出战角色为【诺艾尔】时，装备此牌。；【诺艾尔】装备此牌后，立刻使用一次【ski1502,1】。；装备有此牌的【诺艾尔】｢普通攻击｣后：如果此牌和【sts2036】仍在场，治疗我方所有角色1点。(每回合1次)',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/07/183046623/4c6332fd42d6edc64633a44aa900b32f_248861550176006555.png',
-        3, 6, 0, [6, 7], 1502, 1,
-        (card, event) => talentHandle(event, 1, () => {
-            const { heros = [], hidxs: hi = [] } = event;
-            const isHeal = heros[hi[0]]?.outStatus.some(ost => ost.id == 2036) && card.perCnt > 0;
-            const hidxs = allHidxs(heros);
-            return [() => {
-                if (isHeal) --card.perCnt;
-            }, { execmds: isCdt<Cmds[]>(isHeal, [{ cmd: 'heal', cnt: 1, hidxs }]) }]
-        }, 'skilltype1'), { pct: 1, expl: talentExplain(1502, 1) }),
+        3, 6, 0, [6, 7], 1502, 1, (card, event) => talentHandle(event, 1, () => {
+            const { heros = [], hidxs: [hidx] = [] } = event;
+            if (heros[hidx]?.outStatus.some(ost => ost.id == 2036) && card.perCnt > 0) {
+                return [() => { --card.perCnt }, { execmds: [{ cmd: 'heal', cnt: 1, hidxs: allHidxs(heros) }] }]
+            }
+        }, 'skilltype1'), { pct: 1 }),
 
-    716: new GICard(716, '光辉的季节', '[战斗行动]：我方出战角色为【芭芭拉】时，装备此牌。；【芭芭拉】装备此牌后，立刻使用一次【演唱，开始♪】。；装备有此牌的【芭芭拉】在场时，【歌声之环】会使我方执行｢切换角色｣行动时少花费1个元素骰。(每回合1次)',
+    716: new GICard(716, '光辉的季节', '[战斗行动]：我方出战角色为【芭芭拉】时，装备此牌。；【芭芭拉】装备此牌后，立刻使用一次【ski1101,1】。；装备有此牌的【芭芭拉】在场时，【歌声之环】会使我方执行｢切换角色｣行动时少花费1个元素骰。(每回合1次)',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/07/183046623/a0b27dbfb223e2fe52b7362ad80c3d76_4257766629162615403.png',
-        3, 1, 0, [6, 7], 1101, 1,
-        (card, event) => talentHandle(event, 1, () => {
+        3, 1, 0, [6, 7], 1101, 1, (card, event) => talentHandle(event, 1, () => {
             let { summons = [], changeHeroDiceCnt = 0 } = event;
-            const isMinus = card.perCnt > 0 && summons.some(smn => smn.id == 3015);
-            return [() => {
-                if (changeHeroDiceCnt > 0 && isMinus) {
-                    --card.perCnt;
-                    --changeHeroDiceCnt;
-                }
-                return { changeHeroDiceCnt }
-            }, { minusDiceHero: isCdt(isMinus, 1) }]
-        }, 'change'), { pct: 1, expl: talentExplain(1101, 1) }),
+            if (card.perCnt > 0 && summons.some(smn => smn.id == 3015)) {
+                return [() => {
+                    if (changeHeroDiceCnt > 0) {
+                        --card.perCnt;
+                        --changeHeroDiceCnt;
+                    }
+                    return { changeHeroDiceCnt }
+                }, { minusDiceHero: 1 }]
+            }
+        }, 'change'), { pct: 1 }),
 
-    717: new GICard(717, '冷血之剑', '[战斗行动]：我方出战角色为【凯亚】时，装备此牌。；【凯亚】装备此牌后，立刻使用一次【霜袭】。；装备有此牌的【凯亚】使用【霜袭】后：治疗自身2点。(每回合1次)',
+    717: new GICard(717, '冷血之剑', '[战斗行动]：我方出战角色为【凯亚】时，装备此牌。；【凯亚】装备此牌后，立刻使用一次【ski1003,1】。；装备有此牌的【凯亚】使用【ski1003,1】后：治疗自身2点。(每回合1次)',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/07/183046623/616ba40396a3998560d79d3e720dbfd2_3275119808720081204.png',
-        4, 4, 0, [6, 7], 1003, 1,
-        (card, event) => talentHandle(event, 1, () => {
+        4, 4, 0, [6, 7], 1003, 1, (card, event) => talentHandle(event, 1, () => {
             if (card.perCnt <= 0) return;
             const { hidxs } = event;
             return [() => { --card.perCnt }, { execmds: [{ cmd: 'heal', cnt: 2, hidxs }] }]
-        }), { pct: 1, expl: talentExplain(1003, 1) }),
+        }), { pct: 1 }),
 
-    718: new GICard(718, '吐纳真定', '[战斗行动]：我方出战角色为【重云】时，装备此牌。；【重云】装备此牌后，立刻使用一次【重华叠霜】。；装备有此牌的【重云】生成的【重华叠霜领域】获得以下效果：；使我方单手剑、双手剑或长柄武器角色的｢普通攻击｣伤害+1。',
+    718: new GICard(718, '吐纳真定', '[战斗行动]：我方出战角色为【重云】时，装备此牌。；【重云】装备此牌后，立刻使用一次【ski1004,1】。；装备有此牌的【重云】生成的【sts2039】获得以下效果：；使我方单手剑、双手剑或长柄武器角色的｢普通攻击｣伤害+1。',
         'https://patchwiki.biligame.com/images/ys/e/e6/qfsltpvntkjxioew81iehfhy5xvl7v6.png',
-        3, 4, 0, [6, 7], 1004, 1, talentSkill(1), { expl: talentExplain(1004, 1) }),
+        3, 4, 0, [6, 7], 1004, 1, talentSkill(1)),
 
-    719: new GICard(719, '长野原龙势流星群', '[战斗行动]：我方出战角色为【宵宫】时，装备此牌。；【宵宫】装备此牌后，立刻使用一次【焰硝庭火舞】。；装备有此牌的【宵宫】生成的【庭火焰硝】初始[可用次数]+1，触发【庭火焰硝】后：额外造成1点[火元素伤害]。',
+    719: new GICard(719, '长野原龙势流星群', '[战斗行动]：我方出战角色为【宵宫】时，装备此牌。；【宵宫】装备此牌后，立刻使用一次【ski1204,1】。；装备有此牌的【宵宫】生成的【sts2040】初始[可用次数]+1，触发【sts2040】后：额外造成1点[火元素伤害]。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/07/183046623/126c63df7d92e7d9c0a815a7a54558fc_6536428182837399330.png',
-        2, 2, 0, [6, 7], 1204, 1, talentSkill(1), { expl: talentExplain(1204, 1) }),
+        2, 2, 0, [6, 7], 1204, 1, talentSkill(1)),
 
-    720: new GICard(720, '抵天雷罚', '[战斗行动]：我方出战角色为【刻晴】时，装备此牌。；【刻晴】装备此牌后，立刻使用一次【星斗归位】。；装备有此牌的【刻晴】生成的[雷元素附魔]获得以下效果：初始持续回合+1，并且会使所附属角色造成的[雷元素伤害]+1。',
+    720: new GICard(720, '抵天雷罚', '[战斗行动]：我方出战角色为【刻晴】时，装备此牌。；【刻晴】装备此牌后，立刻使用一次【ski1303,1】。；装备有此牌的【刻晴】生成的【sts2008,3】获得以下效果：初始[持续回合]+1，并且会使所附属角色造成的[雷元素伤害]+1。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/07/183046623/58e4a4eca066cc26e6547f590def46ad_1659079510132865575.png',
-        3, 3, 0, [6, 7], 1303, 1, talentSkill(1), { expl: talentExplain(1303, 1) }),
+        3, 3, 0, [6, 7], 1303, 1, talentSkill(1)),
 
-    721: new GICard(721, '百川奔流', '[战斗行动]：我方出战角色为【纯水精灵·洛蒂娅】时，装备此牌。；【纯水精灵·洛蒂娅】装备此牌后，立刻使用一次【潮涌与激流】。；装备有此牌的【纯水精灵·洛蒂娅】施放【潮涌与激流】时：使我方所有召唤物[可用次数]+1。',
+    721: new GICard(721, '百川奔流', '[战斗行动]：我方出战角色为【纯水精灵·洛蒂娅】时，装备此牌。；【纯水精灵·洛蒂娅】装备此牌后，立刻使用一次【ski1721,3】。；装备有此牌的【纯水精灵·洛蒂娅】施放【ski1721,3】时：使我方所有召唤物[可用次数]+1。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/07/183046623/b1a0f699a2168c60bc338529c3dee38b_3650391807139860687.png',
-        4, 1, 0, [6, 7], 1721, 1, talentSkill(3), { expl: talentExplain(1721, 3), energy: 3 }),
+        4, 1, 0, [6, 7], 1721, 1, talentSkill(3), { energy: 3 }),
 
-    722: new GICard(722, '镜锢之笼', '[战斗行动]：我方出战角色为【愚人众·藏镜仕女】时，装备此牌。；【愚人众·藏镜仕女】装备此牌后，立刻使用一次【潋波绽破】。；装备有此牌的【愚人众·藏镜仕女】生成的【水光破镜】获得以下效果：；初始持续回合+1，并且会使所附属角色切换到其他角色时元素骰费用+1。',
+    722: new GICard(722, '镜锢之笼', '[战斗行动]：我方出战角色为【愚人众·藏镜仕女】时，装备此牌。；【愚人众·藏镜仕女】装备此牌后，立刻使用一次【ski1722,1】。；装备有此牌的【愚人众·藏镜仕女】生成的【sts2043】获得以下效果：；初始[持续回合]+1，并且会使所附属角色切换到其他角色时元素骰费用+1。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/12109492/b0294bbab49b071b0baa570bc2339917_4550477078586399854.png',
-        3, 1, 0, [6, 7], 1722, 1, talentSkill(1), { expl: talentExplain(1722, 1) }),
+        3, 1, 0, [6, 7], 1722, 1, talentSkill(1)),
 
-    723: new GICard(723, '悉数讨回', '[战斗行动]：我方出战角色为【愚人众·火之债务处理人】时，装备此牌。；【愚人众·火之债务处理人】装备此牌后，立刻使用一次【伺机而动】。；装备有此牌的【愚人众·火之债务处理人】生成的【潜行】获得以下效果：；初始持续回合+1，并且使所附属角色造成的[物理伤害]变为[火元素伤害]。',
+    723: new GICard(723, '悉数讨回', '[战斗行动]：我方出战角色为【愚人众·火之债务处理人】时，装备此牌。；【愚人众·火之债务处理人】装备此牌后，立刻使用一次【ski1741,1】。；装备有此牌的【愚人众·火之债务处理人】生成的【sts2044】获得以下效果：；初始[持续回合]+1，并且使所附属角色造成的[物理伤害]变为[火元素伤害]。',
         'https://patchwiki.biligame.com/images/ys/4/4b/p2lmo1107n5nwc2pulpjkurlixa2o4h.png',
-        3, 2, 0, [6, 7], 1741, 1, talentSkill(1), { expl: talentExplain(1741, 1) }),
+        3, 2, 0, [6, 7], 1741, 1, talentSkill(1)),
 
-    724: new GICard(724, '机巧神通', '[战斗行动]：我方出战角色为【魔偶剑鬼】时，装备此牌。；【魔偶剑鬼】装备此牌后，立刻使用一次【孤风刀势】。；装备有此牌的【魔偶剑鬼】施放【孤风刀势】后，我方切换到后一个角色；施放【霜驰影突】后，我方切换到前一个角色。',
+    724: new GICard(724, '机巧神通', '[战斗行动]：我方出战角色为【魔偶剑鬼】时，装备此牌。；【魔偶剑鬼】装备此牌后，立刻使用一次【ski1781,1】。；装备有此牌的【魔偶剑鬼】施放【ski1781,1】后，我方切换到后一个角色；施放【ski1781,2】后，我方切换到前一个角色。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/12109492/29356bd9bc7cbd8bf4843d6725cb8af6_6954582480310016602.png',
-        3, 5, 0, [6, 7], 1781, 1, talentSkill(1), { expl: [...talentExplain(1781, 1), newSummonee(3020)] }),
+        3, 5, 0, [6, 7], 1781, 1, talentSkill(1)),
 
-    725: new GICard(725, '重铸：岩盔', '[战斗行动]：我方出战角色为【丘丘岩盔王】时，装备此牌。；【丘丘岩盔王】装备此牌后，立刻使用一次【Upa Shato】。；装备有此牌的【丘丘岩盔王】击倒地方角色后：【丘丘岩盔王】重新附属【岩盔】和【坚岩之力】。',
+    725: new GICard(725, '重铸：岩盔', '[战斗行动]：我方出战角色为【丘丘岩盔王】时，装备此牌。；【丘丘岩盔王】装备此牌后，立刻使用一次【ski1801,2】。；装备有此牌的【丘丘岩盔王】击倒地方角色后：【丘丘岩盔王】重新附属【sts2045】和【sts2046】。',
         'https://patchwiki.biligame.com/images/ys/9/9f/ijpaagvk7o9jh1pzb933vl9l2l4islk.png',
         4, 6, 0, [6, 7], 1801, 1, (_card, event) => talentHandle(event, 2, () =>
-            [, { execmds: [{ cmd: 'getStatus', status: [heroStatus(2045), heroStatus(2046)] }] }], 'kill'), { expl: talentExplain(1801, 2), energy: 2 }),
+            [, { execmds: [{ cmd: 'getStatus', status: [heroStatus(2045), heroStatus(2046)] }] }], 'kill'), { energy: 2 }),
 
-    726: new GICard(726, '孢子增殖', '[战斗行动]：我方出战角色为【翠翎恐蕈】时，装备此牌。；【翠翎恐蕈】装备此牌后，立刻使用一次【不稳定孢子云】。；装备有此牌的【翠翎恐蕈】可累积的｢活化激能｣层数+1。',
+    726: new GICard(726, '孢子增殖', '[战斗行动]：我方出战角色为【翠翎恐蕈】时，装备此牌。；【翠翎恐蕈】装备此牌后，立刻使用一次【ski1781,1】。；装备有此牌的【翠翎恐蕈】可累积的｢【sts2047】｣层数+1。',
         'https://patchwiki.biligame.com/images/ys/4/41/bj27pgk1uzd78oc9twitrw7aj1fzatb.png',
-        3, 7, 0, [6, 7], 1821, 1, talentSkill(1), { expl: talentExplain(1781, 1) }),
+        3, 7, 0, [6, 7], 1821, 1, talentSkill(1)),
 
-    727: new GICard(727, '砰砰礼物', '[战斗行动]：我方出战角色为【可莉】时，装备此牌。；【可莉】装备此牌后，立刻使用一次【蹦蹦炸弹】。；装备有此牌的【可莉】生成的【爆裂火花】的[可用次数]+1。',
+    727: new GICard(727, '砰砰礼物', '[战斗行动]：我方出战角色为【可莉】时，装备此牌。；【可莉】装备此牌后，立刻使用一次【ski1205,1】。；装备有此牌的【可莉】生成的【sts2058】的[可用次数]+1。',
         'https://uploadstatic.mihoyo.com/ys-obc/2023/01/16/12109492/0cca153cadfef3f9ccfd37fd2b306b61_8853740768385239334.png',
-        3, 2, 0, [6, 7], 1205, 1, talentSkill(1), { expl: talentExplain(1205, 1) }),
+        3, 2, 0, [6, 7], 1205, 1, talentSkill(1)),
 
-    728: new GICard(728, '落羽的裁择', '[战斗行动]：我方出战角色为【赛诺】时，装备此牌。；【赛诺】装备此牌后，立刻使用一次【秘仪·律渊渡魂】。；装备有此牌的【赛诺】在【启途誓使】的｢凭依｣级数为偶数时使用【秘仪·律渊渡魂】时，造成的伤害额外+1。',
+    728: new GICard(728, '落羽的裁择', '[战斗行动]：我方出战角色为【赛诺】时，装备此牌。；【赛诺】装备此牌后，立刻使用一次【ski1304,1】。；装备有此牌的【赛诺】在【sts2060】的｢凭依｣级数为偶数时使用【ski1304,1】时，造成的伤害额外+1。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/07/183046623/b4f218c914886ea4ab9ce4e0e129a8af_2603691344610696520.png',
-        3, 3, 0, [6, 7], 1304, 1, talentSkill(1), { expl: [...talentExplain(1304, 1), heroStatus(2060)] }),
+        3, 3, 0, [6, 7], 1304, 1, talentSkill(1)),
 
-    729: new GICard(729, '霹雳连霄', '[战斗行动]：我方出战角色为【北斗】时，装备此牌。；【北斗】装备此牌后，立刻使用一次【捉浪】。；装备有此牌的【北斗】使用【踏潮】时：使【北斗】本回合内｢普通攻击｣少花费1个[无色元素骰]。',
+    729: new GICard(729, '霹雳连霄', '[战斗行动]：我方出战角色为【北斗】时，装备此牌。；【北斗】装备此牌后，立刻使用一次【ski1305,1】。；装备有此牌的【北斗】使用【rsk1】时：使【北斗】本回合内｢普通攻击｣少花费1个[无色元素骰]。',
         'https://uploadstatic.mihoyo.com/ys-obc/2023/01/16/12109492/c3004d7c3873556c01124277c58b4b87_6946169426849615589.png',
-        3, 3, 0, [6, 7], 1305, 1, talentSkill(1), { expl: talentExplain(1305, 1) }),
+        3, 3, 0, [6, 7], 1305, 1, talentSkill(1)),
 
-    730: new GICard(730, '我界', '[战斗行动]：我方出战角色为【九条裟罗】时，装备此牌。；【九条裟罗】装备此牌后，立刻使用一次【鸦羽天狗霆雷召咒】。；装备有此牌的【九条裟罗】在场时，我方附属有【鸣煌护持】的‹3雷元素›角色，｢元素战技｣和｢元素爆发｣造成的伤害额外+1。',
+    730: new GICard(730, '我界', '[战斗行动]：我方出战角色为【九条裟罗】时，装备此牌。；【九条裟罗】装备此牌后，立刻使用一次【ski1306,1】。；装备有此牌的【九条裟罗】在场时，我方附属有【sts2064】的‹3雷元素›角色，｢元素战技｣和｢元素爆发｣造成的伤害额外+1。',
         'https://uploadstatic.mihoyo.com/ys-obc/2023/02/27/12109492/3eb3cbf6779afc39d7812e5dd6e504d9_148906889400555580.png',
         3, 3, 0, [6, 7], 1306, 1, (_card, event) => talentHandle(event, 1, () => {
-            const { heros = [] } = event;
-            const hero = heros.find(h => h.isFront);
-            if (!hero) throw new Error('hero not found: heros=' + heros);
-            const isAdd = hero.element == 3 && hero.inStatus.some(ist => ist.id == 2064);
-            return [, { addDmgCdt: isCdt(isAdd, 1) }]
-        }, ['skilltype2', 'skilltype3', 'other-skilltype2', 'other-skilltype3']), { expl: talentExplain(1306, 1) }),
+            const { heros = [], hidxs: [hidx] = [] } = event;
+            const hero = heros[hidx];
+            if (hero.isFront && hero.element == 3 && hero.inStatus.some(ist => ist.id == 2064)) {
+                return [, { addDmgCdt: 1 }]
+            }
+        }, ['skilltype2', 'skilltype3', 'other-skilltype2', 'other-skilltype3'])),
 
-    731: new GICard(731, '匣中玉栉', '[战斗行动]：我方出战角色为【珊瑚宫心海】时，装备此牌。；【珊瑚宫心海】装备此牌后，立刻使用一次【海人化羽】。；装备有此牌的【珊瑚宫心海】使用【海人化羽】时：召唤一个[可用次数]为1的【化海月】; 如果【化海月】已在场，则改为使其[可用次数]+1。；【仪来羽衣】存在期间，【化海月】造成的伤害+1。',
+    731: new GICard(731, '匣中玉栉', '[战斗行动]：我方出战角色为【珊瑚宫心海】时，装备此牌。；【珊瑚宫心海】装备此牌后，立刻使用一次【ski1104,2】。；装备有此牌的【珊瑚宫心海】使用【ski1104,2】时：召唤一个[可用次数]为1的【smn3023】; 如果【smn3023】已在场，则改为使其[可用次数]+1。；【sts2065】存在期间，【smn3023】造成的伤害+1。',
         'https://uploadstatic.mihoyo.com/ys-obc/2023/02/27/12109492/5e980c377a2142322435bb4487b4f8fc_5354100201913685764.png',
-        3, 1, 0, [6, 7], 1104, 1, talentSkill(2), { expl: talentExplain(1104, 2), energy: 2 }),
+        3, 1, 0, [6, 7], 1104, 1, talentSkill(2), { energy: 2 }),
 
-    732: new GICard(732, '战欲涌现', '[战斗行动]：我方出战角色为【优菈】时，装备此牌。；【优菈】装备此牌后，立刻使用一次【凝浪之光剑】。；装备有此牌的【优菈】使用【冰潮的涡旋】时，会额外为【光降之剑】累积1点｢能量层数｣。',
+    732: new GICard(732, '战欲涌现', '[战斗行动]：我方出战角色为【优菈】时，装备此牌。；【优菈】装备此牌后，立刻使用一次【ski1006,2】。；装备有此牌的【优菈】使用【ski1006,1】时，会额外为【smn3024】累积1点｢能量层数｣。',
         'https://uploadstatic.mihoyo.com/ys-obc/2023/02/27/12109492/54bfba5d0eb40f38a0b679808dbf3941_5181344457570733816.png',
-        3, 4, 0, [6, 7], 1006, 1, talentSkill(2), { expl: talentExplain(1006, 2), energy: 2 }),
+        3, 4, 0, [6, 7], 1006, 1, talentSkill(2), { energy: 2 }),
 
-    733: new GICard(733, '镜华风姿', '[战斗行动]：我方出战角色为【神里绫人】时，装备此牌。；【神里绫人】装备此牌后，立刻使用一次【神里流·镜花】。；装备有此牌的【神里绫人】触发【泷廻鉴花】的效果时，对于生命值不多于6的敌人伤害+1。',
+    733: new GICard(733, '镜华风姿', '[战斗行动]：我方出战角色为【神里绫人】时，装备此牌。；【神里绫人】装备此牌后，立刻使用一次【ski1105,1】。；装备有此牌的【神里绫人】触发【sts2067】的效果时，对于生命值不多于6的敌人伤害+1。',
         'https://uploadstatic.mihoyo.com/ys-obc/2023/04/11/12109492/a222141c6f996c368c642afe39572e9f_2099787104835776248.png',
         3, 1, 0, [6, 7], 1105, 1, (_card, event) => talentHandle(event, 1, () => {
             const { eheros = [], heros = [], hidxs: [hidx] = [] } = event;
-            const isAdd = (eheros.find(h => h.isFront)?.hp ?? 10) <= 6 && heros[hidx].inStatus.some(ist => ist.id == 2067);
-            return [, { addDmgCdt: isCdt(isAdd, 1) }]
-        }, 'skilltype1'), { expl: talentExplain(1105, 1) }),
+            if ((eheros.find(h => h.isFront)?.hp ?? 10) <= 6 && heros[hidx].inStatus.some(ist => ist.id == 2067)) {
+                return [, { addDmgCdt: 1 }]
+            }
+        }, 'skilltype1')),
 
-    734: new GICard(734, '荒泷第一', '[战斗行动]：我方出战角色为【荒泷一斗】时，装备此牌。；【荒泷一斗】装备此牌后，立刻使用一次【喧哗屋传说】。；装备有此牌的【荒泷一斗】每回合第2次及以后使用【喧哗屋传说】时：如果触发【乱神之怪力】，伤害额外+1。',
+    734: new GICard(734, '荒泷第一', '[战斗行动]：我方出战角色为【荒泷一斗】时，装备此牌。；【荒泷一斗】装备此牌后，立刻使用一次【ski1503,0】。；装备有此牌的【荒泷一斗】每回合第2次及以后使用【ski1503,0】时：如果触发【sts2068】，伤害额外+1。',
         'https://uploadstatic.mihoyo.com/ys-obc/2023/04/11/12109492/46588f6b5a254be9e797cc0cfe050dc7_8733062928845037185.png',
         1, 6, 0, [6, 7], 1503, 1, (_card, event) => talentHandle(event, 0, () => {
             const { heros = [], hidxs: [hidx] = [], isChargedAtk = false } = event;
             const { inStatus, skills: [{ useCnt }] } = heros[hidx];
-            return [, { addDmgCdt: isCdt(isChargedAtk && useCnt >= 1 && inStatus.some(ist => ist.id == 2068), 1) }]
-        }, 'skilltype1'), { expl: talentExplain(1503, 0), anydice: 2 }),
+            if (isChargedAtk && useCnt >= 1 && inStatus.some(ist => ist.id == 2068)) {
+                return [, { addDmgCdt: 1 }]
+            }
+        }, 'skilltype1'), { anydice: 2 }),
 
-    735: new GICard(735, '眼识殊明', '[战斗行动]：我方出战角色为【提纳里】时，装备此牌。；【提纳里】装备此牌后，立刻使用一次【识果种雷】。；装备有此牌的【提纳里】在附属【通塞识】期间，进行[重击]时少花费1个[无色元素骰]。',
+    735: new GICard(735, '眼识殊明', '[战斗行动]：我方出战角色为【提纳里】时，装备此牌。；【提纳里】装备此牌后，立刻使用一次【ski1602,1】。；装备有此牌的【提纳里】在附属【sts2071】期间，进行[重击]时少花费1个[无色元素骰]。',
         'https://uploadstatic.mihoyo.com/ys-obc/2023/04/11/12109492/e949b69145f320ae71ce466813339573_5047924760236436750.png',
         4, 7, 0, [6, 7], 1602, 1, (_card, event) => talentHandle(event, 1, () => {
             const { isChargedAtk = false, heros = [], hidxs: [hidx] = [] } = event;
             const { minusSkillRes } = minusDiceSkillHandle(event, { skilltype1: [0, 0, 1] },
                 () => isChargedAtk && heros[hidx].inStatus.some(ist => ist.id == 2071));
             return [, { ...minusSkillRes }]
-        }, ''), { expl: talentExplain(1602, 1) }),
+        }, '')),
 
-    736: new GICard(736, '忘玄', '[战斗行动]：我方出战角色为【申鹤】时，装备此牌。；【申鹤】装备此牌后，立刻使用一次【仰灵威召将役咒】。；装备有此牌的【申鹤】生成的【冰翎】被我方角色的｢普通攻击｣触发时：不消耗[可用次数]。(每回合1次)。',
+    736: new GICard(736, '忘玄', '[战斗行动]：我方出战角色为【申鹤】时，装备此牌。；【申鹤】装备此牌后，立刻使用一次【ski1007,1】。；装备有此牌的【申鹤】生成的【sts2073】被我方角色的｢普通攻击｣触发时：不消耗[可用次数]。(每回合1次)。',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/9df7f8bf2b97688d9a8fae220b4ff799_2381296963104605530.png',
-        3, 4, 0, [6, 7], 1007, 1, talentSkill(1), { expl: talentExplain(1007, 1) }),
+        3, 4, 0, [6, 7], 1007, 1, talentSkill(1)),
 
-    737: new GICard(737, '深渊之灾·凝水盛放', '[战斗行动]：我方出战角色为【达达利亚】时，装备此牌。；【达达利亚】装备此牌后，立刻使用一次【魔王武装·狂澜】。；结束阶段：装备有此牌的【达达利亚】在场时，敌方出战角色附属有【断流】，则对其造成1点[穿透伤害]。',
+    737: new GICard(737, '深渊之灾·凝水盛放', '[战斗行动]：我方出战角色为【达达利亚】时，装备此牌。；【达达利亚】装备此牌后，立刻使用一次【ski1106,1】。；结束阶段：装备有此牌的【达达利亚】在场时，敌方出战角色附属有【sts2076】，则对其造成1点[穿透伤害]。',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/e56754de22dbaf1cfb84ce85af588d21_7106803920286784988.png',
-        3, 1, 0, [6, 7], 1106, 1, talentSkill(1), { expl: talentExplain(1106, 1) }),
+        3, 1, 0, [6, 7], 1106, 1, talentSkill(1)),
 
-    738: new GICard(738, '一触即发', '[战斗行动]：我方出战角色为【安柏】时，装备此牌。；【安柏】装备此牌后，立刻使用一次【爆炸玩偶】。；【安柏｢普通攻击｣后：】如果此牌和【兔兔伯爵】仍在场，则引爆【兔兔伯爵】，造成4点[火元素伤害]。',
+    738: new GICard(738, '一触即发', '[战斗行动]：我方出战角色为【安柏】时，装备此牌。；【安柏】装备此牌后，立刻使用一次【ski1206,1】。；【安柏｢普通攻击｣后：】如果此牌和【smn3029】仍在场，则引爆【smn3029】，造成4点[火元素伤害]。',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/2a48f2862634d319b9165838de944561_3946596064567874908.png',
-        3, 2, 0, [6, 7], 1206, 1, talentSkill(1), { expl: talentExplain(1206, 1) }),
+        3, 2, 0, [6, 7], 1206, 1, talentSkill(1)),
 
-    739: new GICard(739, '血之灶火', '[战斗行动]：我方出战角色为【胡桃】时，装备此牌。；【胡桃】装备此牌后，立刻使用一次【蝶引来生】。；装备有此牌的【胡桃】在生命值不多于6时，造成的[火元素伤害]+1。',
+    739: new GICard(739, '血之灶火', '[战斗行动]：我方出战角色为【胡桃】时，装备此牌。；【胡桃】装备此牌后，立刻使用一次【ski1207,1】。；装备有此牌的【胡桃】在生命值不多于6时，造成的[火元素伤害]+1。',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/950a1fe6fcb977429942fcf0db1a6cc6_4713651560561730973.png',
         2, 2, 0, [6, 7], 1207, 1, (_card, event) => talentHandle(event, 1, () => {
-            const { heros = [] } = event;
-            const isTalent = (heros.find(h => h.id == 1207)?.hp ?? 10) <= 6;
-            return [, { addDmgCdt: isCdt(isTalent, 1) }]
-        }, 'fire-dmg'), { expl: talentExplain(1207, 1) }),
+            const { heros = [], hidxs: [hidx] = [] } = event;
+            if ((heros[hidx]?.hp ?? 10) <= 6) return [, { addDmgCdt: 1 }]
+        }, 'fire-dmg')),
 
-    740: new GICard(740, '万千的愿望', '[战斗行动]：我方出战角色为【雷电将军】时，装备此牌。；【雷电将军】装备此牌后，立刻使用一次【奥义·梦想真说】。；装备有此牌的【雷电将军】使用【奥义·梦想真说】时每消耗1点｢愿力｣，都使造成的伤害额外+1。',
+    740: new GICard(740, '万千的愿望', '[战斗行动]：我方出战角色为【雷电将军】时，装备此牌。；【雷电将军】装备此牌后，立刻使用一次【ski1307,2】。；装备有此牌的【雷电将军】使用【ski1307,2】时每消耗1点｢愿力｣，都使造成的伤害额外+1。',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/bea2df42c6cb8eecf724f2da60554278_2483208280861354828.png',
-        4, 3, 0, [6, 7], 1307, 1, talentSkill(2), { expl: talentExplain(1307, 2), energy: 2 }),
+        4, 3, 0, [6, 7], 1307, 1, talentSkill(2), { energy: 2 }),
 
-    741: new GICard(741, '神篱之御荫', '[战斗行动]：我方出战角色为【八重神子】时，装备此牌。；【八重神子】装备此牌后，立刻使用一次【大密法·天狐显真】。；装备有此牌的【八重神子】通过【大密法·天狐显真】消灭了【杀生樱】后，本回合下次使用【野千役咒·杀生樱】时少花费2个元素骰。',
+    741: new GICard(741, '神篱之御荫', '[战斗行动]：我方出战角色为【八重神子】时，装备此牌。；【八重神子】装备此牌后，立刻使用一次【ski1308,2】。；装备有此牌的【八重神子】通过【ski1308,2】消灭了【smn3031】后，本回合下次使用【ski1308,1】时少花费2个元素骰。',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/bdb47c41b068190b9f0fd7fe1ca46bf3_449350753177106926.png',
-        3, 3, 0, [6, 7], 1308, 1, talentSkill(2), { expl: talentExplain(1308, 2), energy: 2 }),
+        3, 3, 0, [6, 7], 1308, 1, talentSkill(2), { energy: 2 }),
 
-    742: new GICard(742, '绪风之拥', '[战斗行动]：我方出战角色为【温迪】时，装备此牌。；【温迪】装备此牌后，立刻使用一次【高天之歌】。；装备有此牌的【温迪】生成的【风域】触发后，会使本回合中我方角色下次｢普通攻击｣少花费1个[无色元素骰]。',
+    742: new GICard(742, '绪风之拥', '[战斗行动]：我方出战角色为【温迪】时，装备此牌。；【温迪】装备此牌后，立刻使用一次【ski1403,1】。；装备有此牌的【温迪】生成的【sts2082】触发后，会使本回合中我方角色下次｢普通攻击｣少花费1个[无色元素骰]。',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/f46cfa06d1b3ebe29fe8ed2c986b4586_6729812664471389603.png',
-        3, 5, 0, [6, 7], 1403, 1, talentSkill(1), { expl: talentExplain(1403, 1) }),
+        3, 5, 0, [6, 7], 1403, 1, talentSkill(1)),
 
-    743: new GICard(743, '降魔·护法夜叉', '[战斗行动]：我方出战角色为【魈】时，装备此牌。；【魈】装备此牌后，立刻使用一次【靖妖傩舞】。；装备有此牌的【魈】附属【夜叉傩面】期间，使用【风轮两立】时少花费1个[风元素骰]。(每附属1次【夜叉傩面】，可触发2次)',
+    743: new GICard(743, '降魔·护法夜叉', '[战斗行动]：我方出战角色为【魈】时，装备此牌。；【魈】装备此牌后，立刻使用一次【ski1404,2】。；装备有此牌的【魈】附属【sts2085】期间，使用【ski1404,1】时少花费1个[风元素骰]。(每附属1次【sts2085】，可触发2次)',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/fae27eb5db055cf623a80c11e08bb07c_2875856165408881126.png',
-        3, 5, 0, [6, 7], 1404, 1, talentSkill(2), { expl: talentExplain(1404, 2), energy: 2 }),
+        3, 5, 0, [6, 7], 1404, 1, talentSkill(2), { energy: 2 }),
 
-    744: new GICard(744, '炊金馔玉', '[战斗行动]：我方出战角色为【钟离】时，装备此牌。；【钟离】装备此牌后，立刻使用一次【地心·磐礴】。；装备有此牌的【钟离】在场时，我方出战角色在[护盾]角色状态或[护盾]出战状态的保护下时，我方召唤物造成的[岩元素伤害]+1。',
+    744: new GICard(744, '炊金馔玉', '[战斗行动]：我方出战角色为【钟离】时，装备此牌。；【钟离】装备此牌后，立刻使用一次【ski1504,2】。；装备有此牌的【钟离】在场时，我方出战角色在[护盾]角色状态或[护盾]出战状态的保护下时，我方召唤物造成的[岩元素伤害]+1。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/05/24/255120502/1742e240e25035ec13155e7975f7fe3e_495500543253279445.png',
         5, 6, 0, [6, 7], 1504, 1, (_card, event) => talentHandle(event, 2, () => {
-            const { heros = [], hidxs: [hidx] = [] } = event;
-            const istShield = heros[hidx]?.inStatus.some(ist => ist.type.includes(7));
-            const ostShield = heros.find(h => h.isFront)?.outStatus.some(ost => ost.type.includes(7));
-            return [, { addDmgSummon: isCdt(istShield || ostShield, 1) }]
-        }, 'rock-dmg'), { expl: talentExplain(1504, 2) }),
+            const { heros = [] } = event;
+            const fhero = heros.find(h => h.isFront);
+            const istShield = fhero?.inStatus.some(ist => ist.type.includes(7));
+            const ostShield = fhero?.outStatus.some(ost => ost.type.includes(7));
+            if (istShield || ostShield) return [, { addDmgSummon: 1 }]
+        }, 'rock-dmg')),
 
-    745: new GICard(745, '心识蕴藏之种', '[战斗行动]：我方出战角色为【纳西妲】时，装备此牌。；【纳西妲】装备此牌后，立刻使用一次【心景幻成】。；装备有此牌的【纳西妲】在场时，根据我方队伍中存在的元素类型提供效果：；‹2火元素›：【摩耶之殿】在场时，自身受到元素反应触发【蕴种印】的敌方角色，所受【蕴种印】的[穿透伤害]改为[草元素伤害];；‹3雷元素›：【摩耶之殿】入场时，使当前对方场上【蕴种印】的[可用次数]+1;；‹1水元素›：装备有此牌的【纳西妲】所生成的【摩耶之殿】初始持续回合+1。',
+    745: new GICard(745, '心识蕴藏之种', '[战斗行动]：我方出战角色为【纳西妲】时，装备此牌。；【纳西妲】装备此牌后，立刻使用一次【ski1603,3】。；装备有此牌的【纳西妲】在场时，根据我方队伍中存在的元素类型提供效果：；‹2火元素›：【sts2089】在场时，自身受到元素反应触发【sts2088】的敌方角色，所受【sts2088】的[穿透伤害]改为[草元素伤害];；‹3雷元素›：【sts2089】入场时，使当前对方场上【sts2088】的[可用次数]+1;；‹1水元素›：装备有此牌的【纳西妲】所生成的【sts2089】初始[持续回合]+1。',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/013c862d1c89850fb23f26763f601b11_823565145951775374.png',
-        3, 7, 0, [6, 7], 1603, 1, talentSkill(3), { expl: talentExplain(1603, 3), energy: 2 }),
+        3, 7, 0, [6, 7], 1603, 1, talentSkill(3), { energy: 2 }),
 
-    746: new GICard(746, '冰萤寒光', '[战斗行动]：我方出战角色为【愚人众·冰萤术士】时，装备此牌。；【愚人众·冰萤术士】装备此牌后，立刻使用一次【虚雾摇唤】。；装备有此牌的【愚人众·冰萤术士】使用技能后：如果【冰萤】的[可用次数]被叠加到超过上限，则造成2点[冰元素伤害]。',
+    746: new GICard(746, '冰萤寒光', '[战斗行动]：我方出战角色为【愚人众·冰萤术士】时，装备此牌。；【愚人众·冰萤术士】装备此牌后，立刻使用一次【ski1701,1】。；装备有此牌的【愚人众·冰萤术士】使用技能后：如果【smn3034】的[可用次数]被叠加到超过上限，则造成2点[冰元素伤害]。',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/a6d2ef9ea6bacdc1b48a5253345986cd_7285265484367498835.png',
-        3, 4, 0, [6, 7], 1701, 1, talentSkill(1), { expl: talentExplain(1701, 1) }),
+        3, 4, 0, [6, 7], 1701, 1, talentSkill(1)),
 
-    747: new GICard(747, '汲能棱晶', '[战斗行动]：我方出战角色为【无相之雷】时，治疗该角色3点，并附属【雷晶核心】。',
+    747: new GICard(747, '汲能棱晶', '[战斗行动]：我方出战角色为【无相之雷】时，治疗该角色3点，并附属【sts2091】。',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/3257a4da5f15922e8f068e49f5107130_6618336041939702810.png',
-        2, 3, 2, [6, 7], 1761, 1, () => ({
-            inStatus: [heroStatus(2091)],
-            cmds: [{ cmd: 'heal', cnt: 3 }]
-        }), { expl: talentExplain(1761, 3) }),
+        2, 3, 2, [6, 7], 1761, 1, () => ({ inStatus: [heroStatus(2091)], cmds: [{ cmd: 'heal', cnt: 3 }] })),
 
-    748: new GICard(748, '烬火重燃', '【入场时：】如果装备有此牌的【深渊咏者·渊火】已触发过【火之新生】，就立刻弃置此牌，为角色附属【渊火加护】。；装备有此牌的【深渊咏者·渊火】触发【火之新生】时：弃置此牌，为角色附属【渊火加护】。',
+    748: new GICard(748, '烬火重燃', '【入场时：】如果装备有此牌的【深渊咏者·渊火】已触发过【sts2092】，就立刻弃置此牌，为角色附属【sts2093】。；装备有此牌的【深渊咏者·渊火】触发【sts2092】时：弃置此牌，为角色附属【sts2093】。',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/c065153c09a84ed9d7c358c8cc61171f_8734243408282507546.png',
         2, 2, 0, [6], 1742, 1, (_card, event) => {
             const { heros = [], hidxs: [hidx] = [] } = event;
-            const isTriggered = heros[hidx]?.inStatus.every(ist => ist.id != 2092);
-            return {
-                inStatus: isCdt(isTriggered, [heroStatus(2093)]),
-                isDestroy: isTriggered,
+            if (heros[hidx]?.inStatus.every(ist => ist.id != 2092)) {
+                return { inStatus: [heroStatus(2093)], isDestroy: true }
             }
-        }, { expl: [heroStatus(2093)] }),
+        }),
 
-    749: new GICard(749, '衍溢的汐潮', '[战斗行动]：我方出战角色为【坎蒂丝】时，装备此牌。；【坎蒂丝】装备此牌后，立刻使用一次【圣仪·灰鸰衒潮】。；装备有此牌的【坎蒂丝】生成的【赤冕祝祷】额外具有以下效果：我方角色｢普通攻击｣后：造成1点[水元素伤害]。(每回合1次)',
+    749: new GICard(749, '衍溢的汐潮', '[战斗行动]：我方出战角色为【坎蒂丝】时，装备此牌。；【坎蒂丝】装备此牌后，立刻使用一次【ski1107,2】。；装备有此牌的【坎蒂丝】生成的【sts2095】额外具有以下效果：我方角色｢普通攻击｣后：造成1点[水元素伤害]。(每回合1次)',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/07/14/183046623/64b78d95471e27f99a8cf1cf2a946537_1864982310212941599.png',
-        3, 1, 0, [6, 7], 1107, 1, talentSkill(2), { expl: talentExplain(1107, 2), energy: 2 }),
+        3, 1, 0, [6, 7], 1107, 1, talentSkill(2), { energy: 2 }),
 
-    750: new GICard(750, '最终解释权', '[战斗行动]：我方出战角色为【烟绯】时，装备此牌。；【烟绯】装备此牌后，立刻使用一次【火漆印制】。；装备有此牌的【烟绯】进行[重击]时：对生命值不多于6的敌人造成的伤害+1。；如果触发了【丹火印】，则在技能结算后摸1张牌。',
+    750: new GICard(750, '最终解释权', '[战斗行动]：我方出战角色为【烟绯】时，装备此牌。；【烟绯】装备此牌后，立刻使用一次【ski1208,0】。；装备有此牌的【烟绯】进行[重击]时：对生命值不多于6的敌人造成的伤害+1。；如果触发了【sts2096】，则在技能结算后摸1张牌。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/07/14/183046623/ad8a2130c54da3c3f25d094b7019cb69_4536540887547691720.png',
         1, 2, 0, [6, 7], 1208, 1, (_card, event) => talentHandle(event, 0, () => {
             const { isChargedAtk = false, heros = [], hidxs: [hidx] = [], eheros = [], ehidx = -1 } = event;
+            if (!isChargedAtk) return;
             return [, {
-                addDmgCdt: isCdt(isChargedAtk && (eheros[ehidx]?.hp ?? 10) <= 6, 1),
-                execmds: isCdt(isChargedAtk && heros[hidx]?.inStatus.some(ist => ist.id == 2096), [{ cmd: 'getCard', cnt: 1 }])
+                addDmgCdt: isCdt((eheros[ehidx]?.hp ?? 10) <= 6, 1),
+                execmds: isCdt(heros[hidx]?.inStatus.some(ist => ist.id == 2096), [{ cmd: 'getCard', cnt: 1 }])
             }]
-        }, 'skilltype1'), { expl: talentExplain(1208, 0), anydice: 2 }),
+        }, 'skilltype1'), { anydice: 2 }),
 
-    751: new GICard(751, '风物之诗咏', '[战斗行动]：我方出战角色为【枫原万叶】时，装备此牌。；【枫原万叶】装备此牌后，立刻使用一次【千早振】。；装备有此牌的【枫原万叶】引发扩散反应后：使我方角色和召唤物接下来2次所造成的的被扩散元素类型的伤害+1。(每种元素类型分别计算次数)',
+    751: new GICard(751, '风物之诗咏', '[战斗行动]：我方出战角色为【枫原万叶】时，装备此牌。；【枫原万叶】装备此牌后，立刻使用一次【ski1405,1】。；装备有此牌的【枫原万叶】引发扩散反应后：使我方角色和召唤物接下来2次所造成的的被扩散元素类型的伤害+1。(每种元素类型分别计算次数)',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/07/14/183046623/dd06fa7b0ec63f3e60534a634ebd6fd2_9125107885461849882.png',
         3, 5, 0, [6, 7], 1405, 1, (_card, event) => talentHandle(event, 1, () => {
             const { trigger = '' } = event;
             const windEl = trigger.startsWith('el5Reaction') ? Number(trigger.slice(trigger.indexOf(':') + 1)) : 5;
             return [, { outStatus: isCdt(windEl < 5, [heroStatus(2118 + windEl)]) }]
-        }, 'el5Reaction'), { expl: talentExplain(1405, 1) }),
+        }, 'el5Reaction')),
 
-    752: new GICard(752, '脉冲的魔女', '切换到装备有此牌的【丽莎】后：使敌方出战角色附属【引雷】。(每回合1次)',
+    752: new GICard(752, '脉冲的魔女', '切换到装备有此牌的【丽莎】后：使敌方出战角色附属【sts2099】。(每回合1次)',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/08/12/203927054/608b48c391745b8cbae976d971b8b8c0_2956537094434701939.png',
         1, 3, 0, [6], 1309, 1, (card, event) => {
-            const { heros = [], hidxs: [hidx] = [], ehidx = -1 } = event;
+            const { ehidx = -1 } = event;
+            if (card.perCnt <= 0) return;
             return {
-                trigger: isCdt(card.perCnt > 0, ['change-to']),
+                trigger: ['change-to'],
                 exec: () => {
                     --card.perCnt;
-                    return { inStatusOppo: [heroStatus(2099, [heros[hidx].skills[1]])], hidxs: [ehidx] }
+                    return { inStatusOppo: [heroStatus(2099)], hidxs: [ehidx] }
                 },
             }
-        }, { pct: 1, expl: [heroStatus(2099)] }),
+        }, { pct: 1 }),
 
-    753: new GICard(753, '起死回骸', '[战斗行动]：我方出战角色为【七七】时，装备此牌。；【七七】装备此牌后，立刻使用一次【仙法·救苦度厄】。；装备有此牌的【七七】使用【仙法·救苦度厄】时，复苏我方所有倒下角色，并治疗其2点。(整场牌局限制2次)',
+    753: new GICard(753, '起死回骸', '[战斗行动]：我方出战角色为【七七】时，装备此牌。；【七七】装备此牌后，立刻使用一次【ski1008,2】。；装备有此牌的【七七】使用【ski1008,2】时，复苏我方所有倒下角色，并治疗其2点。(整场牌局限制2次)',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/08/12/258999284/d5ef496771a846af08ec05fff036bf17_8628795343837772161.png',
-        5, 4, 0, [6, 7], 1008, 1, talentSkill(2), { pct: 2, expl: talentExplain(1008, 2), energy: 3 }),
+        5, 4, 0, [6, 7], 1008, 1, talentSkill(2), { pct: 2, energy: 3 }),
 
-    754: new GICard(754, '神性之陨', '[战斗行动]：我方出战角色为【阿贝多】时，装备此牌。；【阿贝多】装备此牌后，立刻使用一次【创生法·拟造阳华】。；装备有此牌的【阿贝多】在场时，如果我方场上存在【阳华】，则我方角色进行[下落攻击]时造成的伤害+1。',
+    754: new GICard(754, '神性之陨', '[战斗行动]：我方出战角色为【阿贝多】时，装备此牌。；【阿贝多】装备此牌后，立刻使用一次【ski1505,1】。；装备有此牌的【阿贝多】在场时，如果我方场上存在【smn3040】，则我方角色进行[下落攻击]时造成的伤害+1。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/08/12/82503813/d10a709aa03d497521636f9ef39ee531_3239361065263302475.png',
         3, 6, 0, [6, 7], 1505, 1, (_card, event) => talentHandle(event, 1, () => {
             const { summons = [], isFallAtk = false } = event;
-            return [, { addDmgCdt: isCdt(summons.some(smn => smn.id == 3040) && isFallAtk, 1) }]
-        }, ['skilltype1', 'other-skilltype1']), { expl: talentExplain(1505, 1) }),
+            if (summons.some(smn => smn.id == 3040) && isFallAtk) return [, { addDmgCdt: 1 }]
+        }, ['skilltype1', 'other-skilltype1'])),
 
-    755: new GICard(755, '梦迹一风', '[战斗行动]：我方出战角色为【流浪者】时，装备此牌。；【流浪者】装备此牌后，立刻使用一次【羽画·风姿华歌】。；装备有此牌的【流浪者】在【优风倾姿】状态下进行[重击]后：下次从该角色执行｢切换角色｣行动时少花费1个元素骰，并且造成1点[风元素伤害]。',
+    755: new GICard(755, '梦迹一风', '[战斗行动]：我方出战角色为【流浪者】时，装备此牌。；【流浪者】装备此牌后，立刻使用一次【ski1406,1】。；装备有此牌的【流浪者】在【sts2102】状态下进行[重击]后：下次从该角色执行｢切换角色｣行动时少花费1个元素骰，并且造成1点[风元素伤害]。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/09/25/258999284/08a42903fcff2a5249ef1fc4021ecf7a_492792879105973370.png',
         4, 5, 0, [6, 7], 1406, 1, (_card, event) => talentHandle(event, 1, () => {
             const { isChargedAtk = false, heros = [], hidxs: [hidx] = [] } = event;
             const hasSts2102 = heros[hidx]?.inStatus.some(ist => ist.id == 2102);
-            return [, { execmds: isCdt(isChargedAtk && hasSts2102, [{ cmd: 'getStatus', status: [heroStatus(2103)] }]) }]
-        }, 'skilltype1'), { expl: talentExplain(1406, 1) }),
+            if (isChargedAtk && hasSts2102) return [, { execmds: [{ cmd: 'getStatus', status: [heroStatus(2103)] }] }]
+        }, 'skilltype1')),
 
-    756: new GICard(756, '崇诚之真', '[战斗行动]：我方出战角色为【迪希雅】时，装备此牌。；【迪希雅】装备此牌后，立刻使用一次【熔铁流狱】。；【结束阶段：】如果装备有此牌的【迪希雅】生命值不多于6，则治疗该角色2点。',
+    756: new GICard(756, '崇诚之真', '[战斗行动]：我方出战角色为【迪希雅】时，装备此牌。；【迪希雅】装备此牌后，立刻使用一次【ski1209,1】。；【结束阶段：】如果装备有此牌的【迪希雅】生命值不多于6，则治疗该角色2点。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/09/25/258999284/161a55bb8e3e5141557f38536579e897_3725263134237782114.png',
         4, 2, 0, [6, 7], 1209, 1, (_card, event) => talentHandle(event, 1, () => {
             const { heros = [], hidxs = [] } = event;
-            return [, { execmds: isCdt<Cmds[]>((heros[hidxs[0]]?.hp ?? 10) <= 6, [{ cmd: 'heal', cnt: 2, hidxs }]) }]
-        }, 'phase-end'), { expl: talentExplain(1209, 1) }),
+            if ((heros[hidxs[0]]?.hp ?? 10) <= 6) return [, { execmds: [{ cmd: 'heal', cnt: 2, hidxs }] }]
+        }, 'phase-end')),
 
-    757: new GICard(757, '慈惠仁心', '[战斗行动]：我方出战角色为【瑶瑶】时，装备此牌。；【瑶瑶】装备此牌后，立刻使用一次【云台团团降芦菔】。；装备有此牌的【瑶瑶】生成的【月桂·抛掷型】，在[可用次数]仅剩余最后1次时造成的伤害和治疗各+1。',
+    757: new GICard(757, '慈惠仁心', '[战斗行动]：我方出战角色为【瑶瑶】时，装备此牌。；【瑶瑶】装备此牌后，立刻使用一次【ski1604,1】。；装备有此牌的【瑶瑶】生成的【月桂·抛掷型】，在[可用次数]仅剩余最后1次时造成的伤害和治疗各+1。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/09/25/258999284/2b762e3829ac4a902190fde3e0f5377e_8510806015272134296.png',
-        3, 7, 0, [6, 7], 1604, 1, talentSkill(1), { expl: talentExplain(1604, 1) }),
+        3, 7, 0, [6, 7], 1604, 1, talentSkill(1)),
 
-    758: new GICard(758, '星天的花雨', '[战斗行动]：我方出战角色为【妮露】时，装备此牌。；【妮露】装备此牌后，立刻使用一次【七域舞步】。；装备有此牌的【妮露】在场时：我方【丰穰之核】造成的伤害+1。',
+    758: new GICard(758, '星天的花雨', '[战斗行动]：我方出战角色为【妮露】时，装备此牌。；【妮露】装备此牌后，立刻使用一次【ski1108,1】。；装备有此牌的【妮露】在场时：我方【smn3043】造成的伤害+1。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/11/08/258999284/8cc9e5054277fa7e344648ac99671e7d_2129982885233274884.png',
-        3, 1, 0, [6, 7], 1108, 1, talentSkill(1), { expl: talentExplain(1108, 1) }),
+        3, 1, 0, [6, 7], 1108, 1, talentSkill(1)),
 
-    759: new GICard(759, '酌盈剂虚', '[战斗行动]：我方出战角色为【多莉】时，装备此牌。；【多莉】装备此牌后，立刻使用一次【卡萨扎莱宫的无微不至】。；装备有此牌的【多莉】所召唤的【灯中幽精】，对生命值不多于6的角色造成的治疗+1，使没有[充能]的角色获得[充能]时获得量+1。',
+    759: new GICard(759, '酌盈剂虚', '[战斗行动]：我方出战角色为【多莉】时，装备此牌。；【多莉】装备此牌后，立刻使用一次【ski1310,2】。；装备有此牌的【多莉】所召唤的【smn3045】，对生命值不多于6的角色造成的治疗+1，使没有[充能]的角色获得[充能]时获得量+1。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/11/08/258999284/da73eb59f8fbd54b1c3da24d494108f7_706910708906017594.png',
-        3, 3, 0, [6, 7], 1310, 1, talentSkill(2), { expl: talentExplain(1310, 2), energy: 2 }),
+        3, 3, 0, [6, 7], 1310, 1, talentSkill(2), { energy: 2 }),
 
-    760: new GICard(760, '在地为化', '[战斗行动]：我方出战角色为【白术】时，装备此牌。；【白术】装备此牌后，立刻使用一次【愈气全形论】。；装备有此牌的【白术】在场，[无欲气护盾]触发治疗效果时：生成1个出战角色类型的元素骰。',
+    760: new GICard(760, '在地为化', '[战斗行动]：我方出战角色为【白术】时，装备此牌。；【白术】装备此牌后，立刻使用一次【ski1605,2】。；装备有此牌的【白术】在场，【sts2114】触发治疗效果时：生成1个出战角色类型的元素骰。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/11/08/258999284/aa3ad0a53cd667f9d6e5393214dfa09d_9069092032307263917.png',
-        4, 7, 0, [6, 7], 1605, 1, talentSkill(2), { expl: talentExplain(1605, 2), energy: 2 }),
+        4, 7, 0, [6, 7], 1605, 1, talentSkill(2), { energy: 2 }),
 
-    761: new GICard(761, '归芒携信', '[战斗行动]：我方出战角色为【莱依拉】时，装备此牌。；【莱依拉】装备此牌后，立刻使用一次【垂裳端凝之夜】。；装备有此牌的【莱依拉】在场时，每当【飞星】造成伤害，就摸1张牌。',
+    761: new GICard(761, '归芒携信', '[战斗行动]：我方出战角色为【莱依拉】时，装备此牌。；【莱依拉】装备此牌后，立刻使用一次【ski1009,1】。；装备有此牌的【莱依拉】在场时，每当【sts2129】造成伤害，就摸1张牌。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/12/258999284/bf34b0aa7f7664582ddb7eacaf1bd9ca_8982816839843813094.png',
-        3, 4, 0, [6, 7], 1009, 1, talentSkill(1), { expl: talentExplain(1009, 1) }),
+        3, 4, 0, [6, 7], 1009, 1, talentSkill(1)),
 
     762: new GICard(762, '猜先有方', '[战斗行动]：我方出战角色为【夜兰】时，装备此牌。；【夜兰】装备此牌后，立刻使用一次【萦络纵命索】。；【投掷阶段：】装备有此牌的【夜兰】在场，则我方队伍中每有1种元素类型，就使1个元素骰总是投出[万能元素骰]。(最多3个)',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/09/258999284/3914bb6ef21abc1f7e373cfe38d8be27_3734095446197720091.png',
@@ -2454,19 +2447,19 @@ const allCards: CardObj = {
         }, { expl: talentExplain(1303, 2) }),
 
     902: new GICard(902, '太郎丸的存款', '生成1个[万能元素骰]。',
-        'https://homdgcat.wiki/images/GCG/UI_Gcg_CardFace_Summon_Taroumaru.png',
+        '/image/crd902.png',
         0, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'getDice', cnt: 1, element: 0 }] })),
 
     903: new GICard(903, '｢清洁工作｣', '我方出战角色下次造成伤害+1。(可叠加，最多叠加到+2)',
-        'https://homdgcat.wiki/images/GCG/UI_Gcg_CardFace_Summon_Baishoutao.png',
+        '/image/crd903.png',
         0, 8, 2, [], 0, 0, () => ({ outStatus: [heroStatus(2185)] })),
 
     904: new GICard(904, '海底宝藏', '治疗我方出战角色1点，生成1个随机基础元素骰。',
-        'https://homdgcat.wiki/images/GCG/UI_Gcg_CardFace_Summon_Xunbao.png',
+        '/image/crd904.png',
         0, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'heal', cnt: 1 }, { cmd: 'getDice', cnt: 1, element: -1 }] })),
 
     905: new GICard(905, '圣俗杂座', '在｢始基力:荒性｣和｢始基力:芒性｣之中，切换【芙宁娜】的形态。；如果我方场上存在【沙龙成员】或【众水的歌者】，也切换其形态。',
-        'https://homdgcat.wiki/images/GCG/UI_Gcg_CardFace_Event_Event_FurinaOusiaChange.png',
+        '/image/crd905.png',
         0, 8, 2, [], 0, 0, (_card, event) => {
             const { heros = [], summons = [], isExec = false } = event;
             if (!isExec) return;
@@ -2485,7 +2478,7 @@ const allCards: CardObj = {
         }),
 
     906: new GICard(906, '噬骸能量块', '随机[舍弃]1张原本元素骰费用最高的手牌，生成1个我方出战角色类型的元素骰。如果我方出战角色是｢圣骸兽｣角色，则使其获得1点[充能]。(每回合最多打出1张)',
-        'https://homdgcat.wiki/images/GCG/UI_Gcg_CardFace_Summon_ScorpionSacred.png',
+        '/image/crd906.png',
         0, 8, 2, [], 0, 0, (_card, event) => {
             const { heros = [], hidxs: [hidx] = [] } = event;
             const cmds: Cmds[] = [{ cmd: 'discard', element: 0 }, { cmd: 'getDice', cnt: 1, element: -2 }];
@@ -2494,12 +2487,12 @@ const allCards: CardObj = {
             return { isValid: !fhero?.outStatus.some(ost => ost.id == 2207), cmds, outStatus: [heroStatus(2207)] }
         }),
 
-    907: new GICard(907, '唤醒眷属', '【打出此牌或[舍弃]此牌时：】召唤一个独立的【增殖生命体】。',
-        'https://homdgcat.wiki/images/GCG/UI_Gcg_CardFace_Summon_Apep.png',
-        2, 7, 2, [], 0, 0, () => ({ trigger: ['discard'], summon: [newSummonee(3063)] }), { expl: [newSummonee(3063)] }),
+    907: new GICard(907, '唤醒眷属', '【打出此牌或[舍弃]此牌时：】召唤一个独立的【smn3063】。',
+        '/image/crd907.png',
+        2, 7, 2, [], 0, 0, () => ({ trigger: ['discard'], summon: [newSummonee(3063)] })),
 
     908: new GICard(908, '禁忌知识', '无法使用此牌进行元素调和，且每回合最多只能打出1张｢禁忌知识｣。；对我方出战角色造成1点[穿透伤害]，摸1张牌。',
-        'https://homdgcat.wiki/images/GCG/UI_Gcg_CardFace_Summon_ChiWangLin.png',
+        '/image/crd908.png',
         0, 8, 2, [-5], 0, 0, (_card, event) => {
             const { heros = [], hidxs = [] } = event;
             return {
@@ -2523,7 +2516,7 @@ for (const id in allCards) {
     cardTotal.push(allCards[id]);
 }
 
-const cardsTotal = (id: number) => allCards[id];
+const cardsTotal = (id: number) => allCards[id] ?? allCards[0];
 
 export {
     cardsTotal,

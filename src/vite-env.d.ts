@@ -131,6 +131,7 @@ type Summonee = {
     isSelected: boolean, // 是否被选择
     canSelect: boolean, // 是否能被选择
     isWill: boolean, // 是否为将要生成的召唤物
+    explains: ExplainContent[], // 要解释的文本
 }
 
 type Status = {

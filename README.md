@@ -1774,6 +1774,12 @@ constructor(
 
      plus 召唤物伤害是否有+号
 
+## explains
+
+类型：ExplainContent[]
+
+解释：描述中提到的其他名词的解释
+
 ## handle
 
 类型：(summon: Summonee, event: SummonHandleEvent) => SummonHandleRes
@@ -1797,13 +1803,14 @@ constructor(
   element: number, 
   handle?: (summon: Summonee, event: SummonHandleEvent) => SummonHandleRes,
   options: { 
-pct?: number,
-isTalent?: boolean, 
-adt?: string[], 
-pdmg?: number, 
-isDestroy?: number, 
-stsId?: number, 
-spReset?: boolean 
+    pct?: number,
+    isTalent?: boolean, 
+    adt?: string[], 
+    pdmg?: number, 
+    isDestroy?: number, 
+    stsId?: number, 
+    spReset?: boolean,
+    expl?: ExplainContent[],
   } = {}
 )
 ```
@@ -2067,6 +2074,12 @@ spReset?: boolean
 解释：是否有特殊重置逻辑
 
 默认值：false
+
+#### expl
+
+解释：explains
+
+默认值：[]
 
 
 

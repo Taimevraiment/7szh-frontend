@@ -201,8 +201,8 @@
             v-for="ists in hero.inStatus.filter((sts, stsi) => hero.inStatus.length < 5 ? !sts.type.includes(0) : stsi < 4)"
             :key="ists.id">
             <div class="status-bg" :class="{ 'mobile-status-bg': isMobile }" :style="{ background: ists.iconBg }"></div>
-            <img v-if="ists.icon != ''" class="status-icon" :style="{
-              filter: ists.icon.startsWith('https') || ists.icon.startsWith('buff') || ists.icon.endsWith('dice')
+            <img v-if="getPngIcon(ists.icon) != ''" class="status-icon" :style="{
+              filter: getPngIcon(ists.icon).startsWith('https') || ists.icon.startsWith('buff') || ists.icon.endsWith('dice')
                 ? `url(${getSvgIcon('filter')}#status-color-${STATUS_BG_COLOR.indexOf(ists.iconBg)})` : '',
             }" :src="getPngIcon(ists.icon)" />
             <div v-else style="color: white;">{{ ists.name[0] }}</div>
@@ -226,8 +226,8 @@
               :key="osts.id">
               <div class="status-bg" :class="{ 'mobile-status-bg': isMobile }" :style="{ background: osts.iconBg }">
               </div>
-              <img v-if="osts.icon != ''" class="status-icon" :style="{
-                filter: osts.icon.startsWith('https') || osts.icon.startsWith('buff') || osts.icon.endsWith('dice')
+              <img v-if="getPngIcon(osts.icon) != ''" class="status-icon" :style="{
+                filter: getPngIcon(osts.icon).startsWith('https') || osts.icon.startsWith('buff') || osts.icon.endsWith('dice')
                   ? `url(${getSvgIcon('filter')}#status-color-${STATUS_BG_COLOR.indexOf(osts.iconBg)})` : '',
               }" :src="getPngIcon(osts.icon)" />
               <div v-else style="color: white;">{{ osts.name[0] }}</div>
@@ -390,6 +390,7 @@
 <script setup lang='ts'>
 import { computed, ref, watchEffect } from 'vue';
 import { ELEMENT_COLOR, ELEMENT_ICON, ELEMENT_URL, STATUS_BG_COLOR } from '@/data/constant';
+import { herosTotal } from '@/data/heros';
 
 const props = defineProps(['isMobile', 'canAction', 'isLookon', 'afterWinHeros', 'client', 'isShowHistory']);
 const emits = defineEmits(['selectChangeCard', 'changeCard', 'reroll', 'selectHero', 'selectUseDice', 'selectSummon', 'selectSite', 'endPhase', 'showHistory']);
@@ -454,8 +455,12 @@ watchEffect(() => {
 
 // 获取png图片
 const getPngIcon = (name: string) => {
-  if (name.startsWith('http')) return name;
+  if (name.startsWith('http') || name == '') return name;
   if (name.endsWith('-dice')) return getSvgIcon(name);
+  if (name.startsWith('ski')) {
+    const [hid, skidx] = name.slice(3).split(',').map(v => JSON.parse(v));
+    return herosTotal(hid).skills?.[skidx].src ?? '';
+  }
   return `/image/${name}.png`;
   return new URL(`/src/assets/image/${name}.png`, import.meta.url).href;
 };

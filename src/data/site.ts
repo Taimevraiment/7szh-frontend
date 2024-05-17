@@ -49,6 +49,7 @@ const getSortedDices = (dices: number[]) => {
 }
 
 const siteTotal: SiteObj = {
+    4000: () => new GISite(4000, 0, 0, 0, 0, () => ({})),
     // 派蒙
     4001: (cardId: number) => new GISite(4001, cardId, 2, 0, 1, site => ({
         trigger: ['phase-start'],
@@ -887,4 +888,4 @@ const siteTotal: SiteObj = {
     }),
 }
 
-export const newSite = (id: number, ...args: any) => siteTotal[id](...args);
+export const newSite = (id: number, ...args: any) => siteTotal[id](...args) ?? siteTotal[4000]();

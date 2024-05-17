@@ -838,6 +838,9 @@ export default class GeniusInvokationClient {
                         const { cmds: skillcmds = [] } = this._doSkill4(hi, 'game-start', { isEHeroEffect: true });
                         cmds.push(...skillcmds);
                     }
+                    if (cmds.some(v => v.cmd == 'addCard')) {
+                        await this._delay(1260);
+                    }
                 }
                 this.socket.emit('sendToServer', {
                     cpidx: this.playerIdx,
@@ -3845,8 +3848,7 @@ export default class GeniusInvokationClient {
      */
     _doDiscard(cards: Card[], options: { pidx?: number, heros?: Hero[], isSkill?: number } = {}) {
         const { pidx = this.playerIdx, heros = this.players[pidx].heros, isSkill = -1 } = options;
-        const player = this.players[pidx];
-        let summonee = clone(player.summon);
+        const summonee: Summonee[] = [];
         const cmds: Cmds[] = [];
         let isTriggered = false;
         for (const card of cards) {
@@ -3855,17 +3857,18 @@ export default class GeniusInvokationClient {
             isTriggered = true;
             const { cmds: cardcmds = [] } = this._doCmds(cardres.cmds, { pidx });
             cmds.push(...cardcmds);
-            summonee = this._updateSummon(cardres.summon ?? [], summonee, player.heros[player.hidx].outStatus);
+            summonee.push(...(cardres.summon ?? []));
         }
         heros.forEach((_, hidx) => this._doSkill4(hidx, 'discard', { pidx, heros, discards: cards }));
         this._doStatus(pidx, 4, 'discard', { discards: cards, heros, isQuickAction: isCdt(isSkill == -1, 2) });
         if (!isTriggered) return;
-        this.socket.emit('sendToServer', {
-            cpidx: pidx,
-            cmds,
-            summonee,
-            flag: `disard-[${cards.map(c => c.name).join(',')}]-${pidx}`,
-        });
+        // this.socket.emit('sendToServer', {
+        //     cpidx: pidx,
+        //     cmds,
+        //     summonee,
+        //     flag: `disard-[${cards.map(c => c.name).join(',')}]-${pidx}`,
+        // });
+        return { cmds, summonee }
     }
     /**
      * 执行命令集
@@ -3899,10 +3902,12 @@ export default class GeniusInvokationClient {
         let outStatus: Status[] | undefined;
         let inStatusOppo: Status[][] | undefined;
         let outStatusOppo: Status[] | undefined;
+        let summonee: Summonee[] | undefined;
         let willHeals: number[] | undefined;
         let changedEl: number | undefined;
         let discards: Card[] | undefined;
-        for (let i = 0; i < cmds.length; ++i) {
+        const cmdlen = cmds.length;
+        for (let i = 0; i < cmdlen; ++i) {
             const { cmd = '', cnt = 0, element = 0, isReadySkill = false, status: getstatus = [], card, isOppo = false } = cmds[i];
             let { hidxs } = cmds[i];
             if (!hidxs && chidxs) {
@@ -4127,7 +4132,7 @@ export default class GeniusInvokationClient {
             }
         }
         return {
-            cmds, ndices, phase, heros, eheros, inStatus, outStatus, willHeals, changedEl,
+            cmds, ndices, phase, heros, eheros, inStatus, outStatus, summonee, willHeals, changedEl,
             isSwitch, isSwitchOppo, inStatusOppo, outStatusOppo, discards,
         }
     }

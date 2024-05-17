@@ -113,8 +113,8 @@
                 <span class="status-title-left">
                   <div class="status-icon">
                     <div class="status-bg" :style="{ background: ist.iconBg }"></div>
-                    <img v-if="ist.icon != ''" :src="getPngIcon(ist.icon)" :style="{
-                      filter: ist.icon.startsWith('https') || ist.icon.startsWith('buff') || ist.icon.endsWith('dice') ? `url(${getSvgIcon('filter')}#status-color-${STATUS_BG_COLOR.indexOf(ist.iconBg)})` : ''
+                    <img v-if="getPngIcon(ist.icon) != ''" :src="getPngIcon(ist.icon)" :style="{
+                      filter: getPngIcon(ist.icon).startsWith('https') || ist.icon.startsWith('buff') || ist.icon.endsWith('dice') ? `url(${getSvgIcon('filter')}#status-color-${STATUS_BG_COLOR.indexOf(ist.iconBg)})` : ''
                     }" />
                     <div v-else style="color: white;">{{ ist.name[0] }}</div>
                     <div class="status-cnt" v-if="!ist.type.includes(10) && (ist.useCnt >= 0 || ist.roundCnt >= 0)">
@@ -142,8 +142,8 @@
                 <span class="status-title-left">
                   <div class="status-icon">
                     <div class="status-bg" :style="{ background: ost.iconBg }"></div>
-                    <img v-if="ost.icon != ''" :src="getPngIcon(ost.icon)"
-                      :style="{ filter: ost.icon.startsWith('https') || ost.icon.startsWith('buff') || ost.icon.endsWith('dice') ? `url(${getSvgIcon('filter')}#status-color-${STATUS_BG_COLOR.indexOf(ost.iconBg)})` : '' }" />
+                    <img v-if="getPngIcon(ost.icon) != ''" :src="getPngIcon(ost.icon)"
+                      :style="{ filter: getPngIcon(ost.icon).startsWith('https') || ost.icon.startsWith('buff') || ost.icon.endsWith('dice') ? `url(${getSvgIcon('filter')}#status-color-${STATUS_BG_COLOR.indexOf(ost.iconBg)})` : '' }" />
                     <div v-else style="color: white;">{{ ost.name[0] }}</div>
                     <div class="status-cnt" v-if="!ost.type.includes(10) && (ost.useCnt >= 0 || ost.roundCnt >= 0)">
                       {{ ost.useCnt < 0 ? ost.roundCnt : ost.useCnt }} </div>
@@ -210,8 +210,8 @@
             <span class="status-title-left">
               <div class="status-icon">
                 <div class="status-bg" :style="{ background: ist.iconBg }"></div>
-                <img v-if="ist.icon != ''" :src="getPngIcon(ist.icon)"
-                  :style="{ filter: ist.icon.startsWith('https') || ist.icon.startsWith('buff') || ist.icon.endsWith('dice') ? `url(${getSvgIcon('filter')}#status-color-${STATUS_BG_COLOR.indexOf(ist.iconBg)})` : '' }" />
+                <img v-if="getPngIcon(ist.icon) != ''" :src="getPngIcon(ist.icon)"
+                  :style="{ filter: getPngIcon(ist.icon).startsWith('https') || ist.icon.startsWith('buff') || ist.icon.endsWith('dice') ? `url(${getSvgIcon('filter')}#status-color-${STATUS_BG_COLOR.indexOf(ist.iconBg)})` : '' }" />
                 <div v-else style="color: white;">{{ ist.name[0] }}</div>
                 <div class="status-cnt" v-if="!ist.type.includes(10) && (ist.useCnt >= 0 || ist.roundCnt >= 0)">
                   {{ ist.useCnt < 0 ? ist.roundCnt : ist.useCnt }} </div>
@@ -238,8 +238,8 @@
             <span class="status-title-left">
               <div class="status-icon">
                 <div class="status-bg" :style="{ background: ost.iconBg }"></div>
-                <img v-if="ost.icon != ''" :src="getPngIcon(ost.icon)"
-                  :style="{ filter: ost.icon.startsWith('https') || ost.icon.startsWith('buff') || ost.icon.endsWith('dice') ? `url(${getSvgIcon('filter')}#status-color-${STATUS_BG_COLOR.indexOf(ost.iconBg)})` : '' }" />
+                <img v-if="getPngIcon(ost.icon) != ''" :src="getPngIcon(ost.icon)"
+                  :style="{ filter: getPngIcon(ost.icon).startsWith('https') || ost.icon.startsWith('buff') || ost.icon.endsWith('dice') ? `url(${getSvgIcon('filter')}#status-color-${STATUS_BG_COLOR.indexOf(ost.iconBg)})` : '' }" />
                 <div v-else style="color: white;">{{ ost.name[0] }}</div>
                 <div class="status-cnt" v-if="!ost.type.includes(10) && (ost.useCnt >= 0 || ost.roundCnt >= 0)">
                   {{ ost.useCnt < 0 ? ost.roundCnt : ost.useCnt }} </div>
@@ -277,7 +277,7 @@ import {
 } from '@/data/constant';
 import { cardsTotal } from '@/data/cards';
 import { heroStatus } from '@/data/heroStatus';
-import { readySkill } from '@/data/heros';
+import { herosTotal, readySkill } from '@/data/heros';
 import { newSummonee } from '@/data/summonee';
 
 const props = defineProps(['info', 'isMobile']);
@@ -303,10 +303,22 @@ const wrapedIcon = (idx: number, isDice = false) => {
   if ([-1, 8, 10].includes(idx)) return '';
   const url = idx < 8 ? isDice ? getPngIcon(ELEMENT_ICON[idx] + '-dice-bg') : ELEMENT_URL[idx] : getPngIcon(ELEMENT_ICON[idx]);
   return `<img style='width:18px;transform:translateY(20%);' src='${url}'/>`;
-};
+}
+const wrapExplCtt = (content: string) => {
+  if (!/^[a-z,0-9]+$/.test(content)) return { name: content }
+  const [a1, a2, a3] = content.slice(3).split(',').map(v => JSON.parse(v));
+  const type = content.slice(0, 3);
+  return type == 'crd' ? cardsTotal(a1) :
+    type == 'sts' ? heroStatus(a1, a2, a3) :
+      type == 'rsk' ? readySkill(a1, a2, a3) :
+        type == 'smn' ? newSummonee(a1, a2, a3) :
+          type == 'ski' ? herosTotal(a1).skills[a2] :
+            { name: content };
+}
 const wrapDesc = (desc: string, obj?: ExplainContent): string => {
   let res = desc.slice()
-    .replace(/(?<!\\)【(.*?)】/g, "<span style='color:white;'>$1</span>")
+    .replace(/(?<!\\)〖(.*?)〗/g, (_, ctt) => `<span style='color:white;'>${wrapExplCtt(ctt).name}</span>`)
+    .replace(/(?<!\\)【(.*?)】/g, (_, ctt) => `<span style='color:white;'>${wrapExplCtt(ctt).name}</span>`)
     .replace(/(?<!\\)(｢)(.*?)(｣)/g, (_, prefix, word, suffix) => {
       let icon = '';
       const sbtpIdx = CARD_SUBTYPE.indexOf(word);
@@ -346,11 +358,12 @@ const wrapDesc = (desc: string, obj?: ExplainContent): string => {
     }
   }
   return res;
-};
+}
 // 变白色：【】｢｣
 // 下划线（有规则解释，如果可能前面会有图标）：[]
+// 解析名字并加入解释：〖〗【】
 // 有某些特殊颜色（如 冰/水/火/雷）：‹nxxx› n为字体元素颜色 + 前面的图标 xxx为内容
-// 一些参考括号类型｢｣﹝﹞«»‹›〔〕〖〗『』〈〉《》【】[]｢｣
+// 一些参考括号类型｢｣﹝﹞«»‹›〔〕〖〗『』〈〉《》【】[]
 
 const wrapExpl = (expls: ExplainContent[], memo: string | string[]): string[][] => {
   const container: string[][] = [];
@@ -358,31 +371,32 @@ const wrapExpl = (expls: ExplainContent[], memo: string | string[]): string[][] 
   for (let expl of expls) {
     const explains: string[] = [];
     if (typeof expl == 'string') {
-      const [a1, a2, a3] = expl.slice(3).split(',').map(Number);
-      const type = expl.slice(0, 3);
-      if (type == 'crd') expl = cardsTotal(a1);
-      else if (type == 'sts') expl = heroStatus(a1, a2, a3);
-      else if (type == 'rsk') expl = readySkill(a1, a2, a3);
-      else if (type == 'smn') expl = newSummonee(a1, a2, a3);
-      else continue;
+      const nctt = wrapExplCtt(expl);
+      if (!('id' in nctt) && !('rdskidx' in nctt) || nctt.name == '' || ('id' in nctt && nctt.id % 1000 == 0)) continue;
+      expl = nctt;
     }
     if (memo.includes(expl.name)) continue;
     memo.push(expl.name);
-    explains.push(`<span style="font-weight:bold;color:white;">${expl.name}</span>`);
+    const nameEl = `<span style="font-weight:bold;color:white;">${expl.name}</span>`;
     if ('costType' in expl) {
       explains.push(`
-        <div data-v-c8bc3e29 class="skill-cost">
+        <div style="display:flex;align-items:flex-end;">
+            ${nameEl}
+            <div data-v-c8bc3e29 class="skill-cost" style="margin-left:5px;">
           <img data-v-c8bc3e29 class="cost-img" src="${getDiceIcon(ELEMENT_ICON[expl.costType])}" />
           <span data-v-c8bc3e29>${expl.cost}</span>
+            </div>
         </div>
       `);
+    } else {
+      explains.push(nameEl);
     }
     explains.push(...expl.description.split('；').map(desc => wrapDesc(desc, expl)));
     container.push(explains);
-    if ('explains' in expl && expl.explains.length > 0) container.push(...wrapExpl(expl.explains, memo));
+    if (expl.explains.length > 0) container.push(...wrapExpl(expl.explains, memo));
   }
   return container;
-};
+}
 
 const wrapRule = (...desc: string[]) => {
   ruleExplain.value = [];
@@ -392,28 +406,32 @@ const wrapRule = (...desc: string[]) => {
       ruleExplain.value.push(...RULE_EXPLAIN[title].split('；').map(desc => wrapDesc(desc)));
     }
   });
-};
+}
 
 // 获取骰子背景
 const getDiceIcon = (name: string) => {
   return `/image/${name}-dice-bg.png`;
   return new URL(`/src/assets/image/${name}-dice-bg.png`, import.meta.url).href;
-};
+}
 
 // 获取png图片
 const getPngIcon = (name: string) => {
-  if (name.startsWith('http')) return name;
+  if (name.startsWith('http') || name == '') return name;
   if (name.endsWith('-dice')) return getSvgIcon(name);
+  if (name.startsWith('ski')) {
+    const [hid, skidx] = name.slice(3).split(',').map(v => JSON.parse(v));
+    return herosTotal(hid).skills?.[skidx].src ?? '';
+  }
   if (name == 'energy') name += '-dice-bg';
   return `/image/${name}.png`;
   return new URL(`/src/assets/image/${name}.png`, import.meta.url).href;
-};
+}
 
 // 获取svg filter
 const getSvgIcon = (name: string) => {
   return `/svg/${name}.svg`;
   return new URL(`/src/assets/svg/${name}.svg`, import.meta.url).href;
-};
+}
 
 watchEffect(() => {
   infoObj = props.info;
@@ -476,19 +494,19 @@ watchEffect(() => {
 const getIcon = (name: string) => {
   return `/svg/${name}.svg`;
   return new URL(`/src/assets/svg/${name}.svg`, import.meta.url).href;
-};
+}
 
 // 是否显示描述
 const showDesc = (obj: boolean[], sidx: number) => {
   isShowRule.value = false;
   obj[sidx] = !obj[sidx];
-};
+}
 
 // 是否显示规则
 const showRule = (...desc: string[]) => {
   isShowRule.value = !isShowRule.value;
   if (isShowRule.value) wrapRule(...desc);
-};
+}
 </script>
 
 <style scoped>

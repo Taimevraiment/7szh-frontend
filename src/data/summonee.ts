@@ -23,27 +23,29 @@ class GISummonee implements Summonee {
     isSelected: boolean = false;
     canSelect: boolean = false;
     isWill: boolean = false;
+    explains: ExplainContent[];
     constructor(
         id: number, name: string, description: string, src: string, useCnt: number, maxUse: number,
         shield: number, damage: number, element: number, handle?: (summon: Summonee, event: SummonHandleEvent) => SummonHandleRes | void,
-        options: { pct?: number, isTalent?: boolean, adt?: string[], pdmg?: number, isDestroy?: number, stsId?: number, spReset?: boolean } = {}
+        options: { pct?: number, isTalent?: boolean, adt?: string[], pdmg?: number, isDestroy?: number, stsId?: number, spReset?: boolean, expl?: ExplainContent[] } = {}
     ) {
         this.id = id;
         this.name = name;
         this.description = description;
-        this.src = src.startsWith('https://') || src == '' ? src : 'http://taim.3vhost.club/geniusInovakation/' + src;
+        this.src = src;
         this.useCnt = useCnt;
         this.maxUse = maxUse;
         this.shield = shield;
         this.damage = damage;
         this.element = element;
-        const { pct = 0, isTalent = false, adt = [], pdmg = 0, isDestroy = 0, stsId = -1, spReset = false } = options;
+        const { pct = 0, isTalent = false, adt = [], pdmg = 0, isDestroy = 0, stsId = -1, spReset = false, expl = [] } = options;
         this.perCnt = pct;
         this.isTalent = isTalent;
         this.addition = adt;
         this.pendamage = pdmg;
         this.isDestroy = isDestroy;
         this.statusId = stsId;
+        this.explains = [...(description.match(/(?<=【)[^【】]+\d(?=】)/g) ?? []), ...expl];
         this.handle = (summon, event) => {
             const { reset = false } = event;
             if (reset) {
@@ -199,10 +201,10 @@ const summonTotal: SummoneeObj = {
         2, 2, 0, 2, 1),
 
     3017: () => new GISummonee(3017, '纯水幻形·飞鸢', '【结束阶段：】造成{dmg}点[水元素伤害]。；【[可用次数]：{useCnt}】',
-        'mihoyo_chunshui_feiyuan.png', 3, 3, 0, 1, 1),
+        '/image/smn3017.png', 3, 3, 0, 1, 1),
 
     3018: () => new GISummonee(3018, '纯水幻形·蛙', '【我方出战角色受到伤害时：】抵消{shield}点伤害。；【[可用次数]：{useCnt}】，耗尽时不弃置此牌。；【结束阶段，如果可用次数已耗尽：】弃置此牌以造成{dmg}点[水元素伤害]。',
-        'mihoyo_chunshui_wa.png', 1, 1, -1, 2, 1, summon => {
+        '/image/smn3018.png', 1, 1, -1, 2, 1, summon => {
             const trigger: Trigger[] = [];
             if (summon.useCnt == 0) trigger.push('phase-end');
             return {
@@ -881,4 +883,4 @@ const summonTotal: SummoneeObj = {
 
 }
 
-export const newSummonee = (id: number, ...args: any) => summonTotal[id](...args);
+export const newSummonee = (id: number, ...args: any) => summonTotal[id](...args) ?? summonTotal[3000]();
