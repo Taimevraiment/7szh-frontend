@@ -137,6 +137,7 @@ export const minusDiceSkillHandle = (event: { heros?: Hero[], hidxs?: number[], 
 // 符合条件就返回，否则返回undefined
 export const isCdt = <T>(cdt: boolean | null | undefined, res: T, elres?: T): T | undefined => {
     if (cdt) return res;
+    if (elres == undefined) return undefined;
     return elres;
 }
 

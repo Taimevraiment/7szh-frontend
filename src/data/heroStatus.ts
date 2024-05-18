@@ -210,7 +210,10 @@ const statusTotal: StatusObj = {
         'buff3', 1, [4, 10], 1, 0, -1, status => ({
             isQuickAction: true,
             trigger: ['change-from'],
-            exec: () => { --status.useCnt },
+            exec: (_eStatus, execEvent = {}) => {
+                const { isQuickAction = false } = execEvent;
+                if (isQuickAction) --status.useCnt
+            },
         })),
 
     2012: () => new GIStatus(2012, '泡影', '【我方造成技能伤害时：】移除此状态，使本次伤害加倍。',
@@ -365,15 +368,18 @@ const statusTotal: StatusObj = {
         })),
 
     2031: () => new GIStatus(2031, '元素共鸣：坚定之岩(生效中)', '【本回合中，我方角色下一次造成[岩元素伤害]后：】如果我方存在提供[护盾]的出战状态，则为一个此类出战状态补充3点[护盾]。',
-        'buff2', 1, [4, 10], 1, 0, 1, (status, event = {}) => {
-            const { heros = [], isSkill = -1, dmgElement = 0 } = event;
+        'buff2', 1, [4, 10], 1, 0, 1, (_status, event = {}) => {
+            const { hidx = -1, isSkill = -1 } = event;
             return {
-                trigger: ['rock-dmg', 'after-skill'],
-                exec: () => {
-                    const shieldStatus = heros.find(h => h.isFront)?.outStatus.find(ost => ost.type.includes(7));
-                    if (shieldStatus && (isSkill > -1 || dmgElement == 6)) {
+                trigger: ['rock-dmg'],
+                isAddTask: true,
+                exec: (eStatus, execEvent = {}) => {
+                    if (!eStatus) return;
+                    const { heros = [] } = execEvent;
+                    const shieldStatus = heros[hidx]?.outStatus.find(ost => ost.type.includes(7));
+                    if (shieldStatus && isSkill > -1) {
                         shieldStatus.useCnt += 3;
-                        --status.useCnt;
+                        --eStatus.useCnt;
                     }
                 }
             }
@@ -931,10 +937,10 @@ const statusTotal: StatusObj = {
             isQuickAction: true,
             trigger: ['change-from'],
             exec: (_eStatus, execEvent = {}) => {
-                const { changeHeroDiceCnt = 0 } = execEvent;
-                if (changeHeroDiceCnt == 0) return { changeHeroDiceCnt }
+                const { changeHeroDiceCnt = 0, isQuickAction = false } = execEvent;
+                if (changeHeroDiceCnt == 0 && !isQuickAction) return { changeHeroDiceCnt }
                 --status.useCnt;
-                return { changeHeroDiceCnt: changeHeroDiceCnt - 1 }
+                return { changeHeroDiceCnt: Math.max(0, changeHeroDiceCnt - 1) }
             }
         })),
 
@@ -1729,7 +1735,7 @@ const statusTotal: StatusObj = {
             return {
                 restDmg,
                 trigger: ['end-phase'],
-                cmds: isCdt(heros[hidx].isFront, [{ cmd: 'getCard', cnt: 1 }]),
+                cmds: isCdt(heros[hidx]?.isFront, [{ cmd: 'getCard', cnt: 1 }]),
             }
         }, { isTalent, pct: isTalent ? 2 : 1, act: addCnt }),
 
@@ -2367,4 +2373,4 @@ const statusTotal: StatusObj = {
 
 };
 
-export const heroStatus = (id: number, ...args: any) => statusTotal[id](...args) ?? statusTotal[2000]();
+export const heroStatus = (id: number, ...args: any) => statusTotal[id]?.(...args) ?? statusTotal[2000]();

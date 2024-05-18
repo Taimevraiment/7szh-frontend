@@ -167,7 +167,7 @@ const elCard = (id: number, element: number, src: string) => {
 }
 
 const magicCount = (cnt: number, id?: number) => new GICard(id ?? (909 + 2 - cnt), `幻戏${cnt > 0 ? `倒计时：${cnt}` : '开始！'}`, `将我方所有元素骰转换为[万能元素骰]，摸4张牌。${cnt > 0 ? '；此牌在手牌或牌库中被[舍弃]后：将1张元素骰费用比此卡少1个的｢幻戏倒计时｣放置到你的牌库顶。' : ''}`,
-    `/image/crd${id ?? (909 + 2 - cnt)}.png`,
+    id ? 'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Event_Event_MagicCount3.webp' : `/image/crd${909 + 2 - cnt}.png`,
     cnt, 8, 2, [], 0, 0, (card, event) => {
         const { trigger = '' } = event;
         const cnt = +card.name.slice(-1) || 0;
@@ -392,12 +392,10 @@ const allCards: CardObj = {
             const { trigger = '' } = event;
             const isTriggered1 = trigger == 'skilltype2' && (card.perCnt >> 0 & 1) == 1;
             const isTriggered2 = trigger == 'getdmg' && (card.perCnt >> 1 & 1) == 1;
-            const execmds: Cmds[] | undefined = isTriggered1 ? [{ cmd: 'getStatus', status: [heroStatus(2149)] }] :
-                isTriggered2 ? [{ cmd: 'getStatus', status: [heroStatus(2150)] }] : undefined;
             return {
                 addDmg: 1,
                 trigger: ['skilltype2', 'getdmg'],
-                execmds,
+                execmds: isCdt<Cmds[]>(isTriggered1 || isTriggered2, [{ cmd: 'getStatus', status: [heroStatus(2149 + (isTriggered2 ? 1 : 0))] }]),
                 exec: () => {
                     if (isTriggered1) card.perCnt &= ~(1 << 0);
                     if (isTriggered2) card.perCnt &= ~(1 << 1);
@@ -469,11 +467,10 @@ const allCards: CardObj = {
             if (getdmg[fhidx] > 0) trigger.push('getdmg', 'other-getdmg');
             if (heal[fhidx] > 0) trigger.push('heal');
             const hero = heros[hidxs[0]];
-            const execmds = isCdt<Cmds[]>(card.useCnt >= 2 && hero.energy < hero.maxEnergy, [{ cmd: 'getEnergy', cnt: 1, hidxs }]);
             return {
                 addDmgType3: 2,
                 trigger,
-                execmds,
+                execmds: isCdt<Cmds[]>(card.useCnt >= 2 && hero.energy < hero.maxEnergy, [{ cmd: 'getEnergy', cnt: 1, hidxs }]),
                 isAddTask: true,
                 exec: () => {
                     if (++card.useCnt >= 3 && hero.energy < hero.maxEnergy) card.useCnt -= 3;
@@ -662,7 +659,7 @@ const allCards: CardObj = {
             return {
                 trigger: ['phase-start', 'getdmg'],
                 execmds: isCdt<Cmds[]>(trigger == 'phase-start', [{ cmd: 'getStatus', status: [heroStatus(2050)] }],
-                    isCdt(card.perCnt > 0, [{ cmd: 'getDice', cnt: 1, element: heros[hidx]?.element ?? 0 }])),
+                    isCdt<Cmds[]>(card.perCnt > 0, [{ cmd: 'getDice', cnt: 1, element: heros[hidx]?.element ?? 0 }])),
                 exec: () => {
                     if (trigger == 'getdmg' && card.perCnt > 0 || heros[hidx]?.isFront) --card.perCnt;
                 }
@@ -864,10 +861,9 @@ const allCards: CardObj = {
             const { heros = [], hidxs = [], trigger = '' } = event;
             const isHeal = trigger == 'phase-end' && card.perCnt <= 0;
             const isGetCard = trigger == 'getdmg' && card.perCnt > 0 && heros[hidxs[0]].isFront;
-            const execmds = isCdt<Cmds[]>(isHeal, [{ cmd: 'heal', cnt: 1, hidxs }], isCdt(isGetCard, [{ cmd: 'getCard', cnt: 1 }]));
             return {
                 trigger: ['getdmg', 'phase-end'],
-                execmds,
+                execmds: isCdt<Cmds[]>(isHeal, [{ cmd: 'heal', cnt: 1, hidxs }], isCdt(isGetCard, [{ cmd: 'getCard', cnt: 1 }])),
                 exec: () => {
                     if (isGetCard) --card.perCnt;
                 }
@@ -878,14 +874,13 @@ const allCards: CardObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/01/27/258999284/166e56c3c68e531c97f4fdfde1adde06_4511818010196081435.png',
         2, 0, 0, [1], 0, 1, (card, event) => {
             const { heros = [], hidxs: [hidx] = [], heal = [], trigger = '' } = event;
-            const isTriggered = card.perCnt > 0 && (trigger == 'getdmg' || trigger == 'heal' && heal[hidx] > 0);
-            const execmds: Cmds[] = [{ cmd: 'getDice', element: heros[hidx].element, cnt: 1 }, { cmd: 'getCard', cnt: 1 }];
-            return {
-                trigger: ['getdmg', 'heal'],
-                execmds: isCdt(isTriggered, [execmds[card.useCnt]]),
-                exec: () => {
-                    if (isTriggered && ++card.useCnt == 2) {
-                        --card.perCnt;
+            if (card.perCnt > 0 && (trigger == 'getdmg' || trigger == 'heal' && heal[hidx] > 0)) {
+                const execmds: Cmds[] = [{ cmd: 'getDice', element: heros[hidx].element, cnt: 1 }, { cmd: 'getCard', cnt: 1 }];
+                return {
+                    trigger: ['getdmg', 'heal'],
+                    execmds: [execmds[card.useCnt]],
+                    exec: () => {
+                        if (++card.useCnt == 2) --card.perCnt;
                     }
                 }
             }
@@ -895,14 +890,13 @@ const allCards: CardObj = {
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Artifact_ZhuYingDa.webp',
         3, 8, 0, [1], 0, 1, (card, event) => {
             const { heros = [], hidxs: [hidx] = [], heal = [], trigger = '' } = event;
-            const isTriggered = card.perCnt > 0 && (trigger == 'getdmg' || trigger == 'heal' && heal[hidx] > 0) && card.useCnt != 2;
-            const execmds: Cmds[] = [{ cmd: 'getDice', element: heros[hidx].element, cnt: 1 }, { cmd: 'getCard', cnt: 1 }];
-            return {
-                trigger: ['getdmg', 'heal'],
-                execmds: isCdt(isTriggered, [execmds[card.useCnt % 3]]),
-                exec: () => {
-                    if (isTriggered && ++card.useCnt == 4) {
-                        --card.perCnt;
+            if (card.perCnt > 0 && (trigger == 'getdmg' || trigger == 'heal' && heal[hidx] > 0)) {
+                const execmds: Cmds[] = [{ cmd: 'getDice', element: heros[hidx].element, cnt: 1 }, { cmd: 'getCard', cnt: 1 }];
+                return {
+                    trigger: ['getdmg', 'heal'],
+                    execmds: isCdt(card.useCnt != 2, [execmds[card.useCnt % 3]]),
+                    exec: () => {
+                        if (++card.useCnt == 4) --card.perCnt;
                     }
                 }
             }

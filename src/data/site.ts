@@ -2,7 +2,7 @@ import { cardsTotal } from './cards';
 import { ELEMENT_ICON } from './constant';
 import { heroStatus } from './heroStatus';
 import { newSummonee } from './summonee';
-import { allHidxs, isCdt, minusDiceSkillHandle } from './utils';
+import { allHidxs, getBackHidxs, isCdt, minusDiceSkillHandle } from './utils';
 
 class GISite implements Site {
     id: number;
@@ -38,7 +38,7 @@ type SiteObj = {
     [id: string]: (...args: any) => GISite
 }
 
-const DICE_WEIGHT = [8, 2, 3, 4, 1, 7, 5, 6]; // 吃骰子的优先级权重(越低越优先)
+const DICE_WEIGHT = [8, 4, 1, 2, 3, 6, 7, 5]; // 吃骰子的优先级权重(越低越优先)
 
 const getSortedDices = (dices: number[]) => {
     const diceCnt = new Map();
@@ -53,10 +53,7 @@ const siteTotal: SiteObj = {
     // 派蒙
     4001: (cardId: number) => new GISite(4001, cardId, 2, 0, 1, site => ({
         trigger: ['phase-start'],
-        exec: () => {
-            --site.cnt;
-            return { cmds: [{ cmd: 'getDice', cnt: 2, element: 0 }], isDestroy: site.cnt == 0 }
-        }
+        exec: () => ({ cmds: [{ cmd: 'getDice', cnt: 2, element: 0 }], isDestroy: --site.cnt == 0 })
     })),
     // 参量质变仪
     4002: (cardId: number) => new GISite(4002, cardId, 0, 0, 2, (site, event = {}) => {
@@ -75,10 +72,7 @@ const siteTotal: SiteObj = {
     // 璃月港口
     4003: (cardId: number) => new GISite(4003, cardId, 2, 0, 1, site => ({
         trigger: ['phase-end'],
-        exec: () => {
-            --site.cnt;
-            return { cmds: [{ cmd: 'getCard', cnt: 2 }], isDestroy: site.cnt == 0 }
-        }
+        exec: () => ({ cmds: [{ cmd: 'getCard', cnt: 2 }], isDestroy: --site.cnt == 0 })
     })),
     // 常九爷
     4004: (cardId: number) => new GISite(4004, cardId, 0, 0, 2, (site, event = {}) => {
@@ -127,23 +121,20 @@ const siteTotal: SiteObj = {
     // 望舒客栈
     4006: (cardId: number) => new GISite(4006, cardId, 2, 0, 1, (site, event = {}) => {
         const { heros = [] } = event;
+        const minHp = Math.min(...heros.filter(h => h.hp > 0 && h.hp < h.maxhp && !h.isFront).map(h => h.hp));
+        const hidxs: number[] = [];
+        const fhidx = heros.findIndex(h => h.isFront);
+        for (let i = 1; i < heros.length; ++i) {
+            const hidx = (i + fhidx) % heros.length;
+            if (heros[hidx].hp == minHp) {
+                hidxs.push(hidx);
+                break;
+            }
+        }
+        if (hidxs.length == 0) return;
         return {
             trigger: ['phase-end'],
-            exec: () => {
-                const minHp = Math.min(...heros.filter(h => h.hp > 0 && h.hp < h.maxhp && !h.isFront).map(h => h.hp));
-                const hidxs: number[] = [];
-                const fhidx = heros.findIndex(h => h.isFront);
-                for (let i = 1; i < heros.length; ++i) {
-                    const hidx = (i + fhidx) % heros.length;
-                    if (heros[hidx].hp == minHp) {
-                        hidxs.push(hidx);
-                        break;
-                    }
-                }
-                if (hidxs.length == 0) return { isDestroy: false }
-                --site.cnt;
-                return { cmds: [{ cmd: 'heal', hidxs, cnt: 2 }], isDestroy: site.cnt == 0 }
-            }
+            exec: () => ({ cmds: [{ cmd: 'heal', hidxs, cnt: 2 }], isDestroy: --site.cnt == 0 })
         }
     }, 2),
     // 西风大教堂
@@ -156,8 +147,7 @@ const siteTotal: SiteObj = {
                 if (frontHeroIdx == -1 || heros[frontHeroIdx].hp == heros[frontHeroIdx].maxhp) {
                     return { isDestroy: false }
                 }
-                --site.cnt;
-                return { cmds: [{ cmd: 'heal', hidxs: [frontHeroIdx], cnt: 2 }], isDestroy: site.cnt == 0 }
+                return { cmds: [{ cmd: 'heal', hidxs: [frontHeroIdx], cnt: 2 }], isDestroy: --site.cnt == 0 }
             }
         }
     }, 2),
@@ -320,8 +310,7 @@ const siteTotal: SiteObj = {
             trigger: ['phase-end'],
             exec: () => {
                 if (hidxs.length == 0) return { isDestroy: false }
-                --site.cnt;
-                return { cmds: [{ cmd: 'getEnergy', cnt: 1, hidxs }], isDestroy: site.cnt == 0 }
+                return { cmds: [{ cmd: 'getEnergy', cnt: 1, hidxs }], isDestroy: --site.cnt == 0 }
             }
         }
     }),
@@ -334,8 +323,7 @@ const siteTotal: SiteObj = {
             exec: () => {
                 if (site.perCnt == 0 || (heros[hidx]?.energy ?? 1) > 0) return { isDestroy: false }
                 --site.perCnt;
-                --site.cnt;
-                return { cmds: [{ cmd: 'getEnergy', cnt: 1, hidxs: [hidx] }], isDestroy: site.cnt == 0 }
+                return { cmds: [{ cmd: 'getEnergy', cnt: 1, hidxs: [hidx] }], isDestroy: --site.cnt == 0 }
             }
         }
     }),
@@ -370,21 +358,17 @@ const siteTotal: SiteObj = {
     // 鸣神大社
     4022: (cardId: number) => new GISite(4022, cardId, 2, 0, 1, site => ({
         trigger: ['phase-start'],
-        exec: () => {
-            --site.cnt;
-            return { cmds: [{ cmd: 'getDice', cnt: 1, element: -1 }], isDestroy: site.cnt == 0 }
-        }
+        exec: () => ({ cmds: [{ cmd: 'getDice', cnt: 1, element: -1 }], isDestroy: --site.cnt == 0 })
     })),
     // 珊瑚宫
-    4023: (cardId: number) => new GISite(4023, cardId, 2, 0, 1, (site, event = {}) => ({
-        trigger: ['phase-end'],
-        exec: () => {
-            const { heros = [] } = event;
-            if (heros.every(h => h.hp == h.maxhp)) return { isDestroy: false }
-            --site.cnt;
-            return { cmds: [{ cmd: 'heal', cnt: 1, hidxs: allHidxs(event.heros) }], isDestroy: site.cnt == 0 }
+    4023: (cardId: number) => new GISite(4023, cardId, 2, 0, 1, (site, event = {}) => {
+        const { heros = [] } = event;
+        if (heros.every(h => h.hp == h.maxhp)) return;
+        return {
+            trigger: ['phase-end'],
+            exec: () => ({ cmds: [{ cmd: 'heal', cnt: 1, hidxs: allHidxs(event.heros) }], isDestroy: --site.cnt == 0 })
         }
-    })),
+    }),
     // 须弥城
     4024: (cardId: number) => new GISite(4024, cardId, 0, 1, 3, (site, event = {}) => {
         const { dices = [], hcards = [], card, trigger = '', minusDiceCard: mdc = 0 } = event;
@@ -430,16 +414,10 @@ const siteTotal: SiteObj = {
     // 镇守之森
     4026: (cardId: number) => new GISite(4026, cardId, 3, 0, 1, (site, event = {}) => {
         const { isFirst = true } = event;
+        if (isFirst) return;
         return {
             trigger: ['phase-start'],
-            exec: () => {
-                if (isFirst) return { isDestroy: false }
-                --site.cnt;
-                return {
-                    cmds: [{ cmd: 'getDice', cnt: 1, element: -2 }],
-                    isDestroy: site.cnt == 0,
-                }
-            }
+            exec: () => ({ cmds: [{ cmd: 'getDice', cnt: 1, element: -2 }], isDestroy: --site.cnt == 0 })
         }
     }),
     // 黄金屋
@@ -452,9 +430,8 @@ const siteTotal: SiteObj = {
             minusDiceCard: isCdt(isMinus, 1),
             exec: () => {
                 if (!isMinus) return { isDestroy: false }
-                --site.cnt;
                 --site.perCnt;
-                return { isDestroy: site.cnt == 0 }
+                return { isDestroy: --site.cnt == 0 }
             }
         }
     }),
@@ -465,9 +442,8 @@ const siteTotal: SiteObj = {
         return {
             trigger: ['action-start'],
             exec: () => {
-                --site.cnt;
                 --site.perCnt;
-                return { cmds: [{ cmd: 'getDice', cnt: 1, element: 0 }], isDestroy: site.cnt == 0 }
+                return { cmds: [{ cmd: 'getDice', cnt: 1, element: 0 }], isDestroy: --site.cnt == 0 }
             }
         }
     }),
@@ -528,17 +504,20 @@ const siteTotal: SiteObj = {
         }
     }),
     // 拉娜
-    4033: (cardId: number) => new GISite(4033, cardId, 0, 1, 3, site => ({
-        trigger: ['skilltype2'],
-        exec: () => {
-            if (site.perCnt == 0) return { isDestroy: false }
-            --site.perCnt;
-            return {
-                cmds: [{ cmd: 'getDice', cnt: 1, element: -3 }],
-                isDestroy: false,
+    4033: (cardId: number) => new GISite(4033, cardId, 0, 1, 3, (site, event = {}) => {
+        const { heros = [] } = event;
+        if (site.perCnt == 0 || getBackHidxs(heros).length == 0) return;
+        return {
+            trigger: ['skilltype2'],
+            exec: () => {
+                --site.perCnt;
+                return {
+                    cmds: [{ cmd: 'getDice', cnt: 1, element: -3 }],
+                    isDestroy: false,
+                }
             }
         }
-    })),
+    }),
     // 老章
     4034: (cardId: number) => new GISite(4034, cardId, 0, 1, 3, (site, event = {}) => {
         const { card, heros = [], minusDiceCard: mdc = 0 } = event;
@@ -560,10 +539,7 @@ const siteTotal: SiteObj = {
         if ((hcards?.length ?? 1) > 0) return;
         return {
             trigger: ['action-after'],
-            exec: () => {
-                --site.cnt;
-                return { cmds: [{ cmd: 'getCard', cnt: 1 }], isDestroy: site.cnt == 0 }
-            }
+            exec: () => ({ cmds: [{ cmd: 'getCard', cnt: 1 }], isDestroy: --site.cnt == 0 })
         }
     }),
     // 弥生七月
@@ -612,8 +588,7 @@ const siteTotal: SiteObj = {
             minusDiceCard: isCdt(isCardMinus, 1),
             ...minusSkillRes,
             exec: () => {
-                if (site.perCnt > 0 && (trigger == 'card' && isCardMinus ||
-                    trigger.startsWith('skill') && isMinusSkill)) {
+                if (site.perCnt > 0 && (trigger == 'card' && isCardMinus || trigger.startsWith('skill') && isMinusSkill)) {
                     --site.perCnt;
                     --site.cnt;
                 }
@@ -626,10 +601,7 @@ const siteTotal: SiteObj = {
         const { hcards = [] } = event;
         return {
             trigger: hcards.length <= 2 ? ['phase-end'] : [],
-            exec: () => {
-                --site.cnt;
-                return { cmds: [{ cmd: 'getCard', cnt: 2 }], isDestroy: site.cnt == 0 }
-            }
+            exec: () => ({ cmds: [{ cmd: 'getCard', cnt: 2 }], isDestroy: --site.cnt == 0 })
         }
     }),
     // 欧庇克莱歌剧院
@@ -639,12 +611,13 @@ const siteTotal: SiteObj = {
             .filter(slot => slot != null).reduce((a, b) => a + (b?.cost ?? 0) + (b?.anydice ?? 0), 0);
         const eslotCost = eheros.flatMap(h => [h.talentSlot, h.artifactSlot, h.weaponSlot])
             .filter(slot => slot != null).reduce((a, b) => a + (b?.cost ?? 0) + (b?.anydice ?? 0), 0);
-        return {
-            trigger: slotCost >= eslotCost && site.perCnt > 0 ? ['action-start'] : [],
-            exec: () => {
-                --site.cnt;
-                --site.perCnt;
-                return { cmds: [{ cmd: 'getDice', cnt: 1, element: -2 }], isDestroy: site.cnt == 0 }
+        if (slotCost >= eslotCost && site.perCnt > 0) {
+            return {
+                trigger: ['action-start'],
+                exec: () => {
+                    --site.perCnt;
+                    return { cmds: [{ cmd: 'getDice', cnt: 1, element: -2 }], isDestroy: --site.cnt == 0 }
+                }
             }
         }
     }),
@@ -664,44 +637,37 @@ const siteTotal: SiteObj = {
                     if (rid > 500) rid += 100;
                     card = cardsTotal(rid);
                 }
-                return {
-                    cmds: [{ cmd: 'getCard', cnt: 1, card }],
-                    isDestroy: site.cnt == 0
-                }
+                return { cmds: [{ cmd: 'getCard', cnt: 1, card }], isDestroy: site.cnt == 0 }
             }
         }
     }),
     // 化种匣
     4043: (cardId: number) => new GISite(4043, cardId, 2, 1, 2, (site, event = {}) => {
         const { card, minusDiceCard: mdc = 0 } = event;
-        const isMinus = card && card.cost >= 2 && card.type == 1 && site.perCnt > 0 && card.cost > mdc;
-        return {
-            trigger: ['card'],
-            minusDiceCard: isCdt(isMinus, 1),
-            isNotAddTask: true,
-            exec: () => {
-                if (isMinus) {
-                    --site.cnt;
+        if (card && card.cost >= 2 && card.type == 1 && site.perCnt > 0 && card.cost > mdc) {
+            return {
+                trigger: ['card'],
+                minusDiceCard: 1,
+                isNotAddTask: true,
+                exec: () => {
                     --site.perCnt;
+                    return { isDestroy: --site.cnt == 0 }
                 }
-                return { isDestroy: site.cnt == 0 }
             }
         }
     }),
     // 留念镜
     4044: (cardId: number) => new GISite(4044, cardId, 2, 1, 2, (site, event = {}) => {
         const { card, playerInfo: { usedCardIds = [] } = {}, minusDiceCard: mdc = 0 } = event;
-        const isMinus = card && usedCardIds.includes(card.id) && card.subType.some(sbtp => sbtp < 4) && site.perCnt > 0 && card.cost > mdc;
-        return {
-            trigger: ['card'],
-            minusDiceCard: isCdt(isMinus, 2),
-            isNotAddTask: true,
-            exec: () => {
-                if (isMinus) {
-                    --site.cnt;
+        if (card && usedCardIds.includes(card.id) && card.subType.some(sbtp => sbtp < 4) && site.perCnt > 0 && card.cost > mdc) {
+            return {
+                trigger: ['card'],
+                minusDiceCard: 2,
+                isNotAddTask: true,
+                exec: () => {
                     --site.perCnt;
+                    return { isDestroy: --site.cnt == 0 }
                 }
-                return { isDestroy: site.cnt == 0 }
             }
         }
     }),
@@ -772,8 +738,7 @@ const siteTotal: SiteObj = {
         return {
             trigger: triggers,
             exec: () => {
-                --site.perCnt;
-                if (site.perCnt == 0) --site.cnt;
+                if (--site.perCnt == 0) --site.cnt;
                 return {
                     cmds: isCdt(site.perCnt == 0, [{ cmd: 'getCard', cnt: 1 }, { cmd: 'getDice', cnt: 1, element: 0 }]),
                     isDestroy: site.cnt == 0,
@@ -888,4 +853,4 @@ const siteTotal: SiteObj = {
     }),
 }
 
-export const newSite = (id: number, ...args: any) => siteTotal[id](...args) ?? siteTotal[4000]();
+export const newSite = (id: number, ...args: any) => siteTotal[id]?.(...args) ?? siteTotal[4000]();

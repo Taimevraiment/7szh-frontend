@@ -442,11 +442,7 @@ watchEffect(() => {
       ...c,
       isSelected: initCardSelect[i],
     })) ?? [];
-});
-watchEffect(() => {
   if (player.value.phase > 4) diceSelect = [...props.client.player.diceSelect];
-});
-watchEffect(() => {
   dices.value = player.value.dice.map((d, i) => ({
     val: d,
     isSelected: diceSelect[i],
@@ -1692,7 +1688,7 @@ svg {
   }
 
   100% {
-    transform: rotate(-90deg);
+    transform: translate(-500%, 0) rotate(-90deg);
     opacity: 0;
   }
 }

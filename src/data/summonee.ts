@@ -249,7 +249,7 @@ const summonTotal: SummoneeObj = {
             }
         }),
 
-    3021: () => new GISummonee(3021, '天狗咒雷·伏', '【结束阶段：】造成{dmg}点[雷元素伤害]，我方出战角色附属【鸣煌护持】。；【[可用次数]：{useCnt}】',
+    3021: () => new GISummonee(3021, '天狗咒雷·伏', '【结束阶段：】造成{dmg}点[雷元素伤害]，我方出战角色附属【sts2064】。；【[可用次数]：{useCnt}】',
         'https://uploadstatic.mihoyo.com/ys-obc/2023/02/04/12109492/aef9cba89ecb16fa0d73ffef53cad44e_6822516960472237055.png',
         1, 1, 0, 1, 3, summon => ({
             trigger: ['phase-end'],
@@ -883,4 +883,4 @@ const summonTotal: SummoneeObj = {
 
 }
 
-export const newSummonee = (id: number, ...args: any) => summonTotal[id](...args) ?? summonTotal[3000]();
+export const newSummonee = (id: number, ...args: any) => summonTotal[id]?.(...args) ?? summonTotal[3000]();

@@ -766,7 +766,7 @@ constructor(
     ac?: number, 
     ec?: number, 
     de?: number, 
-    rdskidx?: number,
+    rskidx?: number,
     pct?: number,
   } = {},
   src?: string | string[], 
@@ -803,7 +803,7 @@ constructor(
 
 默认值：costElement
 
-#### rdskidx
+#### rskidx
 
 解释：readySkillIdx 准备技能的序号
 
@@ -1339,12 +1339,6 @@ constructor(
 
 解释：伤害来源的id
 
-##### dmgElement
-
-类型：number
-
-解释：造成伤害的元素
-
 ##### minusDiceCard
 
 类型：number
@@ -1537,7 +1531,7 @@ constructor(
 
 类型：number
 
-解释：准备技能的序号（rdskidx）
+解释：准备技能的序号（rskidx）
 
 ##### cmds
 
@@ -1612,6 +1606,12 @@ constructor(
 类型：Summonee[]
 
 解释：执行时我方召唤物
+
+##### isQuickAction
+
+类型：boolean
+
+解释：切换角色是否为快速行动
 
 #### StatusExecRes
 

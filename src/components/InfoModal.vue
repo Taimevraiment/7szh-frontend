@@ -168,6 +168,9 @@
         <div class="name">{{ (info as Summonee).name }}</div>
         <div class="summon-desc" v-for="(desc, didx) in (info as Summonee).descriptions" :key="didx" v-html="desc">
         </div>
+        <div class="info-summon-explain" v-for="(expl, eidx) in smnExplain" :key="eidx" style="margin-top: 5px">
+          <div v-for="(desc, didx) in expl" :key="didx" v-html="desc"></div>
+        </div>
       </div>
     </div>
     <div class="info-container" :class="{ 'mobile-font': isMobile }" @click.stop=""
@@ -292,10 +295,11 @@ const isShowSkill = ref<boolean[]>([]); // 是否展示技能
 const isInStatus = ref<boolean[]>([]); // 是否展示角色状态
 const isOutStatus = ref<boolean[]>([]); // 是否展示阵营出战状态
 const isEquipment = ref<boolean[]>([]); // 是否展示装备
-const skillExplain = ref<(string[][] | string[])[]>([]); // 技能解释
+const skillExplain = ref<(string[][] | string[])[]>([]); // 技能/卡牌解释
 const inStatusExplain = ref<any[]>([]); // 状态技能解释
 const outStatusExplain = ref<any[]>([]); // 状态技能解释
 const slotExplain = ref<any[]>([]); // 装备解释
+const smnExplain = ref<any[]>([]); // 召唤物解释
 const ruleExplain = ref<any[]>([]); // 规则解释
 const isShowRule = ref<boolean>(false); // 是否显示规则
 
@@ -367,12 +371,12 @@ const wrapDesc = (desc: string, obj?: ExplainContent): string => {
 
 const wrapExpl = (expls: ExplainContent[], memo: string | string[]): string[][] => {
   const container: string[][] = [];
-  if (typeof memo == 'string') memo = [memo];
+  if (typeof memo == 'string') memo = [];
   for (let expl of expls) {
     const explains: string[] = [];
     if (typeof expl == 'string') {
       const nctt = wrapExplCtt(expl);
-      if (!('id' in nctt) && !('rdskidx' in nctt) || nctt.name == '' || ('id' in nctt && nctt.id % 1000 == 0)) continue;
+      if ((!('id' in nctt) || nctt.id % 1000 == 0) && (!('rskidx' in nctt) || nctt.rskidx == -1) || nctt.name == '') continue;
       expl = nctt;
     }
     if (memo.includes(expl.name)) continue;
@@ -446,6 +450,9 @@ watchEffect(() => {
   }
   if (info.value && 'card' in info.value) {
     info.value.card.descriptions = info.value.card.description.split('；').map(desc => wrapDesc(desc));
+  }
+  if (info.value && 'maxUse' in info.value) {
+    smnExplain.value = wrapExpl(info.value.explains, info.value.name);
   }
   if (info.value && 'inStatus' in info.value) {
     inStatusExplain.value = [];
@@ -711,7 +718,8 @@ const showRule = (...desc: string[]) => {
 
 .info-hero-skill-explain,
 .info-hero-status-explain,
-.info-card-explain {
+.info-card-explain,
+.info-summon-explain {
   margin: 3px;
   margin-right: 0;
   margin-top: 5px;

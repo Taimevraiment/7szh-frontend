@@ -66,20 +66,20 @@ class GISkill implements Skill {
     isForbidden: boolean = false;
     isUsed: number = 0;
     descriptions: string[] = [];
-    rdskidx: number = -1;
+    rskidx: number = -1;
     handle: (event: SkillHandleEvent) => SkillHandleRes = () => ({});
     constructor(
         name: string, description: string, type: number, damage: number, cost: number,
-        costElement: number, options: { ac?: number, ec?: number, de?: number, rdskidx?: number, pct?: number, expl?: ExplainContent[] } = {},
+        costElement: number, options: { ac?: number, ec?: number, de?: number, rskidx?: number, pct?: number, expl?: ExplainContent[] } = {},
         src?: string | string[], handle?: (hevent: SkillHandleEvent) => SkillHandleRes | undefined
     ) {
         this.name = name;
         this.description = description;
         this.type = type;
         this.damage = damage;
-        const { ac = 0, ec = 0, de = costElement % 8, rdskidx = -1, pct = 0, expl = [] } = options;
+        const { ac = 0, ec = 0, de = costElement % 8, rskidx = -1, pct = 0, expl = [] } = options;
         this.dmgElement = de;
-        this.rdskidx = rdskidx;
+        this.rskidx = rskidx;
         this.cost = [{ val: cost, color: costElement }, { val: ac, color: 0 }, { val: ec, color: 9 }];
         this.perCnt = pct;
         if (typeof src == 'string') src = [src];
@@ -169,66 +169,66 @@ type HeroObj = {
 // id 185x：变换形态
 
 const readySkillTotal: { [key: number]: (...args: any) => Skill } = {
-    1: () => new GISkill('踏潮', '(需准备1个行动轮)；造成{dmg}点[雷元素伤害]。', 2, 3, 0, 3, { ec: -2, rdskidx: 1 }),
+    1: () => new GISkill('踏潮', '(需准备1个行动轮)；造成{dmg}点[雷元素伤害]。', 2, 3, 0, 3, { ec: -2, rskidx: 1 }),
 
-    2: () => new GISkill('猜拳三连击·剪刀', '造成{dmg}点[雷元素伤害]，然后[准备技能]：【rsk3】。', 2, 2, 0, 3, { ec: -2, rdskidx: 2 }),
+    2: () => new GISkill('猜拳三连击·剪刀', '(需准备1个行动轮)；造成{dmg}点[雷元素伤害]，然后[准备技能]：【rsk3】。', 2, 2, 0, 3, { ec: -2, rskidx: 2 }),
 
-    3: () => new GISkill('猜拳三连击·布', '造成{dmg}点[雷元素伤害]。', 2, 3, 0, 3, { ec: -2, rdskidx: 3 }),
+    3: () => new GISkill('猜拳三连击·布', '(需准备1个行动轮)；造成{dmg}点[雷元素伤害]。', 2, 3, 0, 3, { ec: -2, rskidx: 3 }),
 
-    4: () => new GISkill('苍鹭震击', '(需准备1个行动轮)；造成{dmg}点[水元素伤害]。', 2, 3, 0, 1, { ec: -2, rdskidx: 4 }),
+    4: () => new GISkill('苍鹭震击', '(需准备1个行动轮)；造成{dmg}点[水元素伤害]。', 2, 3, 0, 1, { ec: -2, rskidx: 4 }),
 
-    5: () => new GISkill('焚落踢', '造成{dmg}点[火元素伤害]。', 3, 3, 0, 2, { ec: -2, rdskidx: 5 }),
+    5: () => new GISkill('焚落踢', '(需准备1个行动轮)；造成{dmg}点[火元素伤害]。', 3, 3, 0, 2, { ec: -2, rskidx: 5 }),
 
     6: () => new GISkill('长延涤流', '(需准备1个行动轮)；对下一个敌方后台角色造成{dmg}点[风元素伤害]，然后[准备技能]：【rsk7】。(敌方没有后台角色时，改为对出战角色造成伤害)',
-        2, 1, 0, 5, { ec: -2, rdskidx: 6 }, '', () => ({ atkAfter: true })),
+        2, 1, 0, 5, { ec: -2, rskidx: 6 }, '', () => ({ atkAfter: true })),
 
     7: () => new GISkill('终幕涤流', '(需准备1个行动轮)；对上一个敌方后台角色造成{dmg}点[风元素伤害]。(敌方没有后台角色时，改为对出战角色造成伤害)',
-        2, 2, 0, 5, { ec: -2, rdskidx: 7 }, '', () => ({ atkBefore: true })),
+        2, 2, 0, 5, { ec: -2, rskidx: 7 }, '', () => ({ atkBefore: true })),
 
-    8: () => new GISkill('洪流重斥', '造成{dmg}点[水元素伤害]，此角色附属【sts2145】。', 2, 3, 3, 1, { rdskidx: 8 },
+    8: () => new GISkill('洪流重斥', '造成{dmg}点[水元素伤害]，此角色附属【sts2145】。', 2, 3, 3, 1, { rskidx: 8 },
         'https://act-webstatic.mihoyo.com/hk4e/e20200928calculate/item_skill_icon_u084qf/45a7f8c8f26f921fce5bb8738bf1bec0.png',
         () => ({ inStatus: [heroStatus(2145)] })),
 
-    9: () => new GISkill('炽焰重斥', '造成{dmg}点[火元素伤害]，此角色附属【sts2145】。', 2, 3, 3, 2, { rdskidx: 9 },
+    9: () => new GISkill('炽焰重斥', '造成{dmg}点[火元素伤害]，此角色附属【sts2145】。', 2, 3, 3, 2, { rskidx: 9 },
         'https://act-webstatic.mihoyo.com/hk4e/e20200928calculate/item_skill_icon_u084qf/160f02ee2bfde3fcfdc558c78a168899.png',
         () => ({ inStatus: [heroStatus(2145)] })),
 
-    10: () => new GISkill('霆雷破袭', '造成{dmg}点[雷元素伤害]，此角色附属【sts2145】。', 2, 3, 3, 3, { rdskidx: 10 },
+    10: () => new GISkill('霆雷破袭', '造成{dmg}点[雷元素伤害]，此角色附属【sts2145】。', 2, 3, 3, 3, { rskidx: 10 },
         'https://act-webstatic.mihoyo.com/hk4e/e20200928calculate/item_skill_icon_u084qf/466e63dcff914eaaa05c7710346033f1.png',
         () => ({ inStatus: [heroStatus(2145)] })),
 
-    11: () => new GISkill('霜刺破袭', '造成{dmg}点[冰元素伤害]，此角色附属【sts2145】。', 2, 3, 3, 4, { rdskidx: 11 },
+    11: () => new GISkill('霜刺破袭', '造成{dmg}点[冰元素伤害]，此角色附属【sts2145】。', 2, 3, 3, 4, { rskidx: 11 },
         'https://act-webstatic.mihoyo.com/hk4e/e20200928calculate/item_skill_icon_u084qf/ac22f83f25890eca87720581f6b06408.png',
         () => ({ inStatus: [heroStatus(2145)] })),
 
-    12: () => new GISkill('风风轮舞踢', '(需准备1个行动轮)；造成{dmg}点[风元素伤害](或被扩散元素的伤害)。', 2, 2, 0, 5, { ec: -2, rdskidx: 12 }),
+    12: () => new GISkill('风风轮舞踢', '(需准备1个行动轮)；造成{dmg}点[风元素伤害](或被扩散元素的伤害)。', 2, 2, 0, 5, { ec: -2, rskidx: 12 }),
 
-    13: () => new GISkill('风风轮舞踢', '(需准备1个行动轮)；造成{dmg}点[水元素伤害]。', 2, 2, 0, 1, { ec: -2, rdskidx: 13 }),
+    13: () => new GISkill('风风轮舞踢', '(需准备1个行动轮)；造成{dmg}点[水元素伤害]。', 2, 2, 0, 1, { ec: -2, rskidx: 13 }),
 
-    14: () => new GISkill('风风轮舞踢', '(需准备1个行动轮)；造成{dmg}点[火元素伤害]。', 2, 2, 0, 2, { ec: -2, rdskidx: 14 }),
+    14: () => new GISkill('风风轮舞踢', '(需准备1个行动轮)；造成{dmg}点[火元素伤害]。', 2, 2, 0, 2, { ec: -2, rskidx: 14 }),
 
-    15: () => new GISkill('风风轮舞踢', '(需准备1个行动轮)；造成{dmg}点[雷元素伤害]。', 2, 2, 0, 3, { ec: -2, rdskidx: 15 }),
+    15: () => new GISkill('风风轮舞踢', '(需准备1个行动轮)；造成{dmg}点[雷元素伤害]。', 2, 2, 0, 3, { ec: -2, rskidx: 15 }),
 
-    16: () => new GISkill('风风轮舞踢', '(需准备1个行动轮)；造成{dmg}点[冰元素伤害]。', 2, 2, 0, 4, { ec: -2, rdskidx: 16 }),
+    16: () => new GISkill('风风轮舞踢', '(需准备1个行动轮)；造成{dmg}点[冰元素伤害]。', 2, 2, 0, 4, { ec: -2, rskidx: 16 }),
 
     17: () => new GISkill('衡平推裁', '(需准备1个行动轮)；造成{dmg}点[水元素伤害]，如果生命值至少为6，则对自身造成1点[穿透伤害]，使伤害+1。',
-        1, 2, 0, 1, { ec: -2, rdskidx: 17 }, '', event => {
+        1, 2, 0, 1, { ec: -2, rskidx: 17 }, '', event => {
             const { hero: { hp } } = event;
             if (hp >= 6) return { addDmgCdt: 1, pendamageSelf: 1 }
         }),
 
-    18: () => new GISkill('霆电迸发', '(需准备1个行动轮)；造成{dmg}点[雷元素伤害]。', 3, 2, 0, 3, { ec: -2, rdskidx: 18 }),
+    18: () => new GISkill('霆电迸发', '(需准备1个行动轮)；造成{dmg}点[雷元素伤害]。', 3, 2, 0, 3, { ec: -2, rskidx: 18 }),
 
-    19: () => new GISkill('涟锋旋刃', '(需准备1个行动轮)；造成{dmg}点[水元素伤害]。', 2, 1, 0, 1, { ec: -2, rdskidx: 19 }),
+    19: () => new GISkill('涟锋旋刃', '(需准备1个行动轮)；造成{dmg}点[水元素伤害]。', 2, 1, 0, 1, { ec: -2, rskidx: 19 }),
 
     20: () => new GISkill('炽烈轰破', '(需准备1个行动轮)；造成{dmg}点[火元素伤害]，对敌方所有后台角色造成2点[穿透伤害]。本角色每附属有2层【sts2182】，就使此技能造成的[火元素伤害]+1。',
-        3, 1, 0, 2, { ec: -2, rdskidx: 20 }, '', event => {
+        3, 1, 0, 2, { ec: -2, rskidx: 20 }, '', event => {
             const { hero: { inStatus } } = event;
             return { pendamage: 2, addDmgCdt: Math.floor((inStatus.find(ist => ist.id == 2182)?.useCnt ?? 0) / 2) }
         }),
 
     21: () => new GISkill('长枪开相', '(需准备1个行动轮)；造成{dmg}点[岩元素伤害]; 如果本回合中我方[舍弃]或[调和]过至少1张牌，则此伤害+1。',
-        2, 2, 0, 6, { ec: -2, rdskidx: 21 }, '', event => {
+        2, 2, 0, 6, { ec: -2, rskidx: 21 }, '', event => {
             const { playerInfo: { discardCnt = 0, reconcileCnt = 0 } = {} } = event;
             return { addDmgCdt: isCdt(discardCnt + reconcileCnt > 0, 1) }
         }),

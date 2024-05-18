@@ -196,7 +196,7 @@ type Skill = {
     useCnt: number, // 本回合技能已使用次数
     perCnt: number, // 每回合使用次数
     isUsed: number, // 整局技能使用次数
-    rdskidx: number, // 准备技能的idx
+    rskidx: number, // 准备技能的idx
     descriptions: string[], // 处理后的技能描述
     explains: ExplainContent[], // 要解释的文本
 }
@@ -422,7 +422,6 @@ type StatusHandleEvent = {
     hasDmg?: boolean,
     isSkill?: number,
     dmgSource?: number,
-    dmgElement?: number,
     minusDiceCard?: number,
     minusDiceSkill?: number[][],
     heal?: number[],
@@ -481,6 +480,7 @@ type StatusExecEvent = {
     changeHeroDiceCnt?: number,
     heros?: Hero[],
     summons?: Summonee[],
+    isQuickAction?: boolean,
 }
 
 type StatusExecRes = {
