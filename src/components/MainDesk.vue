@@ -11,19 +11,19 @@
         </span>
         {{ opponent?.pile.length }}
         <div class="will-getcard-oppo" :class="{ 'mobile-will-card': isMobile }" v-if="opponent?.willGetCard"
-          :style="{ left: `${cidx * 70 - 70}px` }" v-for="(_, cidx) in opponent.willGetCard" :key="cidx"></div>
+          :style="{ left: `${cidx * 70 - 70}px` }" v-for="(_, cidx) in opponent?.willGetCard" :key="cidx"></div>
         <div class="will-addcard-my" :class="{ 'mobile-will-card': isMobile }" v-if="opponent?.willAddCard"
-          :style="{ left: `${cidx * 70 - 70}px` }" v-for="(card, cidx) in opponent.willAddCard" :key="cidx">
+          :style="{ left: `${cidx * 70 - 70}px` }" v-for="(card, cidx) in opponent?.willAddCard" :key="cidx">
           <img class="card-img" :src="card.src" v-if="card?.src?.length > 0" :alt="card.name" />
           <span v-else>{{ card.name }}</span>
         </div>
         <div class="will-discard-hcard-oppo" :class="{ 'mobile-will-card': isMobile }"
-          :style="{ left: `${cidx * 70 - 70}px` }" v-for="(card, cidx) in opponent.willDiscard[0]" :key="cidx">
+          :style="{ left: `${cidx * 70 - 70}px` }" v-for="(card, cidx) in opponent?.willDiscard[0]" :key="cidx">
           <img class="card-img" :src="card.src" v-if="card?.src?.length > 0" :alt="card.name" />
           <span v-else>{{ card.name }}</span>
         </div>
         <div class="will-discard-pile-my" :class="{ 'mobile-will-card': isMobile }"
-          :style="{ left: `${cidx * 70 - 70}px` }" v-for="(card, cidx) in opponent.willDiscard[1]" :key="cidx">
+          :style="{ left: `${cidx * 70 - 70}px` }" v-for="(card, cidx) in opponent?.willDiscard[1]" :key="cidx">
           <img class="card-img" :src="card.src" v-if="card?.src?.length > 0" :alt="card.name" />
           <span v-else>{{ card.name }}</span>
         </div>
@@ -112,14 +112,14 @@
         'background-color': hero.src == '' ? ELEMENT_COLOR[hero?.element ?? 0] : '',
         animation: hero?.isFront &&
           ((hidx > 2 && player.status == 1 && player.summon.every(s => !s.isSelected)) ||
-            (hidx < 3 && opponent.status == 1 && opponent.summon.every(s => !s.isSelected))) &&
+            (hidx < 3 && opponent?.status == 1 && opponent?.summon.every(s => !s.isSelected))) &&
           isShowDmg && willDamages.some(d => d[0] >= 0) && phase < 7 &&
           heros.every(h => h.inStatus.every(s => !s.isSelected) && h.outStatus.every(s => !s.isSelected))
-          ? `attack${opponent.tarhidx - player.tarhidx + 2}-${hidx < 3 ? 0 : 1} 0.8s linear` : 'none',
+          ? `attack${opponent?.tarhidx - player.tarhidx + 2}-${hidx < 3 ? 0 : 1} 0.8s linear` : 'none',
       }" :class="{
         'mobile-hero': isMobile,
         my: hidx > 2,
-        'is-front-oppo': hero?.isFront && player.phase > 3 && opponent.phase > 3 && hidx < 3,
+        'is-front-oppo': hero?.isFront && player.phase > 3 && opponent?.phase > 3 && hidx < 3,
         'is-front-my': hero?.isFront && hidx > 2,
       }" v-for="(hero, hidx) in heros" :key="hidx">
         <div class="hero-img-content" :class="{
@@ -284,7 +284,7 @@
 
         <div class="summons">
           <div class="summon-area" v-if="!!opponent"
-            v-for="(smnArea, saidx) in [[...opponent.summon, ...willSummons[0]], [...player.summon, ...willSummons[1]]]"
+            v-for="(smnArea, saidx) in [[...opponent?.summon, ...willSummons[0]], [...player.summon, ...willSummons[1]]]"
             :key="saidx">
             <div class="summon" :class="{
               'will-attach': summon.isWill,
@@ -422,7 +422,7 @@ const siteCnt = computed<number[][]>(() => props.client.siteCnt);
 const summonCnt = computed<number[][]>(() => props.client.summonCnt);
 const isLookon = computed<number>(() => props.isLookon);
 const heros = computed<Hero[]>(() => {
-  if (props.client.isWin < 2) return [...opponent.value.heros, ...player.value.heros];
+  if (props.client.isWin < 2) return [...opponent?.value.heros, ...player.value.heros];
   if (playerIdx.value == 0) return [...props.afterWinHeros[1], ...props.afterWinHeros[0]];
   return props.afterWinHeros.flat();
 });

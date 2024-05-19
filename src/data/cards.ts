@@ -181,10 +181,12 @@ const talentSkill = (skidx: number): () => ({ trigger: Trigger[], cmds: Cmds[] }
     return () => ({ trigger: ['skill'], cmds: [{ cmd: 'useSkill', cnt: skidx }] });
 }
 
-const talentHandle = (event: CardHandleEvent, skidx: number, nexec: () => [(() => CardExecRes | void)?, CardHandleRes?] | undefined, ntrigger: Trigger | Trigger[] = 'skill') => {
+const talentHandle = (event: CardHandleEvent, skidx: number, nexec: () => [(() => CardExecRes | void)?, CardHandleRes?] | undefined, ntrigger?: Trigger | Trigger[]) => {
     const { reset = false, trigger = '' } = event;
     const { trigger: talTrg, cmds: talCmds } = talentSkill(skidx)();
     const cmds: Cmds[] = [...talCmds];
+    const hasnotNtrigger = ntrigger == undefined;
+    if (ntrigger == undefined) ntrigger = ['skill'];
     if (typeof ntrigger == 'string') {
         if (ntrigger != '') ntrigger = [ntrigger];
         else ntrigger = [];
@@ -194,11 +196,11 @@ const talentHandle = (event: CardHandleEvent, skidx: number, nexec: () => [(() =
     const [nexecf = () => ({}), hdres = {}] = nexec() ?? [];
     if (reset) return hdres;
     const exec = () => isTrigger ? (nexecf() ?? {}) : ({});
-    const triggers: Trigger[] = ntrigger.some(tr => talTrg.includes(tr)) ? talTrg : ntrigger;
+    const triggers: Trigger[] = hasnotNtrigger ? talTrg : ntrigger;
     return {
         ...(isTrigger ? hdres : {}),
         trigger: [...new Set([...triggers, ...(isTrigger ? (hdres.trigger ?? []) : [])])],
-        cmds,
+        cmds: [...cmds, ...(isTrigger ? (hdres.cmds ?? []) : [])],
         exec,
     }
 }
@@ -2364,12 +2366,12 @@ const allCards: CardObj = {
     784: new GICard(784, '予行恶者以惩惧', '[战斗行动]：我方出战角色为【莱欧斯利】时，装备此牌。；【莱欧斯利】装备此牌后，立刻使用一次【迅烈倾霜拳】。；装备有此牌的【莱欧斯利】受到伤害或治疗后，此牌累积1点｢惩戒计数｣。；装备有此牌的【莱欧斯利】使用技能时：如果已有3点｢惩戒计数｣，则消耗3点使此技能伤害+1。',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_Wriothesley.webp',
         1, 4, 0, [6, 7], 1011, 1, (card, event) => talentHandle(event, 0, () => {
-            const { hidxs: [hidx] = [], heal = [], trigger = '' } = event;
+            const { hidxs: [hidx] = [], heal = [], getdmg = [], trigger = '' } = event;
             return [() => {
-                if (trigger == 'getdmg' || trigger == 'heal' && heal[hidx] > 0) ++card.useCnt;
+                if (trigger == 'getdmg' && getdmg[hidx] > 0 || trigger == 'heal' && heal[hidx] > 0) ++card.useCnt;
                 else if (trigger == 'skill' && card.useCnt >= 3) card.useCnt -= 3;
-            }, { addDmgCdt: isCdt(card.useCnt >= 3, 1) }]
-        }, ['getdmg', 'heal', 'skill']), { expl: talentExplain(1011, 0), anydice: 2 }),
+            }, { addDmgCdt: isCdt(card.useCnt >= 3, 1), isAddTask: trigger != 'skill' }]
+        }, ['getdmg', 'heal', 'skill']), { expl: talentExplain(1011, 0), anydice: 2, uct: 0 }),
 
     785: new GICard(785, '｢诸君听我颂，共举爱之杯！｣', '[战斗行动]：我方出战角色为【芙宁娜】时，装备此牌。；【芙宁娜】装备此牌后，立刻使用一次【孤心沙龙】。；装备有此牌的【芙宁娜】使用【孤心沙龙】时，会对自身附属【万众瞩目】。',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_Furina.webp',

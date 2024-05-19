@@ -1626,14 +1626,14 @@ export default class GeniusInvokationClient {
                 if (isSwitchOppo(elrcmds3[0])) atriggers3[hidx].push('change-from');
                 const { statusIdsAndPidx } = this._doStatus(this.playerIdx, 1, atriggers3[hidx], { hidxs: [ahidx], isExec: false });
                 if (statusIdsAndPidx.length > 0) isSwitchAtk = true;
-                doAfterStatus(aHeros[ahidx].inStatus, 0, atriggers3[ahidx], ahidx, ehidx, 0, true);
-                doAfterStatus(aHeros[hidx].outStatus, 1, atriggers3[hidx], ahidx, ehidx, 0, true);
+                doAfterStatus(aHeros[ahidx].inStatus, 0, atriggers3[ahidx], ahidx, ehidx, 1, true);
+                doAfterStatus(aHeros[hidx].outStatus, 1, atriggers3[hidx], ahidx, ehidx, 1, true);
             } else {
                 if (isSwitchOppo(elrcmds3[0])) etriggers3[hidx].push('change-from');
                 const { statusIdsAndPidx } = this._doStatus(this.playerIdx ^ 1, 1, etriggers3[oeFrontIdx], { hidxs: [ehidx], isExec: false });
                 if (statusIdsAndPidx.length > 0) isSwitchAtk = true;
-                doAfterStatus(eaHeros[ehidx].inStatus, 0, etriggers3[ehidx], ahidx, ehidx, 1, true);
-                doAfterStatus(eaHeros[oeFrontIdx].outStatus, 1, etriggers3[oeFrontIdx], ahidx, ehidx, 1, true);
+                doAfterStatus(eaHeros[ehidx].inStatus, 0, etriggers3[ehidx], ahidx, ehidx, 0, true);
+                doAfterStatus(eaHeros[oeFrontIdx].outStatus, 1, etriggers3[oeFrontIdx], ahidx, ehidx, 0, true);
             }
             return false;
         }
@@ -1691,12 +1691,12 @@ export default class GeniusInvokationClient {
                 .map(xtrgs => xtrgs.map(trgs => trgs.map(trg => trg.startsWith('skill') ? 'after-' + trg : trg.startsWith('after-') ? trg.slice(6) : trg) as Trigger[]));
             eaHeros.forEach((h, hi) => {
                 if (hi == oeFrontIdx) afterESkillTrgs[hi].push('status-destroy');
-                doAfterStatus(h.inStatus, 0, afterESkillTrgs[hi], aswhidx, eswhidx, 1);
-                if (hi == oeFrontIdx) doAfterStatus(h.outStatus, 1, afterESkillTrgs[hi], aswhidx, eswhidx, 1);
+                doAfterStatus(h.inStatus, 0, afterESkillTrgs[hi], aswhidx, eswhidx);
+                if (hi == oeFrontIdx) doAfterStatus(h.outStatus, 1, afterESkillTrgs[hi], aswhidx, eswhidx);
             });
             aHeros.forEach((h, hi) => {
-                doAfterStatus(h.inStatus, 0, afterASkillTrgs[hi], aswhidx, eswhidx);
-                if (hi == hidx) doAfterStatus(h.outStatus, 1, afterASkillTrgs[hi], aswhidx, eswhidx);
+                doAfterStatus(h.inStatus, 0, afterASkillTrgs[hi], aswhidx, eswhidx, 1);
+                if (hi == hidx) doAfterStatus(h.outStatus, 1, afterASkillTrgs[hi], aswhidx, eswhidx, 1);
             });
             for (const smn of aSummon) {
                 ([`after-skilltype${skill.type}`, `after-skill`] as Trigger[]).forEach(trg => {
@@ -1711,8 +1711,8 @@ export default class GeniusInvokationClient {
         if (isSwitchOppo(skillcmds)) {
             const { statusIdsAndPidx } = this._doStatus(this.playerIdx ^ 1, 1, 'change-from', { hidxs: [oeFrontIdx], isExec: false, heros: eaHeros });
             if (statusIdsAndPidx.length > 0) isSwitchAtk = true;
-            doAfterStatus(eaHeros[oeFrontIdx].inStatus, 0, ['change-from'], aswhidx, eswhidx, 1, true);
-            doAfterStatus(eaHeros[oeFrontIdx].outStatus, 1, ['change-from'], aswhidx, eswhidx, 1, true);
+            doAfterStatus(eaHeros[oeFrontIdx].inStatus, 0, ['change-from'], aswhidx, eswhidx, 0, true);
+            doAfterStatus(eaHeros[oeFrontIdx].outStatus, 1, ['change-from'], aswhidx, eswhidx, 0, true);
         }
         if (sidx == -1 || isSwitchSelf(skillcmds)) {
             const dtriggers: Trigger[] = [];
@@ -1721,8 +1721,8 @@ export default class GeniusInvokationClient {
             const triggers: Trigger[] = sidx == -1 ? dtriggers : ['change-from'];
             const { statusIdsAndPidx } = this._doStatus(this.playerIdx, 1, triggers, { hidxs: [hidx], isExec: false, heros: aHeros });
             if (statusIdsAndPidx.length > 0) isSwitchAtk = true;
-            doAfterStatus(aHeros[ahidx].inStatus, 0, triggers, aswhidx, eswhidx, 0, true);
-            doAfterStatus(aHeros[hidx].outStatus, 1, triggers, aswhidx, eswhidx, 0, true);
+            doAfterStatus(aHeros[ahidx].inStatus, 0, triggers, aswhidx, eswhidx, 1, true);
+            doAfterStatus(aHeros[hidx].outStatus, 1, triggers, aswhidx, eswhidx, 1, true);
         }
         const stscmds: Cmds[] = [
             { cmd: 'getStatus', status: [...(skillres.inStatus ?? []), ...(skillres.outStatus ?? [])], hidxs: skillres.hidxs },
@@ -3498,6 +3498,10 @@ export default class GeniusInvokationClient {
             ahidx = stype == 1 ? ahidx : ohidx;
             const getAtkStatus = () => (stype == 0 ? aheros[ahidx].inStatus : aheros[ahidx].outStatus).find(sts => sts.id == sid)!;
             const atkedIdx = isSelf ? ahidx : eFrontIdx;
+            if (getAtkStatus() == undefined) {
+                resolve(true);
+                return;
+            }
             const stsres = heroStatus(sid).handle(getAtkStatus(), {
                 heros: aheros,
                 eheros,
@@ -3695,13 +3699,11 @@ export default class GeniusInvokationClient {
                             playerInfo: this.players[pidx].playerInfo,
                         });
                         if (this._hasNotTrigger(slotres.trigger, trigger)) continue;
-                        if (isExec) {
-                            if (slotres.execmds) {
-                                cmds.push(...slotres.execmds);
-                            }
-                            if ((!slotres.execmds?.length && !slotres.isAddTask) || taskMark) {
-                                slotres.exec?.();
-                            }
+                        if (isExec && slotres.execmds) {
+                            cmds.push(...slotres.execmds);
+                        }
+                        if (taskMark || (isExec && !slotres.execmds?.length && !slotres.isAddTask)) {
+                            slotres.exec?.();
                         }
                         isAddTask ||= !!slotres.isAddTask;
                         changeHeroDiceCnt -= slotres.minusDiceHero ?? 0;
@@ -4456,7 +4458,7 @@ class TaskQueue {
     addStatusAtk(ststask: StatusTask[], isUnshift = false) {
         if (ststask.length == 0) return;
         for (const t of ststask) {
-            const atkname = 'statusAtk-' + heroStatus(t.id).name + 'h' + t.hidx;
+            const atkname = 'statusAtk-' + heroStatus(t.id).name + 'p' + t.pidx + (t.type == 0 ? 'h' + t.hidx : '');
             if (this.queue.some(([tpn]) => tpn == atkname)) {
                 console.warn('重复status:', atkname);
                 continue;
