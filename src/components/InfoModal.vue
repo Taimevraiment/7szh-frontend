@@ -318,7 +318,7 @@ const wrapExplCtt = (content: string) => {
         type == 'smn' ? newSummonee(a1, a2, a3) :
           type == 'ski' ? herosTotal(a1).skills[a2] :
             type == 'hro' ? herosTotal(a1) :
-              { name: content };
+              { name: content, default: true };
 }
 const wrapDesc = (desc: string, obj?: ExplainContent): string => {
   let res = desc.slice()
@@ -377,7 +377,7 @@ const wrapExpl = (expls: ExplainContent[], memo: string | string[]): string[][] 
     const explains: string[] = [];
     if (typeof expl == 'string') {
       const nctt = wrapExplCtt(expl);
-      if ((!('id' in nctt) || nctt.id % 1000 == 0) && (!('rskidx' in nctt) || nctt.rskidx == -1) || nctt.name == '' || 'skills' in nctt) continue;
+      if ((!('id' in nctt) || nctt.id % 1000 == 0) && !('rskidx' in nctt) || nctt.name == '' || 'skills' in nctt) continue;
       expl = nctt;
     }
     if (memo.includes(expl.name)) continue;

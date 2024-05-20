@@ -363,6 +363,7 @@ type CardHandleEvent = {
     ehidx?: number,
     minusDiceSkill?: number[][],
     getdmg?: number[],
+    slotUse?: boolean,
 }
 
 type CardHandleRes = {

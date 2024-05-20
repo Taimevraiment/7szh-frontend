@@ -318,6 +318,12 @@ constructor(
 
 解释：本次我方角色受到的伤害数，一般是配合"other-getdmg"使用
 
+##### slotUse
+
+类型：boolean
+
+解释：是否使用装备卡
+
 #### CardHandleRes
 
 ##### site

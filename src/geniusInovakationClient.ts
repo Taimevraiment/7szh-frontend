@@ -87,7 +87,7 @@ export default class GeniusInvokationClient {
      */
     cancel(options: { onlyCard?: boolean, notCard?: boolean, notHeros?: boolean, onlyHeros?: boolean, onlySiteAndSummon?: boolean } = {}) {
         const { onlyCard = false, notCard = false, notHeros = false, onlyHeros = false, onlySiteAndSummon = false } = options;
-        this.willHp = new Array(6).fill(undefined);
+        this.willHp = new Array(this.players.flatMap(p => p.heros).length).fill(undefined);
         if (!onlyCard) {
             if ((!notHeros || onlyHeros) && !onlySiteAndSummon) {
                 this.player?.heros.forEach(h => {
@@ -220,6 +220,8 @@ export default class GeniusInvokationClient {
         let diceSelect: boolean[] = [];
         const diceLen = dice.length;
         this.siteCnt = [[0, 0, 0, 0], [0, 0, 0, 0]];
+        this.willHp = new Array(this.players.flatMap(p => p.heros).length).fill(undefined);
+        this.willAttachs = new Array(this.players.reduce((a, c) => a + c.heros.length, 0)).fill(0).map(() => []);
         const cardres = cardsTotal(id).handle(this.currCard, {
             hidxs: [hidx],
             heros,
@@ -233,6 +235,7 @@ export default class GeniusInvokationClient {
             esite: this.opponent.site,
             esummons: this.opponent.summon,
             isExec: false,
+            slotUse: type == 0,
         });
         if (cardres.hidxs?.length == 0 ||
             cardres.summon && summon.length == 4 ||
@@ -356,6 +359,7 @@ export default class GeniusInvokationClient {
             site: player.site,
             esite: opponent.site,
             isExec: true,
+            slotUse: currCard.type == 0,
         });
         player.playerInfo.destroyedSite += oSiteCnt - player.site.length;
         player.heros.forEach(h => {
@@ -1644,11 +1648,11 @@ export default class GeniusInvokationClient {
             for (const sts of status) {
                 for (const state of trgs) {
                     const stsres = heroStatus(sts.id).handle(sts, {
-                        heros: isSelf ? eaHeros : aHeros,
-                        eheros: isSelf ? aHeros : eaHeros,
-                        hidx: isSelf ? ehidx : ahidx,
+                        heros: isSelf ? aHeros : eaHeros,
+                        eheros: isSelf ? eaHeros : aHeros,
+                        hidx: isSelf ? ahidx : ehidx,
                         trigger: state,
-                        isChargedAtk: isSelf ? false : isChargedAtk,
+                        isChargedAtk: isSelf ? isChargedAtk : false,
                     });
                     const isSelfAtk = +!!stsres.isSelf;
                     if (this._hasNotTrigger(stsres.trigger, state)) continue;
@@ -1658,22 +1662,22 @@ export default class GeniusInvokationClient {
                             statusIds.push({
                                 id: sts.id,
                                 type: stype,
-                                pidx: this.playerIdx ^ isSelf,
+                                pidx: this.playerIdx ^ isSelf ^ 1,
                                 isSelf: isSelfAtk,
                                 trigger: state,
                                 isAfterSwitch,
-                                hidx: isSelf ? ehidx : ahidx,
+                                hidx: isSelf ? ahidx : ehidx,
                             });
                         }
                         const dmg = new Array(ahlen + ehlen).fill(0).map((_, di) => bWillDamages.reduce((a, b) => a + b[di][0] + b[di][1], 0));
-                        const willKill = isSelf ? dmg[(this.playerIdx ^ 1) * ehlen + ahidx] >= aHeros[ahidx].hp : dmg[this.playerIdx * ahlen + ehidx] >= eaHeros[ehidx].hp;
-                        if (calcAtk(stsres, willKill ? 'die' : (['in', 'out'][stype] + 'Status'), sts.id, ahidx, ehidx, !!(isSelfAtk ^ isSelf))) continue;
+                        const willKill = isSelf ? dmg[this.playerIdx * ahlen + ehidx] >= eaHeros[ehidx].hp : dmg[(this.playerIdx ^ 1) * ehlen + ahidx] >= aHeros[ahidx].hp;
+                        if (calcAtk(stsres, willKill ? 'die' : (['in', 'out'][stype] + 'Status'), sts.id, ahidx, ehidx, !(isSelfAtk ^ isSelf))) continue;
                         if (stsres.heal) {
                             let willheals = new Array(ahlen + ehlen).fill(-1);
-                            const whidx = sidx > -1 ? isSelf ? ehidx : ahidx : this.player.heros.findIndex(h => h.isSelected);
-                            (isSelf ? eaHeros : aHeros).forEach((h, hi) => {
+                            const whidx = sidx > -1 ? isSelf ? ahidx : ehidx : this.player.heros.findIndex(h => h.isSelected);
+                            (isSelf ? aHeros : eaHeros).forEach((h, hi) => {
                                 if ((stsres.hidxs ?? [whidx]).includes(hi)) {
-                                    willheals[hi + (this.playerIdx ^ +!isSelf) * (isSelf ? ahlen : ehlen)] = Math.min(h.maxhp - h.hp, stsres.heal ?? -1);
+                                    willheals[hi + (this.playerIdx ^ +isSelf) * (isSelf ? ehlen : ahlen)] = Math.min(h.maxhp - h.hp, stsres.heal ?? -1);
                                 }
                             });
                             bWillHeal.push(willheals);
