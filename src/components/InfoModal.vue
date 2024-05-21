@@ -341,7 +341,14 @@ const wrapDesc = (desc: string, obj?: ExplainContent): string => {
     .replace(/(?<!\\)(\*?)\[(.*?)\]/g, (_, isUnderline, ctt) => {
       const el = ELEMENT.findIndex((v, vi) => v != '' && ((vi < 11 && ctt.includes(v)) || (vi > 11 && ctt == v)));
       const c = el > 10 || el == -1 ? 'white' : ELEMENT_COLOR[el];
-      const wpicon = wrapedIcon(el, ctt.includes('骰'));
+      let wpicon = wrapedIcon(el, ctt.includes('骰'));
+      const elSplit = ctt.indexOf('元素') - 1;
+      if (elSplit > 0 && !ctt.includes('骰')) {
+        const ctt1 = ctt.slice(0, elSplit);
+        const ctt2 = ctt.slice(elSplit);
+        ctt = ctt1 + wpicon + ctt2;
+        wpicon = '';
+      }
       const underline = isUnderline == '' ? `border-bottom:2px solid ${c};cursor:pointer;` : '';
       return `${wpicon}<span style='color:${c};${underline}margin-right:2px;${[-1, 8, 10].includes(el) ? 'margin-left:2px;' : ''}'>${ctt}</span>`;
     })

@@ -139,7 +139,7 @@ const summonTotal: SummoneeObj = {
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/12109492/19b63677c8f4e6cabed15711be406e09_2795447472820195792.png',
         2, 2, 0, 2, 2),
 
-    3008: (isTalent = false) => new GISummonee(3008, '奥兹', `【结束阶段：】造成{dmg}点[雷元素伤害]。；【[可用次数]：{useCnt}】${isTalent ? '；【菲谢尔】｢普通攻击｣后：造成2点[雷元素伤害]。(需消耗[可用次数])' : ''}`,
+    3008: (isTalent = false) => new GISummonee(3008, '奥兹', `【结束阶段：】造成{dmg}点[雷元素伤害]。；【[可用次数]：{useCnt}】${isTalent ? '；【hro1301】｢普通攻击｣后：造成2点[雷元素伤害]。(需消耗[可用次数])' : ''}`,
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/12109492/ea0ab20ac46c334e1afd6483b28bb901_2978591195898491598.png',
         2, 2, 0, 1, 3, (summon, event) => {
             const { heros = [], trigger = '', isExec = true } = event;
@@ -261,7 +261,7 @@ const summonTotal: SummoneeObj = {
             }
         })),
 
-    3022: () => new GISummonee(3022, '天狗咒雷·雷砾', '【结束阶段：】造成{dmg}点[雷元素伤害]，我方出战角色附属【鸣煌护持】。；【[可用次数]：{useCnt}】',
+    3022: () => new GISummonee(3022, '天狗咒雷·雷砾', '【结束阶段：】造成{dmg}点[雷元素伤害]，我方出战角色附属【sts2064】。；【[可用次数]：{useCnt}】',
         'https://uploadstatic.mihoyo.com/ys-obc/2023/02/04/12109492/51bca1f202172ad60abbace59b96c346_7973049003331786903.png',
         2, 2, 0, 2, 3, summon => ({
             trigger: ['phase-end'],
@@ -292,7 +292,7 @@ const summonTotal: SummoneeObj = {
             }
         })),
 
-    3024: () => new GISummonee(3024, '光降之剑', '【优菈使用｢普通攻击｣或｢元素战技｣时：】此牌累积2点｢能量层数｣，但是【优菈】不会获得[充能]。；【结束阶段：】弃置此牌。造成{dmg}点[物理伤害]; 每有1点｢能量层数｣，都使次伤害+1。(影响此牌｢[可用次数]｣的效果会作用于｢能量层数｣。)',
+    3024: () => new GISummonee(3024, '光降之剑', '【〖hro1006〗使用｢普通攻击｣或｢元素战技｣时：】此牌累积2点｢能量层数｣，但是【hro1006】不会获得[充能]。；【结束阶段：】弃置此牌。造成{dmg}点[物理伤害]; 每有1点｢能量层数｣，都使次伤害+1。(影响此牌｢[可用次数]｣的效果会作用于｢能量层数｣。)',
         'https://uploadstatic.mihoyo.com/ys-obc/2023/02/04/12109492/a475346a830d9b62d189dc9267b35a7a_4963009310206732642.png',
         0, 100, 0, 3, 0, (summon, event) => {
             const { heros = [], trigger = '' } = event;
@@ -324,7 +324,7 @@ const summonTotal: SummoneeObj = {
             },
         })),
 
-    3026: () => new GISummonee(3026, '阿丑', '【我方出战角色受到伤害时：】抵消{shield}点伤害。；【[可用次数]：{useCnt}】，耗尽时不弃置此牌。；【此召唤物在场期间可触发1次：】我方角色受到伤害后，为【荒泷一斗】附属【乱神之怪力】。；【结束阶段：】弃置此牌，造成{dmg}点[岩元素伤害]。',
+    3026: () => new GISummonee(3026, '阿丑', '【我方出战角色受到伤害时：】抵消{shield}点伤害。；【[可用次数]：{useCnt}】，耗尽时不弃置此牌。；【此召唤物在场期间可触发1次：】我方角色受到伤害后，为【hro1503】附属【sts2068】。；【结束阶段：】弃置此牌，造成{dmg}点[岩元素伤害]。',
         'https://uploadstatic.mihoyo.com/ys-obc/2023/03/28/12109492/9beb8c255664a152c8e9ca35697c7d9e_263220232522666772.png',
         1, 1, -1, 1, 6, (summon, event) => {
             const { heros = [], trigger = '' } = event;
@@ -525,7 +525,7 @@ const summonTotal: SummoneeObj = {
         'https://act-upload.mihoyo.com/ys-obc/2023/08/03/203927054/0ea69a82861d8469ecdbbc78797e9fd8_3713104012683105893.png',
         2, 2, 0, 2, 3),
 
-    3039: () => new GISummonee(3039, '寒病鬼差', '【结束阶段：】造成{dmg}点[冰元素伤害]。；【[可用次数]：{useCnt}】；【此召唤物在场时，七七使用｢普通攻击｣后：】治疗受伤最多的我方角色1点。',
+    3039: () => new GISummonee(3039, '寒病鬼差', '【结束阶段：】造成{dmg}点[冰元素伤害]。；【[可用次数]：{useCnt}】；【此召唤物在场时，〖hro1008〗使用｢普通攻击｣后：】治疗受伤最多的我方角色1点。',
         'https://act-upload.mihoyo.com/ys-obc/2023/08/16/12109492/f9ea7576630eb5a8c46aae9ea8f61c7b_317750933065064305.png',
         3, 3, 0, 1, 4, (summon, event) => {
             const { heros = [], trigger = '', isExec = false } = event;
@@ -562,7 +562,7 @@ const summonTotal: SummoneeObj = {
             }
         }, { pct: 1 }),
 
-    3041: () => new GISummonee(3041, '净焰剑狱领域', '【结束阶段：】造成{dmg}点[火元素伤害]。；【[可用次数]：{useCnt}】；【当此召唤物在场且迪希雅在我方后台，我方出战角色受到伤害时：】抵消1点伤害; 然后，如果【迪希雅】生命值至少为7，则对其造成1点[穿透伤害]。(每回合1次)',
+    3041: () => new GISummonee(3041, '净焰剑狱领域', '【结束阶段：】造成{dmg}点[火元素伤害]。；【[可用次数]：{useCnt}】；【当此召唤物在场且〖hro1209〗在我方后台，我方出战角色受到伤害时：】抵消1点伤害; 然后，如果【hro1209】生命值至少为7，则对其造成1点[穿透伤害]。(每回合1次)',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/09/22/258999284/5fe195423d5308573221c9d25f08d6d7_2012000078881285374.png',
         3, 3, 0, 1, 2, (summon, event) => {
             const { reset = false } = event;
@@ -634,7 +634,7 @@ const summonTotal: SummoneeObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/11/04/258999284/42b6402e196eec814b923ac88b2ec3e6_7208177288974921556.png',
         1, 1, 1, 1, 7),
 
-    3047: () => new GISummonee(3047, '饰梦天球', '【结束阶段：】造成{dmg}点[冰元素伤害]。如果【飞星】在场，则使其累积1枚｢晚星｣。；【[可用次数]：{useCnt}】',
+    3047: () => new GISummonee(3047, '饰梦天球', '【结束阶段：】造成{dmg}点[冰元素伤害]。如果【sts2129】在场，则使其累积1枚｢晚星｣。；【[可用次数]：{useCnt}】',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/12/258999284/1b86f1cb97411b77d51cc22bb5622ff7_2462971599599504312.png',
         2, 2, 0, 1, 4, (summon, event) => ({
             trigger: ['phase-end'],
@@ -690,7 +690,7 @@ const summonTotal: SummoneeObj = {
         }, { spReset: true }),
 
 
-    3050: () => new GISummonee(3050, '大将威仪', '【结束阶段：】造成{dmg}点[岩元素伤害]；如果队伍中存在2名‹6岩元素›角色，则生成【结晶】。；【[可用次数]：{useCnt}】',
+    3050: () => new GISummonee(3050, '大将威仪', '【结束阶段：】造成{dmg}点[岩元素伤害]；如果队伍中存在2名‹6岩元素›角色，则生成【sts2007】。；【[可用次数]：{useCnt}】',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/19/258999284/669b37ae522405031419cd14f6e8daf0_5829987868413544081.png',
         2, 2, 0, 1, 6, (summon, event) => ({
             trigger: ['phase-end'],
@@ -704,7 +704,7 @@ const summonTotal: SummoneeObj = {
             }
         })),
 
-    3051: (isTalent = false) => new GISummonee(3051, '厄灵·炎之魔蝎', `【结束阶段：】造成{dmg}点[火元素伤害]${isTalent ? '; 如果本回合中【镀金旅团·炽沙叙事人】使用过｢普通攻击｣或｢元素战技｣，则此伤害+1' : ''}。；【[可用次数]：{useCnt}】；【入场时和行动阶段开始：】使我方【镀金旅团·炽沙叙事人】附属【炎之魔蝎·守势】。(【厄灵·炎之魔蝎】在场时每回合至多${isTalent ? 2 : 1}次，使角色受到的伤害-1。)`,
+    3051: (isTalent = false) => new GISummonee(3051, '厄灵·炎之魔蝎', `【结束阶段：】造成{dmg}点[火元素伤害]${isTalent ? '; 如果本回合中【hro1743】使用过｢普通攻击｣或｢元素战技｣，则此伤害+1' : ''}。；【[可用次数]：{useCnt}】；【入场时和行动阶段开始：】使我方【hro1743】附属【sts2139】。(【厄灵·炎之魔蝎】在场时每回合至多${isTalent ? 2 : 1}次，使角色受到的伤害-1。)`,
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/12/258999284/8bb20558ca4a0f53569eb23a7547bdff_6164361177759522363.png',
         2, 2, 0, 1, 2, (summon, event) => {
             const { heros = [], trigger = '' } = event;
@@ -729,7 +729,7 @@ const summonTotal: SummoneeObj = {
             }
         }, { isTalent, adt: isTalent ? ['plus'] : [] }),
 
-    3052: () => new GISummonee(3052, '轰雷禁锢', '【结束阶段：】对附属【雷鸣探知】的敌方角色造成{dmg}点[雷元素伤害]。(如果敌方不存在符合条件角色，则改为对出战角色造成伤害)；【[可用次数]：{useCnt}】',
+    3052: () => new GISummonee(3052, '轰雷禁锢', '【结束阶段：】对附属【sts2141】的敌方角色造成{dmg}点[雷元素伤害]。(如果敌方不存在符合条件角色，则改为对出战角色造成伤害)；【[可用次数]：{useCnt}】',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/12/05/258999284/552ec062eef427f9a1986f92ee19c716_8843394885297317371.png',
         1, 1, 0, 3, 3, (summon, event) => {
             const { eheros = [] } = event;

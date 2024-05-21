@@ -728,12 +728,12 @@ const statusTotal: StatusObj = {
             }
         }, { icbg: STATUS_BG_COLOR[1] }),
 
-    2066: (expl?: ExplainContent[]) => new GIStatus(2066, '冷酷之心', '【所附属角色使用冰潮的涡旋时：】移除此状态，使本次伤害+3。',
+    2066: () => new GIStatus(2066, '冷酷之心', '【所附属角色使用〖ski1006,1〗时：】移除此状态，使本次伤害+3。',
         'buff4', 0, [4, 6, 10], 1, 0, -1, status => ({
             trigger: ['skilltype2'],
             addDmgCdt: 3,
             exec: () => { --status.useCnt },
-        }), { icbg: STATUS_BG_COLOR[4], expl }),
+        }), { icbg: STATUS_BG_COLOR[4] }),
 
     2067: () => new GIStatus(2067, '泷廻鉴花', '所附属角色｢普通攻击｣造成的伤害+1，造成的[物理伤害]变为[水元素伤害]。；【[可用次数]：{useCnt}】',
         'buff4', 0, [6, 8], 3, 0, -1, status => {
@@ -778,7 +778,7 @@ const statusTotal: StatusObj = {
             return { restDmg: restDmg - 1 }
         }, { smnId: summonId }),
 
-    2071: () => new GIStatus(2071, '通塞识', '【所附属角色进行[重击]时：】造成的[物理伤害]变为[草元素伤害]，并且会在技能结算后召唤【藏蕴花矢】。；【[可用次数]：{useCnt}】',
+    2071: () => new GIStatus(2071, '通塞识', '【所附属角色进行[重击]时：】造成的[物理伤害]变为[草元素伤害]，并且会在技能结算后召唤【smn3027】。；【[可用次数]：{useCnt}】',
         'buff', 0, [16], 3, 0, -1, (status, event = {}) => {
             if (!event.isChargedAtk) return;
             return {
@@ -808,7 +808,7 @@ const statusTotal: StatusObj = {
             }
         }, { icbg: STATUS_BG_COLOR[4], pct: isCdt(isTalent, 1), isTalent }),
 
-    2074: () => new GIStatus(2074, '远程状态', '【所附属角色进行[重击]后：】目标角色附属【断流】。',
+    2074: () => new GIStatus(2074, '远程状态', '【所附属角色进行[重击]后：】目标角色附属【sts2076】。',
         'ski1106,3', 0, [10], -1, 0, -1, (_status, event = {}) => ({
             trigger: ['skilltype1'],
             exec: () => {
@@ -817,7 +817,7 @@ const statusTotal: StatusObj = {
             }
         }), { icbg: STATUS_BG_COLOR[1] }),
 
-    2075: () => new GIStatus(2075, '近战状态', '角色造成的[物理伤害]转换为[水元素伤害]。；【角色进行[重击]后：】目标角色附属【断流】。；角色对附属有【断流】的角色造成的伤害+1;；【角色对已附属有断流的角色使用技能后：】对下一个敌方后台角色造成1点[穿透伤害]。(每回合至多2次)；【[持续回合]：{roundCnt}】',
+    2075: () => new GIStatus(2075, '近战状态', '角色造成的[物理伤害]转换为[水元素伤害]。；【角色进行[重击]后：】目标角色附属【sts2076】。；角色对附属有【sts2076】的角色造成的伤害+1;；【角色对已附属有断流的角色使用技能后：】对下一个敌方后台角色造成1点[穿透伤害]。(每回合至多2次)；【[持续回合]：{roundCnt}】',
         'ski1106,1', 0, [3, 6, 8], -1, 0, 2, (status, event = {}) => {
             const { isChargedAtk, heros = [], hidx = -1, eheros = [], trigger = '' } = event;
             const efHero = eheros.find(h => h.isFront);
@@ -1014,7 +1014,7 @@ const statusTotal: StatusObj = {
             trigger: ['elReaction'],
         }), { icbg: STATUS_BG_COLOR[7], isTalent }),
 
-    2090: (useCnt = 0) => new GIStatus(2090, '流萤护罩', '为我方出战角色提供1点[护盾]。；【创建时：】如果我方场上存在【冰萤】，则额外提供其[可用次数]的[护盾]。(最多额外提供3点[护盾])',
+    2090: (useCnt = 0) => new GIStatus(2090, '流萤护罩', '为我方出战角色提供1点[护盾]。；【创建时：】如果我方场上存在【smn3034】，则额外提供其[可用次数]的[护盾]。(最多额外提供3点[护盾])',
         '', 1, [7], 1 + Math.min(3, useCnt), 0, -1),
 
     2091: () => new GIStatus(2091, '雷晶核心', '【所附属角色被击倒时：】移除此效果，使角色[免于被击倒]，并治疗该角色到1点生命值。',
@@ -1094,7 +1094,7 @@ const statusTotal: StatusObj = {
             }
         }),
 
-    2097: () => new GIStatus(2097, '灼灼', '【角色进行[重击]时：】少花费1个[火元素骰]。(每回合1次)；【结束阶段：】角色附属【丹火印】。；【[持续回合]：{roundCnt}】',
+    2097: () => new GIStatus(2097, '灼灼', '【角色进行[重击]时：】少花费1个[火元素骰]。(每回合1次)；【结束阶段：】角色附属【sts2096】。；【[持续回合]：{roundCnt}】',
         'ski1208,2', 0, [3, 4], -1, 0, 2, (status, event = {}) => {
             const { isChargedAtk = false, trigger = '' } = event;
             const isMinus = isChargedAtk && status.perCnt > 0;
@@ -1188,7 +1188,7 @@ const statusTotal: StatusObj = {
             }
         }), { icbg: STATUS_BG_COLOR[7] }),
 
-    2105: (summonId: number) => new GIStatus(2105, '净焰剑狱之护', '【迪希雅在我方后台，我方出战角色受到伤害时：】抵消1点伤害; 然后，如果【迪希雅】生命值至少为7，则对其造成1点[穿透伤害]。',
+    2105: (summonId: number) => new GIStatus(2105, '净焰剑狱之护', '【〖hro1209〗在我方后台，我方出战角色受到伤害时：】抵消1点伤害; 然后，如果【hro1209】生命值至少为7，则对其造成1点[穿透伤害]。',
         '', 1, [2], 1, 0, -1, (status, event = {}) => {
             const { restDmg = 0, heros = [] } = event;
             const hero = heros.find(h => h.id == 1209);
@@ -1251,7 +1251,7 @@ const statusTotal: StatusObj = {
             }
         }),
 
-    2111: () => new GIStatus(2111, '金杯的丰馈', '【敌方角色受到绽放反应时：】我方不再生成【草原核】，而是改为召唤【smn3043】。',
+    2111: () => new GIStatus(2111, '金杯的丰馈', '【敌方角色受到绽放反应时：】我方不再生成【sts2005】，而是改为召唤【smn3043】。',
         'ski1108,1', 1, [4, 10], -1, 0, -1, (_status, event = {}) => {
             const { isElStatus = [] } = event;
             return {
@@ -1271,16 +1271,14 @@ const statusTotal: StatusObj = {
             },
         }), { icbg: DEBUFF_BG_COLOR }),
 
-    2113: () => new GIStatus(2113, '脉摄宣明', '【行动阶段开始时：】生成【无欲气护盾】。；【[可用次数]：{useCnt}】',
-        'ski1605,2', 1, [4], 2, 0, -1, (_status, event = {}) => ({
+    2113: () => new GIStatus(2113, '脉摄宣明', '【行动阶段开始时：】生成【sts2114】。；【[可用次数]：{useCnt}】',
+        'ski1605,2', 1, [4], 2, 0, -1, (_status) => ({
             trigger: ['phase-start'],
             exec: eStatus => {
                 if (eStatus) --eStatus.useCnt;
-                const { heros = [], hidx = -1 } = event;
-                const isExist = heros[hidx]?.outStatus?.some(ost => ost.id == 2114);
-                return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2114, isExist)] }] }
+                return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2114)] }] }
             },
-        }), { icbg: STATUS_BG_COLOR[7], expl: [heroStatus(2114)] }),
+        }), { icbg: STATUS_BG_COLOR[7] }),
 
     2114: () => new GIStatus(2114, '无欲气护盾', '提供1点[护盾]，保护我方出战角色。；【此效果被移除，或被重复生成时：】造成1点[草元素伤害]，治疗我方出战角色1点。',
         '', 1, [1, 7], 1, 0, -1, (status, event = {}) => {
@@ -1468,7 +1466,7 @@ const statusTotal: StatusObj = {
             }
         }, { icbg: STATUS_BG_COLOR[7] }),
 
-    2137: (type = 0, isExpl = true) => new GIStatus(2137, ['严寒', '炽热'][type], `【结束阶段：】对所附属角色造成1点[${['冰', '火'][type]}元素伤害]。；【[可用次数]：{useCnt}】；所附属角色被附属【${['炽热', '严寒'][type]}】时，移除此效果。`,
+    2137: (type = 0) => new GIStatus(2137, ['严寒', '炽热'][type], `【结束阶段：】对所附属角色造成1点[${['冰', '火'][type]}元素伤害]。；【[可用次数]：{useCnt}】；所附属角色被附属【sts2137${[',1', ''][type]}】时，移除此效果。`,
         ELEMENT_ICON[[4, 2][type]] + '-dice', 0, [1], 1, 0, -1, status => ({
             damage: 1,
             element: status.perCnt == 0 ? 4 : 2,
@@ -1477,7 +1475,7 @@ const statusTotal: StatusObj = {
             exec: eStatus => {
                 if (eStatus) --eStatus.useCnt;
             },
-        }), { icbg: DEBUFF_BG_COLOR, pct: -type, expl: isExpl ? [heroStatus(2137, type ^ 1, false)] : [] }),
+        }), { icbg: DEBUFF_BG_COLOR, pct: -type }),
 
     2138: () => new GIStatus(2138, '冰封的炽炎魔女', '【行动阶段开始时：】如果所附属角色生命值不多于4，则移除此效果。；【所附属角色被击倒时：】移除此效果，使角色[免于被击倒]，并治疗该角色到1点生命值。【此效果被移除时：】所附属角色转换为[｢焚尽的炽炎魔女｣]形态。',
         'ski1702,3', 0, [4, 10, 13], 1, 0, -1, (_status, event = {}) => {
@@ -1505,7 +1503,7 @@ const statusTotal: StatusObj = {
             return { restDmg: restDmg - 1 }
         }),
 
-    2140: () => new GIStatus(2140, '雷霆探针', '【所在阵营角色使用技能后：】对所在阵营出战角色附属【雷鸣探知】。(每回合1次)',
+    2140: () => new GIStatus(2140, '雷霆探针', '【所在阵营角色使用技能后：】对所在阵营出战角色附属【sts2141】。(每回合1次)',
         'ski1762,3', 1, [10], -1, 0, -1, status => ({
             trigger: ['skill'],
             exec: () => {
@@ -1513,9 +1511,9 @@ const statusTotal: StatusObj = {
                 --status.perCnt;
                 return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2141)] }] }
             }
-        }), { icbg: DEBUFF_BG_COLOR, pct: 1, expl: [heroStatus(2141)] }),
+        }), { icbg: DEBUFF_BG_COLOR, pct: 1 }),
 
-    2141: () => new GIStatus(2141, '雷鸣探知', '【所附属角色受到雷音权现及其召唤物造成的伤害时：】移除此状态，使此伤害+1。；(同一方场上最多存在一个此状态。【雷音权现】的部分技能，会以所附属角色为目标。)',
+    2141: () => new GIStatus(2141, '雷鸣探知', '【所附属角色受到〖hro1762〗及其召唤物造成的伤害时：】移除此状态，使此伤害+1。；(同一方场上最多存在一个此状态。【hro1762】的部分技能，会以所附属角色为目标。)',
         'debuff', 0, [6, 10], 1, 0, -1, (status, event = {}) => {
             const { dmgSource = 0, eheros = [] } = event;
             const getDmg = dmgSource == 1762 || dmgSource == 3052 ? 1 : 0;
@@ -1561,7 +1559,7 @@ const statusTotal: StatusObj = {
                 const { trigger = '' } = event;
                 --status.useCnt;
                 if (trigger == 'change-from') return;
-                return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2144, [status.explains?.[1]])] }] }
+                return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2144)] }] }
             }
         })),
 
@@ -1805,7 +1803,7 @@ const statusTotal: StatusObj = {
             }
         }, { icbg: DEBUFF_BG_COLOR }),
 
-    2164: (cnt = 1) => new GIStatus(2164, '源水之滴', `【那维莱特进行｢普通攻击｣后：】治疗角色2点，然后角色[准备技能]：【rsk17】。；【[可用次数]：{useCnt}】(可叠加，最多叠加到3次)`,
+    2164: (cnt = 1) => new GIStatus(2164, '源水之滴', `【〖hro1110〗进行｢普通攻击｣后：】治疗角色2点，然后角色[准备技能]：【rsk17】。；【[可用次数]：{useCnt}】(可叠加，最多叠加到3次)`,
         'sts2164', 1, [1], cnt, 3, -1, (_status, event = {}) => {
             const { heros = [], hidx = -1 } = event;
             if (heros[hidx]?.id != 1110) return;
@@ -1866,15 +1864,15 @@ const statusTotal: StatusObj = {
             },
         }), { icbg: DEBUFF_BG_COLOR }),
 
-    2170: (useCnt = 0) => new GIStatus(2170, '雷萤护罩', '为我方出战角色提供1点[护盾]。；【创建时：】如果我方场上存在【雷萤】，则额外提供其[可用次数]的[护盾]。(最多额外提供3点[护盾])',
+    2170: (useCnt = 0) => new GIStatus(2170, '雷萤护罩', '为我方出战角色提供1点[护盾]。；【创建时：】如果我方场上存在【smn3057】，则额外提供其[可用次数]的[护盾]。(最多额外提供3点[护盾])',
         '', 1, [7], 1 + Math.min(3, useCnt), 0, -1),
 
-    2171: (expl?: ExplainContent[]) => new GIStatus(2171, '霆电迸发', '本角色将在下次行动时，直接使用技能：【rsk18】。',
+    2171: () => new GIStatus(2171, '霆电迸发', '本角色将在下次行动时，直接使用技能：【rsk18】。',
         'buff3', 0, [10, 11], 1, 0, -1, status => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 18,
             exec: () => { --status.useCnt },
-        }), { expl }),
+        })),
 
     2172: () => new GIStatus(2172, '万世的浪涛', '角色在本回合中，下次造成的伤害+2。',
         'buff5', 0, [4, 6, 10], 1, 0, 1, status => ({
@@ -2062,7 +2060,7 @@ const statusTotal: StatusObj = {
             }
         })),
 
-    2190: (expl?: ExplainContent[]) => new GIStatus(2190, '苍鹭震击', '本角色将在下次行动时，直接使用技能：【苍鹭震击】。',
+    2190: () => new GIStatus(2190, '苍鹭震击', '本角色将在下次行动时，直接使用技能：【rsk4】。',
         'buff3', 0, [10, 11], 1, 0, -1, (status, event = {}) => ({
             trigger: ['change-from', 'useReadySkill'],
             skill: 4,
@@ -2072,7 +2070,7 @@ const statusTotal: StatusObj = {
                 const sts2094 = heros[hidx].inStatus.find(ist => ist.id == 2094);
                 if (sts2094) sts2094.useCnt = 0;
             }
-        }), { expl }),
+        })),
 
     2191: () => new GIStatus(2191, '火之新生·锐势', '角色造成的[火元素伤害]+1。', 'buff4', 0, [6, 10], 1, 0, -1, () => ({ addDmg: 1 }), { icbg: STATUS_BG_COLOR[2] }),
 
@@ -2226,7 +2224,7 @@ const statusTotal: StatusObj = {
             }
         }, { icbg: STATUS_BG_COLOR[7] }),
 
-    2203: () => new GIStatus(2203, '梅赫拉克的助力', '角色｢普通攻击｣造成的伤害+1，且造成的[物理伤害]变为[草元素伤害]。；角色｢普通攻击｣后：生成【迸发扫描】。；【[持续回合]:{roundCnt}】',
+    2203: () => new GIStatus(2203, '梅赫拉克的助力', '角色｢普通攻击｣造成的伤害+1，且造成的[物理伤害]变为[草元素伤害]。；角色｢普通攻击｣后：生成【sts2202】。；【[持续回合]:{roundCnt}】',
         'buff4', 0, [4, 6, 8], -1, 0, 2, (_status, event = {}) => {
             const { heros = [], hidx = -1 } = event;
             return {
@@ -2249,7 +2247,7 @@ const statusTotal: StatusObj = {
             }
         }),
 
-    2205: (useCnt = 0) => new GIStatus(2205, '深噬之域', '我方[舍弃]或[调和]的手牌，会被吞噬。；每吞噬3张牌：【吞星之鲸】获得1点额外最大生命; 如果其中存在原本元素骰费用值相同的牌，则额外获得1点; 如果3张均相同，再额外获得1点。',
+    2205: (useCnt = 0) => new GIStatus(2205, '深噬之域', '我方[舍弃]或[调和]的手牌，会被吞噬。；每吞噬3张牌：【hro1724】获得1点额外最大生命; 如果其中存在原本元素骰费用值相同的牌，则额外获得1点; 如果3张均相同，再额外获得1点。',
         'ski1724,3', 1, [4, 9, 12], useCnt, 0, -1, (_status, event = {}) => {
             const { discards = [] } = event;
             return {
@@ -2290,10 +2288,11 @@ const statusTotal: StatusObj = {
     2207: () => oncePerRound(2207, '噬骸能量块'),
 
     2208: () => new GIStatus(2208, '亡风啸卷(生效中)', '本回合中，我方下次切换角色后，生成1个出战角色类型的元素骰。',
-        'buff2', 1, [4, 10], 1, 0, 1, status => ({
+        'buff2', 1, [4, 10], 1, 0, 1, () => ({
             trigger: ['change-from'],
-            exec: () => {
-                --status.useCnt;
+            isAddTask: true,
+            exec: eStatus => {
+                if (eStatus) --eStatus.useCnt;
                 return { cmds: [{ cmd: 'getDice', cnt: 1, element: -2 }] }
             }
         })),
@@ -2310,7 +2309,7 @@ const statusTotal: StatusObj = {
             }
         }, { icbg: STATUS_BG_COLOR[7] }),
 
-    2210: (icon = '') => new GIStatus(2210, '重燃的绿洲之心', '所附属角色造成的伤害+3。；【所附属角色使用技能后：】移除我方场上的【绿洲之滋养】，每移除1层就治疗所附属角色1点。',
+    2210: (icon = '') => new GIStatus(2210, '重燃的绿洲之心', '所附属角色造成的伤害+3。；【所附属角色使用技能后：】移除我方场上的【sts2209】，每移除1层就治疗所附属角色1点。',
         icon, 0, [6, 10], -1, 0, -1, (_status, event = {}) => {
             const { heros = [], hidx = -1 } = event;
             const sts2209 = heros[hidx]?.outStatus.find(ost => ost.id == 2209);
@@ -2350,7 +2349,7 @@ const statusTotal: StatusObj = {
             }
         }),
 
-    2214: () => new GIStatus(2214, 'todo赤王陵debuff', '本回合结束前，对方每摸2张牌，就立刻在对方牌库顶生成1张【禁忌知识】。',
+    2214: () => new GIStatus(2214, 'todo赤王陵debuff', '本回合结束前，对方每摸2张牌，就立刻在对方牌库顶生成1张【crd908】。',
         'debuff', 0, [4, 10], 0, 2, 1, (status, event = {}) => {
             const { getcard = 0, trigger = '' } = event;
             return {

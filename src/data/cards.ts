@@ -2,7 +2,7 @@ import { newSite } from './site';
 import { heroStatus } from './heroStatus';
 import { ELEMENT, HERO_LOCAL, WEAPON_TYPE } from './constant';
 import { newSummonee } from './summonee';
-import { allHidxs, isCdt, minusDiceSkillHandle } from './utils';
+import { allHidxs, getBackHidxs, isCdt, minusDiceSkillHandle } from './utils';
 
 class GICard implements Card {
     id: number;
@@ -132,7 +132,7 @@ const senlin1Weapon = (id: number, name: string, userType: number, src: string) 
 
 const senlin2Weapon = (id: number, name: string, userType: number, src: string) => {
     return new GICard(id, name, '【角色造成的伤害+1】。；【入场时：】所附属角色在本回合中，下次使用｢普通攻击｣后：生成2个此角色类型的元素骰。', src, 3, 0, 0, [0], userType, 1,
-        () => ({ addDmg: 1, inStatus: [heroStatus(2060, name)] }));
+        () => ({ addDmg: 1, inStatus: [heroStatus(2160, name)] }));
 }
 
 const normalElArtifact = (id: number, name: string, element: number, src: string) => {
@@ -510,7 +510,7 @@ const allCards: CardObj = {
 
     88: new GICard(88, '静水流涌之辉', '【我方角色受到伤害或治疗后：】此牌累积1点｢湖光｣。；【角色进行｢普通攻击｣时：】如果已有12点｢湖光｣，则消耗12点，使此技能少花费2个[无色元素骰]且造成的伤害+1，并且治疗所附属角色1点。(每回合1次)',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Weapon_Jinshuiliuyong.webp',
-        3, 8, 0, [0], 1, 1, (card, event) => {
+        2, 8, 0, [0], 1, 1, (card, event) => {
             const { trigger = '' } = event;
             const triggers: Trigger[] = ['getdmg', 'heal'];
             const isTriggered = card.useCnt >= 12 && card.perCnt > 0;
@@ -1627,17 +1627,11 @@ const allCards: CardObj = {
     582: new GICard(582, '元素共鸣：愈疗之水', '治疗我方出战角色2点。然后，治疗我方所有后台角色1点。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/75833613/2735fa558713779ca2f925701643157a_7412042337637299588.png',
         1, 1, 2, [9], 0, 0, (_card, event) => {
-            const { heros = [] } = event;
-            const fhidxs: number[] = [];
-            const bhidxs: number[] = [];
-            heros.forEach((h, hi) => {
-                if (h.isFront) fhidxs.push(hi);
-                else if (h.hp > 0) bhidxs.push(hi);
-            });
+            const { heros = [], hidxs = [] } = event;
             return {
                 cmds: [
-                    { cmd: 'heal', cnt: 2, hidxs: fhidxs },
-                    { cmd: 'heal', cnt: 1, hidxs: bhidxs },
+                    { cmd: 'heal', cnt: 2, hidxs },
+                    { cmd: 'heal', cnt: 1, hidxs: getBackHidxs(heros) },
                 ],
                 isValid: heros.some(h => h.hp < h.maxhp),
             }
@@ -2458,7 +2452,7 @@ const allCards: CardObj = {
 
     792: new GICard(792, '万千子嗣', '【入场时：】生成4张【crd907】，随机置入我方牌库。；装备有此牌的【{hro}】在场时，我方造成的伤害+1。',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_Apep.webp',
-        2, 7, 0, [6], 1822, 1, () => ({ cmds: [{ cmd: 'addCard', cnt: 4, card: 907 }], addDmg: 1 })),
+        2, 7, 0, [6], 1822, 1, () => ({ cmds: [{ cmd: 'addCard', cnt: 4, card: 907 }], trigger: ['dmg', 'other-dmg'], addDmgCdt: 1 })),
 
 
     901: new GICard(901, '雷楔', '[战斗行动]：将【hro1303】切换到场上，立刻使用【ski1303,2】。本次【ski1303,2】会为【hro1303】附属【sts2008,3】，但是不会再生成【雷楔】。(【hro1303】使用【ski1303,2】时，如果此牌在手中：不会再生成【雷楔】，而是改为[舍弃]此牌，并为【hro1303】附属【sts2008,3】)',
