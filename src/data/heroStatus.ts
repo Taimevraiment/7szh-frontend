@@ -2249,7 +2249,7 @@ const statusTotal: StatusObj = {
 
     2205: (useCnt = 0) => new GIStatus(2205, '深噬之域', '我方[舍弃]或[调和]的手牌，会被吞噬。；每吞噬3张牌：【hro1724】获得1点额外最大生命; 如果其中存在原本元素骰费用值相同的牌，则额外获得1点; 如果3张均相同，再额外获得1点。',
         'ski1724,3', 1, [4, 9, 12], useCnt, 0, -1, (_status, event = {}) => {
-            const { discards = [] } = event;
+            const { discards = [], card } = event;
             return {
                 trigger: ['discard', 'reconcile'],
                 isAddTask: true,
@@ -2259,6 +2259,7 @@ const statusTotal: StatusObj = {
                     const hidx = heros.findIndex(h => h.id == 1724);
                     if (hidx == -1) return;
                     const [curDiscard, allDiscard] = eStatus.addition;
+                    if (card) discards.push(card);
                     discards.forEach(c => {
                         const cost = c.cost + c.anydice;
                         curDiscard.push(cost);

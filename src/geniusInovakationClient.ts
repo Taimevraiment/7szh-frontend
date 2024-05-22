@@ -1284,7 +1284,8 @@ export default class GeniusInvokationClient {
                 this.isValid = isValid;
                 this.player.diceSelect = diceSelect;
             } else {
-                this._doStatus(this.playerIdx, 4, 'reconcile', { discards: this.handCards.filter(c => c.selected), isQuickAction: 2 });
+                this._doStatus(this.playerIdx, 4, 'reconcile', { card: this.handCards.find(c => c.selected), isQuickAction: 2 });
+                this._doSite(this.playerIdx, 'reconcile', { isQuickAction: true });
                 const dices = this.player.dice.map((d, i) => {
                     const val = this.player.diceSelect[i] ? this._getFrontHero().element : d;
                     return { val, isSelected: false }
@@ -1409,7 +1410,7 @@ export default class GeniusInvokationClient {
         const bWillHeal: number[][] = [aWillHeal];
         const isChargedAtk = skill?.type == 1 && ((this.player.dice.length + (!isOnlyRead && isCard ? (skill?.cost[0].val ?? 0) + (skill?.cost[1].val ?? 0) : 0)) & 1) == 0;
         const isFallAtk = skill?.type == 1 && (this.isFall || isSwitch > -1);
-        if (curCard.id > 0) this._doSlot('card', { hidxs: allHidxs(aHeros, { isAll: true }), hcard: curCard, heros: aHeros });
+        // if (curCard.id > 0) this._doSlot('card', { hidxs: allHidxs(aHeros, { isAll: true }), hcard: curCard, heros: aHeros });
         const skillres: SkillHandleRes = curHandle?.({
             hero: aHeros[hidx],
             heros: aHeros,
@@ -1553,7 +1554,7 @@ export default class GeniusInvokationClient {
             skillcmds.push(...(skillres.cmds ?? []));
 
             const afterSkillTrgs = atriggers[hidx].filter(trg => trg.startsWith('skill')).map(v => 'after-' + v) as Trigger[];
-            this._doSlot(afterSkillTrgs, { isExec, heros: aHeros });
+            // this._doSlot(afterSkillTrgs, { isExec, heros: aHeros });
             this._doStatus(this.playerIdx, 4, afterSkillTrgs, { isExec, isOnlyOutStatus: true, isSkill: sidx, heros: aHeros });
         }
 
@@ -2147,6 +2148,7 @@ export default class GeniusInvokationClient {
         ];
         console.info('first:', actIdx);
         setTimeout(() => {
+            return this.endPhase(); // 临时
             let actionres = false;
             while (actionres) {
                 const tmpres = actions[actIdx]();
@@ -3600,7 +3602,8 @@ export default class GeniusInvokationClient {
             heros = this.players[pidx].heros, eheros = this.players[pidx ^ 1].heros, taskMark, isUnshift = false,
             isChargedAtk = false, isFallAtk = this.isFall, isExec = true, intvl = [0, 0, 0, 0], card,
             dieChangeBack = false, isSkill = -1, usedDice = 0, getdmg } = options;
-        let { changeHeroDiceCnt = 0, minusDiceCard = 0, hidxs = [this.players[pidx].hidx], minusDiceSkill, isQuickAction = false } = options;
+        const player = this.players[pidx];
+        let { changeHeroDiceCnt = 0, minusDiceCard = 0, hidxs = [player.hidx], minusDiceSkill, isQuickAction = false } = options;
         let willHeals: number[] = new Array(heros.length).fill(-1);
         let addDmg = 0;
         let addDmgSummon = 0;
@@ -3609,7 +3612,7 @@ export default class GeniusInvokationClient {
         let summon: Summonee[] | undefined;
         let minusDiceHero = 0;
         let task: [(() => void)[], number[]] | undefined;
-        const ahidx = this.players[pidx].hidx;
+        const ahidx = player.hidx;
         if (typeof hidxs == 'number') {
             if (hidxs < 0) hidxs = [];
             else hidxs = [hidxs];
@@ -3639,19 +3642,17 @@ export default class GeniusInvokationClient {
                             heal,
                             isChargedAtk,
                             isFallAtk,
-                            hcards: this.player.handCards,
-                            dicesCnt: this.player.dice.length - usedDice,
+                            hcards: player.handCards,
+                            dicesCnt: player.dice.length - usedDice,
                             isSkill,
                             isExec,
                             minusDiceCard,
                             minusDiceSkill,
                             getdmg,
-                            playerInfo: this.players[pidx].playerInfo,
+                            playerInfo: player.playerInfo,
                         });
                         if (this._hasNotTrigger(slotres.trigger, trigger)) continue;
-                        if (isExec && slotres.execmds) {
-                            cmds.push(...slotres.execmds);
-                        }
+                        cmds.push(...(slotres.execmds ?? []));
                         if (taskMark || (isExec && !slotres.execmds?.length && !slotres.isAddTask)) {
                             slotres.exec?.();
                         }
@@ -3688,7 +3689,7 @@ export default class GeniusInvokationClient {
                             eheros[ehidx].outStatus = this._updateStatus(slotres.outStatusOppo ?? [], eheros[ehidx].outStatus).nstatus;
                         }
                     }
-                    if (cmds.length > 0 || isAddTask) {
+                    if (isExec && (cmds.length > 0 || isAddTask)) {
                         if (!taskMark) {
                             const args = clone(Array.from(arguments));
                             args[1] = clone(args[1]) ?? {};
@@ -3765,24 +3766,16 @@ export default class GeniusInvokationClient {
         const { pidx = this.playerIdx, heros = this.players[pidx].heros, isSkill = -1 } = options;
         const summons: Summonee[] = [];
         const cmds: Cmds[] = [];
-        // let isTriggered = false;
         for (const card of cards) {
             const cardres = cardsTotal(card.id).handle(card, { trigger: 'discard' });
             if (this._hasNotTrigger(cardres.trigger, 'discard')) continue;
-            // isTriggered = true;
             const { cmds: cardcmds = [] } = this._doCmds(cardres.cmds, { pidx });
             cmds.push(...cardcmds);
             summons.push(...(cardres.summon ?? []));
         }
         heros.forEach((_, hidx) => this._doSkill4(hidx, 'discard', { pidx, heros, discards: cards }));
         this._doStatus(pidx, 4, 'discard', { discards: cards, heros, isQuickAction: isCdt(isSkill == -1, 2) });
-        // if (!isTriggered) return;
-        // this.socket.emit('sendToServer', {
-        //     cpidx: pidx,
-        //     cmds,
-        //     summonee,
-        //     flag: `disard-[${cards.map(c => c.name).join(',')}]-${pidx}`,
-        // });
+        this._doSite(pidx, 'discard', { discard: cards.length, isQuickAction: isSkill == -1 });
         return { cmds, summons }
     }
     /**
@@ -4131,7 +4124,7 @@ export default class GeniusInvokationClient {
             const skillres = curSkill.handle({ hero: curHero, skidx, minusDiceSkill: mds, trigger: 'calc' });
             calcCostChange(skillres);
         });
-        [curHero.weaponSlot, curHero.talentSlot, curHero.artifactSlot].forEach(slot => {
+        [curHero.weaponSlot, curHero.artifactSlot, curHero.talentSlot].forEach(slot => {
             if (slot != null) {
                 const slotres = cardsTotal(slot.id).handle(slot, {
                     heros,
@@ -4201,7 +4194,7 @@ export default class GeniusInvokationClient {
         if (!curHero) return;
         this.handCards.forEach((c, ci) => {
             player.heros.forEach(h => {
-                [h.artifactSlot, h.weaponSlot].forEach(slot => {
+                [h.weaponSlot, h.artifactSlot].forEach(slot => {
                     if (slot != null) {
                         costChange[ci] += cardsTotal(slot.id).handle(slot, {
                             heros: [h],

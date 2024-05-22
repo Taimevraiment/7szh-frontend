@@ -412,9 +412,10 @@ const allCards: CardObj = {
             return {
                 addDmg: 1,
                 addDmgCdt: isCdt(isShieldStatus && trigger == 'skill', 1),
-                trigger: ['skill', 'after-skilltype2'],
+                trigger: ['skill', 'skilltype2'],
+                isAddTask: trigger == 'skilltype2',
                 exec: () => {
-                    if (card.perCnt == 0 || trigger != 'after-skilltype2') return;
+                    if (card.perCnt == 0 || trigger != 'skilltype2') return;
                     const ost = fhero.outStatus.find(ost => ost.type.includes(7));
                     if (ost) {
                         ++ost.useCnt;
@@ -674,7 +675,7 @@ const allCards: CardObj = {
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/ad8e8b77b4efc4aabd42b7954fbc244c_7518202688884952912.png',
         3, 0, 0, [1], 0, 1, (card, event) => {
             const { hcard, heros = [], hidxs: [hidx] = [], trigger = '', minusDiceCard: mdc = 0 } = event;
-            const isMinusCard = hcard && hcard.subType.includes(6) && hcard.userType == heros[hidx]?.id && hcard.cost > mdc && card.perCnt > 0;
+            const isMinusCard = hcard && hcard.subType.includes(6) && hcard.userType == heros[hidx]?.id && hcard.cost + hcard.anydice > mdc && card.perCnt > 0;
             const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(event, { skilltype1: [0, 0, 1] }, () => card.perCnt > 0);
             return {
                 ...minusSkillRes,
@@ -904,7 +905,7 @@ const allCards: CardObj = {
                     if (isPhaseEnd) {
                         ++card.useCnt;
                     } else if (trigger == 'card' && isCardMinus) {
-                        card.useCnt -= hcard.cost - mdc;
+                        card.useCnt -= hcard.cost + hcard.anydice - mdc;
                     } else if (trigger == 'skilltype2' && isMinusSkill) {
                         const skill = heros[hidx]?.skills[isSkill].cost ?? [{ val: 0 }, { val: 0 }];
                         const skillcost = skill[0].val + skill[1].val;
@@ -930,7 +931,7 @@ const allCards: CardObj = {
                     if (isPhaseEnd) {
                         card.useCnt = Math.min(4, card.useCnt + 2);
                     } else if (trigger == 'card' && isCardMinus) {
-                        card.useCnt -= hcard.cost - mdc;
+                        card.useCnt -= hcard.cost + hcard.anydice - mdc;
                     } else if (trigger == 'skilltype2' && isMinusSkill) {
                         const skill = heros[hidx]?.skills[isSkill].cost ?? [{ val: 0 }, { val: 0 }];
                         const skillcost = skill[0].val + skill[1].val;
@@ -962,7 +963,7 @@ const allCards: CardObj = {
             if (!heros[hidx]?.isFront) return;
             return {
                 trigger: ['grass-getdmg-oppo', 'el7Reaction'],
-                execmds: isCdt<Cmds[]>(card.useCnt + 1 >= hcardsCnt && card.perCnt > 0, [{ cmd: 'getDice', cnt: 1, element: 0 }]),
+                execmds: isCdt<Cmds[]>(card.useCnt + 2 >= hcardsCnt && card.perCnt > 0, [{ cmd: 'getDice', cnt: 1, element: 0 }]),
                 isAddTask: true,
                 exec: () => {
                     card.useCnt += 2;
