@@ -350,29 +350,17 @@ constructor(
 
 解释：会触发卡（装备）的事件名
 
-##### inStatus
+##### status
 
 类型：Status[]
 
-解释：我方附属角色状态
+解释：我方附属角色状态/生成出战状态
 
-##### outStatus
-
-类型：Status[]
-
-解释：我方生成出战状态
-
-##### inStatusOppo
+##### statusOppo
 
 类型：Status[]
 
-解释：敌方附属角色状态
-
-##### outStatusOppo
-
-类型：Status[]
-
-解释：敌方生成出战状态
+解释：敌方附属角色状态/生成出战状态
 
 ##### canSelectHero
 
@@ -941,29 +929,17 @@ constructor(
 
 #### SkillHandleRes
 
-##### inStatus
+##### status
 
 类型：Status[]
 
-解释：我方附属角色状态
+解释：我方附属角色状态/生成出战状态
 
-##### outStatus
-
-类型：Status[]
-
-解释：我方生成出战状态
-
-##### inStatusOppo
+##### statusOppo
 
 类型：Status[]
 
-解释：敌方附属角色状态
-
-##### outStatusOppo
-
-类型：Status[]
-
-解释：敌方生成出战状态
+解释：敌方附属角色状态/生成出战状态
 
 ##### summon
 

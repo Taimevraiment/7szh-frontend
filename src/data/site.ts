@@ -790,7 +790,7 @@ const siteTotal: SiteObj = {
                 if (site.cnt < 4) return { isDestroy: false }
                 return {
                     cmds: [
-                        { cmd: 'addCard', cnt: 2, card: 908, hidxs: [2], isOppo: true },
+                        { cmd: 'addCard', cnt: 2, card: 908, hidxs: [1], isOppo: true },
                         { cmd: 'getStatus', status: [heroStatus(2214)], isOppo: true },
                     ],
                     isDestroy: true,
@@ -831,10 +831,10 @@ const siteTotal: SiteObj = {
     }),
     // 苦舍桓
     4055: (cardId: number) => new GISite(4055, cardId, 0, 1, 2, (site, event = {}) => {
-        const { hcards = [], trigger = '' } = event;
+        const { hcards = [], isSkill = -1, trigger = '' } = event;
         if (trigger == 'phase-start' && (site.cnt >= 2 || hcards.length == 0)) return;
         if (site.perCnt == 0 && (trigger == 'card' || (trigger == 'skill' && site.cnt == 0))) return;
-        const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(event, { skill: [0, 0, 1] }, () => site.perCnt > 0 && site.cnt > 0);
+        const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(event, { skill: [0, 0, site.cnt] }, () => site.perCnt > 0 && site.cnt > 0);
         return {
             trigger: ['phase-start', 'skill', 'card'],
             ...minusSkillRes,
@@ -846,7 +846,9 @@ const siteTotal: SiteObj = {
                     const cnt = Math.min(hcards.length, 2 - site.cnt);
                     site.cnt += cnt;
                     cmds.push({ cmd: 'discard', cnt, element: 0 });
-                } else if (trigger == 'skill' && isMinusSkill) --site.cnt;
+                } else if (trigger == 'skill' && isMinusSkill) {
+                    site.cnt -= minusSkillRes.minusDiceSkills[isSkill].reduce((a, b) => a + b);
+                }
                 return { cmds, isDestroy: false }
             },
         }

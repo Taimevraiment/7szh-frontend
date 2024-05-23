@@ -305,10 +305,8 @@ type SkillHandleEvent = {
 }
 
 type SkillHandleRes = {
-    outStatus?: Status[],
-    inStatus?: Status[],
-    outStatusOppo?: Status[],
-    inStatusOppo?: Status[],
+    status?: Status[],
+    statusOppo?: Status[],
     summon?: Summonee[],
     trigger?: Trigger[],
     isAttach?: boolean,
@@ -371,10 +369,8 @@ type CardHandleRes = {
     cmds?: Cmds[],
     execmds?: Cmds[],
     trigger?: Trigger[],
-    inStatus?: Status[],
-    outStatus?: Status[],
-    inStatusOppo?: Status[],
-    outStatusOppo?: Status[],
+    status?: Status[],
+    statusOppo?: Status[],
     canSelectHero?: boolean[],
     summon?: Summonee[],
     addDmg?: number,
