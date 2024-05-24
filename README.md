@@ -2629,6 +2629,10 @@ card(number): 弃置卡牌的id
 
 我方进行任意行动后
 
+### action-after-oppo
+
+敌方进行任意行动后
+
 ### end-phase
 
 我方结束回合时

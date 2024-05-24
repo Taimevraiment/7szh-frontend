@@ -75,6 +75,7 @@
         <div class="site" :class="{
           'site-select': site.isSelected,
           'site-can-select': site.canSelect && player.status == 1,
+          'active-sitecnt': canAction && currSkill.type > 0 && siteCnt[saidx ^ playerIdx ^ 1][siidx] != 0,
         }" v-for="(site, siidx) in siteArea" :key="siidx" @click.stop="showSiteInfo(saidx, siidx)">
           <div class="site-img-content">
             <img class="site-img" :style="{ top: site.card.subType.includes(3) && isMobile ? '100%' : '60%' }"
@@ -118,9 +119,10 @@
           ? `attack${opponent?.tarhidx - player.tarhidx + 2}-${hidx < 3 ? 0 : 1} 0.8s linear` : 'none',
       }" :class="{
         'mobile-hero': isMobile,
-        my: hidx > 2,
+        'my': hidx > 2,
         'is-front-oppo': hero?.isFront && player.phase > 3 && opponent?.phase > 3 && hidx < 3,
         'is-front-my': hero?.isFront && hidx > 2,
+        'active-willhp': canAction && (willHp[(hidx + 3 * playerIdx) % 6] != undefined || hero.skills.some(sk => sk.name == currSkill.name)),
       }" v-for="(hero, hidx) in heros" :key="hidx">
         <div class="hero-img-content" :class="{
           'hero-select': hero.isSelected > 0,
@@ -290,6 +292,7 @@
               'will-attach': summon.isWill,
               'summon-select': summon.isSelected,
               'summon-can-select': summon.canSelect && player.status == 1,
+              'active-summoncnt': canAction && summonCnt[saidx ^ playerIdx ^ 1][suidx] != 0,
             }" v-for="(summon, suidx) in smnArea" :key="suidx" @click.stop="selectSummon(saidx, suidx, summon.isWill)">
               <div class="summon-img-content">
                 <img class="summon-img" :src="summon.src" v-if="summon?.src?.length > 0" :alt="summon.name" />
@@ -863,6 +866,7 @@ button:active {
 .will-attach {
   width: 20px;
   animation: blink 1s linear infinite alternate;
+  z-index: 5;
 }
 
 .damages {
@@ -1159,6 +1163,7 @@ button:active {
   display: flex;
   flex-direction: column;
   flex-wrap: wrap-reverse;
+  z-index: 5;
 }
 
 .dice-change {
@@ -1517,6 +1522,12 @@ button:active {
   padding-top: 20px;
   transform: rotate(90deg);
   animation: discard-hcard-oppo 1.5s linear forwards;
+}
+
+.active-willhp,
+.active-sitecnt,
+.active-summoncnt {
+  z-index: 5;
 }
 
 .mobile-hero {

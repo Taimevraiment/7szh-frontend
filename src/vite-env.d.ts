@@ -265,13 +265,14 @@ type TrgEl = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 type TrgDmg = 'el' | 'pen' | 'any' | 'water' | 'fire' | 'thunder' | 'ice' | 'wind' | 'rock' | 'grass';
 type TrgElReDmg = 'water' | 'fire' | 'thunder' | 'ice';
 
-type Trigger = 'phase-start' | 'phase-end' | 'phase-dice' | 'game-start' | 'action-start' | 'action-start-oppo' | 'action-after' | 'end-phase' | 'any-end-phase' |
-    'skill' | `skilltype${TrgSkType}` | `other-skilltype${TrgSkType}` | `after-skilltype${TrgSkType}` | 'after-skill' | 'oppo-skill' | 'other-skill' |
-    'change' | 'change-to' | 'change-from' | 'change-oppo' | 'card' | 'elReaction' | `el${TrgEl}Reaction` | `el5Reaction:${TrgElRe}` | `other-el${TrgEl}Reaction` |
-    'other-elReaction' | 'ecard' | `el6Reaction:${TrgElRe}` | 'get-elReaction' | `get-el${TrgEl}Reaction` | 'get-elReaction-oppo' |
-    'kill' | 'killed' | 'will-killed' | 'dmg' | 'other-dmg' | `${TrgDmg}-dmg` | 'dmg-wind' | `${TrgElReDmg}-dmg-wind` | 'getdmg' | 'other-getdmg' |
-    `${TrgDmg}-getdmg` | 'getdmg-oppo' | 'revive' | `${TrgDmg}-getdmg-oppo` | 'heal' | 'eheal' | 'useReadySkill' | 'status-destroy' |
-    'summon-destroy' | 'slot-destroy' | 'site-destroy' | 'calc' | 'reconcile' | 'discard' | 'getcard' | 'getcard-oppo' | '';
+type Trigger = 'phase-start' | 'phase-end' | 'phase-dice' | 'game-start' | 'action-start' | 'action-start-oppo' | 'action-after' | 'action-after-oppo' |
+    'end-phase' | 'any-end-phase' | 'skill' | `skilltype${TrgSkType}` | `other-skilltype${TrgSkType}` | `after-skilltype${TrgSkType}` |
+    'after-skill' | 'oppo-skill' | 'other-skill' | 'change' | 'change-to' | 'change-from' | 'change-oppo' | 'card' | 'elReaction' |
+    `el${TrgEl}Reaction` | `el5Reaction:${TrgElRe}` | `other-el${TrgEl}Reaction` | 'other-elReaction' | 'ecard' | `el6Reaction:${TrgElRe}` |
+    'get-elReaction' | `get-el${TrgEl}Reaction` | 'get-elReaction-oppo' | 'kill' | 'killed' | 'will-killed' | 'dmg' | 'other-dmg' | `${TrgDmg}-dmg` |
+    'dmg-wind' | `${TrgElReDmg}-dmg-wind` | 'getdmg' | 'other-getdmg' | `${TrgDmg}-getdmg` | 'getdmg-oppo' | 'revive' | `${TrgDmg}-getdmg-oppo` |
+    'heal' | 'eheal' | 'useReadySkill' | 'status-destroy' | 'summon-destroy' | 'slot-destroy' | 'site-destroy' | 'calc' |
+    'reconcile' | 'discard' | 'getcard' | 'getcard-oppo' | '';
 
 type ExplainContent = Skill | Status | Summonee | Card | string;
 

@@ -100,7 +100,7 @@ const summonTotal: SummoneeObj = {
         3, 3, 0, 2, 5, (summon, event) => {
             const { trigger = '' } = event;
             const triggers: Trigger[] = ['phase-end'];
-            const changeElTrg = ELEMENT_ICON[summon.element] + '-dmg';
+            const changeElTrg = ELEMENT_ICON[summon.element] + '-dmg' as Trigger;
             if (summon.element == 5) triggers.push('el5Reaction');
             const isTalent = summon.isTalent && summon.element < 5 && trigger == changeElTrg;
             if (isTalent) triggers.push(changeElTrg);

@@ -419,7 +419,7 @@ const allHeros: HeroObj = {
             '',
             '',
         ], () => ({ status: [heroStatus(2192)] })),
-        new GISkill('黑金狼噬', '造成{dmg}点[冰元素伤害]，生成【sts2193】。', 3, 3, 3, 4, { ec: 3 }, [
+        new GISkill('黑金狼噬', '造成{dmg}点[冰元素伤害]，生成【sts2193】。', 3, 2, 3, 4, { ec: 3 }, [
             '',
             '',
         ], () => ({ status: [heroStatus(2193)] })),
@@ -635,7 +635,7 @@ const allHeros: HeroObj = {
             const isTalent = !!talentSlot || card?.id == 785;
             return { summon: [newSummonee(local.includes(11) ? 3060 : 3061)], status: isCdt(isTalent, [heroStatus(2196)],) }
         }),
-        new GISkill('万众狂欢', '造成{dmg}点[水元素伤害]，生成【sts2194】。', 3, 3, 3, 1, { ec: 2 }, [
+        new GISkill('万众狂欢', '造成{dmg}点[水元素伤害]，生成【sts2194】。', 3, 2, 4, 1, { ec: 2 }, [
             '',
             '',
         ], () => ({ status: [heroStatus(2194)] })),
@@ -1597,13 +1597,13 @@ const allHeros: HeroObj = {
     1724: new GIHero(1724, '吞星之鲸', 0, 5, 1, 0,
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Char_Monster_Ptahur.webp',
         skill1('碎涛旋跃'), [
-        new GISkill('迸落星雨', '造成{dmg}点[水元素伤害]，此角色每有3点【无尽食欲】提供的额外最大生命，此伤害+1(最多+4)。然后[舍弃]元素骰费用最高的手牌。', 2, 2, 3, 1, { expl: ['sts2205'] }, [
+        new GISkill('迸落星雨', '造成{dmg}点[水元素伤害]，此角色每有3点【无尽食欲】提供的额外最大生命，此伤害+1(最多+5)。然后[舍弃]元素骰费用最高的手牌。', 2, 2, 3, 1, { expl: ['sts2205'] }, [
             '',
             '',
         ], event => {
             const { hero: { outStatus } } = event;
             return {
-                addDmgCdt: Math.min(4, Math.floor((outStatus.find(ist => ist.id == 2205)?.useCnt ?? 0) / 3)),
+                addDmgCdt: Math.min(5, Math.floor((outStatus.find(ist => ist.id == 2205)?.useCnt ?? 0) / 3)),
                 cmds: [{ cmd: 'discard', element: 0 }],
             }
         }),

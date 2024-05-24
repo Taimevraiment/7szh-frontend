@@ -325,23 +325,25 @@ const allCards: CardObj = {
 
     26: senlin1Weapon(26, '王下近侍', 3, 'https://act-upload.mihoyo.com/wiki-user-upload/2023/08/12/203927054/c667e01fa50b448958eff1d077a7ce1b_1806864451648421284.png'),
 
-    27: new GICard(27, '竭泽', '【我方打出名称不存在于初始牌组中的行动牌后：】此牌累积1点｢渔猎｣。(最多累积2点)；【角色使用技能时：】如果此牌已有｢渔猎｣，则消耗所有｢渔猎｣，使此技能伤害+1，并且每消耗1点｢渔猎｣就摸1张牌。',
+    27: new GICard(27, '竭泽', '【我方打出名称不存在于初始牌组中的行动牌后：】此牌累积1点｢渔猎｣。(最多累积2点，每回合最多累积2点)；【角色使用技能时：】如果此牌已有｢渔猎｣，则消耗所有｢渔猎｣，使此技能伤害+1，并且每消耗1点｢渔猎｣就摸1张牌。',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Weapon_Jieze.webp',
         2, 8, 0, [0], 3, 1, (card, event) => {
             const { playerInfo: { initCardIds = [] } = {}, hcard, trigger = '' } = event;
             const triggers: Trigger[] = [];
             if (card.useCnt > 0) triggers.push('skill');
-            if (hcard && !initCardIds.includes(hcard.id) && card.useCnt < 2) triggers.push('card');
+            if (hcard && !initCardIds.includes(hcard.id) && card.useCnt < 2 && card.perCnt > 0) triggers.push('card');
             return {
                 trigger: triggers,
                 addDmgCdt: isCdt(card.useCnt > 0, 1),
                 execmds: isCdt<Cmds[]>(trigger == 'skill' && card.useCnt > 0, [{ cmd: 'getCard', cnt: card.useCnt }]),
                 exec: () => {
-                    if (trigger == 'card') ++card.useCnt;
-                    else if (trigger == 'skill') card.useCnt = 0;
+                    if (trigger == 'card') {
+                        ++card.useCnt;
+                        --card.perCnt;
+                    } else if (trigger == 'skill') card.useCnt = 0;
                 }
             }
-        }, { uct: 0 }),
+        }, { uct: 0, pct: 2 }),
 
     41: normalWeapon(41, '白铁大剑', 2, 'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/75720734/d8916ae5aaa5296a25c1f54713e2fd85_802175621117502141.png'),
 
@@ -875,7 +877,7 @@ const allCards: CardObj = {
 
     124: new GICard(124, '逐影猎人', '【角色受到伤害或治疗后：】根据本回合触发此效果的次数，执行不同的效果。；【第一次触发：】生成1个此角色类型的元素骰。；【第二次触发：】摸1张牌。；【第四次触发：】生成1个此角色类型的元素骰。',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Artifact_ZhuYingDa.webp',
-        3, 8, 0, [1], 0, 1, (card, event) => {
+        3, 0, 0, [1], 0, 1, (card, event) => {
             const { heros = [], hidxs: [hidx] = [], heal = [], trigger = '' } = event;
             if (card.perCnt > 0 && (trigger == 'getdmg' || trigger == 'heal' && heal[hidx] > 0)) {
                 const execmds: Cmds[] = [{ cmd: 'getDice', element: heros[hidx].element, cnt: 1 }, { cmd: 'getCard', cnt: 1 }];
@@ -1076,9 +1078,9 @@ const allCards: CardObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/04/15/258999284/2bfc84b730feaf6a350373080d97c255_2788497572764739451.png',
         1, 8, 1, [2], 0, 0, () => ({ site: [newSite(4049, 219)] })),
 
-    220: new GICard(220, '赤王陵', '【对方累积摸4张牌后：】弃置此牌，在对方牌库顶生成2张【crd908】。然后直到本回合结束前，对方每摸2张牌，就立刻在对方牌库顶生成1张【crd908】。',
+    220: new GICard(220, '赤王陵', '【对方累积摸4张牌后：】弃置此牌，在对方牌库顶生成2张【crd908】。然后直到本回合结束前，对方每摸1张牌，就立刻生成1张【crd908】随机地置入对方牌库中。',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Assist_Location_ChiWangLin.webp',
-        0, 8, 1, [2], 0, 0, () => ({ site: [newSite(4052, 220)] })),
+        1, 8, 1, [2], 0, 0, () => ({ site: [newSite(4052, 220)] })),
 
     221: new GICard(221, '中央实验室遗址', '【我方[舍弃]或[调和]1张牌后：】此牌累积1点｢实验进展｣。每当｢实验进展｣达到3点、6点、9点时，就获得1个[万能元素骰]。然后，如果｢实验进展｣至少为9点，则弃置此牌。',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Assist_Location_FontaineSci.webp',

@@ -126,7 +126,8 @@
     </div>
     <div class="skills"
       v-else-if="client.phase > 4 && client.player && client.player.phase > 4 && client.player.heros[client.player.hidx].hp > 0">
-      <div class="skill" v-for="(skill, sidx) in client.skills.filter(sk => sk.type < 4)" :key="sidx">
+      <div class="skill" :class="{ 'skill-will': canAction && client.currSkill.name == skill.name }"
+        v-for="(skill, sidx) in client.skills.filter(sk => sk.type < 4)" :key="sidx">
         <div class="skill-btn" @click.stop="useSkill(sidx, false)"
           :style="{ boxShadow: skill.type == 3 && client.player.heros[client.player.hidx].energy >= skill.cost[2].val ? `0px 0px 8px 3px ${ELEMENT_COLOR[skill.cost[0].color]}` : '' }">
           <div class="skill3-bg"
@@ -173,6 +174,7 @@
     {{ client.actionInfo }}
   </div>
   <div class="debug-mask" v-if="isOpenMask" :style="{ opacity: maskOpacity }"></div>
+  <div class="willskill-mask" v-if="client.player.status == 1 && client.currSkill.type > 0"></div>
 </template>
 
 <script setup lang='ts'>
@@ -431,7 +433,6 @@ const devOps = (cidx = 0) => {
   let heros = client.value.players[cpidx].heros;
   let dices;
   let flag = new Set<string>();
-  // let cards: (number | Card)[] = [];
   let handCards: Card[] | undefined;
   const cmds: Cmds[] = [];
   const h = (v: string) => (v == '' ? undefined : Number(v));
@@ -647,11 +648,16 @@ body {
 }
 
 .skill {
+  position: relative;
   display: inline-flex;
   width: 50px;
   flex-wrap: wrap;
   justify-content: center;
   margin-right: 5px;
+}
+
+.skill-will {
+  z-index: 5;
 }
 
 .skill3-bg {
@@ -973,6 +979,17 @@ body {
   height: 100%;
   background-color: #dedede;
   z-index: 50;
+  pointer-events: none;
+}
+
+.willskill-mask {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 4;
+  width: 100%;
+  height: 100%;
+  background-color: #0000006c;
   pointer-events: none;
 }
 

@@ -409,6 +409,7 @@ export default class GeniusInvokationClient {
                 isCard: true,
                 isAction,
                 heros: aHeros,
+                eheros: eHeros,
                 isEffectHero: true,
                 isRollDice: true,
                 hidxs: isCdt(currCard.canSelectHero > 0, hidxs),
@@ -1034,6 +1035,7 @@ export default class GeniusInvokationClient {
                 if (h.isFront) h.outStatus = this._updateStatus([], h.outStatus).nstatus;
             });
             this._doSite(this.playerIdx, 'action-after', { isQuickAction: actionAfter?.[1] == 1 });
+            this._doSite(this.playerIdx ^ 1, 'action-after-oppo', { isQuickAction: actionAfter?.[1] == 1 });
             await this._execTask();
             if (isTriggered) {
                 this.socket.emit('sendToServer', {
@@ -1054,9 +1056,11 @@ export default class GeniusInvokationClient {
             await this._execTask();
         }
         if (startTimer) this._startTimer();
-        setTimeout(() => {
-            if (isAI && players[1].phase == 2 && this.player.phase == 2) this.changeCard([]);
-        }, 500);
+        if (isAI) {
+            setTimeout(() => {
+                if (players[1].phase == 2 && this.player.phase == 2) this.changeCard([]);
+            }, 500);
+        }
     }
     /**
      * 游戏开始时换卡
@@ -1317,7 +1321,7 @@ export default class GeniusInvokationClient {
      * @param options isOnlyRead 是否为只读, isCard 是否为使用卡, isSwitch 是否切换角色, isReadySkill 是否为准备技能, triggers 触发数组(出牌或切换角色时)
      */
     async useSkill(sidx: number, options: { isOnlyRead?: boolean, isCard?: boolean, isSwitch?: number, isReadySkill?: boolean, otriggers?: Trigger | Trigger[] } = {}) {
-        if ([PHASE.DIE_CHANGE, PHASE.DIE_CHANGE_END].includes(this.opponent.phase)) return;
+        if ([PHASE.DIE_CHANGE, PHASE.DIE_CHANGE_END].includes(this.opponent.phase) || !this.canAction) return;
         const { isOnlyRead = false, isCard = false, isSwitch = -1, isReadySkill = false, otriggers = [] } = options;
         this.siteCnt = [[0, 0, 0, 0], [0, 0, 0, 0]];
         const currSkill = { ...this.currSkill };

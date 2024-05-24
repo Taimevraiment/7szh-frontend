@@ -2350,21 +2350,13 @@ const statusTotal: StatusObj = {
             }
         }),
 
-    2214: () => new GIStatus(2214, 'todo赤王陵debuff', '本回合结束前，我方每摸2张牌，就立刻在我方牌库顶生成1张【crd908】。',
-        'debuff', 1, [4, 9], 0, 2, 1, (status, event = {}) => {
+    2214: () => new GIStatus(2214, 'todo赤王陵debuff', '本回合结束前，我方每摸1张牌，就立刻生成1张【crd908】随机地置入我方牌库中。',
+        'debuff', 1, [4, 10], -1, 0, 1, (_status, event = {}) => {
             const { getcard = 0 } = event;
             return {
                 trigger: ['getcard'],
                 isAddTask: true,
-                exec: eStatus => {
-                    let cnt = getcard;
-                    cnt += status.useCnt;
-                    if (eStatus) eStatus.useCnt = cnt % 2;
-                    if (cnt > 1) {
-                        cnt = Math.floor(cnt / 2);
-                        return { cmds: [{ cmd: 'addCard', cnt, card: 908, hidxs: [1] }] }
-                    }
-                },
+                exec: () => ({ cmds: [{ cmd: 'addCard', cnt: getcard, card: 908, element: 1 }] }),
             }
         }),
 
