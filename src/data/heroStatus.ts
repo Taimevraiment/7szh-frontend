@@ -1803,16 +1803,19 @@ const statusTotal: StatusObj = {
             }
         }, { icbg: DEBUFF_BG_COLOR }),
 
-    2164: (cnt = 1) => new GIStatus(2164, '源水之滴', `【〖hro1110〗进行｢普通攻击｣后：】治疗角色2点，然后角色[准备技能]：【rsk17】。；【[可用次数]：{useCnt}】(可叠加，最多叠加到3次)`,
+    2164: (cnt = 1) => new GIStatus(2164, '源水之滴', `【〖hro1110〗进行｢普通攻击｣后：】治疗【hro1110】2点，然后如果【hro1110】是我方｢出战角色｣，则[准备技能]：【rsk17】。；【[可用次数]：{useCnt}】(可叠加，最多叠加到3次)`,
         'sts2164', 1, [1], cnt, 3, -1, (_status, event = {}) => {
-            const { heros = [], hidx = -1 } = event;
-            if (heros[hidx]?.id != 1110) return;
+            const { heros = [] } = event;
             return {
                 heal: 2,
+                hidxs: [heros.findIndex(h => h.id = 1110)],
                 trigger: ['after-skilltype1'],
-                exec: eStatus => {
+                exec: (eStatus, execEvent = {}) => {
+                    const { heros: hs = [] } = execEvent;
                     if (eStatus) --eStatus.useCnt;
-                    return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2165)] }] }
+                    if (hs.find(h => h.id == 1110)?.isFront) {
+                        return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2165)] }] }
+                    }
                 },
             }
         }, { icbg: STATUS_BG_COLOR[1] }),

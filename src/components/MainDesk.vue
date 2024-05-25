@@ -122,7 +122,7 @@
         'my': hidx > 2,
         'is-front-oppo': hero?.isFront && player.phase > 3 && opponent?.phase > 3 && hidx < 3,
         'is-front-my': hero?.isFront && hidx > 2,
-        'active-willhp': canAction && (willHp[(hidx + 3 * playerIdx) % 6] != undefined || hero.skills.some(sk => sk.name == currSkill.name)),
+        'active-willhp': canAction && (willHp[(hidx + 3 * playerIdx) % 6] != undefined || hero.skills.some(sk => sk.name == currSkill.name) || willSwitch[(hidx % 3) + (playerIdx ^ (hidx > 2 ? 0 : 1)) * 3]),
       }" v-for="(hero, hidx) in heros" :key="hidx">
         <div class="hero-img-content" :class="{
           'hero-select': hero.isSelected > 0,

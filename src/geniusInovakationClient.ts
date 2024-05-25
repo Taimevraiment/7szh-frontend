@@ -1321,8 +1321,8 @@ export default class GeniusInvokationClient {
      * @param options isOnlyRead 是否为只读, isCard 是否为使用卡, isSwitch 是否切换角色, isReadySkill 是否为准备技能, triggers 触发数组(出牌或切换角色时)
      */
     async useSkill(sidx: number, options: { isOnlyRead?: boolean, isCard?: boolean, isSwitch?: number, isReadySkill?: boolean, otriggers?: Trigger | Trigger[] } = {}) {
-        if ([PHASE.DIE_CHANGE, PHASE.DIE_CHANGE_END].includes(this.opponent.phase) || !this.canAction) return;
         const { isOnlyRead = false, isCard = false, isSwitch = -1, isReadySkill = false, otriggers = [] } = options;
+        if ([PHASE.DIE_CHANGE, PHASE.DIE_CHANGE_END].includes(this.opponent.phase) || (!this.canAction && !isReadySkill)) return;
         this.siteCnt = [[0, 0, 0, 0], [0, 0, 0, 0]];
         const currSkill = { ...this.currSkill };
         const skill = isReadySkill ? this._calcSkillChange(1, this.player.hidx, { isReadySkill: sidx }) as Skill :
@@ -1607,7 +1607,7 @@ export default class GeniusInvokationClient {
                 isSelf ? (ebSummon.at(-1) ?? []) : (bSummon.at(-1) ?? []),
                 { isExec: false, pidx: this.playerIdx ^ +isSelf }
             );
-            const { isSwitch: csw = -1, isSwitchOppo: cswo = -1 } = this._doCmds(elrcmds3[0], { isExec: false, isAction: true });
+            const { isSwitch: csw = -1, isSwitchOppo: cswo = -1 } = this._doCmds(elrcmds3[0], { isExec: false, pidx: this.playerIdx ^ +isSelf, isAction: true });
             if (cswo == -1 && type == 'die') return true;
             let obj;
             if (type == 'summon') {
@@ -2337,7 +2337,7 @@ export default class GeniusInvokationClient {
      * @param options isAttach 是否为自己附着元素, isSummon 召唤物攻击id, pidx 发起攻击的玩家idx, isExec 是否执行
      *                isChargedAtk 是否为重击, isWind 是否为扩散伤害, isFallAtk 是否为下落攻击, isReadySkill 是否为准备技能, willheals 回血,
      *                elrcmds 命令执行, atriggers 攻击者触发时机, etriggers 受击者触发时机, sidx 技能idx, sktype 技能类型, isWindExec 扩散伤害是否执行,
-     *                usedDice 使用的骰子, dmgElements: 本次伤害元素, minusDiceSkill 使用技能减骰子
+     *                usedDice 使用的骰子, dmgElements: 本次伤害元素, minusDiceSkill 使用技能减骰子, isSelf 是否为对自身攻击(目前仅用于statusAtk)
      * @param willAttachs 所有角色将要附着的元素
      * @param elTips 元素反应提示 
      * @returns willDamage: 所有角色将要受到的伤害[普攻伤害, 穿透伤害], 
@@ -2361,13 +2361,13 @@ export default class GeniusInvokationClient {
             isAttach?: boolean, isSummon?: number, pidx?: number, isExec?: boolean, isChargedAtk?: boolean, isWind?: boolean,
             skidx?: number, sktype?: number, isFallAtk?: boolean, isReadySkill?: boolean, isWindExec?: boolean, willheals?: number[],
             elrcmds?: Cmds[][], atriggers?: Trigger[][], etriggers?: Trigger[][], usedDice?: number, dmgElements?: number[],
-            minusDiceSkill?: number[][], elTips?: [string, number, number][], willAttachs?: number[], multiDmg?: number,
+            minusDiceSkill?: number[][], elTips?: [string, number, number][], willAttachs?: number[], multiDmg?: number, isSelf?: number,
         } = {}) {
         const { isAttach = false, isSummon = -1, pidx = this.playerIdx, isWind = false, isExec = true, isChargedAtk = false, multiDmg = 1,
             skidx = -1, sktype = -1, isReadySkill = false, isWindExec = true, isFallAtk = false, willheals = new Array(aheros.length + eheros.length).fill(-1),
             elrcmds = [[], []], usedDice = 0, dmgElements = new Array(eheros.length).fill(0), minusDiceSkill, willAttachs = new Array(eheros.length).fill(0),
             elTips = new Array(aheros.length + eheros.length).fill(0).map(() => ['', 0, 0]), atriggers: atrg = new Array(aheros.length).fill(0).map(() => []),
-            etriggers: etrg = new Array(eheros.length).fill(0).map(() => []) } = options;
+            etriggers: etrg = new Array(eheros.length).fill(0).map(() => []), isSelf = 0 } = options;
         let resdmg = willDamage;
         if (!isWind) {
             if (willDamage.length == 0) resdmg = new Array(aheros.length + eheros.length).fill(0).map(() => [-1, 0]);
@@ -2483,7 +2483,7 @@ export default class GeniusInvokationClient {
                         res.elTips[elTipIdx] = ['绽放', willAttach, attachElement];
                     } else if (hasEls(2, 3)) { // 火雷 超载
                         res.willDamage[getDmgIdx][0] += 2;
-                        if (efhero.isFront) res.elrcmds[0].push({ cmd: 'switch-after', cnt: 2500, isOppo: true });
+                        if (efhero.isFront) res.elrcmds[0].push({ cmd: 'switch-after', cnt: 2500, isOppo: !isSelf });
                         res.elTips[elTipIdx] = ['超载', willAttach, attachElement];
                     } else if (hasEls(2, 7)) { // 火草 燃烧
                         ++res.willDamage[getDmgIdx][0];
@@ -2988,7 +2988,6 @@ export default class GeniusInvokationClient {
                                     let currSummon: Summonee | undefined;
                                     let willDamage: number[][] | undefined;
                                     let dmgElements: number[] = new Array(eheros.length).fill(0);
-                                    const aWillAttachs: number[][] = new Array(aheros.length + eheros.length).fill(0).map(() => []);
                                     let aElTips: [string, number, number][] = new Array(aheros.length + eheros.length).fill(0).map(() => ['', 0, 0]);
                                     const { changedEl, inStatus, outStatus, heros, willHeals, ndices } = this._doCmds(smnexecres.cmds, { pidx, heal: summon.shield, isRollDice: true });
                                     if (changedEl) summon.element = changedEl;
@@ -3006,7 +3005,7 @@ export default class GeniusInvokationClient {
                                             else eFrontIdx = this.players[pidx ^ 1].hidx;
                                             const bhidxs = hidxs ?? getBackHidxs(eheros);
                                             const dmgElement = (element as number | undefined) ?? summon.element;
-                                            let { willDamage: willDamage1, willAttachs, dmgElements: dmgElements1, eheros: eheros1, esummon: esummon1,
+                                            let { willDamage: willDamage1, dmgElements: dmgElements1, eheros: eheros1, esummon: esummon1,
                                                 aheros: aheros1, asummon: asummon1, elrcmds: elrcmds1, elTips: elTips1 }
                                                 = this._elementReaction(
                                                     dmgElement,
@@ -3033,7 +3032,6 @@ export default class GeniusInvokationClient {
                                             esummon = [...(isOppo ? asummon1 : esummon1)];
                                             aSummon = [...(isOppo ? esummon1 : asummon1)];
                                             aElTips = [...elTips1];
-                                            for (let i = 0; i < aheros.length; ++i) aWillAttachs[i + (pidx ^ +isOppo) * (isOppo ? aheros : eheros).length].push(willAttachs[i]);
                                             smncmds.push(...elrcmds1[0]);
                                             if (elrcmds1[0].some(cmds => cmds.cmd?.includes('switch') && cmds.isOppo)) {
                                                 const { statusIdsAndPidx: stpidx } = this._doStatus(pidx ^ 1, 1, 'change-from', { hidxs: [eFrontIdx] });
@@ -3041,7 +3039,7 @@ export default class GeniusInvokationClient {
                                             }
                                         }
                                         if (isAttach) {
-                                            const { eheros: eheros2, willAttachs, aheros: aheros2, esummon: asummon2, asummon: esummon2, elrcmds: elrcmds2, elTips: elTips2 }
+                                            const { eheros: eheros2, aheros: aheros2, esummon: asummon2, asummon: esummon2, elrcmds: elrcmds2, elTips: elTips2 }
                                                 = this._elementReaction(
                                                     summon.element,
                                                     [],
@@ -3056,7 +3054,6 @@ export default class GeniusInvokationClient {
                                             esummon = [...esummon2];
                                             smncmds.push(...elrcmds2[0]);
                                             aElTips = [...elTips2];
-                                            for (let i = 0; i < aheros.length; ++i) aWillAttachs[i + pidx * eheros.length].push(willAttachs[i]);
                                         }
                                         currSummon = summon;
                                     }
@@ -3068,7 +3065,6 @@ export default class GeniusInvokationClient {
                                         heros: aheros,
                                         eheros: eheros,
                                         esummon,
-                                        willAttachs: aWillAttachs,
                                         willDamage,
                                         dmgElements,
                                         elTips: aElTips,
@@ -3468,28 +3464,26 @@ export default class GeniusInvokationClient {
                 force: true,
             });
             const stsreshidxs = stsres.hidxs ?? getBackHidxs(isSelf ? aheros : eheros);
-            let { willDamage, willAttachs: willAttachs1, dmgElements, eheros: eheros1, esummon, aheros: aheros1, asummon, elrcmds, elTips }
+            let { willDamage, dmgElements, eheros: eheros1, esummon, aheros: aheros1, asummon, elrcmds, elTips }
                 = this._elementReaction(
                     stsres.element ?? 0,
                     new Array((isSelf ? aheros : eheros).length).fill(0).map((_, i) => [
                         i == atkedIdx ? (stsres.damage ?? -1) : -1,
-                        (stsreshidxs.includes(i)) ? (stsres.pendamage ?? 0) : 0
+                        (stsreshidxs.includes(i)) ? (stsres.pendamage ?? 0) : 0,
                     ]),
                     atkedIdx,
                     isSelf ? aheros : eheros,
                     isSelf ? aSummon : eSummon,
                     isSelf ? eheros : aheros,
                     isSelf ? eSummon : aSummon,
-                    { pidx: pidx ^ isSelf }
+                    { pidx: pidx ^ isSelf, isSelf }
                 );
             aheros = isSelf ? eheros1 : aheros1;
             eheros = isSelf ? aheros1 : eheros1;
             let summonee = isSelf ? esummon : asummon;
             const { cmds: execmds = [] } = stsres.exec?.(getAtkStatus(), { heros: aheros, summons: summonee }) ?? {};
-            const aWillAttach: number[][] = new Array(aheros.length + eheros.length).fill(0).map(() => []);
-            for (let i = 0; i < aheros.length; ++i) aWillAttach[i + (pidx ^ 1) * eheros.length].push(willAttachs1[i]);
             let willHeals: number[] | undefined;
-            const cmds = [...(stsres.cmds ?? []), ...(execmds ?? [])];
+            const cmds = [...(stsres.cmds ?? []), ...(execmds ?? []), ...elrcmds[0]];
             let dices;
             if (cmds.length > 0) {
                 const { willHeals: cmdheal, ndices, heros } = this._doCmds(cmds, { pidx, heros: aheros, summons: summonee, isRollDice: true });
@@ -3515,8 +3509,6 @@ export default class GeniusInvokationClient {
                 const { statusIdsAndPidx: stpidx } = this._doStatus(pidx ^ 1, 1, 'change-from', { hidxs: [eFrontIdx] });
                 if (stpidx.length > 0) isSwitchAtk = true;
             }
-            const willAttachs: number[][] = new Array(aheros.length + eheros.length).fill(0).map(() => []);
-            willAttachs[eFrontIdx + (pidx ^ 1) * aheros.length].push(stsres.element ?? 0);
             this.socket.emit('sendToServer', {
                 statusId: [sid, stype, ahidx, isa, isQuickAction],
                 cpidx: pidx,
@@ -3525,12 +3517,11 @@ export default class GeniusInvokationClient {
                 eheros,
                 esummon: isSelf ? asummon : esummon,
                 willDamage,
-                willAttachs,
                 dmgElements,
                 elTips,
                 willHeals,
                 dices,
-                cmds: [...elrcmds[0], ...cmds],
+                cmds,
                 playerInfo: this.players[pidx].playerInfo,
                 isEndAtk: this.taskQueue.isTaskEmpty() && !isSwitchAtk && !isa,
                 step: 1,
@@ -3836,7 +3827,6 @@ export default class GeniusInvokationClient {
             } else if (cmd.startsWith('switch-')) {
                 if (isSwitch == -1) isSwitch = hidxs?.[0] ?? -1;
                 if (!isExec) {
-                    this.willSwitch = new Array(cheros.length + ceheros.length).fill(false);
                     let sdir = 0;
                     if (cmd == 'switch-before') sdir = -1;
                     else if (cmd == 'switch-after') sdir = 1;
