@@ -416,11 +416,11 @@ const allHeros: HeroObj = {
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Char_Avatar_Wriothesley.webp',
         skill1('迅烈倾霜拳'), [
         new GISkill('冰牙突驰', '造成{dmg}点[冰元素伤害]，本角色附属【sts2192】。', 2, 2, 3, 4, {}, [
-            '',
+            'https://api.hakush.in/gi/UI/Skill_S_Wriothesley_01.webp',
             '',
         ], () => ({ status: [heroStatus(2192)] })),
         new GISkill('黑金狼噬', '造成{dmg}点[冰元素伤害]，生成【sts2193】。', 3, 2, 3, 4, { ec: 3 }, [
-            '',
+            'https://api.hakush.in/gi/UI/Skill_E_Wriothesley_01.webp',
             '',
         ], () => ({ status: [heroStatus(2193)] })),
         new GISkill('黑金狼噬', '【本角色在本回合中受到伤害或治疗每累计到2次时：】｢元素爆发｣少花费1个元素骰(最多少花费2个)。', 4, 0, 0, 0, {}, [
@@ -628,7 +628,7 @@ const allHeros: HeroObj = {
         return { cmds: [{ cmd: 'getCard', cnt: 1, card: 905 }], exec: () => { --skill1.perCnt } }
     }, '；【每回合1次：】如果手牌中没有【crd905】，则生成手牌【crd905】。', { pct: 1 }), [
         new GISkill('孤心沙龙', '【芙宁娜】当前处于｢始基力:荒性｣形态，召唤【smn3060】。；(【芙宁娜】处于｢始基力:芒性｣形态时，会改为召唤【smn3061】。)', 2, 0, 3, 1, {}, [
-            '',
+            'https://api.hakush.in/gi/UI/Skill_E_Furina_01.webp',
             '',
         ], event => {
             const { hero: { local, talentSlot }, card } = event;
@@ -636,7 +636,7 @@ const allHeros: HeroObj = {
             return { summon: [newSummonee(local.includes(11) ? 3060 : 3061)], status: isCdt(isTalent, [heroStatus(2196)],) }
         }),
         new GISkill('万众狂欢', '造成{dmg}点[水元素伤害]，生成【sts2194】。', 3, 2, 4, 1, { ec: 2 }, [
-            '',
+            'https://api.hakush.in/gi/UI/Skill_S_Furina_01.webp',
             '',
         ], () => ({ status: [heroStatus(2194)] })),
         new GISkill('始基力：圣俗杂座', '战斗开始时，生成手牌【crd905】。', 4, 0, 0, 0, {}, [
@@ -834,11 +834,11 @@ const allHeros: HeroObj = {
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Char_Avatar_Xinyan.webp',
         skill1('炎舞'), [
         new GISkill('热情拂扫', '造成{dmg}点[火元素伤害]，随机[舍弃]1张元素骰费用最高的手牌，生成【sts2197】。', 2, 2, 3, 2, {}, [
-            '',
+            'http://www.yuhengcup.top/homdgcat-res/AvatarSkill/Skill_S_Xinyan_01.png',
             '',
         ], () => ({ cmds: [{ cmd: 'discard', element: 0 }], status: [heroStatus(2197)] })),
         new GISkill('叛逆刮弦', '造成{dmg}点[物理伤害]，对所有敌方后台角色造成2点[穿透伤害]; [舍弃]我方所有手牌，生成【sts2199】。', 3, 3, 3, 2, { ec: 2, de: 0 }, [
-            '',
+            'http://www.yuhengcup.top/homdgcat-res/AvatarSkill/Skill_E_Xinyan_01.png',
             '',
         ], () => ({ pendamage: 2, status: [heroStatus(2199)], cmds: [{ cmd: 'discard', element: 1 }] }))
     ]),
@@ -1310,11 +1310,11 @@ const allHeros: HeroObj = {
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Char_Avatar_Yunjin.webp',
         skill1('拂云出手'), [
         new GISkill('旋云开相', '生成【sts2198】，本角色附属【sts2200】并[准备技能]：【rsk21】。', 2, 0, 3, 6, {}, [
-            '',
+            'http://www.yuhengcup.top/homdgcat-res/AvatarSkill/Skill_S_Yunjin_01.png',
             '',
         ], () => ({ status: [heroStatus(2198), heroStatus(2200), heroStatus(2201)] })),
         new GISkill('破嶂见旌仪', '造成{dmg}点[岩元素伤害]，生成3层【sts2198】。', 3, 2, 3, 6, { ec: 2 }, [
-            '',
+            'http://www.yuhengcup.top/homdgcat-res/AvatarSkill/Skill_E_Yunjin_01.png',
             '',
         ], () => ({ status: [heroStatus(2198, 3)] }))
     ]),
@@ -1454,11 +1454,11 @@ const allHeros: HeroObj = {
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Char_Avatar_Kaveh.webp',
         skill1('旋规设矩'), [
         new GISkill('画则巧施', '造成{dmg}点[草元素伤害]，生成【sts2202】。', 2, 2, 3, 7, {}, [
-            '',
+            'https://api.hakush.in/gi/UI/Skill_S_Kaveh_01.webp',
             '',
         ], () => ({ status: [heroStatus(2202)] })),
         new GISkill('繁绘隅穹', '造成{dmg}点[草元素伤害]，本角色附属【sts2203】，生成2层【sts2202】。', 3, 3, 3, 7, { ec: 2 }, [
-            '',
+            'https://api.hakush.in/gi/UI/Skill_E_Kaveh_01.webp',
             '',
         ], () => ({ status: [heroStatus(2203), heroStatus(2202, 2)] }))
     ]),

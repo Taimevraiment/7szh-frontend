@@ -338,10 +338,12 @@
           </div>
         </div>
 
-        <div class="dice-change" v-if="[4, 6].includes(phase) && player.phase == 4 && isLookon == -1">
+        <div class="dice-change" v-if="[4, 6].includes(phase) && player.phase == 4 && isLookon == -1"
+          @mousedown.stop="mousedown()" @mouseup.stop="mouseup">
           <div class="dice-change-area">
-            <div class="dice-container" v-for="(dice, didx) in dices" :key="didx" @click.stop="selectDice(didx)">
-              <div class="dice" :class="{ 'dice-select': dice.isSelected }">
+            <div class="dice-container" v-for="(dice, didx) in dices" :key="didx">
+              <div class="dice" :class="{ 'dice-select': dice.isSelected }" @mousedown.stop="mousedown(didx)"
+                @mouseenter.stop="selectDice(didx)">
                 <img class="dice-change-img" :src="getDiceBgIcon(ELEMENT_ICON[dice.val])" style="opacity: 1" />
                 <img class="dice-change-el-img" :src="getDiceIcon(ELEMENT_ICON[dice.val])" />
                 <img class="dice-change-img" :src="getDiceBgIcon(ELEMENT_ICON[dice.val])" />
@@ -436,8 +438,10 @@ const initCards = ref<(Card & { isSelected: boolean })[]>(player.value.handCards
 const dices = ref<DiceVO[]>(player.value.dice.map(d => ({ val: d, isSelected: false })));
 const showChangeCardBtn = ref<boolean>(true);
 
-let diceSelect: boolean[] = props.client.player.diceSelect.length == 0 ? new Array(player.value.dice.length).fill(false) : [...props.client.player.diceSelect];
+const diceSelect: boolean[] = props.client.player.diceSelect.length == 0 ? new Array(player.value.dice.length).fill(false) : [...props.client.player.diceSelect];
 const initCardSelect = new Array(5).fill(false);
+const diceChangeEnter: boolean[] = new Array(player.value.dice.length).fill(false);
+let isMouseDown: boolean = false;
 
 watchEffect(() => {
   initCards.value =
@@ -445,7 +449,7 @@ watchEffect(() => {
       ...c,
       isSelected: initCardSelect[i],
     })) ?? [];
-  if (player.value.phase > 4) diceSelect = [...props.client.player.diceSelect];
+  if (player.value.phase > 4) diceSelect.splice(0, 20, ...props.client.player.diceSelect);
   dices.value = player.value.dice.map((d, i) => ({
     val: d,
     isSelected: diceSelect[i],
@@ -509,9 +513,11 @@ const selectHero = (pidx: number, hidx: number) => {
 };
 // 选择骰子
 const selectDice = (didx: number) => {
+  if (!isMouseDown || diceChangeEnter[didx]) return;
   const newVal = !dices.value[didx].isSelected;
   dices.value[didx].isSelected = newVal;
   diceSelect[didx] = newVal;
+  diceChangeEnter[didx] = true;
 };
 // 重掷骰子
 const reroll = (dices: DiceVO[]) => {
@@ -539,7 +545,7 @@ const selectUseDice = (didx: number) => {
     } else if (dices.value.filter(v => v.isSelected).length > cost) {
       dices.value.forEach((v, i) => (v.isSelected = i == didx));
     }
-    diceSelect = dices.value.map(v => v.isSelected);
+    diceSelect.splice(0, 20, ...dices.value.map(v => v.isSelected));
   }
   emits('selectUseDice', diceSelect);
 };
@@ -559,7 +565,17 @@ const showHistory = () => {
 const endPhase = () => {
   if (player.value.status == 0 || !canAction) return;
   emits('endPhase');
-};
+}
+// 鼠标按下
+const mousedown = (didx: number = -1) => {
+  if (!isMouseDown && player.value.phase == 4) isMouseDown = true;
+  if (didx > -1) selectDice(didx);
+}
+// 鼠标松开
+const mouseup = () => {
+  if (isMouseDown && player.value.phase == 4) isMouseDown = false;
+  diceChangeEnter.forEach((_, i, a) => a[i] = false);
+}
 </script>
 
 <style scoped>
@@ -1210,12 +1226,12 @@ button:active {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: min(50px, 100%);
+  width: min(60px, 100%);
   opacity: 60%;
 }
 
 .dice {
-  width: min(50px, 100%);
+  width: min(60px, 100%);
   aspect-ratio: 1;
   border-radius: 50%;
   cursor: pointer;

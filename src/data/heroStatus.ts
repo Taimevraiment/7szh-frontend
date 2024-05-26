@@ -1804,8 +1804,9 @@ const statusTotal: StatusObj = {
         }, { icbg: DEBUFF_BG_COLOR }),
 
     2164: (cnt = 1) => new GIStatus(2164, '源水之滴', `【〖hro1110〗进行｢普通攻击｣后：】治疗【hro1110】2点，然后如果【hro1110】是我方｢出战角色｣，则[准备技能]：【rsk17】。；【[可用次数]：{useCnt}】(可叠加，最多叠加到3次)`,
-        'sts2164', 1, [1], cnt, 3, -1, (_status, event = {}) => {
-            const { heros = [] } = event;
+        'https://api.hakush.in/gi/UI/UI_Talent_S_Neuvillette_03.webp', 1, [1], cnt, 3, -1, (_status, event = {}) => {
+            const { heros = [], hidx = -1 } = event;
+            if (heros[hidx]?.id != 1110) return;
             return {
                 heal: 2,
                 hidxs: [heros.findIndex(h => h.id = 1110)],
@@ -2108,8 +2109,8 @@ const statusTotal: StatusObj = {
             },
         }), { icbg: STATUS_BG_COLOR[4] }),
 
-    2194: (icon = '') => new GIStatus(2194, '普世欢腾', '【我方出战角色受到伤害或治疗后：】叠加1点【sts2195】。；【[持续回合]：{roundCnt}】',
-        icon, 1, [4], -1, 0, 2, (_status, event = {}) => {
+    2194: () => new GIStatus(2194, '普世欢腾', '【我方出战角色受到伤害或治疗后：】叠加1点【sts2195】。；【[持续回合]：{roundCnt}】',
+        'ski1111,2', 1, [4], -1, 0, 2, (_status, event = {}) => {
             const { heal = [], hidx = -1, trigger = '' } = event;
             const triggers: Trigger[] = ['getdmg'];
             if (trigger == 'heal' && (heal[hidx] ?? 0) > 0) triggers.push('heal');
@@ -2117,7 +2118,7 @@ const statusTotal: StatusObj = {
                 trigger: triggers,
                 exec: () => ({ cmds: [{ cmd: 'getStatus', status: [heroStatus(2195)] }] }),
             }
-        }, { icbg: STATUS_BG_COLOR[4] }),
+        }, { icbg: STATUS_BG_COLOR[1] }),
 
     2195: () => new GIStatus(2195, '狂欢值', '我方造成的伤害+1。(包括角色引发的扩散伤害)；【[可用次数]：{useCnt}(可叠加，没有上限)】',
         'buff5', 1, [4, 6], 1, 1000, 1, (status, { trigger } = {}) => ({
@@ -2313,8 +2314,8 @@ const statusTotal: StatusObj = {
             }
         }, { icbg: STATUS_BG_COLOR[7] }),
 
-    2210: (icon = '') => new GIStatus(2210, '重燃的绿洲之心', '所附属角色造成的伤害+3。；【所附属角色使用技能后：】移除我方场上的【sts2209】，每移除1层就治疗所附属角色1点。',
-        icon, 0, [6, 10], -1, 0, -1, (_status, event = {}) => {
+    2210: () => new GIStatus(2210, '重燃的绿洲之心', '所附属角色造成的伤害+3。；【所附属角色使用技能后：】移除我方场上的【sts2209】，每移除1层就治疗所附属角色1点。',
+        'ski1822,2', 0, [6, 10], -1, 0, -1, (_status, event = {}) => {
             const { heros = [], hidx = -1 } = event;
             const sts2209 = heros[hidx]?.outStatus.find(ost => ost.id == 2209);
             let cnt = 0;

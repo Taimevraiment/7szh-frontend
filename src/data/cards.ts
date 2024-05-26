@@ -2493,7 +2493,7 @@ const allCards: CardObj = {
             hero.local.push(11 + nlocal);
             hero.src = hero.srcs[nlocal];
             const [odesc, ndesc] = hero.skills[1].description.split('；');
-            hero.skills[1].description = `${ndesc.slice(1, -1)}；(${odesc})`;
+            hero.skills[1].description = `${ndesc.slice(1, -1).replace('处于', '当前处于')}；(${odesc.replace('当前', '')})`;
             const smnIdx = summons.findIndex(smn => smn.id == 3060 + (nlocal ^ 1));
             if (smnIdx > -1) {
                 const useCnt = summons[smnIdx].useCnt;
