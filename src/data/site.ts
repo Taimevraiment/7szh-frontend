@@ -17,7 +17,7 @@ class GISite implements Site {
     canSelect: boolean = false;
     constructor(id: number, cardId: number, cnt: number, perCnt: number, type: number, handle: (site: Site, event?: SiteHandleEvent) => SiteHandleRes | void, hpCnt = 0) {
         this.id = id;
-        this.sid = Math.floor(Math.random() * 1000);
+        this.sid = Math.floor(Math.random() * 100000);
         this.card = cardsTotal(cardId);
         this.cnt = cnt;
         this.perCnt = perCnt;
@@ -65,7 +65,6 @@ const siteTotal: SiteObj = {
             exec: () => {
                 if (++site.cnt < 3) return { isDestroy: false }
                 return { cmds: [{ cmd: 'getDice', cnt: 3, element: -1 }], isDestroy: true }
-
             }
         }
     }),

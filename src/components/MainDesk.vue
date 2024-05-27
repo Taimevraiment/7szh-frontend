@@ -85,7 +85,9 @@
             </div>
           </div>
           <img class="site-top-icon" v-if="site.type < 3" :src="getSvgIcon(site.type == 1 ? 'round' : 'bag')" />
-          <div class="site-top-num" v-if="site.type < 3">{{ site.cnt }}</div>
+          <div class="site-top-num" :class="{ 'is-change': siteCurcnt[saidx][siidx].isChange }" v-if="site.type < 3">
+            {{ site.cnt }}
+          </div>
           <div :class="{
             'will-destroy': siteCnt[saidx ^ playerIdx ^ 1][siidx] < 0,
             'will-add': siteCnt[saidx ^ playerIdx ^ 1][siidx] > 0,
@@ -111,7 +113,7 @@
     <div class="heros">
       <div class="hero" @click.stop="selectHero(hidx < 3 ? 0 : 1, hidx % 3)" v-if="!!opponent" :style="{
         'background-color': hero.src == '' ? ELEMENT_COLOR[hero?.element ?? 0] : '',
-        animation: hero?.isFront &&
+        'animation': hero?.isFront &&
           ((hidx > 2 && player.status == 1 && player.summon.every(s => !s.isSelected)) ||
             (hidx < 3 && opponent?.status == 1 && opponent?.summon.every(s => !s.isSelected))) &&
           isShowDmg && willDamages.some(d => d[0] >= 0) && phase < 7 &&
@@ -200,7 +202,7 @@
         </div>
         <div class="instatus" v-if="phase > 3 && hero.hp > 0">
           <div :class="{ status: true, 'mobile-status': isMobile, 'status-select': ists.isSelected }"
-            v-for="ists in hero.inStatus.filter((sts, stsi) => hero.inStatus.length < 5 ? !sts.type.includes(0) : stsi < 4)"
+            v-for="(ists, isti) in hero.inStatus.filter((sts, stsi) => hero.inStatus.length < 5 ? !sts.type.includes(0) : stsi < 4)"
             :key="ists.id">
             <div class="status-bg" :class="{ 'mobile-status-bg': isMobile }" :style="{ background: ists.iconBg }"></div>
             <img v-if="getPngIcon(ists.icon) != ''" class="status-icon" :style="{
@@ -210,7 +212,8 @@
             <div v-else style="color: white;">{{ ists.name[0] }}</div>
             <div :style="{ position: 'absolute', width: '100%', height: '100%', borderRadius: '50%' }"
               :class="{ 'status-can-use': ists.perCnt > 0 }"></div>
-            <div class="status-cnt" :class="{ 'mobile-status-cnt': isMobile }"
+            <div class="status-cnt"
+              :class="{ 'mobile-status-cnt': isMobile, 'is-change': statusCurcnt[hidx][0][isti].isChange }"
               v-if="!ists.type.includes(10) && (ists.useCnt >= 0 || ists.roundCnt >= 0)">
               {{ ists.useCnt < 0 ? ists.roundCnt : ists.useCnt }} </div>
             </div>
@@ -224,7 +227,7 @@
           </div>
           <div class="outstatus" :class="{ 'mobile-outstatus': isMobile }" v-if="phase > 3 && hero.hp > 0">
             <div :class="{ status: true, 'mobile-status': isMobile, 'status-select': osts.isSelected }"
-              v-for="osts in hero.outStatus.filter((sts, stsi) => hero.outStatus.length < 5 ? !sts.type.includes(0) : stsi < 3)"
+              v-for="(osts, osti) in hero.outStatus.filter((sts, stsi) => hero.outStatus.length < 5 ? !sts.type.includes(0) : stsi < 3)"
               :key="osts.id">
               <div class="status-bg" :class="{ 'mobile-status-bg': isMobile }" :style="{ background: osts.iconBg }">
               </div>
@@ -235,7 +238,8 @@
               <div v-else style="color: white;">{{ osts.name[0] }}</div>
               <div :style="{ position: 'absolute', width: '100%', height: '100%', borderRadius: '50%' }"
                 :class="{ 'status-can-use': osts.perCnt > 0 }"></div>
-              <div class="status-cnt" :class="{ 'mobile-status-cnt': isMobile }"
+              <div class="status-cnt"
+                :class="{ 'mobile-status-cnt': isMobile, 'is-change': statusCurcnt[hidx][1][osti].isChange }"
                 v-if="!osts.type.includes(10) && (osts.useCnt >= 0 || osts.roundCnt >= 0)">
                 {{ osts.useCnt < 0 ? osts.roundCnt : osts.useCnt }} </div>
               </div>
@@ -302,7 +306,8 @@
               </div>
               <img class="summon-top-icon" v-if="!summon?.isWill"
                 :src="getSvgIcon(summon.maxUse > 10 ? 'bag' : summon.shield < 0 ? 'shield' : 'round')" />
-              <div class="summon-top-num" v-if="!summon?.isWill">
+              <div class="summon-top-num" :class="{ 'is-change': summonCurcnt[saidx][suidx].isChange }"
+                v-if="!summon?.isWill">
                 {{ summon.useCnt }}
               </div>
               <div :class="{
@@ -400,8 +405,60 @@ import { herosTotal } from '@/data/heros';
 const props = defineProps(['isMobile', 'canAction', 'isLookon', 'afterWinHeros', 'client', 'isShowHistory']);
 const emits = defineEmits(['selectChangeCard', 'changeCard', 'reroll', 'selectHero', 'selectUseDice', 'selectSummon', 'selectSite', 'endPhase', 'showHistory']);
 
+type Curcnt = { sid: number, val: number, isChange: boolean };
+const genChangeProxy = (length: number) => {
+  return Array.from({ length }, () => ({ sid: 0, val: 0, isChange: false }));
+}
+const siteCurcnt = ref<Curcnt[][]>([genChangeProxy(4), genChangeProxy(4)]);
+const summonCurcnt = ref<Curcnt[][]>([genChangeProxy(4), genChangeProxy(4)]);
+const statusCurcnt = ref<Curcnt[][][]>([]);
+
 const playerIdx = computed<number>(() => Math.max(props.isLookon, props.client.playerIdx));
-const player = computed<Player>(() => props.client.players[playerIdx.value]);
+const player = computed<Player>(() => {
+  const players = props.client.players as Player[];
+  if (statusCurcnt.value.length == 0) statusCurcnt.value = players.flatMap(p => p.heros.map(() => [genChangeProxy(12), genChangeProxy(12)]));
+  players.forEach((p, pi) => {
+    p.heros.forEach((h, hi) => {
+      const hidx = +(pi == playerIdx.value) * players[playerIdx.value ^ 1].heros.length + hi;
+      [h.inStatus, h.outStatus].forEach((hst, hsti) => {
+        hst.forEach((s, si) => {
+          const val = Math.max(s.roundCnt, s.useCnt);
+          if (statusCurcnt.value[hidx][hsti][si].val != val) {
+            if (statusCurcnt.value[hidx][hsti][si].sid == s.id) {
+              statusCurcnt.value[hidx][hsti][si] = { sid: s.id, val, isChange: true };
+              setTimeout(() => statusCurcnt.value[hidx][hsti][si].isChange = false, 300);
+            } else {
+              statusCurcnt.value[hidx][hsti][si] = { sid: s.id, val, isChange: false };
+            }
+          }
+        });
+      });
+    });
+    p.site.forEach((st, sti) => {
+      const saidx = +(pi == playerIdx.value);
+      if (siteCurcnt.value[saidx][sti].val != st.cnt) {
+        if (siteCurcnt.value[saidx][sti].sid == st.sid) {
+          siteCurcnt.value[saidx][sti] = { sid: st.sid, val: st.cnt, isChange: true };
+          setTimeout(() => siteCurcnt.value[saidx][sti].isChange = false, 300);
+        } else {
+          siteCurcnt.value[saidx][sti] = { sid: st.sid, val: st.cnt, isChange: false };
+        }
+      }
+    });
+    p.summon.forEach((smn, smni) => {
+      const saidx = +(smni == playerIdx.value);
+      if (summonCurcnt.value[saidx][smni].val != smn.useCnt) {
+        if (summonCurcnt.value[saidx][smni].sid == smn.id) {
+          summonCurcnt.value[saidx][smni] = { sid: smn.id, val: smn.useCnt, isChange: true };
+          setTimeout(() => summonCurcnt.value[saidx][smni].isChange = false, 300);
+        } else {
+          summonCurcnt.value[saidx][smni] = { sid: smn.id, val: smn.useCnt, isChange: false };
+        }
+      }
+    });
+  })
+  return players[playerIdx.value];
+});
 const phase = computed<number>(() => props.client.phase);
 const opponent = computed<Player>(() => props.client.players[playerIdx.value ^ 1]);
 const currCard = computed<Card>(() => props.client.currCard);
@@ -688,15 +745,23 @@ button:active {
   align-self: self-end;
 }
 
+@property --front-val {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+
 .hero {
+  --scale-val-will: 1;
   position: relative;
   width: 23%;
   height: 35%;
   border-radius: 10px;
   margin: 0 5%;
   cursor: pointer;
-  transition: 0.3s;
+  transition: --front-val 0.3s;
   background: black;
+  transform: translateY(var(--front-val)) scale(var(--scale-val-will));
 }
 
 .hero.my {
@@ -768,7 +833,7 @@ button:active {
   justify-content: center;
   align-items: center;
   box-sizing: border-box;
-  transition: 0.2s;
+  transition: 0.3s;
 }
 
 .hero-weapon>img,
@@ -779,11 +844,11 @@ button:active {
 }
 
 .is-front-oppo {
-  transform: translateY(20%);
+  --front-val: 20%;
 }
 
 .is-front-my {
-  transform: translateY(-20%);
+  --front-val: -20%;
 }
 
 .will-damage {
@@ -982,6 +1047,8 @@ button:active {
   color: white;
   background: #0000007b;
   border-radius: 50%;
+  transform: scale(var(--scale-val-change));
+  transition: transform 0.3s;
 }
 
 .hero-die {
@@ -1083,7 +1150,8 @@ button:active {
   padding-top: 10%;
   box-sizing: border-box;
   cursor: pointer;
-  transition: 0.5s;
+  transition: box-shadow 0.5s;
+  transform: scale(var(--scale-val-will));
 }
 
 .summon-img-content,
@@ -1118,6 +1186,7 @@ button:active {
 
 .summon-top-num,
 .site-top-num {
+  --scale-val-change: 1;
   position: absolute;
   top: 0;
   right: 0;
@@ -1125,11 +1194,12 @@ button:active {
   height: 25px;
   text-align: center;
   line-height: 25px;
-  transform: translate(35%, -30%);
+  transform: translate(35%, -30%) scale(var(--scale-val-change));
   color: white;
   font-weight: bolder;
   font-size: medium;
   -webkit-text-stroke: 1px black;
+  transition: 0.2s;
 }
 
 .summon-top-icon,
@@ -1543,7 +1613,12 @@ button:active {
 .active-willhp,
 .active-sitecnt,
 .active-summoncnt {
+  --scale-val-will: 1.1;
   z-index: 5;
+}
+
+.is-change {
+  --scale-val-change: 1.5;
 }
 
 .mobile-hero {

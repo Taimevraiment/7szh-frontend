@@ -1732,7 +1732,7 @@ const statusTotal: StatusObj = {
             }
             return {
                 restDmg,
-                trigger: ['end-phase'],
+                trigger: isCdt(heros[hidx]?.isFront, ['end-phase']),
                 cmds: isCdt(heros[hidx]?.isFront, [{ cmd: 'getCard', cnt: 1 }]),
             }
         }, { isTalent, pct: isTalent ? 2 : 1, act: addCnt }),
