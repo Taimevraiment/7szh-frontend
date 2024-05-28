@@ -54,14 +54,14 @@ export const HERO_LOCAL_URL = [
     '/image/local2.png',
     '/image/local3.png',
     '/image/local4.png',
-    '/image/local5.png',
+    'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/270e3e7772698578d0679b4b60cf03da.png',
     '',
     '',
     '/image/local8.png',
     '/image/local9.png',
     '',
-    '/image/local11.png',
-    '/image/local12.png',
+    'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/2bf769807e6739fbeb8b5781b9689386.png',
+    'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/bb176892163d7c0d63e664b01217802d.png',
     '/image/local13.png',
 ]
 

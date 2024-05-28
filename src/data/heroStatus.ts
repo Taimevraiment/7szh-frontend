@@ -812,14 +812,14 @@ const statusTotal: StatusObj = {
         'ski1106,3', 0, [10], -1, 0, -1, (_status, event = {}) => ({
             trigger: ['skilltype1'],
             exec: () => {
-                const { isChargedAtk = false, heros = [], hidx = -1 } = event;
-                return { cmds: isCdt<Cmds[]>(isChargedAtk, [{ cmd: 'getStatus', status: [heroStatus(2076, heros[hidx].skills[2].src)], isOppo: true }]) }
+                const { isChargedAtk = false } = event;
+                return { cmds: isCdt<Cmds[]>(isChargedAtk, [{ cmd: 'getStatus', status: [heroStatus(2076)], isOppo: true }]) }
             }
         }), { icbg: STATUS_BG_COLOR[1] }),
 
     2075: () => new GIStatus(2075, '近战状态', '角色造成的[物理伤害]转换为[水元素伤害]。；【角色进行[重击]后：】目标角色附属【sts2076】。；角色对附属有【sts2076】的角色造成的伤害+1;；【角色对已附属有断流的角色使用技能后：】对下一个敌方后台角色造成1点[穿透伤害]。(每回合至多2次)；【[持续回合]：{roundCnt}】',
         'ski1106,1', 0, [3, 6, 8], -1, 0, 2, (status, event = {}) => {
-            const { isChargedAtk, heros = [], hidx = -1, eheros = [], trigger = '' } = event;
+            const { isChargedAtk, eheros = [], trigger = '' } = event;
             const efHero = eheros.find(h => h.isFront);
             const isDuanliu = efHero?.inStatus.some(ist => ist.id == 2076);
             let afterIdx = (eheros.findIndex(h => h.isFront) + 1) % eheros.length;
@@ -834,10 +834,10 @@ const statusTotal: StatusObj = {
                 attachEl: 1,
                 exec: () => {
                     if (trigger == 'phase-end' && status.roundCnt == 1) {
-                        return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2074, heros[hidx].skills[3].src)] }] }
+                        return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2074)] }] }
                     }
                     if (isPenDmg) --status.perCnt;
-                    return { cmds: isCdt<Cmds[]>(isChargedAtk, [{ cmd: 'getStatus', status: [heroStatus(2076, heros[hidx].skills[2].src)], isOppo: true }]) }
+                    return { cmds: isCdt<Cmds[]>(isChargedAtk, [{ cmd: 'getStatus', status: [heroStatus(2076)], isOppo: true }]) }
                 },
             }
         }, { icbg: STATUS_BG_COLOR[1], pct: 2 }),
@@ -2229,15 +2229,12 @@ const statusTotal: StatusObj = {
         }, { icbg: STATUS_BG_COLOR[7] }),
 
     2203: () => new GIStatus(2203, '梅赫拉克的助力', '角色｢普通攻击｣造成的伤害+1，且造成的[物理伤害]变为[草元素伤害]。；角色｢普通攻击｣后：生成【sts2202】。；【[持续回合]:{roundCnt}】',
-        'buff4', 0, [4, 6, 8], -1, 0, 2, (_status, event = {}) => {
-            const { heros = [], hidx = -1 } = event;
-            return {
-                trigger: ['skilltype1'],
-                attachEl: 7,
-                addDmgType1: 1,
-                exec: () => ({ cmds: [{ cmd: 'getStatus', status: [heroStatus(2202, heros[hidx].skills[1].src)] }] })
-            }
-        }, { icbg: STATUS_BG_COLOR[7] }),
+        'buff4', 0, [4, 6, 8], -1, 0, 2, () => ({
+            trigger: ['skilltype1'],
+            attachEl: 7,
+            addDmgType1: 1,
+            exec: () => ({ cmds: [{ cmd: 'getStatus', status: [heroStatus(2202)] }] })
+        }), { icbg: STATUS_BG_COLOR[7] }),
 
     2204: () => new GIStatus(2204, '预算师的技艺todo名字待定', '【本回合中，我方下次打出场地牌时：】少花费2个元素骰。',
         'buff2', 1, [4, 10], 1, 0, 1, (status, event = {}) => {
@@ -2251,8 +2248,8 @@ const statusTotal: StatusObj = {
             }
         }),
 
-    2205: (useCnt = 0) => new GIStatus(2205, '深噬之域', '我方[舍弃]或[调和]的手牌，会被吞噬。；每吞噬3张牌：【hro1724】获得1点额外最大生命; 如果其中存在原本元素骰费用值相同的牌，则额外获得1点; 如果3张均相同，再额外获得1点。',
-        'ski1724,3', 1, [4, 9, 12], useCnt, 0, -1, (_status, event = {}) => {
+    2205: () => new GIStatus(2205, '深噬之域', '我方[舍弃]或[调和]的手牌，会被吞噬。；每吞噬3张牌：【hro1724】获得1点额外最大生命; 如果其中存在原本元素骰费用值相同的牌，则额外获得1点; 如果3张均相同，再额外获得1点。',
+        'ski1724,3', 1, [4, 9, 12], 0, 0, -1, (_status, event = {}) => {
             const { discards = [], card } = event;
             return {
                 trigger: ['discard', 'reconcile'],

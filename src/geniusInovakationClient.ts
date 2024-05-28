@@ -917,6 +917,8 @@ export default class GeniusInvokationClient {
             await this._sendTip('结束阶段');
             setTimeout(async () => {
                 await this._wait(() => this.taskQueue.isTaskEmpty() && this.actionInfo == '');
+                // this.player.heros.forEach((_, hi) => this._doSkill4(hi, 'phase-end', { pidx: startIdx }));
+                // await this._execTask(true); // todo 改造doSkill4为task形式
                 this._doSlot('phase-end', { pidx: startIdx, hidxs: allHidxs(players[startIdx].heros, { isAll: true }) });
                 await this._execTask(true);
                 this._doStatus(startIdx, [1, 3, 9], 'phase-end', { intvl: [100, 500, 1000, 100], hidxs: allHidxs(players[startIdx].heros) });
@@ -2587,6 +2589,7 @@ export default class GeniusInvokationClient {
                     isChargedAtk,
                     isFallAtk,
                     isSkill: skidx,
+                    isSummon,
                     usedDice,
                     isExec,
                     minusDiceSkill: res.minusDiceSkill,
@@ -3550,7 +3553,7 @@ export default class GeniusInvokationClient {
     */
     _doSkill4(hidx: number, otrigger: Trigger | Trigger[],
         options: {
-            pidx?: number, players?: Player[], heros?: Hero[], eheros?: Hero[], isEHeroEffect?: boolean,
+            pidx?: number, players?: Player[], heros?: Hero[], eheros?: Hero[],
             isExec?: boolean, getdmg?: number, heal?: number[], discards?: Card[],
         } = {}
     ) {
@@ -3589,14 +3592,14 @@ export default class GeniusInvokationClient {
      *                        heal 回血量, heros 我方角色组, eheros 敌方角色组, hcard 使用的牌, isChargedAtk 是否为重击, isSkill 使用技能的idx, taskMark 任务标记,
      *                        isFallAtk 是否为下落攻击, isExec 是否执行task(配合新heros), intvl 间隔时间, dieChangeBack 是否为死后切换角色, card 可能要装备的卡,
      *                        usedDice 使用的骰子数, ehidx 被攻击角色的idx, minusDiceCard 用卡减骰子, minusDiceSkill 用技能减骰子, isExecTask 是否执行任务队列,
-     *                        getdmg 受到的伤害, isQuickAction 是否为快速攻击, isUnshift 是否立即加入task
+     *                        getdmg 受到的伤害, isQuickAction 是否为快速攻击, isUnshift 是否立即加入task, isSummon 是否为召唤物攻击
      * @returns willHeals 将要回血, pidx 玩家索引, changeHeroDiceCnt 切换角色需要骰子, addDmg 条件加伤, inStatus 新增角色状态, outStatus 新增出战状态
      *          addDmgSummon 召唤物加伤, summon 新出的召唤物, minusDiceSkill 用技能减骰子, isQuickAction 是否为快速攻击
      */
     _doSlot(otriggers: Trigger | Trigger[], options: {
         pidx?: number, hidxs?: number | number[], summons?: Summonee[], ehidx?: number, card?: Card | null, taskMark?: number[],
         changeHeroDiceCnt?: number, heal?: number[], heros?: Hero[], eheros?: Hero[], minusDiceCard?: number, isUnshift?: boolean,
-        hcard?: Card, isChargedAtk?: boolean, isFallAtk?: boolean, isSkill?: number, minusDiceSkill?: number[][],
+        hcard?: Card, isChargedAtk?: boolean, isFallAtk?: boolean, isSkill?: number, minusDiceSkill?: number[][], isSummon?: number,
         isExec?: boolean, intvl?: number[], dieChangeBack?: boolean, usedDice?: number, isQuickAction?: boolean, getdmg?: number[],
     } = {}) {
         const triggers: Trigger[] = [];
@@ -3604,7 +3607,7 @@ export default class GeniusInvokationClient {
         else triggers.push(...otriggers);
         const { pidx = this.playerIdx, summons = this.players[pidx].summon, heal, hcard, ehidx = this.players[pidx ^ 1].hidx,
             heros = this.players[pidx].heros, eheros = this.players[pidx ^ 1].heros, taskMark, isUnshift = false,
-            isChargedAtk = false, isFallAtk = this.isFall, isExec = true, intvl = [0, 0, 0, 0], card,
+            isChargedAtk = false, isFallAtk = this.isFall, isExec = true, intvl = [0, 0, 0, 0], card, isSummon = -1,
             dieChangeBack = false, isSkill = -1, usedDice = 0, getdmg } = options;
         const player = this.players[pidx];
         let { changeHeroDiceCnt = 0, minusDiceCard = 0, hidxs = [player.hidx], minusDiceSkill, isQuickAction = false } = options;
@@ -3649,6 +3652,7 @@ export default class GeniusInvokationClient {
                             hcards: player.handCards,
                             dicesCnt: player.dice.length - usedDice,
                             isSkill,
+                            isSummon,
                             isExec,
                             minusDiceCard,
                             minusDiceSkill,

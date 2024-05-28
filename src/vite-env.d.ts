@@ -355,6 +355,7 @@ type CardHandleEvent = {
     dicesCnt?: number,
     restDmg?: number,
     isSkill?: number,
+    isSummon?: number,
     isExec?: boolean,
     site?: Site[],
     esite?: Site[],

@@ -148,7 +148,7 @@
           :src="getSvgIcon('switch')" />
         <div class="hero-hp" v-if="hero?.hp > 0">
           <img class="hero-hp-bg" src="@@/image/hero-hp-bg.png" />
-          <span>{{ Math.max(0, hero?.hp) }}</span>
+          <div class="hero-hp-cnt" :class="{ 'is-change': hpCurcnt[hidx].isChange }">{{ Math.max(0, hero?.hp) }}</div>
         </div>
         <div class="hero-energys" v-if="hero?.hp > 0">
           <img v-for="(_, eidx) in hero?.maxEnergy" :key="eidx" class="hero-energy"
@@ -412,14 +412,24 @@ const genChangeProxy = (length: number) => {
 const siteCurcnt = ref<Curcnt[][]>([genChangeProxy(4), genChangeProxy(4)]);
 const summonCurcnt = ref<Curcnt[][]>([genChangeProxy(4), genChangeProxy(4)]);
 const statusCurcnt = ref<Curcnt[][][]>([]);
+const hpCurcnt = ref<Curcnt[]>([]);
 
 const playerIdx = computed<number>(() => Math.max(props.isLookon, props.client.playerIdx));
 const player = computed<Player>(() => {
   const players = props.client.players as Player[];
   if (statusCurcnt.value.length == 0) statusCurcnt.value = players.flatMap(p => p.heros.map(() => [genChangeProxy(12), genChangeProxy(12)]));
+  if (hpCurcnt.value.length == 0) hpCurcnt.value = players.flatMap(p => genChangeProxy(p.heros.length));
   players.forEach((p, pi) => {
     p.heros.forEach((h, hi) => {
       const hidx = +(pi == playerIdx.value) * players[playerIdx.value ^ 1].heros.length + hi;
+      if (hpCurcnt.value[hidx].val != h.hp) {
+        if (hpCurcnt.value[hidx].sid == h.id) {
+          hpCurcnt.value[hidx] = { sid: h.id, val: h.hp, isChange: true };
+          setTimeout(() => hpCurcnt.value[hidx].isChange = false, 300);
+        } else {
+          hpCurcnt.value[hidx] = { sid: h.id, val: h.hp, isChange: false };
+        }
+      }
       [h.inStatus, h.outStatus].forEach((hst, hsti) => {
         hst.forEach((s, si) => {
           const val = Math.max(s.roundCnt, s.useCnt);
@@ -787,12 +797,14 @@ button:active {
   font-size: medium;
 }
 
-.hero-hp>span {
+.hero-hp-cnt {
   color: white;
   font-weight: bolder;
   -webkit-text-stroke: black 1px;
   z-index: 1;
   padding-right: 2px;
+  transform: scale(var(--scale-val-change));
+  transition: transform 0.3s;
 }
 
 .hero-name {

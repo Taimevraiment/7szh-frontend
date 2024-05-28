@@ -90,10 +90,7 @@ const summonTotal: SummoneeObj = {
 
     3004: () => new GISummonee(3004, '虚影', '【我方出战角色受到伤害时：】抵消{shield}点伤害。；【[可用次数]：{useCnt}】，耗尽时不弃置此牌。；【结束阶段：】弃置此牌，造成{dmg}点[水元素伤害]。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/12109492/098f3edd0f9ac347a9424c6417de6987_7446453175998729325.png',
-        1, 1, -1, 1, 1, summon => ({
-            trigger: ['phase-end'],
-            exec: execEvent => phaseEndAtk(execEvent?.summon ?? summon),
-        }), { isDestroy: 2, stsId: 2013 }),
+        1, 1, -1, 1, 1, undefined, { isDestroy: 2, stsId: 2013 }),
 
     3005: (isTalent = false) => new GISummonee(3005, '大型风灵', `【结束阶段：】造成{dmg}点[风元素伤害]。；【[可用次数]：{useCnt}】；【我方角色或召唤物引发扩散反应后：】转换此牌的元素类型，改为造成被扩散的元素类型的伤害。(离场前仅限一次)${isTalent ? '；此召唤物在场时：如果此牌的元素已转换，则使我方造成的此类元素伤害+1。' : ''}`,
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/12109492/9ed867751e0b4cbb697279969593a81c_1968548064764444761.png',
@@ -864,17 +861,10 @@ const summonTotal: SummoneeObj = {
 
     3062: (dmg = -1, useCnt = -1) => new GISummonee(3062, '黑色幻影', `【入场时：】获得我方已吞噬卡牌中最高元素骰费用值的｢攻击力｣，获得该费用的已吞噬卡牌数量的[可用次数]。；【结束阶段和我方宣布结束时：】造成${dmg == -1 ? '此牌｢攻击力｣值的' : '{dmg}点'}[雷元素伤害]。；【我方出战角色受到伤害时：】抵消1点伤害，然后此牌[可用次数]-2。${useCnt == -1 ? '' : '；【[可用次数]：{useCnt}】'}`,
         '',
-        useCnt, useCnt, 0, dmg, 3, (summon, event) => {
-            const { trigger = '' } = event;
-            return {
-                trigger: ['phase-end', 'end-phase', 'getdmg'],
-                isNotAddTask: trigger == 'getdmg',
-                exec: execEvent => {
-                    if (trigger == 'getdmg') return;
-                    return phaseEndAtk(execEvent.summon ?? summon);
-                }
-            }
-        }, { stsId: 2212 }),
+        useCnt, useCnt, 0, dmg, 3, summon => ({
+            trigger: ['phase-end', 'end-phase'],
+            exec: execEvent => phaseEndAtk(execEvent.summon ?? summon),
+        }), { stsId: 2212 }),
 
     3063: () => new GISummonee(3063, '增殖生命体', '【结束阶段：】造成{dmg}点[草元素伤害]。；【[可用次数]：{useCnt}】',
         '',

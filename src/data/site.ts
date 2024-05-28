@@ -789,7 +789,7 @@ const siteTotal: SiteObj = {
                 if (site.cnt < 4) return { isDestroy: false }
                 return {
                     cmds: [
-                        { cmd: 'addCard', cnt: 2, card: 908, hidxs: [1], isOppo: true },
+                        { cmd: 'addCard', cnt: 2, card: 908, hidxs: [2], isOppo: true },
                         { cmd: 'getStatus', status: [heroStatus(2214)], isOppo: true },
                     ],
                     isDestroy: true,
