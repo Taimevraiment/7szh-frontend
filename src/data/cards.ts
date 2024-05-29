@@ -43,8 +43,17 @@ class GICard implements Card {
         else if (subType?.includes(-3)) this.description += `；(牌组包含至少2个｢${HERO_LOCAL[id - 570]}｣角色，才能加入牌组)`;
         else if (subType?.includes(0)) this.description += `；(｢${WEAPON_TYPE[userType]}｣【角色】才能装备。角色最多装备1件｢武器｣)`;
         else if (subType?.includes(1)) this.description += `；(角色最多装备1件｢圣遗物｣)`;
-        else if (subType?.includes(5)) this.description += `；(每回合每个角色最多食用1次｢料理｣)`;
-        else if (subType?.includes(6)) {
+        else if (subType?.includes(5)) {
+            this.description += `；(每回合每个角色最多食用1次｢料理｣)`;
+            const ohandle = handle;
+            handle = (card, event) => {
+                const res = ohandle?.(card, event) ?? {};
+                return {
+                    ...res,
+                    status: [...(res.status ?? []), heroStatus(2009)],
+                }
+            }
+        } else if (subType?.includes(6)) {
             const hro = `hro${userType}`;
             const ski = `ski${userType},${canSelectHero}`;
             if (this.description.startsWith('{action}')) {
@@ -1712,44 +1721,44 @@ const allCards: CardObj = {
 
     601: new GICard(601, '绝云锅巴', '本回合中，目标角色下一次｢普通攻击｣造成的伤害+1。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/79683714/1e59df2632c1822d98a24047f97144cd_5355214783454165570.png',
-        0, 8, 2, [5], 0, 1, () => ({ status: [heroStatus(2014), heroStatus(2009)] })),
+        0, 8, 2, [5], 0, 1, () => ({ status: [heroStatus(2014)] })),
 
     602: new GICard(602, '仙跳墙', '本回合中，目标角色下一次｢元素爆发｣造成的伤害+3。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/79683714/d5f601020016ee5b999837dc291dc939_1995091421771489590.png',
-        2, 0, 2, [5], 0, 1, () => ({ status: [heroStatus(2015), heroStatus(2009)] })),
+        2, 0, 2, [5], 0, 1, () => ({ status: [heroStatus(2015)] })),
 
     603: new GICard(603, '莲花酥', '本回合中，目标角色下次受到的伤害-3。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/79683714/3df4388cf37da743d62547874329e020_8062215832659512862.png',
-        1, 8, 2, [5], 0, 1, () => ({ status: [heroStatus(2018), heroStatus(2009)] })),
+        1, 8, 2, [5], 0, 1, () => ({ status: [heroStatus(2018)] })),
 
     604: new GICard(604, '北地烟熏鸡', '本回合中，目标角色下一次｢普通攻击｣少花费1个[无色元素骰]。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/79683714/bea77758f2b1392abba322e54cb43dc4_7154513228471011328.png',
-        0, 8, 2, [5], 0, 1, () => ({ status: [heroStatus(2021), heroStatus(2009)] })),
+        0, 8, 2, [5], 0, 1, () => ({ status: [heroStatus(2021)] })),
 
     605: new GICard(605, '甜甜花酿鸡', '治疗目标角色1点。(每回合每个角色最多食用1次｢料理｣)',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/79683714/bb5528c89decc6e54ade58e1c672cbfa_4113972688843190708.png',
         0, 8, 2, [5], 0, 1, (_card, event) => {
             const canSelectHero = (event?.heros ?? []).map(h => h.hp < h.maxhp);
-            return { cmds: [{ cmd: 'heal', cnt: 1 }], status: [heroStatus(2009)], canSelectHero }
+            return { cmds: [{ cmd: 'heal', cnt: 1 }], canSelectHero }
         }),
 
     606: new GICard(606, '蒙德土豆饼', '治疗目标角色2点。(每回合每个角色最多食用1次｢料理｣)',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/79683714/f1026f0a187267e7484d04885e62558a_1248842015783359733.png',
         1, 8, 2, [5], 0, 1, (_card, event) => {
             const canSelectHero = (event?.heros ?? []).map(h => h.hp < h.maxhp);
-            return { cmds: [{ cmd: 'heal', cnt: 2 }], status: [heroStatus(2009)], canSelectHero }
+            return { cmds: [{ cmd: 'heal', cnt: 2 }], canSelectHero }
         }),
 
     607: new GICard(607, '烤蘑菇披萨', '治疗目标角色1点，两回合内结束阶段再治疗此角色1点。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/79683714/915af5fee026a95d6001559c3a1737ff_7749997812479443913.png',
         1, 8, 2, [5], 0, 1, (_card, event) => {
             const canSelectHero = (event?.heros ?? []).map(h => h.hp < h.maxhp);
-            return { cmds: [{ cmd: 'heal', cnt: 1 }], status: [heroStatus(2016), heroStatus(2009)], canSelectHero }
+            return { cmds: [{ cmd: 'heal', cnt: 1 }], status: [heroStatus(2016)], canSelectHero }
         }),
 
     608: new GICard(608, '兽肉薄荷卷', '目标角色在本回合结束前，之后的三次｢普通攻击｣都少花费1个[无色元素骰]。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/79683714/02a88d1110794248403455ca8a872a96_7596521902301090637.png',
-        1, 8, 2, [5], 0, 1, () => ({ status: [heroStatus(2019), heroStatus(2009)] })),
+        1, 8, 2, [5], 0, 1, () => ({ status: [heroStatus(2019)] })),
 
     609: new GICard(609, '提瓦特煎蛋', '复苏目标角色，并治疗此角色1点。',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/20/1694811/981cc0d2da6a2dc2b535b1ee25a77622_592021532068551671.png',
@@ -1759,14 +1768,14 @@ const allCards: CardObj = {
             const canSelectHero = heros.map(h => h.hp <= 0 && !isRevived);
             return {
                 cmds: [{ cmd: 'revive', cnt: 1, hidxs }],
-                status: [heroStatus(2009), heroStatus(2022)],
+                status: [heroStatus(2022)],
                 canSelectHero,
             }
         }),
 
     610: new GICard(610, '刺身拼盘', '目标角色在本回合结束前，｢普通攻击｣造成的伤害+1。',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/20/1694811/66806f78b2ced1ea0be9b888d912a61a_8814575863313174324.png',
-        1, 8, 2, [5], 0, 1, () => ({ status: [heroStatus(2023), heroStatus(2009)] })),
+        1, 8, 2, [5], 0, 1, () => ({ status: [heroStatus(2023)] })),
 
     611: new GICard(611, '唐杜尔烤鸡', '本回合中，所有我方角色下一次｢元素战技｣造成的伤害+2。',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/20/1694811/ebc939f0b5695910118e65f9acfc95ff_8938771284871719730.png',
@@ -1774,7 +1783,7 @@ const allCards: CardObj = {
             const { heros = [] } = event;
             const hidxs = heros.map((h, hi) => ({ hi, val: !h.inStatus.some(ist => ist.id == 2009) && h.hp > 0 }))
                 .filter(v => v.val).map(v => v.hi);
-            return { status: [heroStatus(2024), heroStatus(2009)], hidxs }
+            return { status: [heroStatus(2024)], hidxs }
         }),
 
     612: new GICard(612, '黄油蟹蟹', '本回合中，所有我方角色下次受到伤害-2。',
@@ -1783,7 +1792,7 @@ const allCards: CardObj = {
             const { heros = [] } = event;
             const hidxs = heros.map((h, hi) => ({ hi, val: !h.inStatus.some(ist => ist.id == 2009) && h.hp > 0 }))
                 .filter(v => v.val).map(v => v.hi);
-            return { status: [heroStatus(2025), heroStatus(2009)], hidxs }
+            return { status: [heroStatus(2025)], hidxs }
         }),
 
     613: new GICard(613, '炸鱼薯条', '本回合中，所有我方角色下次使用技能时少花费1个元素骰。',
@@ -1792,7 +1801,7 @@ const allCards: CardObj = {
             const { heros = [] } = event;
             const hidxs = heros.map((h, hi) => ({ hi, val: !h.inStatus.some(ist => ist.id == 2009) && h.hp > 0 }))
                 .filter(v => v.val).map(v => v.hi);
-            return { status: [heroStatus(2152), heroStatus(2009)], hidxs }
+            return { status: [heroStatus(2152)], hidxs }
         }),
 
     614: new GICard(614, '松茸酿肉卷', '治疗目标角色2点，3回合内结束阶段再治疗此角色1点。',
@@ -1800,7 +1809,7 @@ const allCards: CardObj = {
         2, 8, 2, [5], 0, 1, (_card, event) => {
             const { heros = [] } = event;
             const canSelectHero = heros.map(h => h.hp < h.maxhp);
-            return { cmds: [{ cmd: 'heal', cnt: 2 }], status: [heroStatus(2159), heroStatus(2009)], canSelectHero }
+            return { cmds: [{ cmd: 'heal', cnt: 2 }], status: [heroStatus(2159)], canSelectHero }
         }),
 
     615: new GICard(615, '缤纷马卡龙', '治疗目标角色1点，该角色接下来3次受到伤害后再治疗其1点。',
@@ -1808,7 +1817,7 @@ const allCards: CardObj = {
         2, 0, 2, [5], 0, 1, (_card, event) => {
             const { heros = [] } = event;
             const canSelectHero = heros.map(h => h.hp < h.maxhp);
-            return { cmds: [{ cmd: 'heal', cnt: 1 }], status: [heroStatus(2186), heroStatus(2009)], canSelectHero }
+            return { cmds: [{ cmd: 'heal', cnt: 1 }], status: [heroStatus(2186)], canSelectHero }
         }),
 
     701: new GICard(701, '唯此一心', '{action}；装备有此牌的【{hro}】使用【{ski}】时：如果此技能在本场对局中曾经被使用过，则其对敌方后台角色造成的[穿透伤害]改为3点。',

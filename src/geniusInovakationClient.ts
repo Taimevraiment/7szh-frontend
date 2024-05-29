@@ -380,7 +380,7 @@ export default class GeniusInvokationClient {
         } else {
             if (currCard.type != 0) cardres.exec?.();
             const cardcmds = [...(cardres.cmds ?? [])];
-            player.heros.forEach((_, hidx) => cardcmds.push(...(this._doSkill4(hidx, 'card').cmds ?? [])));
+            cardcmds.push(...(this._doSkill('card').cmds ?? []));
             const { cmds: otherCmds } = this._doSite(this.playerIdx, 'card', { hcard: currCard, minusDiceCard: stsmdc, isQuickAction: !isAction });
             cardcmds.push(...otherCmds);
             let aHeros: Hero[] = clone(player.heros);
@@ -856,10 +856,7 @@ export default class GeniusInvokationClient {
                 const cmds: Cmds[] = [];
                 if (this.round == 1) { // 游戏开始时
                     await this._wait(() => this.isReseted == this.playerIdx, { delay: 0, freq: 100 });
-                    for (let hi = 0; hi < this.player.heros.length; ++hi) {
-                        const { cmds: skillcmds = [] } = this._doSkill4(hi, 'game-start');
-                        cmds.push(...skillcmds);
-                    }
+                    cmds.push(...this._doSkill('game-start').cmds);
                     if (cmds.some(v => v.cmd == 'addCard')) await this._delay(1260);
                 }
                 this.socket.emit('sendToServer', {
@@ -917,8 +914,8 @@ export default class GeniusInvokationClient {
             await this._sendTip('结束阶段');
             setTimeout(async () => {
                 await this._wait(() => this.taskQueue.isTaskEmpty() && this.actionInfo == '');
-                // this.player.heros.forEach((_, hi) => this._doSkill4(hi, 'phase-end', { pidx: startIdx }));
-                // await this._execTask(true); // todo 改造doSkill4为task形式
+                await this._doSkill('phase-end', { pidx: startIdx });
+                await this._execTask(true); // todo 改造doSkill4为task形式
                 this._doSlot('phase-end', { pidx: startIdx, hidxs: allHidxs(players[startIdx].heros, { isAll: true }) });
                 await this._execTask(true);
                 this._doStatus(startIdx, [1, 3, 9], 'phase-end', { intvl: [100, 500, 1000, 100], hidxs: allHidxs(players[startIdx].heros) });
@@ -927,6 +924,8 @@ export default class GeniusInvokationClient {
                 await this._execTask(true);
                 this._doSite(startIdx, 'phase-end');
                 await this._execTask(true);
+                await this._doSkill('phase-end', { pidx: startIdx ^ 1 });
+                await this._execTask(true); // todo 改造doSkill4为task形式
                 this._doSlot('phase-end', { pidx: startIdx ^ 1, hidxs: allHidxs(players[startIdx ^ 1].heros, { isAll: true }) });
                 await this._execTask(true);
                 this._doStatus(startIdx ^ 1, [1, 3, 9], 'phase-end', { intvl: [100, 500, 1000, 100], hidxs: allHidxs(players[startIdx ^ 1].heros) });
@@ -971,7 +970,7 @@ export default class GeniusInvokationClient {
         if (changeTo == this.playerIdx) { // 切换了角色
             this.isFall = true;
             const { hidx } = this.player;
-            this._doSkill4(hidx, 'change-to');
+            this._doSkill('change-to', { hidxs: hidx });
             this._doStatus(this.playerIdx, 11, 'change-from', { hidxs: [changeFrom], isOnlyInStatus: true });
             const heros = this.player.heros;
             const { nheros: ncheros = [], nstatus } = this._updateStatus(heros[hidx].outStatus, [], heros, hidx);
@@ -1030,8 +1029,7 @@ export default class GeniusInvokationClient {
         }
         if (actionAfter?.[0] == this.playerIdx) { // 我方执行任意行动后
             if (isUseSkill) await this._delay(2300);
-            let isTriggered = false;
-            this.player.heros.forEach((_, hi) => isTriggered ||= this._doSkill4(hi, 'action-after').isTriggered);
+            let isTriggered = this._doSkill('action-after').isTriggered;
             this._doStatus(this.playerIdx, [1, 4], 'status-destroy', { intvl: [100, 500, 1000, 100], isOnlyFront: true, isQuickAction: isCdt(actionAfter?.[1] == 1, 2) });
             await this._execTask();
             this.player.heros.forEach(h => {
@@ -1089,7 +1087,7 @@ export default class GeniusInvokationClient {
             this._calcHeroChangeDice(hidx, this.player.hidx);
             this.isValid = this.heroChangeDice == 0 || this.player.dice.length >= this.heroChangeDice;
             let isQuickAction = false;
-            isQuickAction = this._doSkill4(this.player.hidx, 'change-from', { isExec: false }).isQuickAction;
+            isQuickAction = this._doSkill('change-from', { hidxs: this.player.hidx, isExec: false }).isQuickAction;
             isQuickAction = this._doStatus(this.playerIdx, 4, 'change-from', { isQuickAction, isExec: false }).isQuickAction;
             isQuickAction = this._doSite(this.playerIdx, 'change', { isQuickAction, isExec: false }).isQuickAction;
             this.isShowChangeHero = 2;
@@ -1809,7 +1807,7 @@ export default class GeniusInvokationClient {
             this.player.heros = aHeros;
             this.opponent.heros = eaHeros;
             this.taskQueue.addStatusAtk(statusIds);
-            const hasSkill4Task = this.player.heros.some((_, hi) => this._doSkill4(hi, 'action-after', { isExec: false }).isTriggered);
+            const hasSkillTask = this._doSkill('action-after', { isExec: false }).isTriggered;
             this.socket.emit('sendToServer', {
                 dices: ndices,
                 edices,
@@ -1828,7 +1826,7 @@ export default class GeniusInvokationClient {
                 skillcmds: [skillcmds, eskillcmds],
                 site: this.player.site,
                 playerInfo: this.player.playerInfo,
-                isEndAtk: ebHeros.length == 1 && !isSwitchAtk && this.taskQueue.isTaskEmpty() && !hasSkill4Task,
+                isEndAtk: ebHeros.length == 1 && !isSwitchAtk && this.taskQueue.isTaskEmpty() && !hasSkillTask,
                 flag: `useSkill-${skill.name}-${this.playerIdx}`,
             });
             if (!curCard.subType.includes(7) || !isCard) this.cancel();
@@ -1919,7 +1917,7 @@ export default class GeniusInvokationClient {
             if (heros) this.player.heros = heros;
         } else {
             let changeHeroDiceCnt = this._calcHeroChangeDice(hidx, this.player.hidx, true);
-            isQuickAction = this._doSkill4(this.player.hidx, 'change-from').isQuickAction;
+            isQuickAction = this._doSkill('change-from', { hidxs: this.player.hidx }).isQuickAction;
             changeHeroDiceCnt = this._doSlot('change', { hidxs: this.player.hidx, changeHeroDiceCnt, summons: this.player.summon }).changeHeroDiceCnt;
             const { isQuickAction: stsiqa, changeHeroDiceCnt: stschd } = this._doStatus(this.playerIdx, 4, 'change-from', { isQuickAction, changeHeroDiceCnt, isOnlyFront: true });
             isQuickAction = stsiqa;
@@ -2814,9 +2812,15 @@ export default class GeniusInvokationClient {
             restDmg *= multiDmg;
         }
         res.willDamage[getDmgIdx][0] = restDmg;
-        res.aheros.forEach((h, hi) => res.willheals[hi + epidx * res.aheros.length] = Math.min(h.maxhp - h.hp, res.willheals[hi + epidx * res.aheros.length]));
-        res.eheros.forEach((h, hi) => res.willheals[hi + pidx * res.eheros.length] = Math.min(h.maxhp - h.hp, res.willheals[hi + pidx * res.eheros.length]));
-        this._doSkill4(frontIdx, etriggers[frontIdx], { pidx: pidx ^ 1, heros: res.eheros, isExec, getdmg: restDmg });
+        const aGetDmgIdxOffset = res.aheros.length * (pidx ^ 1);
+        res.aheros.forEach((h, hi) => {
+            res.willheals[hi + epidx * res.aheros.length] = Math.min(h.maxhp - h.hp, res.willheals[hi + epidx * res.aheros.length])
+            this._doSkill(atriggers[hi], { pidx, hidxs: hi, heros: res.aheros, isExec, getdmg: res.willDamage.slice(aGetDmgIdxOffset, aGetDmgIdxOffset + res.aheros.length).map(v => v.reduce((a, b) => a + Math.max(0, b))) });
+        });
+        res.eheros.forEach((h, hi) => {
+            res.willheals[hi + pidx * res.eheros.length] = Math.min(h.maxhp - h.hp, res.willheals[hi + pidx * res.eheros.length]);
+            this._doSkill(etriggers[hi], { pidx: pidx ^ 1, hidxs: hi, heros: res.eheros, isExec, getdmg: res.willDamage.slice(getDmgIdxOffset, getDmgIdxOffset + hi).map(v => v.reduce((a, b) => a + Math.max(0, b))) });
+        });
 
         if (isElReaction[6] > 0) aost.push(heroStatus(2007));
         if (isElStatus[0] && [...aost, ...res.aheros[aFrontIdx].outStatus].every(ost => ost.id != 2111)) aost.push(heroStatus(2005));
@@ -3544,44 +3548,46 @@ export default class GeniusInvokationClient {
         });
     }
     /**
-    * 被动技能发动
+    * 技能触发发动
     * @param hidx 发动技能角色的索引idx
     * @param trigger 触发的时机
     * @param options pidx 玩家idx, players 玩家组, heros 角色组, eheros 敌方角色组, isExec 是否执行, getdmg 受到伤害数,
     *                isEffectHero 是否直接作用于改变角色组, heal 回血数, discards 我方弃牌
     * @returns isQuickAction: 是否为快速行动, heros 变化后的我方角色组, eheros 变化后的对方角色组, isTriggered 是否触发被动
     */
-    _doSkill4(hidx: number, otrigger: Trigger | Trigger[],
+    _doSkill(otrigger: Trigger | Trigger[],
         options: {
-            pidx?: number, players?: Player[], heros?: Hero[], eheros?: Hero[],
-            isExec?: boolean, getdmg?: number, heal?: number[], discards?: Card[],
+            pidx?: number, players?: Player[], heros?: Hero[], eheros?: Hero[], hidxs?: number[] | number,
+            isExec?: boolean, getdmg?: number[], heal?: number[], discards?: Card[],
         } = {}
     ) {
-        if (hidx < 0) return { isQuickAction: false, heros: [], eheros: [], isTriggered: false }
-        const { pidx = this.playerIdx, players = this.players, isExec = true, getdmg = 0, heal = [], discards = [] } = options;
-        let { heros = players[pidx].heros, eheros = players[pidx ^ 1].heros } = options;
+        const { pidx = this.playerIdx, players = this.players, isExec = true, getdmg = [], heal = [], discards = [] } = options;
+        let { heros = players[pidx].heros, eheros = players[pidx ^ 1].heros, hidxs } = options;
         let isTriggered = false;
-        const hero = heros[hidx];
         let isQuickAction = false;
-        const skills = herosTotal(hero.id).skills;
-        const skill4s = skills.filter(sk => sk.type == 4);
-        const triggers: Trigger[] = [];
-        if (typeof otrigger == 'string') triggers.push(otrigger);
-        else triggers.push(...otrigger);
         const cmds: Cmds[] = [];
-        for (const skill4 of skill4s) {
-            for (const trigger of triggers) {
-                const skidx = skills.findIndex(sk => sk.type == 4 && sk.name == skill4.name);
-                const skillres = skill4.handle({ hero, skidx, getdmg, trigger, heros, heal, discards });
-                if (!skillres.trigger?.includes(trigger)) continue;
-                isTriggered = true;
-                cmds.push(...(skillres.cmds ?? []));
-                cmds.push({ cmd: 'getStatus', status: skillres.status, hidxs: [hidx] });
-                cmds.push({ cmd: 'getStatus', status: skillres.statusOppo, isOppo: true });
-                if (skillres.isQuickAction) isQuickAction = true;
-                if (isExec) skillres.exec?.();
+        if (typeof hidxs == 'number') hidxs = [hidxs];
+        (hidxs ?? allHidxs(heros)).forEach(hidx => {
+            const hero = heros[hidx];
+            const skills = herosTotal(hero.id).skills;
+            const triggers: Trigger[] = [];
+            if (typeof otrigger == 'string') triggers.push(otrigger);
+            else triggers.push(...otrigger);
+            for (let skidx = 0; skidx < skills.length; ++skidx) {
+                const skill = skills[skidx];
+                for (const trigger of triggers) {
+                    const skillres = skill.handle({ hero, skidx, getdmg: getdmg[hidx], trigger, heros, heal, discards });
+                    if (this._hasNotTrigger(skillres.trigger, trigger)) continue;
+                    isTriggered = true;
+                    cmds.push(...(skillres.cmds ?? []));
+                    cmds.push({ cmd: 'getStatus', status: skillres.status, hidxs: [hidx] });
+                    cmds.push({ cmd: 'getStatus', status: skillres.statusOppo, isOppo: true });
+                    if (skillres.isQuickAction) isQuickAction = true;
+                    if (isExec) skillres.exec?.();
+                }
             }
-        }
+        });
+        // todo 这里cmds不用暴露出去，直接交给task来做
         this._doCmds(cmds, { pidx, heros, eheros, isExec, isEffectHero: true });
         return { isQuickAction, cmds, isTriggered }
     }
@@ -3760,7 +3766,7 @@ export default class GeniusInvokationClient {
         const heal = willHeal?.slice((pidx ^ 1) * ehlen, (pidx ^ 1) * ehlen + ahlen).map(v => Math.max(0, v) % 100);
         if (heal?.some(hl => hl > 0)) {
             heal.forEach((h, hi) => {
-                if (h > 0) this._doSkill4(hi, 'heal', { pidx, heros, heal, isExec });
+                if (h > 0) this._doSkill('heal', { pidx, hidxs: hi, heros, heal, isExec });
             });
             this._doSlot('heal', { pidx, hidxs: allHidxs(heros, { isAll: true }), heal, heros, isExec, isQuickAction });
             this._doStatus(pidx, 4, 'heal', { heal, heros, isExec });
@@ -3785,7 +3791,7 @@ export default class GeniusInvokationClient {
             cmds.push(...cardcmds);
             summons.push(...(cardres.summon ?? []));
         }
-        heros.forEach((_, hidx) => this._doSkill4(hidx, 'discard', { pidx, heros, discards: cards }));
+        this._doSkill('discard', { pidx, heros, discards: cards });
         this._doStatus(pidx, 4, 'discard', { discards: cards, heros, isQuickAction: isCdt(!isAction, 2) });
         this._doSite(pidx, 'discard', { discard: cards.length, isQuickAction: !isAction });
         return { cmds, summons }
@@ -3988,10 +3994,8 @@ export default class GeniusInvokationClient {
                     }
                 });
                 if (cnt == 0) cmds[i].cnt = heal;
-                (hidxs ?? []).forEach(hidx => {
-                    heros = heros ?? cheros;
-                    this._doSkill4(hidx, 'revive', { pidx, heros });
-                });
+                heros = heros ?? cheros;
+                this._doSkill('revive', { pidx, hidxs, heros });
             } else if (cmd == 'changeElement') {
                 changedEl = element as number;
             } else if (cmd == 'changePattern') {
@@ -4075,7 +4079,7 @@ export default class GeniusInvokationClient {
         const plidx = this.playerIdx ^ pidx ^ 1;
         const { isUpdateHandcards = true, isSwitch = false, isReadySkill = -1 } = options;
         const heros: Hero[] = (!isSwitch ? this.players[plidx] : clone(this.players[plidx])).heros;
-        if (isSwitch) this._doSkill4(hidx, 'change-to', { heros });
+        if (isSwitch) this._doSkill('change-to', { hidxs: hidx, heros });
         const curHero = heros[hidx];
         if (!curHero) return this.wrap(this.players[plidx], { isUpdateHandcards });
         const rdskill = isReadySkill > -1 ? readySkill(isReadySkill) : null;
