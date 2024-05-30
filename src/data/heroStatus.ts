@@ -456,13 +456,12 @@ const statusTotal: StatusObj = {
         }, { icbg: STATUS_BG_COLOR[4], isTalent }),
 
     2040: (isTalent = false) => new GIStatus(2040, '庭火焰硝', `所附属角色｢普通攻击｣伤害+1，造成的[物理伤害]变为[火元素伤害]。${isTalent ? '；【所附属角色使用｢普通攻击｣后：】造成1点[火元素伤害]。' : ''}；【[可用次数]：{useCnt}】`,
-        'buff4', 0, [1, 6, 8], isTalent ? 3 : 2, 0, -1, (status, event = {}) => {
+        'buff4', 0, [1, 6, 8], 3, 0, -1, (status, event = {}) => {
             const { trigger = '' } = event;
-            const dmgCdt = status.isTalent && trigger == 'after-skilltype1';
             return {
                 trigger: ['skilltype1', 'after-skilltype1'],
                 addDmgType1: 1,
-                damage: isCdt(dmgCdt, 1),
+                damage: isCdt(status.isTalent && trigger == 'after-skilltype1', 1),
                 element: 2,
                 attachEl: 2,
                 exec: eStatus => {

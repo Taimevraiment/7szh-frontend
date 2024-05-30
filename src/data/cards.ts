@@ -1179,7 +1179,7 @@ const allCards: CardObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/07/14/183046623/c332425d700b588ed93ae01f9817e568_3896726709346713005.png',
         1, 8, 1, [3], 0, 0, () => ({ site: [newSite(4034, 318)] })),
 
-    319: new GICard(319, '塞塔蕾', '【我方执行任何行动后，手牌数量为0时：】摸1张牌。；[可用次数]：3',
+    319: new GICard(319, '塞塔蕾', '【双方执行任何行动后，手牌数量为0时：】摸1张牌。；[可用次数]：3',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/08/12/203927054/b4a9b32d9ff26697821d3cf0f2444ef7_7283838166930329300.png',
         1, 8, 1, [3], 0, 0, () => ({ site: [newSite(4035, 319)] })),
 

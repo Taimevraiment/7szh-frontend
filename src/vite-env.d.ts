@@ -330,6 +330,7 @@ type SkillHandleRes = {
     atkTo?: number,
     minusDiceSkill?: number[][],
     minusDiceSkills?: number[][],
+    isNotAddTask?: boolean,
     exec?: () => void,
 }
 

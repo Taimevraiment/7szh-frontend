@@ -522,24 +522,30 @@ const summonTotal: SummoneeObj = {
         'https://act-upload.mihoyo.com/ys-obc/2023/08/03/203927054/0ea69a82861d8469ecdbbc78797e9fd8_3713104012683105893.png',
         2, 2, 0, 2, 3),
 
-    3039: () => new GISummonee(3039, '寒病鬼差', '【结束阶段：】造成{dmg}点[冰元素伤害]。；【[可用次数]：{useCnt}】；【此召唤物在场时，〖hro1008〗使用｢普通攻击｣后：】治疗受伤最多的我方角色1点。',
+    3039: () => new GISummonee(3039, '寒病鬼差', '【结束阶段：】造成{dmg}点[冰元素伤害]。；【[可用次数]：{useCnt}】；【此召唤物在场时，〖hro1008〗使用｢普通攻击｣后：】治疗受伤最多的我方角色1点; 每回合1次：再治疗我方出战角色1点。',
         'https://act-upload.mihoyo.com/ys-obc/2023/08/16/12109492/f9ea7576630eb5a8c46aae9ea8f61c7b_317750933065064305.png',
         3, 3, 0, 1, 4, (summon, event) => {
-            const { heros = [], trigger = '', isExec = false } = event;
+            const { heros = [], trigger = '', tround = 0, isExec = false } = event;
             const triggers: Trigger[] = ['phase-end'];
             const hidxs = getMaxHertHidxs(heros);
-            const isHeal = heros[getAtkHidx(heros)]?.id == 1008 && trigger == 'skilltype1' && hidxs.length > 0;
+            const fhero = heros[getAtkHidx(heros)];
+            const isHeal = fhero?.id == 1008 && trigger == 'skilltype1' && hidxs.length > 0;
+            const hasTround = trigger == 'skilltype1' && tround == 0 && summon.perCnt > 0 && fhero.hp < fhero.maxhp;
             if (isHeal) triggers.push('skilltype1');
-            const cmds: Cmds[] = [{ cmd: 'heal', cnt: 1, hidxs }];
+            const skcmds: Cmds[] = [{ cmd: 'heal', cnt: 1, hidxs }];
+            const trdcmds: Cmds[] = [];
+            if (hasTround) trdcmds.push({ cmd: 'heal', cnt: 1 });
             return {
                 trigger: triggers,
-                cmds: isCdt(isHeal && !isExec, cmds),
+                cmds: isCdt(isHeal && !isExec, [...skcmds, ...trdcmds]),
+                tround: isCdt(hasTround, 1),
                 exec: execEvent => {
+                    if (tround == 1) return { cmds: trdcmds }
+                    if (trigger == 'skilltype1') return { cmds: skcmds }
                     if (trigger == 'phase-end') return phaseEndAtk(execEvent?.summon ?? summon);
-                    if (trigger == 'skilltype1') return { cmds }
                 },
             }
-        }),
+        }, { pct: 1 }),
 
     3040: () => new GISummonee(3040, '阳华', '【结束阶段：】造成{dmg}点[岩元素伤害]。；【[可用次数]：{useCnt}】；【此召唤物在场时：】我方角色进行[下落攻击]时少花费1个[无色元素骰]。(每回合1次)',
         'https://act-upload.mihoyo.com/ys-obc/2023/08/02/82503813/5e2b48f4db9bfae76d4ab9400f535b4f_1116777827962231889.png',

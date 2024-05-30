@@ -404,7 +404,7 @@ export default class GeniusInvokationClient {
                 }
             }
             aHeros = clone(player.heros);
-            const isUseSkill = cardcmds.some(c => c.cmd == 'useSkill');
+            const isUseSkill = cardcmds.some(({ cmd }) => cmd == 'useSkill');
             cardcmds.filter(cmds => ['attach', 'attack'].includes(cmds.cmd)).forEach(cmds => {
                 const { cmd, element = 0, hidxs: chidxs, cnt = 0, isOppo = false } = cmds;
                 // if (!chidxs) cmds.hidxs = [...hidxs];
@@ -853,25 +853,25 @@ export default class GeniusInvokationClient {
                         if (rOutStatus.length > 0) h.outStatus = this._updateStatus(rOutStatus, h.outStatus).nstatus;
                     }
                 });
-                const cmds: Cmds[] = [];
-                if (this.round == 1) { // 游戏开始时
-                    await this._wait(() => this.isReseted == this.playerIdx, { delay: 0, freq: 100 });
-                    cmds.push(...this._doSkill('game-start').cmds);
-                    if (cmds.some(v => v.cmd == 'addCard')) await this._delay(1260);
-                }
+                await this._wait(() => this.isReseted == this.playerIdx, { delay: 0, freq: 100 });
                 this.socket.emit('sendToServer', {
                     cpidx: this.playerIdx,
                     heros: this.player.heros,
                     eheros: isCdt(this.round == 1, this.opponent.heros),
                     site: this.player.site,
                     summonee: this.player.summon,
-                    cmds,
                     playerInfo: this.player.playerInfo,
                     resetOnly: true,
                     flag: 'getServerInfo-phase-start-reset-' + this.playerIdx,
                 });
                 if (this.playerIdx == execIdx) {
                     await this._wait(() => this.isReseted == 2, { delay: 0 });
+                    if (this.round == 1) { // 游戏开始时
+                        this._doSkill('game-start', { pidx: startIdx });
+                        await this._execTask(true);
+                        this._doSkill('game-start', { pidx: startIdx ^ 1 });
+                        await this._execTask(true);
+                    }
                     this._doSlot('phase-start', { pidx: startIdx, hidxs: allHidxs(players[startIdx].heros, { isAll: true }) });
                     await this._execTask(true);
                     this._doStatus(startIdx, [1, 4], 'phase-start', { intvl: [100, 500, 1000, 100] });
@@ -1763,14 +1763,14 @@ export default class GeniusInvokationClient {
                     if (hero.talentSlot?.subType.includes(-4)) {
                         const reviveSlot = cardsTotal(hero.talentSlot.id)
                             .handle(hero.talentSlot, { trigger: 'will-killed' })
-                            .execmds?.find(v => v.cmd == 'revive')?.cnt ?? 0;
+                            .execmds?.find(({ cmd }) => cmd == 'revive')?.cnt ?? 0;
                         if (reviveSlot > 0) {
                             return reviveSlot - hero.hp - 0.3;
                         }
                     }
                     const isReviveSts = hero.inStatus.find(ist => ist.type.includes(13));
                     if (isReviveSts) {
-                        return (heroStatus(isReviveSts.id).handle(isReviveSts)?.cmds?.find(v => v.cmd == 'revive')?.cnt ?? 0) - hero.hp - 0.3;
+                        return (heroStatus(isReviveSts.id).handle(isReviveSts)?.cmds?.find(({ cmd }) => cmd == 'revive')?.cnt ?? 0) - hero.hp - 0.3;
                     }
                 }
                 return res;
@@ -3225,8 +3225,8 @@ export default class GeniusInvokationClient {
                                     siteexecres = siteres.exec?.({ isQuickAction, changeHeroDiceCnt, summonDiffCnt, minusDiceCard }) ?? siteexecres;
                                     console.info(`[${p.name}]${state}:${site.card.name}-${site.sid}.cnt:${site.cnt}.perCnt:${site.perCnt}`);
                                     if (siteexecres.cmds) {
-                                        if (siteexecres.cmds.some((v: Cmds) => v.cmd == 'getCard')) curIntvl[2] = 2000;
-                                        if (siteexecres.cmds.some((v: Cmds) => v.cmd == 'heal')) curIntvl[2] = 1000;
+                                        if (siteexecres.cmds.some(({ cmd }) => cmd == 'getCard')) curIntvl[2] = 2000;
+                                        if (siteexecres.cmds.some(({ cmd }) => cmd == 'heal')) curIntvl[2] = 1000;
                                     }
                                     const { ndices, heros: nh, eheros: neh, willHeals } = this._doCmds(siteexecres.cmds, { pidx, summons: this.players[pidx].summon, isRollDice: true });
                                     const heros = nh ?? this.players[pidx].heros;
@@ -3557,39 +3557,75 @@ export default class GeniusInvokationClient {
     */
     _doSkill(otrigger: Trigger | Trigger[],
         options: {
-            pidx?: number, players?: Player[], heros?: Hero[], eheros?: Hero[], hidxs?: number[] | number,
-            isExec?: boolean, getdmg?: number[], heal?: number[], discards?: Card[],
+            pidx?: number, players?: Player[], heros?: Hero[], eheros?: Hero[], hidxs?: number[] | number, cskill?: [number, number],
+            isExec?: boolean, getdmg?: number[], heal?: number[], discards?: Card[], isExecTask?: boolean,
         } = {}
     ) {
-        const { pidx = this.playerIdx, players = this.players, isExec = true, getdmg = [], heal = [], discards = [] } = options;
+        const { pidx = this.playerIdx, players = this.players, isExec = true, getdmg = [], heal = [], discards = [],
+            isExecTask = false, cskill } = options;
         let { heros = players[pidx].heros, eheros = players[pidx ^ 1].heros, hidxs } = options;
         let isTriggered = false;
         let isQuickAction = false;
         const cmds: Cmds[] = [];
+        let task: [(() => void)[], number[]] | undefined;
         if (typeof hidxs == 'number') hidxs = [hidxs];
-        (hidxs ?? allHidxs(heros)).forEach(hidx => {
+        for (const hidx of hidxs ?? allHidxs(heros)) {
+            if (cskill && cskill[0] != hidx) continue;
             const hero = heros[hidx];
             const skills = herosTotal(hero.id).skills;
             const triggers: Trigger[] = [];
             if (typeof otrigger == 'string') triggers.push(otrigger);
             else triggers.push(...otrigger);
             for (let skidx = 0; skidx < skills.length; ++skidx) {
+                if (cskill && cskill[1] != skidx) continue;
                 const skill = skills[skidx];
                 for (const trigger of triggers) {
                     const skillres = skill.handle({ hero, skidx, getdmg: getdmg[hidx], trigger, heros, heal, discards });
                     if (this._hasNotTrigger(skillres.trigger, trigger)) continue;
                     isTriggered = true;
+                    if (skillres.isQuickAction) isQuickAction = true;
                     cmds.push(...(skillres.cmds ?? []));
                     cmds.push({ cmd: 'getStatus', status: skillres.status, hidxs: [hidx] });
                     cmds.push({ cmd: 'getStatus', status: skillres.statusOppo, isOppo: true });
-                    if (skillres.isQuickAction) isQuickAction = true;
                     if (isExec) skillres.exec?.();
+                    if (!skillres.isNotAddTask) {
+                        if (!isExecTask) {
+                            const args = clone(Array.from(arguments));
+                            args[1] = clone(args[1]) ?? {};
+                            args[1].isExecTask = true;
+                            args[1].cskill = [hidx, skidx];
+                            this.taskQueue.addTask('skill-' + skill.name, args);
+                        } else {
+                            const intvl = [100, 500, 0, 0];
+                            if (cmds.some(({ cmd }) => cmd == 'addCard')) intvl[3] = 1200;
+                            if (cmds.some(({ cmd }) => cmd == 'getCard')) intvl[3] = 1500;
+                            const skillHandle = [
+                                () => { },
+                                () => {
+                                    this._doCmds(cmds, { pidx, heros, eheros, isExec, isEffectHero: true });
+                                    this.socket.emit('sendToServer', {
+                                        cpidx: pidx,
+                                        currSkill: { type: -2, skidx, hidx },
+                                        cmds,
+                                        heros,
+                                        eheros,
+                                        isEndAtk: this.taskQueue.isTaskEmpty(),
+                                        isQuickAction,
+                                        flag: `_doSkill-${skill.name}-${pidx}`,
+                                    });
+                                },
+                                () => { },
+                                () => { },
+                            ];
+                            task = [skillHandle, intvl];
+                        }
+                    } else {
+                        this._doCmds(cmds, { pidx, heros, eheros, isExec, isEffectHero: true });
+                    }
                 }
             }
-        });
-        // todo 这里cmds不用暴露出去，直接交给task来做
-        this._doCmds(cmds, { pidx, heros, eheros, isExec, isEffectHero: true });
-        return { isQuickAction, cmds, isTriggered }
+        }
+        return { isQuickAction, cmds, isTriggered, task }
     }
     /**
      * 检测装备栏
@@ -4296,6 +4332,7 @@ export default class GeniusInvokationClient {
                 else if (taskType.startsWith('site-')) task = this._doSite(...(args as Parameters<typeof this._doSite>)).task;
                 else if (taskType.startsWith('summon-')) task = this._doSummon(...(args as Parameters<typeof this._doSummon>)).task;
                 else if (taskType.startsWith('slot-')) task = this._doSlot(...(args as Parameters<typeof this._doSlot>)).task;
+                else if (taskType.startsWith('skill-')) task = this._doSkill(...(args as Parameters<typeof this._doSkill>)).task;
                 if (taskType.startsWith('statusAtk-')) {
                     const isExeced = await this._doStatusAtk(args as StatusTask);
                     if (!isExeced) {
