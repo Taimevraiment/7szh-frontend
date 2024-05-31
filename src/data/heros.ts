@@ -232,6 +232,23 @@ const readySkillTotal: { [key: number]: (...args: any) => Skill } = {
             const { playerInfo: { discardCnt = 0, reconcileCnt = 0 } = {} } = event;
             return { addDmgCdt: isCdt(discardCnt + reconcileCnt > 0, 1) }
         }),
+
+    22: () => new GISkill('孤心沙龙', '【芙宁娜】当前处于｢始基力:荒性｣形态，召唤【smn3060】。；(【芙宁娜】处于｢始基力:芒性｣形态时，会改为召唤【smn3061】。)', 2, 0, 3, 1, { rskidx: 22 }, [
+        'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/629f7630db6af1831478699dbe6a04e0.png',
+        '',
+    ], event => {
+        const { hero: { talentSlot }, card } = event;
+        const isTalent = !!talentSlot || card?.id == 785;
+        return { summon: [newSummonee(3060)], status: isCdt(isTalent, [heroStatus(2196)],) }
+    }),
+
+    23: () => new GISkill('孤心沙龙', '【芙宁娜】当前处于｢始基力:芒性｣形态，召唤【smn3061】。；(【芙宁娜】处于｢始基力:荒性｣形态时，会改为召唤【smn3060】。)', 2, 0, 3, 1, { rskidx: 23 },
+        'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/3a6b3aa64583eed30205cc6959de0b11.png',
+        event => {
+            const { hero: { talentSlot }, card } = event;
+            const isTalent = !!talentSlot || card?.id == 785;
+            return { summon: [newSummonee(3061)], status: isCdt(isTalent, [heroStatus(2196)],) }
+        }),
 }
 
 const readySkill = (id: number, ...args: any) => {
@@ -422,17 +439,19 @@ const allHeros: HeroObj = {
         new GISkill('黑金狼噬', '造成{dmg}点[冰元素伤害]，生成【sts2193】。；【本角色在本回合中受到伤害或治疗每累计到2次时：】此技能少花费1个元素骰(最多少花费2个)。', 3, 2, 3, 4, { ec: 3 }, [
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/bfa34d0f6363c94bbc3e5a2164196028.png',
             '',
-        ], () => ({ status: [heroStatus(2193)] })),
-        new GISkill('黑金狼噬', 'todo', 4, 0, 0, 0, {}, [
-            '',
-            '',
         ], event => {
-            const { hero: { skills: [, , , { useCnt }] }, trigger = '' } = event;
+            const { hero: { skills: [, , { perCnt }] }, trigger = '' } = event;
             if (trigger == 'calc') {
-                const { minusSkillRes } = minusDiceSkillHandle(event, { skilltype3: [0, 0, Math.min(Math.floor(useCnt / 2), 2)] });
+                const { minusSkillRes } = minusDiceSkillHandle(event, { skilltype3: [0, 0, Math.floor(perCnt / 2)] });
                 return { ...minusSkillRes }
             }
-            return { trigger: ['getdmg', 'heal'] }
+            return {
+                status: isCdt(trigger == 'skilltype3', [heroStatus(2193)]),
+                trigger: isCdt(perCnt < 4, ['getdmg', 'heal']),
+                exec: () => {
+                    if (['getdmg', 'heal'].includes(trigger)) ++event.hero.skills[2].perCnt;
+                }
+            }
         })
     ]),
 

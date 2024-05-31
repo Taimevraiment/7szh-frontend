@@ -2500,18 +2500,18 @@ const allCards: CardObj = {
         0, 8, 2, [], 0, 0, (_card, event) => {
             const { heros = [], summons = [], isExec = false } = event;
             if (!isExec) return;
-            const hero = heros.find(h => h.id == 1111);
-            if (!hero) return;
+            const hidx = heros.findIndex(h => h.id == 1111);
+            if (hidx == -1) return;
+            const hero = heros[hidx];
             const nlocal = ((hero.local.pop() ?? 11) - 11) ^ 1;
             hero.local.push(11 + nlocal);
             hero.src = hero.srcs[nlocal];
-            const [odesc, ndesc] = hero.skills[1].description.split('；');
-            hero.skills[1].description = `${ndesc.slice(1, -1).replace('处于', '当前处于')}；(${odesc.replace('当前', '')})`;
             const smnIdx = summons.findIndex(smn => smn.id == 3060 + (nlocal ^ 1));
             if (smnIdx > -1) {
                 const useCnt = summons[smnIdx].useCnt;
                 summons.splice(smnIdx, 1, newSummonee(3060 + nlocal, useCnt));
             }
+            return { cmds: [{ cmd: 'loseSkill', hidxs: [hidx], element: 1 }, { cmd: 'getSkill', hidxs: [hidx], cnt: 22 + nlocal, element: 1 }] }
         }),
 
     906: new GICard(906, '噬骸能量块', '随机[舍弃]1张原本元素骰费用最高的手牌，生成1个我方出战角色类型的元素骰。如果我方出战角色是｢圣骸兽｣角色，则使其获得1点[充能]。(每回合最多打出1张)',

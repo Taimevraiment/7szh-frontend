@@ -2570,13 +2570,15 @@ cnt(number): 转换后的hid
 
 cnt(number): 技能idx-1
 
-### getSkill
+### getSkill/loseSkill
 
-获得技能
+获得/失去技能
 
 cnt(number): readySkill中的id
 
-hidxs(number[]): 插入的技能槽skillx
+hidxs(number[]): 将要获得/失去技能的角色索引hidx
+
+element(number): 插入/移除的技能槽的idx
 
 ### addCard
 

@@ -2099,7 +2099,7 @@ const statusTotal: StatusObj = {
         }, { icbg: STATUS_BG_COLOR[4] }),
 
     2193: () => new GIStatus(2193, '余威冰锥', '【我方选择行动前：】造成2点[冰元素伤害]。；【[可用次数]：{useCnt}】',
-        'ski1011,2', 1, [1, 10], 1, 0, -1, () => ({
+        'ski1011,2', 1, [1], 1, 0, -1, () => ({
             damage: 2,
             element: 4,
             trigger: ['action-start'],
@@ -2228,7 +2228,7 @@ const statusTotal: StatusObj = {
         }, { icbg: STATUS_BG_COLOR[7] }),
 
     2203: () => new GIStatus(2203, '梅赫拉克的助力', '角色｢普通攻击｣造成的伤害+1，且造成的[物理伤害]变为[草元素伤害]。；角色｢普通攻击｣后：生成【sts2202】。；【[持续回合]:{roundCnt}】',
-        'buff4', 0, [4, 6, 8], -1, 0, 2, () => ({
+        'ski1608,2', 0, [4, 6, 8], -1, 0, 2, () => ({
             trigger: ['skilltype1'],
             attachEl: 7,
             addDmgType1: 1,
@@ -2258,22 +2258,29 @@ const statusTotal: StatusObj = {
                     const { heros = [] } = execEvent;
                     const hidx = heros.findIndex(h => h.id == 1724);
                     if (hidx == -1) return;
-                    const [curDiscard, allDiscard] = eStatus.addition;
+                    const [cost1, cost2, maxDice] = eStatus.addition;
                     if (card) discards.push(card);
                     discards.forEach(c => {
                         const cost = c.cost + c.anydice;
-                        curDiscard.push(cost);
-                        allDiscard.push(cost);
-                        if (curDiscard.length == 3) {
-                            const cnt = 4 - new Set(curDiscard).size;
+                        if (cost > maxDice) {
+                            eStatus.addition[2] = cost;
+                            eStatus.addition[3] = 1;
+                        } else if (cost == maxDice) {
+                            ++eStatus.addition[3];
+                        }
+                        if (cost1 == -1) eStatus.addition[0] = cost;
+                        else if (cost2 == -1) eStatus.addition[1] = cost;
+                        else {
+                            const cnt = 1 + +(cost1 == cost) + +(cost2 == cost);
                             eStatus.useCnt += cnt;
                             heros[hidx].maxhp += cnt;
-                            curDiscard.length = 0;
+                            eStatus.addition[0] = -1;
+                            eStatus.addition[1] = -1;
                         }
                     });
                 }
             }
-        }, { icbg: STATUS_BG_COLOR[1], adt: [[], []] }),
+        }, { icbg: STATUS_BG_COLOR[1], adt: [-1, -1, 0, 0] }),
 
     2206: (useCnt = -1) => new GIStatus(2206, '雷锥陷阱', `【所在阵营的角色使用技能后：】对所在阵营的出战角色造成2点[雷元素伤害]。；【[可用次数]：${useCnt > 0 ? '{useCnt}' : '初始为创建时所弃置的噬骸能量块张数。'}(最多叠加到3)】`,
         'debuff', 1, [1], useCnt, 3, -1, () => ({
