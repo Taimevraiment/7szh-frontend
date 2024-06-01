@@ -739,7 +739,7 @@ export default class GeniusInvokationClient {
                 await this._sendTip('等待对方选择出战角色');
             }
         }
-        if (this.playerIdx == execIdx && dieChangeBack == undefined) {
+        if (this.playerIdx == execIdx && dieChangeBack == undefined && this._hasNotDieChange(players)) {
             this._execTask();
         }
         const siteDiffCnt = this.player.site.length - players[this.playerIdx].site.length - this.exchangeSite.length;
@@ -867,30 +867,30 @@ export default class GeniusInvokationClient {
                 if (this.playerIdx == execIdx) {
                     await this._wait(() => this.isReseted == 2, { delay: 0 });
                     if (this.round == 1) { // 游戏开始时
-                        this._doSkill('game-start', { pidx: startIdx });
+                        this._doSkill('game-start', { pidx: startIdx, isQuickAction: true });
                         await this._execTask(true);
-                        this._doSkill('game-start', { pidx: startIdx ^ 1 });
+                        this._doSkill('game-start', { pidx: startIdx ^ 1, isQuickAction: true });
                         await this._execTask(true);
                     }
-                    this._doSlot('phase-start', { pidx: startIdx, hidxs: allHidxs(players[startIdx].heros, { isAll: true }) });
+                    this._doSlot('phase-start', { pidx: startIdx, hidxs: allHidxs(players[startIdx].heros, { isAll: true }), isQuickAction: true });
                     await this._execTask(true);
-                    this._doStatus(startIdx, [1, 4], 'phase-start', { intvl: [100, 500, 1000, 100] });
+                    this._doStatus(startIdx, [1, 4], 'phase-start', { intvl: [100, 500, 1000, 100], isQuickAction: 2 });
                     await this._execTask(true);
                     this._doSummon(startIdx, 'phase-start');
                     await this._execTask(true);
-                    const { exchangeSite: ecs1 } = this._doSite(startIdx, 'phase-start', { firstPlayer: startIdx });
+                    const { exchangeSite: ecs1 } = this._doSite(startIdx, 'phase-start', { firstPlayer: startIdx, isQuickAction: true });
                     this.exchangeSite.push(...ecs1);
                     for (const [exsite, pidx] of ecs1) {
                         this.players[pidx].site.push(exsite);
                     }
                     await this._execTask(true);
-                    this._doSlot('phase-start', { pidx: startIdx ^ 1, hidxs: allHidxs(players[startIdx ^ 1].heros, { isAll: true }) });
+                    this._doSlot('phase-start', { pidx: startIdx ^ 1, hidxs: allHidxs(players[startIdx ^ 1].heros, { isAll: true }), isQuickAction: true });
                     await this._execTask(true);
-                    this._doStatus(startIdx ^ 1, [1, 4], 'phase-start', { intvl: [100, 500, 1000, 100] });
+                    this._doStatus(startIdx ^ 1, [1, 4], 'phase-start', { intvl: [100, 500, 1000, 100], isQuickAction: 2 });
                     await this._execTask(true);
                     this._doSummon(startIdx ^ 1, 'phase-start');
                     await this._execTask(true);
-                    const { exchangeSite: ecs2 } = this._doSite(startIdx ^ 1, 'phase-start', { firstPlayer: startIdx });
+                    const { exchangeSite: ecs2 } = this._doSite(startIdx ^ 1, 'phase-start', { firstPlayer: startIdx, isQuickAction: true });
                     this.exchangeSite.push(...ecs2);
                     for (const [exsite, pidx] of ecs2) {
                         this.players[pidx].site.push(exsite);
@@ -914,8 +914,8 @@ export default class GeniusInvokationClient {
             await this._sendTip('结束阶段');
             setTimeout(async () => {
                 await this._wait(() => this.taskQueue.isTaskEmpty() && this.actionInfo == '');
-                await this._doSkill('phase-end', { pidx: startIdx });
-                await this._execTask(true); // todo 改造doSkill4为task形式
+                this._doSkill('phase-end', { pidx: startIdx });
+                await this._execTask(true);
                 this._doSlot('phase-end', { pidx: startIdx, hidxs: allHidxs(players[startIdx].heros, { isAll: true }) });
                 await this._execTask(true);
                 this._doStatus(startIdx, [1, 3, 9], 'phase-end', { intvl: [100, 500, 1000, 100], hidxs: allHidxs(players[startIdx].heros) });
@@ -924,8 +924,8 @@ export default class GeniusInvokationClient {
                 await this._execTask(true);
                 this._doSite(startIdx, 'phase-end');
                 await this._execTask(true);
-                await this._doSkill('phase-end', { pidx: startIdx ^ 1 });
-                await this._execTask(true); // todo 改造doSkill4为task形式
+                this._doSkill('phase-end', { pidx: startIdx ^ 1 });
+                await this._execTask(true);
                 this._doSlot('phase-end', { pidx: startIdx ^ 1, hidxs: allHidxs(players[startIdx ^ 1].heros, { isAll: true }) });
                 await this._execTask(true);
                 this._doStatus(startIdx ^ 1, [1, 3, 9], 'phase-end', { intvl: [100, 500, 1000, 100], hidxs: allHidxs(players[startIdx ^ 1].heros) });
@@ -1027,7 +1027,7 @@ export default class GeniusInvokationClient {
                 }
             }, 10);
         }
-        if (actionAfter?.[0] == this.playerIdx) { // 我方执行任意行动后
+        if (actionAfter?.[0] == this.playerIdx && dieChangeBack == undefined && this._hasNotDieChange()) { // 我方执行任意行动后
             if (isUseSkill) await this._delay(2300);
             let isTriggered = this._doSkill('action-after').isTriggered;
             this._doStatus(this.playerIdx, [1, 4], 'status-destroy', { intvl: [100, 500, 1000, 100], isOnlyFront: true, isQuickAction: isCdt(actionAfter?.[1] == 1, 2) });
@@ -1047,7 +1047,7 @@ export default class GeniusInvokationClient {
                 });
             }
         }
-        if (actionStart == this.playerIdx && ![PHASE.DIE_CHANGE, PHASE.DIE_CHANGE_END].includes(this.player.phase)) { // 我方选择行动前
+        if (actionStart == this.playerIdx && dieChangeBack == undefined && this._hasNotDieChange()) { // 我方选择行动前
             this._doStatus(this.playerIdx, [1, 4], 'action-start', { intvl: [100, 500, 1000, 100], isOnlyFront: true });
             await this._execTask();
             this._doSummon(this.playerIdx, 'action-start');
@@ -1759,6 +1759,7 @@ export default class GeniusInvokationClient {
                 }
                 const res = allHeal - alldamage;
                 const hero = this.players[Math.floor(i / (this.playerIdx == 0 ? ahlen : ehlen)) ^ 1].heros[i % (this.playerIdx == 0 ? ehlen : ahlen)];
+                if (hero.hp <= 0) return undefined;
                 if (res + hero.hp <= 0) {
                     if (hero.talentSlot?.subType.includes(-4)) {
                         const reviveSlot = cardsTotal(hero.talentSlot.id)
@@ -2948,6 +2949,7 @@ export default class GeniusInvokationClient {
                     minusDiceSkill,
                     isSkill,
                     tround,
+                    force: isExecTask,
                 });
                 if (this._hasNotTrigger(summonres.trigger, state)) continue;
                 if (summonres.isNotAddTask) {
@@ -2978,9 +2980,11 @@ export default class GeniusInvokationClient {
                 if (isExec) {
                     if (!isExecTask) {
                         const args = clone(Array.from(arguments));
-                        args[2] = clone(args[2]) ?? {};
-                        args[2].isExecTask = true;
-                        args[2].tsummon = [summon];
+                        args[2] = {
+                            ...(clone(args[2]) ?? {}),
+                            isExecTask: true,
+                            tsummon: [summon],
+                        };
                         this.taskQueue.addTask('summon-' + summon.name, args, isUnshift);
                     } else {
                         let aSummon = csummon ?? [...p.summon];
@@ -3211,9 +3215,11 @@ export default class GeniusInvokationClient {
                     } else {
                         if (!isExecTask) {
                             const args = clone(Array.from(arguments));
-                            args[2] = clone(args[2]) ?? {};
-                            args[2].isExecTask = true;
-                            args[2].csite = [site];
+                            args[2] = {
+                                ...(clone(args[2]) ?? {}),
+                                isExecTask: true,
+                                csite: [site]
+                            };
                             this.taskQueue.addTask('site-' + site.card.name + site.sid, args);
                         } else {
                             const curIntvl = [...intvl];
@@ -3379,8 +3385,10 @@ export default class GeniusInvokationClient {
                         if (stsres.damage || stsres.pendamage) tintvl[2] = 2000;
                         if (!taskMark) {
                             const args = clone(Array.from(arguments));
-                            args[3] = clone(args[3]) ?? {};
-                            args[3].taskMark = [hidx, group, sts.id];
+                            args[3] = {
+                                ...(clone(args[3]) ?? {}),
+                                taskMark: [hidx, group, sts.id],
+                            };
                             this.taskQueue.addTask('status-' + sts.name, args, isUnshift);
                         } else {
                             const statusHandle = [
@@ -3449,10 +3457,11 @@ export default class GeniusInvokationClient {
     }
     /**
      * 是否有阵亡
+     * @param players 当前玩家组
      * @returns 是否有阵亡
      */
-    _hasNotDieChange() {
-        return this.players.findIndex(p => [PHASE.DIE_CHANGE, PHASE.DIE_CHANGE_END].includes(p.phase)) == -1;
+    _hasNotDieChange(players: Player[] = this.players) {
+        return players.every(p => ![PHASE.DIE_CHANGE, PHASE.DIE_CHANGE_END].includes(p.phase));
     }
     /**
      * 进行额外的攻击
@@ -3588,7 +3597,7 @@ export default class GeniusInvokationClient {
                     const skillres = skill.handle({ hero, skidx, getdmg: getdmg[hidx], trigger, heros, heal, discards });
                     if (this._hasNotTrigger(skillres.trigger, trigger)) continue;
                     isTriggered = true;
-                    if (skillres.isQuickAction) isQuickAction ||= true;
+                    isQuickAction ||= !!skillres.isQuickAction;
                     cmds.push(...(skillres.cmds ?? []));
                     cmds.push({ cmd: 'getStatus', status: skillres.status, hidxs: [hidx] });
                     cmds.push({ cmd: 'getStatus', status: skillres.statusOppo, isOppo: true });
@@ -3597,11 +3606,13 @@ export default class GeniusInvokationClient {
                         if (!skillres.isNotAddTask) {
                             if (!isExecTask) {
                                 const args = clone(Array.from(arguments));
-                                args[1] = clone(args[1]) ?? {};
-                                args[1].isExecTask = true;
-                                args[1].cskill = [hidx, skidx];
-                                args[1].heros = undefined;
-                                args[1].eheros = undefined;
+                                args[1] = {
+                                    ...(clone(args[1]) ?? {}),
+                                    isExecTask: true,
+                                    cskill: [hidx, skidx],
+                                    heros: undefined,
+                                    eheros: undefined,
+                                };
                                 this.taskQueue.addTask('skill-' + skill.name, args);
                             } else {
                                 const intvl = [0, 1000, 0, 0];
@@ -3613,7 +3624,7 @@ export default class GeniusInvokationClient {
                                         this._doCmds(cmds, { pidx, heros, eheros, isExec, isEffectHero: true });
                                         this.socket.emit('sendToServer', {
                                             cpidx: pidx,
-                                            currSkill: { type: -2, skidx, hidx, isGameStart: trigger == 'game-start' },
+                                            currSkill: { type: -2, skidx, hidx },
                                             cmds,
                                             heros,
                                             eheros,
@@ -3755,11 +3766,13 @@ export default class GeniusInvokationClient {
                     if (isExec && (cmds.length > 0 || isAddTask)) {
                         if (!taskMark) {
                             const args = clone(Array.from(arguments));
-                            args[1] = clone(args[1]) ?? {};
-                            args[1].pidx = pidx;
-                            args[1].taskMark = [hidx, slot.subType[0]];
-                            args[1].heros = undefined;
-                            args[1].eheros = undefined;
+                            args[1] = {
+                                ...(clone(args[1]) ?? {}),
+                                pidx,
+                                taskMark: [hidx, slot.subType[0]],
+                                heros: undefined,
+                                eheros: undefined,
+                            };
                             this.taskQueue.addTask('slot-' + slot.name, args, isUnshift);
                         } else {
                             const slotHandle = [
@@ -4332,7 +4345,6 @@ export default class GeniusInvokationClient {
             let isDieChangeBack = false;
             while (this._hasNotDieChange() && !this.taskQueue.isTaskEmpty() && this.taskQueue.isExecuting) {
                 await this._wait(() => this.actionInfo == '', { delay: 0, freq: 100, isImmediate: false });
-                // if (this.taskQueue.isTaskEmpty()) break;
                 const [taskType, args] = this.taskQueue.getTask() ?? [];
                 if (taskType == undefined || args == undefined) break;
                 let task: [(() => void)[], number[]] | undefined;
@@ -4349,7 +4361,10 @@ export default class GeniusInvokationClient {
                         break;
                     }
                     await this._delay(500);
-                } else await this.taskQueue.execTask(...(task ?? [[], []]));
+                } else {
+                    if (task == undefined) continue;
+                    await this.taskQueue.execTask(...task);
+                }
                 if (isDieChangeBack) isDieChangeBack = false;
                 if (isWait) {
                     if (!this._hasNotDieChange()) isDieChangeBack = true;
@@ -4460,7 +4475,7 @@ class TaskQueue {
     addStatusAtk(ststask: StatusTask[], isUnshift = false) {
         if (ststask.length == 0) return;
         for (const t of ststask) {
-            const atkname = 'statusAtk-' + heroStatus(t.id).name + 'p' + t.pidx + (t.type == 0 ? 'h' + t.hidx : '');
+            const atkname = 'statusAtk-' + heroStatus(t.id).name + 'p' + t.pidx + 'h' + t.hidx;
             if (this.queue.some(([tpn]) => tpn == atkname)) {
                 console.warn('重复status:', atkname);
                 continue;

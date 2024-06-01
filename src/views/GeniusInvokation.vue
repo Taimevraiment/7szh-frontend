@@ -441,22 +441,22 @@ const devOps = (cidx = 0) => {
       const isAdd = op[1] == '+';
       const [el = 0, hidx = heros.findIndex(h => h.isFront)] = op.slice(isAdd ? 2 : 1).split(/[:：]+/).map(h);
       if (!isAdd || el == 0) {
-        if (hidx > 2) heros.forEach(h => (h.attachElement = []));
+        if (hidx >= heros.length) heros.forEach(h => (h.attachElement = []));
         else heros[hidx].attachElement = [];
       }
       if (el > 0) {
-        if (hidx > 2) heros.forEach(h => h.attachElement.push(el));
+        if (hidx >= heros.length) heros.forEach(h => h.attachElement.push(el));
         else heros[hidx].attachElement.push(el);
       }
       flag.add('setEl');
     } else if (op.startsWith('%')) { // 血量
       const [hp = 10, hidx = heros.findIndex(h => h.isFront)] = op.slice(1).split(/[:：]+/).map(h);
-      if (hidx > 2) heros.forEach(h => (h.hp = hp));
+      if (hidx >= heros.length) heros.forEach(h => h.hp = hp);
       else heros[hidx].hp = hp;
       flag.add('setHp');
     } else if (op.startsWith('@')) { // 充能
       const [cnt = 3, hidx = heros.findIndex(h => h.isFront)] = op.slice(1).split(/[:：]+/).map(h);
-      const { heros: nheros } = client.value._doCmds([{ cmd: 'getEnergy', cnt, hidxs: hidx > 2 ? [0, 1, 2] : [hidx] }], { heros });
+      const { heros: nheros } = client.value._doCmds([{ cmd: 'getEnergy', cnt, hidxs: hidx > 2 ? new Array(heros.length).fill(0).map((_, i) => i) : [hidx] }], { heros });
       if (nheros) heros = nheros;
       flag.add('setEnergy');
     } else if (op.startsWith('#')) { // 骰子
@@ -490,11 +490,16 @@ const devOps = (cidx = 0) => {
     } else if (op.startsWith('=')) { // 状态
       const [stsid = 0, hidx = heros.findIndex(h => h.isFront)] = op.slice(1).split(/[:：]+/).map(h);
       if (stsid < 2000 || stsid > 3000) {
-        if (stsid < 2000) heros[hidx].inStatus = [];
-        if (stsid > 3000 || stsid == 0) heros[hidx].outStatus = [];
+        if (stsid < 2000) {
+          if (hidx >= heros.length) heros.forEach(h => h.inStatus = []);
+          else heros[hidx].inStatus = [];
+        }
+        if (stsid > 3000 || stsid == 0) {
+          heros[heros.findIndex(h => h.isFront)].outStatus = [];
+        }
       } else {
         const sts = heroStatus(stsid);
-        const cmds: Cmds[] = [{ cmd: 'getStatus', status: [sts], hidxs: [hidx] }];
+        const cmds: Cmds[] = [{ cmd: 'getStatus', status: [sts], hidxs: hidx > 2 ? new Array(heros.length).fill(0).map((_, i) => i) : [hidx] }];
         client.value._doCmds(cmds, { heros, isEffectHero: true });
       }
       flag.add('setStatus');

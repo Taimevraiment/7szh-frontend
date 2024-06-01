@@ -559,6 +559,7 @@ type SummonHandleEvent = {
     minusDiceCard?: number,
     minusDiceSkill?: number[][],
     tround?: number,
+    force?: boolean,
 }
 
 type SummonHandleRes = {

@@ -213,9 +213,9 @@ const summonTotal: SummoneeObj = {
     3019: () => new GISummonee(3019, '剑影·孤风', '【结束阶段：】造成{dmg}点[风元素伤害]。；【[可用次数]：{useCnt}】',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/12109492/90767acfd11dc25ae46a333557b3ee2a_4658043205818200753.png',
         2, 2, 0, 1, 5, (summon, event) => {
-            const { trigger = '', heros = [] } = event;
+            const { trigger = '', heros = [], force = false } = event;
             const triggers: Trigger[] = ['phase-end'];
-            if (heros.find(h => h.id == 1781)?.isFront) triggers.push('after-skilltype3')
+            if (heros.find(h => h.id == 1781)?.isFront || force) triggers.push('after-skilltype3')
             return {
                 trigger: triggers,
                 damage: summon.damage,
@@ -231,9 +231,9 @@ const summonTotal: SummoneeObj = {
     3020: () => new GISummonee(3020, '剑影·霜驰', '【结束阶段：】造成{dmg}点[冰元素伤害]。；【[可用次数]：{useCnt}】',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/12109492/3f77ab65d8d940df9b3cf70d96ae0b25_8204101439924542003.png',
         2, 2, 0, 1, 4, (summon, event) => {
-            const { trigger = '', heros = [] } = event;
+            const { trigger = '', heros = [], force = false } = event;
             const triggers: Trigger[] = ['phase-end'];
-            if (heros.find(h => h.id == 1781)?.isFront) triggers.push('after-skilltype3')
+            if (heros.find(h => h.id == 1781)?.isFront || force) triggers.push('after-skilltype3')
             return {
                 trigger: triggers,
                 damage: summon.damage,

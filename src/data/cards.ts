@@ -654,12 +654,14 @@ const allCards: CardObj = {
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/6b1e8983b34f821da73f7a93076a501e_3915605735095366427.png',
         3, 8, 0, [1], 0, 1, (card, event) => {
             const { heros = [], hidxs: [hidx] = [], trigger = '' } = event;
+            const isGetDmg = trigger == 'getdmg' && card.perCnt > 0 && heros[hidx].isFront;
             return {
                 trigger: ['phase-start', 'getdmg'],
+                isAddTask: card.perCnt > 0,
                 execmds: isCdt<Cmds[]>(trigger == 'phase-start', [{ cmd: 'getStatus', status: [heroStatus(2050)] }],
-                    isCdt<Cmds[]>(card.perCnt > 0, [{ cmd: 'getDice', cnt: 1, element: heros[hidx]?.element ?? 0 }])),
+                    isCdt<Cmds[]>(isGetDmg, [{ cmd: 'getDice', cnt: 1, element: heros[hidx]?.element ?? 0 }])),
                 exec: () => {
-                    if (trigger == 'getdmg' && card.perCnt > 0 || heros[hidx]?.isFront) --card.perCnt;
+                    if (isGetDmg) --card.perCnt;
                 }
             }
         }, { pct: 1 }),
@@ -846,6 +848,7 @@ const allCards: CardObj = {
             const isGetCard = card.perCnt > 0 && heros[hidx].isFront;
             return {
                 trigger: ['getdmg'],
+                isAddTask: card.perCnt > 0,
                 cmds: isCdt<Cmds[]>(isGetCard, [{ cmd: 'getCard', cnt: 1 }]),
                 exec: () => {
                     if (isGetCard) --card.perCnt;
@@ -861,6 +864,7 @@ const allCards: CardObj = {
             const isGetCard = trigger == 'getdmg' && card.perCnt > 0 && heros[hidxs[0]].isFront;
             return {
                 trigger: ['getdmg', 'phase-end'],
+                isAddTask: card.perCnt > 0,
                 execmds: isCdt<Cmds[]>(isHeal, [{ cmd: 'heal', cnt: 1, hidxs }], isCdt(isGetCard, [{ cmd: 'getCard', cnt: 1 }])),
                 exec: () => {
                     if (isGetCard) --card.perCnt;

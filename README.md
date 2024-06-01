@@ -1897,6 +1897,12 @@ constructor(
 
 解释：当前触发轮次，默认为0
 
+##### force
+
+类型：boolean
+
+解释：强制执行
+
 #### SummonHandleRes
 
 ##### trigger

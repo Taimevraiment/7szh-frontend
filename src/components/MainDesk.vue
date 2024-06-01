@@ -121,10 +121,10 @@
           ? `attack${opponent?.tarhidx - player.tarhidx + 2}-${hidx < 3 ? 0 : 1} 0.8s linear` : 'none',
       }" :class="{
         'mobile-hero': isMobile,
-        'my': hidx > 2,
+        'my': hidx >= opponent.heros.length,
         'is-front-oppo': hero?.isFront && player.phase > 3 && opponent?.phase > 3 && hidx < 3,
-        'is-front-my': hero?.isFront && hidx > 2,
-        'active-willhp': canAction && (willHp[(hidx + 3 * playerIdx) % 6] != undefined || hero.skills.some(sk => sk.name == currSkill.name) || willSwitch[(hidx % 3) + (playerIdx ^ (hidx > 2 ? 0 : 1)) * 3]),
+        'is-front-my': hero?.isFront && hidx >= opponent.heros.length,
+        'active-willhp': canAction && (willHp[(hidx + 3 * playerIdx) % 6] != undefined || hero.skills.some(sk => sk.name == currSkill.name) && hidx > 2 || willSwitch[(hidx % 3) + (playerIdx ^ (hidx > 2 ? 0 : 1)) * 3]),
       }" v-for="(hero, hidx) in heros" :key="hidx">
         <div class="hero-img-content" :class="{
           'hero-select': hero.isSelected > 0,
@@ -148,7 +148,8 @@
           :src="getSvgIcon('switch')" />
         <div class="hero-hp" v-if="hero?.hp > 0">
           <img class="hero-hp-bg" src="@@/image/hero-hp-bg.png" />
-          <div class="hero-hp-cnt" :class="{ 'is-change': hpCurcnt[hidx].isChange }">{{ Math.max(0, hero?.hp) }}</div>
+          <div class="hero-hp-cnt" :class="{ 'is-change': hpCurcnt[hidx].isChange }">{{ Math.max(0, hpCurcnt[hidx].val)
+            }}</div>
         </div>
         <div class="hero-energys" v-if="hero?.hp > 0">
           <img v-for="(_, eidx) in hero?.maxEnergy" :key="eidx" class="hero-energy"
@@ -424,8 +425,10 @@ const player = computed<Player>(() => {
       const hidx = +(pi == playerIdx.value) * players[playerIdx.value ^ 1].heros.length + hi;
       if (hpCurcnt.value[hidx].val != h.hp) {
         if (hpCurcnt.value[hidx].sid == h.id) {
-          hpCurcnt.value[hidx] = { sid: h.id, val: h.hp, isChange: true };
-          setTimeout(() => hpCurcnt.value[hidx].isChange = false, 300);
+          setTimeout(() => {
+            hpCurcnt.value[hidx] = { sid: h.id, val: h.hp, isChange: true };
+            setTimeout(() => hpCurcnt.value[hidx].isChange = false, 300);
+          }, 200);
         } else {
           hpCurcnt.value[hidx] = { sid: h.id, val: h.hp, isChange: false };
         }
