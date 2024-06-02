@@ -633,7 +633,6 @@ export default class GeniusInvokationClient {
         this._startTimer(data.currCountdown);
         if (data.taskQueueVal) {
             this.taskQueue.queue = data.taskQueueVal.queue;
-            this.taskQueue.isEndAtk = data.taskQueueVal.isEndAtk;
             this.taskQueue.isExecuting = data.taskQueueVal.isExecuting;
             this.taskQueue.statusAtk = data.taskQueueVal.statusAtk;
         }
@@ -673,7 +672,6 @@ export default class GeniusInvokationClient {
         if (winnerIdx > -1) this.isWin = winnerIdx;
         if (taskQueueVal != undefined) {
             this.taskQueue.queue = taskQueueVal.queue;
-            this.taskQueue.isEndAtk = taskQueueVal.isEndAtk;
             this.taskQueue.isExecuting = taskQueueVal.isExecuting;
             this.taskQueue.statusAtk = taskQueueVal.statusAtk;
             return;
@@ -1441,7 +1439,13 @@ export default class GeniusInvokationClient {
             playerInfo: this.player.playerInfo,
             trigger: `skilltype${skill.type}` as Trigger,
         }) ?? {};
-        if (isExec) skillres.exec?.();
+        skillcmds.push(...(skillres.cmds ?? []));
+        if (isExec) {
+            skillres.exec?.();
+            if (skillcmds.some(({ cmd }) => cmd.startsWith('switch'))) {
+                this.taskQueue.addTask('switch-' + this.playerIdx, [2800]);
+            }
+        }
         if (skill) {
             if (skill.cost[2].val == 0) {
                 aHeros[hidx].energy = Math.min(aHeros[hidx].maxEnergy + 1, aHeros[hidx].energy + 1);
@@ -1565,7 +1569,6 @@ export default class GeniusInvokationClient {
                 etriggers[atkhidx] = [...new Set([...etriggers[atkhidx], ...etriggers2[atkhidx]])];
                 for (let i = 0; i < ahlen; ++i) aWillAttach[i + this.playerIdx * ehlen].push(willAttachs2[i]);
             }
-            skillcmds.push(...(skillres.cmds ?? []));
 
             const afterSkillTrgs = atriggers[hidx].filter(trg => trg.startsWith('skill')).map(v => 'after-' + v) as Trigger[];
             // this._doSlot(afterSkillTrgs, { isExec, heros: aHeros });
@@ -2869,6 +2872,7 @@ export default class GeniusInvokationClient {
                     }
                 }
             }
+            if (res.elrcmds.some(cmds => cmds.some(({ cmd }) => cmd.startsWith('switch-')))) this.taskQueue.addTask('switch-' + pidx, [2800]);
         }
         return res;
     }
@@ -3720,6 +3724,7 @@ export default class GeniusInvokationClient {
                             minusDiceSkill,
                             getdmg,
                             playerInfo: player.playerInfo,
+                            isExecTask: !!taskMark,
                         });
                         if (this._hasNotTrigger(slotres.trigger, trigger)) continue;
                         cmds.push(...(slotres.execmds ?? []));
@@ -3909,14 +3914,14 @@ export default class GeniusInvokationClient {
                     if (cmd == 'switch-before') sdir = -1;
                     else if (cmd == 'switch-after') sdir = 1;
                     const cpidx = pidx ^ +isOppo;
-                    const heros = this.players[cpidx].heros;
-                    const hLen = heros.filter(h => h.hp > 0).length;
+                    const heros = isOppo ? ceheros : cheros;
+                    const hLen = cheros.filter(h => h.hp > 0).length;
                     const livehidxs: number[] = allHidxs(heros);
                     let nhidx = -1;
                     if (sdir == 0) {
-                        nhidx = getNearestHidx(hidxs?.[0] ?? -1, heros);
+                        nhidx = getNearestHidx(hidxs?.[0] ?? -1, cheros);
                     } else {
-                        nhidx = livehidxs[(livehidxs.indexOf((heros.findIndex(h => h.isFront))) + sdir + hLen) % hLen];
+                        nhidx = livehidxs[(livehidxs.indexOf((cheros.findIndex(h => h.isFront))) + sdir + hLen) % hLen];
                     }
                     this.willSwitch[cpidx * ceheros.length + nhidx] = true;
                     if (isOppo) isSwitchOppo = nhidx;
@@ -4336,7 +4341,7 @@ export default class GeniusInvokationClient {
         return this.heroChangeDice = Math.max(0, 1 - minusDiceHero + addDiceHero);
     }
     /**
-     * 执行summon,site
+     * 执行任务
      */
     _execTask(isWait = false) {
         if (this.taskQueue.isExecuting || this.taskQueue.isTaskEmpty() || !this._hasNotDieChange()) return;
@@ -4354,7 +4359,8 @@ export default class GeniusInvokationClient {
                 else if (taskType.startsWith('summon-')) task = this._doSummon(...(args as Parameters<typeof this._doSummon>)).task;
                 else if (taskType.startsWith('slot-')) task = this._doSlot(...(args as Parameters<typeof this._doSlot>)).task;
                 else if (taskType.startsWith('skill-')) task = this._doSkill(...(args as Parameters<typeof this._doSkill>)).task;
-                if (taskType.startsWith('statusAtk-')) {
+                if (taskType.startsWith('switch-')) await this._delay((args as number[])[0]);
+                else if (taskType.startsWith('statusAtk-')) {
                     const isExeced = await this._doStatusAtk(args as StatusTask);
                     if (!isExeced) {
                         this.taskQueue.addStatusAtk([args as StatusTask], true);
@@ -4362,7 +4368,13 @@ export default class GeniusInvokationClient {
                     }
                     await this._delay(500);
                 } else {
-                    if (task == undefined) continue;
+                    if (task == undefined) {
+                        if (this.taskQueue.isTaskEmpty()) this.socket.emit('sendToServer', {
+                            failTask: true,
+                            flag: 'failTask',
+                        });
+                        continue;
+                    }
                     await this.taskQueue.execTask(...task);
                 }
                 if (isDieChangeBack) isDieChangeBack = false;
@@ -4441,6 +4453,7 @@ class TaskQueue {
     statusAtk: number = 0;
     isExecuting: boolean = false;
     isEndAtk: boolean = false;
+    isQuickAction: boolean = false;
     constructor(socket: Socket) {
         this.socket = socket;
     }
@@ -4456,7 +4469,6 @@ class TaskQueue {
                 const isEndAtk = this.isTaskEmpty();
                 await this._delay(funcs[i], intvl[i], isEndAtk);
                 this.isExecuting = true;
-                this.isEndAtk = isEndAtk;
                 this._emit('execTask-step' + i);
             }
             resolve();
@@ -4489,11 +4501,6 @@ class TaskQueue {
     hasStatusAtk() {
         return this.statusAtk > 0;
     }
-    setIsEndAtk(val: boolean) {
-        if (this.isEndAtk == val) return;
-        this.isEndAtk = val;
-        this._emit('setIsEndAtk');
-    }
     setIsExecuting(val: boolean) {
         if (this.isExecuting == val) return;
         this.isExecuting = val;
@@ -4503,7 +4510,6 @@ class TaskQueue {
         this.socket.emit('sendToServer', {
             taskVal: {
                 queue: this.queue,
-                isEndAtk: this.isEndAtk,
                 isExecuting: this.isExecuting,
                 statusAtk: this.statusAtk,
             },

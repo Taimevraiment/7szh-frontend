@@ -653,11 +653,11 @@ const allCards: CardObj = {
     110: new GICard(110, '千岩牢固', '【行动阶段开始时：】为角色附属｢【sts2050】｣。；【角色受到伤害后：】如果所附属角色为｢出战角色｣，则生成1个此角色元素类型的元素骰。(每回合1次)',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/16/183046623/6b1e8983b34f821da73f7a93076a501e_3915605735095366427.png',
         3, 8, 0, [1], 0, 1, (card, event) => {
-            const { heros = [], hidxs: [hidx] = [], trigger = '' } = event;
+            const { heros = [], hidxs: [hidx] = [], trigger = '', isExecTask = false } = event;
             const isGetDmg = trigger == 'getdmg' && card.perCnt > 0 && heros[hidx].isFront;
             return {
                 trigger: ['phase-start', 'getdmg'],
-                isAddTask: card.perCnt > 0,
+                isAddTask: !isExecTask,
                 execmds: isCdt<Cmds[]>(trigger == 'phase-start', [{ cmd: 'getStatus', status: [heroStatus(2050)] }],
                     isCdt<Cmds[]>(isGetDmg, [{ cmd: 'getDice', cnt: 1, element: heros[hidx]?.element ?? 0 }])),
                 exec: () => {

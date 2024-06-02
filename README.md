@@ -330,6 +330,12 @@ constructor(
 
 解释：是否使用装备卡
 
+##### isExecTask
+
+类型：boolean
+
+解释：是否进入执行队列
+
 #### CardHandleRes
 
 ##### site
