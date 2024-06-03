@@ -534,13 +534,16 @@ const summonTotal: SummoneeObj = {
             if (isHeal) triggers.push('skilltype1');
             const skcmds: Cmds[] = [{ cmd: 'heal', cnt: 1, hidxs }];
             const trdcmds: Cmds[] = [];
-            if (hasTround) trdcmds.push({ cmd: 'heal', cnt: 1 });
+            if (hasTround || tround == 1) trdcmds.push({ cmd: 'heal', cnt: 1 });
             return {
                 trigger: triggers,
                 cmds: isCdt(isHeal && !isExec, [...skcmds, ...trdcmds]),
                 tround: isCdt(hasTround, 1),
                 exec: execEvent => {
-                    if (tround == 1) return { cmds: trdcmds }
+                    if (tround == 1) {
+                        --summon.perCnt;
+                        return { cmds: trdcmds }
+                    }
                     if (trigger == 'skilltype1') return { cmds: skcmds }
                     if (trigger == 'phase-end') return phaseEndAtk(execEvent?.summon ?? summon);
                 },

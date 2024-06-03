@@ -461,7 +461,7 @@ const statusTotal: StatusObj = {
             return {
                 trigger: ['skilltype1', 'after-skilltype1'],
                 addDmgType1: 1,
-                damage: isCdt(status.isTalent && trigger == 'after-skilltype1', 1),
+                damage: isCdt(status.isTalent && trigger.endsWith('skilltype1'), 1),
                 element: 2,
                 attachEl: 2,
                 exec: eStatus => {

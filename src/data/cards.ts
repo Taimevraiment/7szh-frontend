@@ -464,14 +464,13 @@ const allCards: CardObj = {
             const trigger: Trigger[] = [];
             if (getdmg[fhidx] > 0) trigger.push('getdmg', 'other-getdmg');
             if (heal[fhidx] > 0) trigger.push('heal');
-            const hero = heros[hidxs[0]];
             return {
                 addDmgType3: 2,
                 trigger,
-                execmds: isCdt<Cmds[]>(card.useCnt >= 2 && hero.energy < hero.maxEnergy, [{ cmd: 'getEnergy', cnt: 1, hidxs }]),
+                execmds: isCdt<Cmds[]>(card.useCnt >= 2, [{ cmd: 'getEnergy', cnt: 1, hidxs }]),
                 isAddTask: true,
                 exec: () => {
-                    if (++card.useCnt >= 3 && hero.energy < hero.maxEnergy) card.useCnt -= 3;
+                    if (++card.useCnt >= 3) card.useCnt -= 3;
                 }
             }
         }, { uct: 0 }),
@@ -1265,7 +1264,10 @@ const allCards: CardObj = {
 
     502: new GICard(502, '换班时间', '【我方下次执行｢切换角色｣行动时：】少花费1个元素骰。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/79683714/c512c490a548f8322503c59c9d87c89a_5960770686347735037.png',
-        0, 8, 2, [], 0, 0, () => ({ status: [heroStatus(2010)] })),
+        0, 8, 2, [], 0, 0, (_card, event) => {
+            const { heros = [] } = event;
+            return { isValid: allHidxs(heros).length > 1, status: [heroStatus(2010)] }
+        }),
 
     503: new GICard(503, '一掷乾坤', '选择任意元素骰【重投】，可重投2次。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/79683714/524d3e5c5e6f3fad28a931abd9c7bb92_2495658906309226331.png',
@@ -1288,11 +1290,17 @@ const allCards: CardObj = {
 
     506: new GICard(506, '交给我吧！', '【我方下次执行｢切换角色｣行动时：】将此次切换视为｢[快速行动]｣而非｢[战斗行动]｣。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/79683714/182f87b4ad80bc18e051098c8d73ba98_7868509334361476394.png',
-        0, 8, 2, [], 0, 0, () => ({ status: [heroStatus(2011)] })),
+        0, 8, 2, [], 0, 0, (_card, event) => {
+            const { heros = [] } = event;
+            return { isValid: allHidxs(heros).length > 1, status: [heroStatus(2011)] }
+        }),
 
     507: new GICard(507, '鹤归之时', '【我方下一次使用技能后：】将下一个我方后台角色切换到场上。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/79683714/4b9215f7e25ed9581698b45f67164395_8716418184979886737.png',
-        1, 8, 2, [], 0, 0, () => ({ status: [heroStatus(2017)] })),
+        1, 8, 2, [], 0, 0, (_card, event) => {
+            const { heros = [] } = event;
+            return { isValid: allHidxs(heros).length > 1, status: [heroStatus(2017)] }
+        }),
 
     508: new GICard(508, '星天之兆', '我方当前出战角色【获得1点[充能]】。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/79683714/e6e557f4dd2762ecb727e14c66bafb57_828613557415004800.png',
@@ -1600,7 +1608,10 @@ const allCards: CardObj = {
 
     571: new GICard(571, '风与自由', '【本回合中，我方角色使用技能后：】将下一个我方后台角色切换到场上。',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/23/1694811/5a34fd4bfa32edfe062f0f6eb76106f4_4397297165227014906.png',
-        0, 8, 2, [-3], 0, 0, () => ({ status: [heroStatus(2056)] })),
+        0, 8, 2, [-3], 0, 0, (_card, event) => {
+            const { heros = [] } = event;
+            return { isValid: allHidxs(heros).length > 1, status: [heroStatus(2056)] }
+        }),
 
     572: new GICard(572, '岩与契约', '【下回合行动阶段开始时：】生成3点[万能元素骰]，并摸1张牌。',
         'https://act-upload.mihoyo.com/ys-obc/2023/05/23/1694811/7ffbf85a7089e25fc48f6a48826e1fa4_183114830191275147.png',

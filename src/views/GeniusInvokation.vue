@@ -927,6 +927,7 @@ body {
   right: 5%;
   display: flex;
   justify-content: space-evenly;
+  z-index: 5;
 }
 
 .btn-group button {

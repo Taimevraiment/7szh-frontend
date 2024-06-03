@@ -234,6 +234,7 @@ export default class GeniusInvokationClient {
             ehcardsCnt: this.opponent.handCards.length,
             esite: this.opponent.site,
             esummons: this.opponent.summon,
+            playerInfo: this.player.playerInfo,
             isExec: false,
             slotUse: type == 0,
         });
@@ -1010,7 +1011,7 @@ export default class GeniusInvokationClient {
             if (isSendActionInfo) this.isShowDmg = true;
         }
         if (isSendActionInfo) this._sendActionInfo(isSendActionInfo);
-        if (dieChangeBack == PHASE.ACTION) { // 对方选完出战角色
+        if (dieChangeBack == PHASE.ACTION_END) { // 对方选完出战角色
             setTimeout(() => this._sendTip(this.player.status == 1 ? '继续你的回合' : '对方继续回合'), 1000);
         }
         if (dieChangeBack != undefined && this.playerIdx == cidx) { // 重新选择完出战角色
@@ -1584,7 +1585,7 @@ export default class GeniusInvokationClient {
         let isSwitchAtk = false;
         const isSwitchSelf = (cmds: Cmds[]) => cmds.some(cmds => cmds.cmd?.includes('switch') && !cmds.isOppo);
         const isSwitchOppo = (cmds: Cmds[]) => cmds.some(cmds => cmds.cmd?.includes('switch') && cmds.isOppo);
-        const calcAtk = (res: any, type: string, stsId: number, ahidx: number, ehidx: number, isSelf = false) => {
+        const calcAtk = (res: any, type: string, stsId: number, ahidx: number, ehidx: number, isSkill = false, isSelf = false) => {
             if (res?.damage == undefined && res?.pendamage == undefined && res?.heal == undefined) return false;
             const nheros = clone(isSelf ? (ebHeros.at(-1) ?? []) : (bHeros.at(-1) ?? []));
             const neheros = clone(isSelf ? (bHeros.at(-1) ?? []) : (ebHeros.at(-1) ?? []));
@@ -1617,7 +1618,7 @@ export default class GeniusInvokationClient {
                 isSelf ? (bSummon.at(-1) ?? []) : (ebSummon.at(-1) ?? []),
                 isSelf ? (ebHeros.at(-1) ?? []) : (bHeros.at(-1) ?? []),
                 isSelf ? (ebSummon.at(-1) ?? []) : (bSummon.at(-1) ?? []),
-                { isExec: false, pidx: this.playerIdx ^ +isSelf }
+                { isExec: false, pidx: this.playerIdx ^ +isSelf, skidx: isCdt(isSkill, -2) }
             );
             const { isSwitch: csw = -1, isSwitchOppo: cswo = -1 } = this._doCmds(elrcmds3[0], { isExec: false, pidx: this.playerIdx ^ +isSelf, isAction: true });
             if (cswo == -1 && type == 'die') return true;
@@ -1689,7 +1690,7 @@ export default class GeniusInvokationClient {
                         }
                         const dmg = new Array(ahlen + ehlen).fill(0).map((_, di) => bWillDamages.reduce((a, b) => a + b[di][0] + b[di][1], 0));
                         const willKill = isSelf ? dmg[this.playerIdx * ahlen + ehidx] >= eaHeros[ehidx].hp : dmg[(this.playerIdx ^ 1) * ehlen + ahidx] >= aHeros[ahidx].hp;
-                        if (calcAtk(stsres, willKill ? 'die' : (['in', 'out'][stype] + 'Status'), sts.id, ahidx, ehidx, !(isSelfAtk ^ isSelf))) continue;
+                        if (calcAtk(stsres, willKill ? 'die' : (['in', 'out'][stype] + 'Status'), sts.id, ahidx, ehidx, state.includes('skill'), !(isSelfAtk ^ isSelf))) continue;
                         if (stsres.heal) {
                             let willheals = new Array(ahlen + ehlen).fill(-1);
                             const whidx = sidx > -1 ? isSelf ? ahidx : ehidx : this.player.heros.findIndex(h => h.isSelected);
@@ -1724,7 +1725,7 @@ export default class GeniusInvokationClient {
                 ([`after-skilltype${skill.type}`, `after-skill`] as Trigger[]).forEach(trg => {
                     const smnres = newSummonee(smn.id).handle(smn, { heros: bHeros.at(-1) ?? [], trigger: trg, hcard: curCard });
                     if (smnres?.trigger?.includes(trg)) {
-                        calcAtk(smnres, 'summon', smn.id, aswhidx, eswhidx);
+                        calcAtk(smnres, 'summon', smn.id, aswhidx, eswhidx, true);
                         this._doSummon(this.playerIdx, trg, { csummon: [smn], isExec });
                     }
                 });
@@ -2346,7 +2347,7 @@ export default class GeniusInvokationClient {
      * @param summonOppo 攻击方召唤物
      * @param options isAttach 是否为自己附着元素, isSummon 召唤物攻击id, pidx 发起攻击的玩家idx, isExec 是否执行
      *                isChargedAtk 是否为重击, isWind 是否为扩散伤害, isFallAtk 是否为下落攻击, isReadySkill 是否为准备技能, willheals 回血,
-     *                elrcmds 命令执行, atriggers 攻击者触发时机, etriggers 受击者触发时机, sidx 技能idx, sktype 技能类型, isWindExec 扩散伤害是否执行,
+     *                elrcmds 命令执行, atriggers 攻击者触发时机, etriggers 受击者触发时机, skidx 技能idx, sktype 技能类型, isWindExec 扩散伤害是否执行,
      *                usedDice 使用的骰子, dmgElements: 本次伤害元素, minusDiceSkill 使用技能减骰子, isSelf 是否为对自身攻击(目前仅用于statusAtk)
      * @param willAttachs 所有角色将要附着的元素
      * @param elTips 元素反应提示 
@@ -3041,7 +3042,7 @@ export default class GeniusInvokationClient {
                                                     eFrontIdx,
                                                     isOppo ? aheros : eheros, isOppo ? aSummon : esummon,
                                                     isOppo ? eheros : aheros, isOppo ? esummon : aSummon,
-                                                    { pidx: pidx ^ +isOppo, isSummon: summon.id, elTips: aElTips }
+                                                    { pidx: pidx ^ +isOppo, isSummon: summon.id, elTips: aElTips, skidx: isCdt(isSkill > -1, -2) }
                                                 );
                                             if (!willDamage) willDamage = new Array(aheros.length + eheros.length).fill(0).map(() => [-1, 0]);
                                             willDamage.forEach((wdmg, wdci) => {
@@ -3511,7 +3512,7 @@ export default class GeniusInvokationClient {
                     isSelf ? aSummon : eSummon,
                     isSelf ? eheros : aheros,
                     isSelf ? eSummon : aSummon,
-                    { pidx: pidx ^ isSelf, isSelf }
+                    { pidx: pidx ^ isSelf, isSelf, skidx: isCdt(trigger.includes('skill'), -2) }
                 );
             aheros = isSelf ? eheros1 : aheros1;
             eheros = isSelf ? aheros1 : eheros1;
@@ -3909,25 +3910,26 @@ export default class GeniusInvokationClient {
                 this.useSkill(cnt, { isOnlyRead: !isExec, isCard, isSwitch, isReadySkill });
             } else if (cmd.startsWith('switch-')) {
                 if (isSwitch == -1) isSwitch = hidxs?.[0] ?? -1;
+                let nhidx = -1;
+                let sdir = 0;
+                if (cmd == 'switch-before') sdir = -1;
+                else if (cmd == 'switch-after') sdir = 1;
+                const cpidx = pidx ^ +isOppo;
+                const heros = isOppo ? ceheros : cheros;
+                const hLen = heros.filter(h => h.hp > 0).length;
+                const livehidxs: number[] = allHidxs(heros);
+                if (sdir == 0) {
+                    nhidx = getNearestHidx(hidxs?.[0] ?? -1, heros);
+                } else {
+                    nhidx = livehidxs[(livehidxs.indexOf((heros.findIndex(h => h.isFront))) + sdir + hLen) % hLen];
+                }
                 if (!isExec) {
-                    let sdir = 0;
-                    if (cmd == 'switch-before') sdir = -1;
-                    else if (cmd == 'switch-after') sdir = 1;
-                    const cpidx = pidx ^ +isOppo;
-                    const heros = isOppo ? ceheros : cheros;
-                    const hLen = cheros.filter(h => h.hp > 0).length;
-                    const livehidxs: number[] = allHidxs(heros);
-                    let nhidx = -1;
-                    if (sdir == 0) {
-                        nhidx = getNearestHidx(hidxs?.[0] ?? -1, cheros);
-                    } else {
-                        nhidx = livehidxs[(livehidxs.indexOf((cheros.findIndex(h => h.isFront))) + sdir + hLen) % hLen];
-                    }
                     this.willSwitch[cpidx * ceheros.length + nhidx] = true;
                     if (isOppo) isSwitchOppo = nhidx;
                     else if (isSwitch == -1) isSwitch = nhidx;
                     else if (!cmds.some(cmds => cmds.cmd == 'useSkill')) this.useSkill(-1, { isOnlyRead: true, otriggers: 'change-from' });
                 }
+                if (nhidx > -1) cmds[i].hidxs = [nhidx];
             } else if (['getCard', 'addCard'].includes(cmd)) {
                 if (card) {
                     const cards = Array.isArray(card) ? card : new Array(cnt).fill(0).map(() => clone(card));
@@ -4359,20 +4361,20 @@ export default class GeniusInvokationClient {
                 else if (taskType.startsWith('summon-')) task = this._doSummon(...(args as Parameters<typeof this._doSummon>)).task;
                 else if (taskType.startsWith('slot-')) task = this._doSlot(...(args as Parameters<typeof this._doSlot>)).task;
                 else if (taskType.startsWith('skill-')) task = this._doSkill(...(args as Parameters<typeof this._doSkill>)).task;
-                if (taskType.startsWith('switch-')) await this._delay((args as number[])[0]);
+                if (taskType.startsWith('switch-')) {
+                    await this._delay((args as number[])[0]);
+                    if (this.taskQueue.isTaskEmpty()) this.socket.emit('sendToServer', { failTask: true, flag: 'failTask' });
+                }
                 else if (taskType.startsWith('statusAtk-')) {
+                    await this._delay(300);
                     const isExeced = await this._doStatusAtk(args as StatusTask);
                     if (!isExeced) {
                         this.taskQueue.addStatusAtk([args as StatusTask], true);
                         break;
                     }
-                    await this._delay(500);
                 } else {
                     if (task == undefined) {
-                        if (this.taskQueue.isTaskEmpty()) this.socket.emit('sendToServer', {
-                            failTask: true,
-                            flag: 'failTask',
-                        });
+                        if (this.taskQueue.isTaskEmpty()) this.socket.emit('sendToServer', { failTask: true, flag: 'failTask' });
                         continue;
                     }
                     await this.taskQueue.execTask(...task);

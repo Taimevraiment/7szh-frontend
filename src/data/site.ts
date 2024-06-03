@@ -711,17 +711,18 @@ const siteTotal: SiteObj = {
     }),
     // 梅洛彼得堡
     4047: (cardId: number) => new GISite(4047, cardId, 0, 0, 2, (site, event = {}) => {
-        const { hidxs = [], getdmg = [], heal = [], trigger = '' } = event;
+        const { hidxs = [], getdmg = [], heal = [], eheros = [], trigger = '' } = event;
         const triggers: Trigger[] = [];
         if (trigger == 'getdmg' && getdmg[hidxs[0]] > 0 && site.cnt < 4) triggers.push('getdmg');
         if (trigger == 'heal' && heal[hidxs[0]] > 0 && site.cnt < 4) triggers.push('heal');
-        if (site.cnt >= 4) triggers.push('phase-start');
+        const hasSts2174 = eheros.flatMap(h => h.outStatus).some(ost => ost.id == 2174);
+        if (site.cnt >= 4 && !hasSts2174) triggers.push('phase-start');
         const isAdd = triggers.some(tr => ['getdmg', 'heal'].includes(tr));
         return {
             trigger: triggers,
             siteCnt: isCdt(isAdd, 1),
             exec: () => {
-                if (trigger == 'phase-start' && site.cnt >= 4) {
+                if (trigger == 'phase-start') {
                     site.cnt -= 4;
                     return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2174)], isOppo: true }], isDestroy: false }
                 }
