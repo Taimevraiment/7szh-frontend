@@ -1601,6 +1601,7 @@ const allCards: CardObj = {
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/75833613/011610bb3aedb5dddfa1db1322c0fd60_7383120485374723900.png',
         2, 8, 2, [-3], 0, 0, (_card, event) => {
             const { summons = [] } = event;
+            if (summons.length == 4) return { isValid: false }
             const smnIds = [3010, 3011, 3012, 3013].filter(sid => !summons.some(smn => smn.id === sid));
             return { summon: [newSummonee(smnIds[Math.floor(Math.random() * smnIds.length)])] }
         },
@@ -2176,7 +2177,7 @@ const allCards: CardObj = {
 
     753: new GICard(753, '起死回骸', '{action}；装备有此牌的【{hro}】使用【{ski}】时，复苏我方所有倒下角色，并治疗其2点。(整场牌局限制2次)',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/08/12/258999284/d5ef496771a846af08ec05fff036bf17_8628795343837772161.png',
-        4, 4, 0, [6, 7], 1008, 2, undefined, { pct: 2, energy: 3 }),
+        4, 4, 0, [6, 7], 1008, 2, undefined, { pct: 2, energy: 3, isResetPct: false }),
 
     754: new GICard(754, '神性之陨', '{action}；装备有此牌的【{hro}】在场时，如果我方场上存在【smn3040】，则我方角色进行[下落攻击]时造成的伤害+1。',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/08/12/82503813/d10a709aa03d497521636f9ef39ee531_3239361065263302475.png',
@@ -2541,7 +2542,13 @@ const allCards: CardObj = {
 
     907: new GICard(907, '唤醒眷属', '【打出此牌或[舍弃]此牌时：】召唤一个独立的【smn3063】。',
         '/image/crd907.png',
-        2, 7, 2, [], 0, 0, () => ({ trigger: ['discard'], summon: [newSummonee(3063)] })),
+        2, 7, 2, [], 0, 0, (_card, event) => {
+            const { summons = [] } = event;
+            if (summons.length == 4) return { isValid: false }
+            let smnid = 3063;
+            while (summons.some(smn => smn.id == smnid)) ++smnid;
+            return { trigger: ['discard'], summon: [newSummonee(smnid)] }
+        }),
 
     908: new GICard(908, '禁忌知识', '无法使用此牌进行元素调和，且每回合最多只能打出1张｢禁忌知识｣。；对我方出战角色造成1点[穿透伤害]，摸1张牌。',
         '/image/crd908.png',

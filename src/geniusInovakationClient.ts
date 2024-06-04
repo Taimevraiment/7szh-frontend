@@ -1099,7 +1099,7 @@ export default class GeniusInvokationClient {
                 if (hi != this.player.hidx) {
                     if (hi == hidx) h.isSelected = 1;
                     else h.isSelected = 0;
-                    h.canSelect = true;
+                    if (h.hp > 0) h.canSelect = true;
                 }
             });
             this.modalInfo = { ...NULL_MODAL };
@@ -2928,7 +2928,7 @@ export default class GeniusInvokationClient {
         const states: Trigger[] = [];
         if (typeof ostate == 'string') states.push(ostate);
         else states.push(...ostate);
-        const { intvl = [100, 700, 2000, 200], isUnshift = false, csummon, isExec = true, isDmg = false, isChargedAtk = false,
+        const { intvl = [100, 100, 1500, 100], isUnshift = false, csummon, isExec = true, isDmg = false, isChargedAtk = false,
             hidx = this.players[pidx].hidx, isFallAtk = false, hcard, isExecTask = false, isSkill = -1, tsummon,
             players = this.players, heros = players[pidx].heros, eheros = players[pidx ^ 1].heros, tround = 0 } = options;
         let { minusDiceSkill } = options;
@@ -4570,6 +4570,7 @@ const NULL_PLAYER: Player = {
         reconcileCnt: 0,
         discardIds: [],
         initCardIds: [],
+        isKillCurRound: false,
     },
 };
 

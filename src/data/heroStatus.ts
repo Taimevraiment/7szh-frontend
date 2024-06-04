@@ -599,11 +599,18 @@ const statusTotal: StatusObj = {
         }),
 
     2054: () => new GIStatus(2054, '自由的新风(生效中)', '【本回合中，轮到我方行动期间有对方角色被击倒时：】本次行动结束后，我方可以再连续行动一次。；【[可用次数]：{useCnt}】',
-        'buff3', 1, [4, 10], 1, 0, 1, status => ({
-            trigger: ['kill'],
-            isQuickAction: true,
-            exec: () => { --status.useCnt },
-        })),
+        'buff3', 1, [4, 10], 1, 0, 1, (status, event = {}) => {
+            const { card, playerInfo: { isKillCurRound = false } = {}, trigger = '' } = event;
+            const triggers: Trigger[] = ['kill', 'skill', 'change-from'];
+            if (card?.subType.includes(7)) triggers.push('card');
+            return {
+                trigger: triggers,
+                isQuickAction: true,
+                exec: (_eStatus, execEvent = {}) => {
+                    if (!execEvent.isQuickAction) --status.useCnt;
+                },
+            }
+        }),
 
     2055: () => new GIStatus(2055, '旧时庭园(生效中)', '本回合中，我方下次打出｢武器｣或｢圣遗物｣装备牌时少花费2个元素骰。',
         'buff2', 1, [4, 10], 1, 0, 1, (status, event = {}) => {

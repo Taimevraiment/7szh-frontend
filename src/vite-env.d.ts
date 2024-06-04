@@ -257,6 +257,7 @@ type GameInfo = {
     reconcileCnt: number, // 每回合调和次数
     discardIds: number[], // 舍弃卡牌的id
     initCardIds: number[], // 初始手牌id
+    isKillCurRound: boolean, // 本回合是否击倒对方角色
 }
 
 type TrgElRe = 1 | 2 | 3 | 4;

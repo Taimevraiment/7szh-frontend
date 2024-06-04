@@ -2987,3 +2987,9 @@ x取值为 any | water | fire | thunder | ice | wind | rock | grass 对应敌方
 类型：number[]
 
 解释：初始手牌id
+
+## isKillCurRound
+
+类型：boolean
+
+解释：本回合是否击倒对方角色

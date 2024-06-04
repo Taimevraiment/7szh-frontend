@@ -392,14 +392,17 @@ const allHeros: HeroObj = {
             'https://act-upload.mihoyo.com/ys-obc/2023/08/12/258999284/fbf260ac04da9e7eafa3967cd9bed42c_824806426983130530.jpg',
         ], event => {
             const { hero: { talentSlot }, card, heros = [] } = event;
-            const isTalent = !!talentSlot || card?.id == 753;
-            const talent = talentSlot ?? card;
+            const talent = talentSlot ?? isCdt(card?.id == 753, card);
             const hidxs = allHidxs(heros, { isDie: true });
-            const isExecTalent = isTalent && hidxs.length > 0 && talent && talent.useCnt > 0;
-            const cmds = isCdt<Cmds[]>(isExecTalent, [{ cmd: 'revive', cnt: 2, hidxs }]);
-            const heals = isExecTalent ? { heal: 2, hidxs } : {};
-            if (isExecTalent) --talent.useCnt;
-            return { status: [heroStatus(2100)], cmds, ...heals }
+            const isExecTalent = hidxs.length > 0 && talent && talent.perCnt > 0;
+            return {
+                status: [heroStatus(2100)],
+                cmds: isCdt<Cmds[]>(isExecTalent, [{ cmd: 'revive', cnt: 2, hidxs }]),
+                ...(isExecTalent ? { heal: 2, hidxs } : {}),
+                exec: () => {
+                    if (isExecTalent) --talent.perCnt;
+                }
+            }
         })
     ]),
 

@@ -3,7 +3,7 @@
 export const allHidxs = (heros?: Hero[], options: { isDie?: boolean, exclude?: number, isAll?: boolean } = {}): number[] => {
     const { isDie = false, exclude = -1, isAll = false } = options;
     return heros?.map((h, hi) => ({ hi, hp: h.hp }))
-        .filter(v => isAll || ((isDie ? v.hp <= 0 : v.hp > 0) && (exclude == -1 || exclude != v.hi)))
+        .filter(v => isAll || ((isDie ? v.hp <= 0 : v.hp > 0) && exclude != v.hi))
         .map(v => v.hi) ?? [];
 }
 
