@@ -73,6 +73,12 @@ const phaseEndAtk = (summon: Summonee, healHidxs?: number[]): SummonHandleRes =>
     return { cmds }
 }
 
+const crd907summon = (id: number) => {
+    return new GISummonee(id, '增殖生命体', '【结束阶段：】造成{dmg}点[草元素伤害]。；【[可用次数]：{useCnt}】',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/04/258999284/5c6f5f310243aea5eff849b26dd80269_2475050287145431617.png',
+        1, 1, 0, 1, 7);
+}
+
 const summonTotal: SummoneeObj = {
     3000: () => new GISummonee(3000, '', '', '', -1, -1, -1, 0, 0, () => ({})),
 
@@ -835,7 +841,7 @@ const summonTotal: SummoneeObj = {
     3059: (src = '') => new GISummonee(3059, '愤怒的太郎丸', '【结束阶段：】造成{dmg}点[物理伤害]。；【[可用次数]：{useCnt}】', src, 2, 2, 0, 2, 0),
 
     3060: (useCnt = 2) => new GISummonee(3060, '沙龙成员', '【结束阶段：】造成{dmg}点[水元素伤害]。如果我方存在生命值至少为6的角色，则对一位受伤最少的我方角色造成1点[穿透伤害]，然后再造成1点[水元素伤害]。；【[可用次数]：{useCnt}(可叠加，最多叠加到4次)】',
-        '',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/03/258999284/8cfed9e54e85d3bd44fc7e7e3aa9564a_6917287984925848695.png',
         useCnt, 4, 0, 1, 1, (summon, event) => {
             const { tround = 0, heros = [] } = event;
             const hasTround = tround == 0 && heros.some(h => h.hp >= 6);
@@ -852,7 +858,7 @@ const summonTotal: SummoneeObj = {
         }),
 
     3061: (useCnt = 2) => new GISummonee(3061, '众水的歌者', '【结束阶段：】治疗所有我方角色1点。如果我方存在生命值不多于5的角色，则再治疗一位受伤最多的角色1点。；【[可用次数]：{useCnt}(可叠加，最多叠加到4次)】',
-        '',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/03/258999284/e223897c5723dcc6b6ea50fcdf966232_9198406692148038444.png',
         useCnt, 4, 1, 0, 0, (summon, event) => {
             const { tround = 0, heros = [] } = event;
             const hasTround = tround == 0 && heros.some(h => h.hp <= 4);
@@ -869,27 +875,19 @@ const summonTotal: SummoneeObj = {
         }),
 
     3062: (dmg = -1, useCnt = -1) => new GISummonee(3062, '黑色幻影', `【入场时：】获得我方已吞噬卡牌中最高元素骰费用值的｢攻击力｣，获得该费用的已吞噬卡牌数量的[可用次数]。；【结束阶段和我方宣布结束时：】造成${dmg == -1 ? '此牌｢攻击力｣值的' : '{dmg}点'}[雷元素伤害]。；【我方出战角色受到伤害时：】抵消1点伤害，然后此牌[可用次数]-2。${useCnt == -1 ? '' : '；【[可用次数]：{useCnt}】'}`,
-        '',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/04/258999284/71d21daf1689d58b7b86691b894a1d2c_6622906347878958966.png',
         useCnt, useCnt, 0, dmg, 3, summon => ({
             trigger: ['phase-end', 'end-phase'],
             exec: execEvent => phaseEndAtk(execEvent.summon ?? summon),
         }), { stsId: 2212 }),
 
-    3063: () => new GISummonee(3063, '增殖生命体', '【结束阶段：】造成{dmg}点[草元素伤害]。；【[可用次数]：{useCnt}】',
-        '',
-        1, 1, 0, 1, 7),
+    3063: () => crd907summon(3063),
 
-    3064: () => new GISummonee(3064, '增殖生命体', '【结束阶段：】造成{dmg}点[草元素伤害]。；【[可用次数]：{useCnt}】',
-        '',
-        1, 1, 0, 1, 7),
+    3064: () => crd907summon(3064),
 
-    3065: () => new GISummonee(3065, '增殖生命体', '【结束阶段：】造成{dmg}点[草元素伤害]。；【[可用次数]：{useCnt}】',
-        '',
-        1, 1, 0, 1, 7),
+    3065: () => crd907summon(3065),
 
-    3066: () => new GISummonee(3066, '增殖生命体', '【结束阶段：】造成{dmg}点[草元素伤害]。；【[可用次数]：{useCnt}】',
-        '',
-        1, 1, 0, 1, 7),
+    3066: () => crd907summon(3066),
 
 
 }

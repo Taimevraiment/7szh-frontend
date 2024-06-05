@@ -235,7 +235,7 @@ const readySkillTotal: { [key: number]: (...args: any) => Skill } = {
 
     22: () => new GISkill('孤心沙龙', '【芙宁娜】当前处于｢始基力:荒性｣形态，召唤【smn3060】。；(【芙宁娜】处于｢始基力:芒性｣形态时，会改为召唤【smn3061】。)', 2, 0, 3, 1, { rskidx: 22 }, [
         'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/629f7630db6af1831478699dbe6a04e0.png',
-        '',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/03/258999284/d605827c81562212ec685c75f8788b85_3866956682696340528.png',
     ], event => {
         const { hero: { talentSlot }, card } = event;
         const isTalent = !!talentSlot || card?.id == 785;
@@ -398,7 +398,7 @@ const allHeros: HeroObj = {
             return {
                 status: [heroStatus(2100)],
                 cmds: isCdt<Cmds[]>(isExecTalent, [{ cmd: 'revive', cnt: 2, hidxs }]),
-                ...(isExecTalent ? { heal: 2, hidxs } : {}),
+                ...(isExecTalent ? { heal: 1.7, hidxs } : {}),
                 exec: () => {
                     if (isExecTalent) --talent.perCnt;
                 }
@@ -433,15 +433,15 @@ const allHeros: HeroObj = {
     ]),
 
     1011: new GIHero(1011, '莱欧斯利', [5, 11], 10, 4, 4,
-        'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/da22d011cc5cab39a5c7f2068ba5837c.png',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/02/258999284/064e881b99d30a1ce455d16a11768a24_8173906534678189661.png',
         skill1('迅烈倾霜拳'), [
         new GISkill('冰牙突驰', '造成{dmg}点[冰元素伤害]，本角色附属【sts2192】。', 2, 2, 3, 4, {}, [
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/682e824a7cf31c433eabdf8f101592b1.png',
-            '',
+            'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/02/258999284/2996ceb349568c064073978f3c45f419_3333678689971567936.png',
         ], () => ({ status: [heroStatus(2192)] })),
         new GISkill('黑金狼噬', '造成{dmg}点[冰元素伤害]，生成【sts2193】。；【本角色在本回合中受到伤害或治疗每累计到2次时：】此技能少花费1个元素骰(最多少花费2个)。', 3, 2, 3, 4, { ec: 3 }, [
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/bfa34d0f6363c94bbc3e5a2164196028.png',
-            '',
+            'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/02/258999284/1156bc48af506ea88c321bfc3e0de56a_8959649322241374469.png',
         ], event => {
             const { hero: { skills: [, , { perCnt }] }, trigger = '' } = event;
             if (trigger == 'calc') {
@@ -659,11 +659,11 @@ const allHeros: HeroObj = {
         }),
         new GISkill('万众狂欢', '造成{dmg}点[水元素伤害]，生成【sts2194】。', 3, 2, 4, 1, { ec: 2 }, [
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/41d5043a50d5e8617dfa47e1a21aa25c.png',
-            '',
+            'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/03/258999284/808b53862627bda5900f820650997a77_3050208693053163874.png',
         ], () => ({ status: [heroStatus(2194)] })),
         new GISkill('始基力：圣俗杂座', '战斗开始时，生成手牌【crd905】。', 4, 0, 0, 0, {}, [
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/02b8738828b4ce238059cd8d47a56267.png',
-            '',
+            'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/03/258999284/5ee50826cdd9cb5c1d48d55b04f84aa1_187435207931585226.png',
         ], () => ({ trigger: ['game-start'], cmds: [{ cmd: 'getCard', cnt: 1, card: 905 }] })),
     ]),
 
@@ -853,15 +853,15 @@ const allHeros: HeroObj = {
     ]),
 
     1212: new GIHero(1212, '辛焱', 2, 10, 2, 2,
-        'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/12c5268e9ba4ed5ceafdfc2bcbe97888.png',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/03/258999284/2538459953fb12e38da66416bd1db19a_2302423233068754101.png',
         skill1('炎舞'), [
         new GISkill('热情拂扫', '造成{dmg}点[火元素伤害]，随机[舍弃]1张元素骰费用最高的手牌，生成【sts2197】。', 2, 2, 3, 2, {}, [
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/dbd50c015ba92d80ee8c5feab9b1f16d.png',
-            '',
+            'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/03/258999284/32dd71b5685b54f23af58c4afa8cffc7_1218700248488941422.png',
         ], () => ({ cmds: [{ cmd: 'discard', element: 0 }], status: [heroStatus(2197)] })),
         new GISkill('叛逆刮弦', '造成{dmg}点[物理伤害]，对所有敌方后台角色造成2点[穿透伤害]; [舍弃]我方所有手牌，生成【sts2199】。', 3, 3, 3, 2, { ec: 2, de: 0 }, [
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/0f007a2905436bfbbcc0f286889fea82.png',
-            '',
+            'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/03/258999284/6387793092d6e4fbf598834d1c4735b0_3596019311060413612.png',
         ], () => ({ pendamage: 2, status: [heroStatus(2199)], cmds: [{ cmd: 'discard', element: 1 }] }))
     ]),
 
@@ -1329,15 +1329,15 @@ const allHeros: HeroObj = {
     ]),
 
     1507: new GIHero(1507, '云堇', 2, 10, 6, 5,
-        'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/ccaec256d6f4136c2d8530d576c5d640.png',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/03/258999284/1d2e9fbd3e021de0c2e944e9c3dbfab3_8286048443691981221.png',
         skill1('拂云出手'), [
         new GISkill('旋云开相', '生成【sts2198】，本角色附属【sts2200】并[准备技能]：【rsk21】。', 2, 0, 3, 6, {}, [
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/1800fefaf04f62c348cfecf558a0d573.png',
-            '',
+            'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/03/258999284/9653b6a5d3fda17c3e8443962584b311_4509508959084319555.png',
         ], () => ({ status: [heroStatus(2198), heroStatus(2200), heroStatus(2201)] })),
         new GISkill('破嶂见旌仪', '造成{dmg}点[岩元素伤害]，生成3层【sts2198】。', 3, 2, 3, 6, { ec: 2 }, [
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/4fbd00e2cf6f2931fdf7c1d3c3f3d196.png',
-            '',
+            'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/03/258999284/289c56363620f16b7372fc097b9a9883_846777564977909040.png',
         ], () => ({ status: [heroStatus(2198, 3)] }))
     ]),
 
@@ -1473,15 +1473,15 @@ const allHeros: HeroObj = {
     ]),
 
     1608: new GIHero(1608, '卡维', 4, 10, 7, 2,
-        'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/39fdafb9e6602e858e5bd29a03b8927d.png',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/04/258999284/2879f08ce85d5ab6c5b69e8e729923e5_5879182844975848941.png',
         skill1('旋规设矩'), [
         new GISkill('画则巧施', '造成{dmg}点[草元素伤害]，生成【sts2202】。', 2, 2, 3, 7, {}, [
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/1ae339d4c664e477455b738f1bbb52ed.png',
-            '',
+            'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/04/258999284/c16266bb9d15e3d2f72b5c9928d8c3da_4617658453359064497.png',
         ], () => ({ status: [heroStatus(2202)] })),
         new GISkill('繁绘隅穹', '造成{dmg}点[草元素伤害]，本角色附属【sts2203】，生成2层【sts2202】。', 3, 3, 3, 7, { ec: 2 }, [
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/203718fd9317e4c089e8ae572c04e40e.png',
-            '',
+            'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/04/258999284/40b352ac9244264e9eecf3413512fae2_1420990360545160672.png',
         ], () => ({ status: [heroStatus(2203), heroStatus(2202, 2)] }))
     ]),
 
@@ -1617,11 +1617,11 @@ const allHeros: HeroObj = {
     ]),
 
     1724: new GIHero(1724, '吞星之鲸', 0, 5, 1, 0,
-        'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/3547006fa4a27fd5bad186f034d99c25.png',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/04/258999284/17c1739ef970603be767fa88764fc44f_4845015785088476307.png',
         skill1('碎涛旋跃'), [
         new GISkill('迸落星雨', '造成{dmg}点[水元素伤害]，此角色每有3点【无尽食欲】提供的额外最大生命，此伤害+1(最多+5)。然后[舍弃]1张原本元素骰费用最高的手牌。', 2, 1, 3, 1, { expl: ['sts2205'] }, [
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/f5c0f89cf02925ec13e306d11a5f7bd8.png',
-            '',
+            'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/04/258999284/942e3d28310f4395ee7e3f1580268db8_512199522496433076.png',
         ], event => {
             const { hero: { outStatus } } = event;
             return {
@@ -1631,7 +1631,7 @@ const allHeros: HeroObj = {
         }),
         new GISkill('横噬鲸吞', '造成{dmg}点[水元素伤害]，对敌方所有后台角色造成1点[穿透伤害]。召唤【smn3062】。', 3, 1, 3, 1, { ec: 2 }, [
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/347f4286f0891f1b6937c9ac8cf5b1f7.png',
-            '',
+            'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/04/258999284/4a25287ec5707c0cbcdfa997c1621224_1686936517736141335.png',
         ], event => {
             const { hero: { outStatus } } = event;
             const sts2205 = outStatus.find(ost => ost.id == 2205);
@@ -1642,7 +1642,7 @@ const allHeros: HeroObj = {
         }),
         new GISkill('无尽食欲', '战斗开始时，生成【sts2205】。', 4, 0, 0, 0, {}, [
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/a9e29da334dce66803ef9edb13b8e8d9.png',
-            '',
+            'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/04/258999284/66b604a5c6cc6b3ca21c5bee7bee28a5_2353476581760344471.png',
         ], () => ({ trigger: ['game-start', 'revive'], status: [heroStatus(2205)] }))
     ]),
 
@@ -1838,15 +1838,15 @@ const allHeros: HeroObj = {
     ]),
 
     1765: new GIHero(1765, '圣骸毒蝎', [0, 13], 10, 3, 0,
-        'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/6d439106906f4978d8cdaf85cc9a5af5.png',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/04/258999284/379deb8c564c0af89f544ff6bab049d2_839388424690765015.png',
         skill1('蝎爪钳击'), [
         new GISkill('蝎尾锥刺', '造成{dmg}点[雷元素伤害]。；生成1张【crd906】，随机置入我方牌库顶部2张牌之中。', 2, 3, 3, 3, {}, [
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/ba3107753a28bf55c7279482d9b0c9ed.png',
-            '',
+            'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/04/258999284/0e1110651dbff69343c8e40bf3c7e93f_6498390434174190990.png',
         ], () => ({ cmds: [{ cmd: 'addCard', card: 906, cnt: 1, hidxs: [2] }] })),
         new GISkill('雷锥散射', '造成{dmg}点[雷元素伤害]，弃置手牌中最多3张【crd906】，在对方场上生成【sts2206】。', 3, 3, 3, 3, { ec: 2 }, [
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/4d58f950df06a277f43a21dcdfa58eb0.png',
-            '',
+            'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/04/258999284/54dc8816d5fb42528ba84eaefb1a8068_7565040194931804591.png',
         ], event => {
             const { hcards = [] } = event;
             const cnt = Math.min(3, hcards.filter(c => c.id == 906).length);
@@ -1855,7 +1855,7 @@ const allHeros: HeroObj = {
         }),
         new GISkill('不朽亡骸·雷', '回合结束时，生成两张【crd906】，随机置入我方牌库顶部10张牌中。', 4, 0, 0, 0, {}, [
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/f2c9fb8d451bc79e309ce9f397738a39.png',
-            '',
+            'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/04/258999284/02cbaf22d48774e6e7cff5203e9562eb_9127079687708650066.png',
         ], () => ({ trigger: ['phase-end'], cmds: [{ cmd: 'addCard', card: 906, cnt: 2, hidxs: [10] }] }))
     ]),
 
@@ -1906,11 +1906,11 @@ const allHeros: HeroObj = {
     ]),
 
     1783: new GIHero(1783, '圣骸飞蛇', [0, 13], 10, 5, 0,
-        'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/01f446a3d1fca8bf826c8c427d7f87c1.png',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/04/258999284/39bdf909aff15f061d4d9ea3d4c2b2ab_472359532850721936.png',
         skill1('旋尾迅击'), [
         new GISkill('盘绕风引', '造成{dmg}点[风元素伤害]，摸1张【crd906】; 然后，手牌中每有1张【crd906】，摸1张牌(每回合最多摸2张)。', 2, 2, 3, 5, { pct: 2 }, [
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/8c6ea09bfd6308bb23bf32d96d640487.png',
-            '',
+            'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/04/258999284/20afc68783ad98f1da36cc3a5286bee6_5169119727722449200.png',
         ], event => {
             const { hcards = [], hero: { skills: [, skill1] } } = event;
             const cmds: Cmds[] = [{ cmd: 'getCard', cnt: 1, card: 906, isAttach: true }];
@@ -1923,7 +1923,7 @@ const allHeros: HeroObj = {
         }),
         new GISkill('错落风涡', '造成{dmg}点[风元素伤害]，[舍弃]手牌中所有的【crd906】，每[舍弃]2张，此次伤害翻倍1次。', 3, 2, 3, 5, { ec: 2 }, [
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/468894f96582f384ff87859549de0536.png',
-            '',
+            'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/04/258999284/65225a24479d53ed9bbc0200d6786423_1124235468902631200.png',
         ], event => {
             const { hcards = [] } = event;
             const cnt = hcards.filter(c => c.id == 906).length;
@@ -1931,7 +1931,7 @@ const allHeros: HeroObj = {
         }),
         new GISkill('不朽亡骸·风', '战斗开始时，生成6张【crd906】，均匀放入牌库。', 4, 0, 0, 0, {}, [
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/b20cdf60cef51f689592487d6587d353.png',
-            '',
+            'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/04/258999284/3f113b01a3fbab406f2ddb81d9a2a019_675662049327994953.png',
         ], () => ({ trigger: ['game-start'], cmds: [{ cmd: 'addCard', cnt: 6, card: 906, element: 1 }] })),
     ]),
 
@@ -2001,29 +2001,20 @@ const allHeros: HeroObj = {
     ]),
 
     1822: new GIHero(1822, '阿佩普的绿洲守望者', 0, 10, 7, 0,
-        'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/e70809cac9ff0bff359b80173f1ad9b0.png',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/04/258999284/59b3a5744a5e0cef3a742cf97ee1a48e_9222353554920937369.png',
         skill1('失乡重击'), [
         new GISkill('生命流束', '造成{dmg}点[草元素伤害]，摸1张【crd907】，生成1层【sts2209】。', 2, 2, 3, 7, {}, [
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/a2598b6377145054026356571e3494d6.png',
-            '',
+            'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/04/258999284/6b6af66686864e881e180633491577b7_1337053029698647969.png',
         ], () => ({ cmds: [{ cmd: 'getCard', cnt: 1, card: 907, isAttach: true }], status: [heroStatus(2209)] })),
         new GISkill('终景迸落', '造成{dmg}点[草元素伤害]，摸1张【crd907】，生成2层【sts2209】。', 3, 2, 3, 7, { ec: 2 }, [
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/e2b183c009d60ca57023829db15c23fb.png',
-            '',
+            'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/04/258999284/67a564cb356fc0cfddb1f98658d35573_3718187889744663164.png',
         ], () => ({ cmds: [{ cmd: 'getCard', cnt: 1, card: 907, isAttach: true }], status: [heroStatus(2209, 2)] })),
-        new GISkill('增殖感召', '战斗开始时，生成6张【crd907】，随机放入牌库。我方召唤4个【smn3063】后，此角色附属【sts2210】，并获得2点[护盾]。', 4, 0, 0, 0, { expl: ['sts2211'] }, [
+        new GISkill('增殖感召', '战斗开始时，生成6张【crd907】，随机放入牌库。我方召唤4个【smn3063】后，此角色附属【sts2210】，并获得2点[护盾]。', 4, 0, 0, 0, {}, [
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/665265a425ebbddf512f6c93f35e725d.png',
-            '',
-        ], event => {
-            const { card, discards = [], hero: { skills: [, , , { isUsed }] }, trigger = '' } = event;
-            const cmds: Cmds[] = [];
-            if (trigger == 'game-start') {
-                cmds.push({ cmd: 'addCard', cnt: 6, card: 907 });
-            } else if (['card', 'discard'].includes(trigger) && (card?.id == 907 || discards.some(c => c.id == 907)) && isUsed == 4) {
-                cmds.push({ cmd: 'getStatus', status: [heroStatus(2210), heroStatus(2211)] });
-            }
-            return { trigger: ['game-start', 'card', 'discard'], cmds }
-        })
+            'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/04/258999284/d5084bf33845c72c75d6b590a21b3f93_3778267969787494418.png',
+        ], () => ({ trigger: ['game-start'], status: [heroStatus(2216)] }))
     ]),
 
 

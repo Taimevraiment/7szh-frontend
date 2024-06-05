@@ -563,9 +563,11 @@ body {
   flex-direction: row;
   justify-content: center;
   position: absolute;
-  bottom: 130px;
   left: 30%;
   background-color: red;
+  bottom: 95px;
+  font-size: medium;
+  z-index: 5;
 }
 
 .card {
@@ -1024,11 +1026,6 @@ body {
   [class*='player-display'] {
     width: 70px;
     height: 100px;
-  }
-
-  .hand-card {
-    bottom: 95px;
-    font-size: medium;
   }
 
   .card,

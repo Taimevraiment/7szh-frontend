@@ -600,7 +600,8 @@ const statusTotal: StatusObj = {
 
     2054: () => new GIStatus(2054, '自由的新风(生效中)', '【本回合中，轮到我方行动期间有对方角色被击倒时：】本次行动结束后，我方可以再连续行动一次。；【[可用次数]：{useCnt}】',
         'buff3', 1, [4, 10], 1, 0, 1, (status, event = {}) => {
-            const { card, playerInfo: { isKillCurRound = false } = {}, trigger = '' } = event;
+            const { card, playerInfo: { isKillCurRound = false } = {} } = event;
+            if (!isKillCurRound) return;
             const triggers: Trigger[] = ['kill', 'skill', 'change-from'];
             if (card?.subType.includes(7)) triggers.push('card');
             return {
@@ -2127,13 +2128,13 @@ const statusTotal: StatusObj = {
         }, { icbg: STATUS_BG_COLOR[1] }),
 
     2195: () => new GIStatus(2195, '狂欢值', '我方造成的伤害+1。(包括角色引发的扩散伤害)；【[可用次数]：{useCnt}(可叠加，没有上限)】',
-        'buff5', 1, [4, 6], 1, 1000, 1, (status, { trigger } = {}) => ({
+        'https://homdgcat.wiki/homdgcat-res/AvatarSkill/UI_Talent_S_Furina_01.png', 1, [4, 6], 1, 1000, 1, (status, { trigger } = {}) => ({
             trigger: ['dmg', 'dmg-wind'],
-            addDmgCdt: 1,
+            addDmg: 1,
             exec: () => {
                 if (trigger == 'dmg') --status.useCnt
             },
-        })),
+        }), { icbg: STATUS_BG_COLOR[1] }),
 
     2196: () => new GIStatus(2196, '万众瞩目', '【角色进行｢普通攻击｣时：】使角色造成的造成的[物理伤害]变为[水元素伤害]。如果角色处于｢荒｣形态，则治疗我方所有后台角色1点; 如果角色处于｢芒｣形态，则此伤害+2，但是对一位受伤最少的我方角色造成1点[穿透伤害]。；【[可用次数]：{useCnt}】',
         'buff4', 0, [1, 8], 1, 0, -1, (_status, event = {}) => {
@@ -2351,8 +2352,8 @@ const statusTotal: StatusObj = {
             return { restDmg: restDmg - 1 }
         }, { smnId: summonId }),
 
-    2213: () => new GIStatus(2213, '金流监督(生效中)', '目标角色在本回合结束前，下一次｢普通攻击｣少花费1个[无色元素骰]，且造成的伤害+1。',
-        'buff2', 0, [4], 1, 2, 1, (status, event = {}) => {
+    2213: () => new GIStatus(2213, '金流监督(生效中)', '本回合中，角色下一次｢普通攻击｣少花费1个[无色元素骰]，且造成的伤害+1。',
+        'buff5', 0, [4], 1, 2, 1, (status, event = {}) => {
             const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(event, { skilltype1: [0, 1, 0] });
             return {
                 trigger: ['skilltype1'],
@@ -2364,7 +2365,7 @@ const statusTotal: StatusObj = {
             }
         }),
 
-    2214: () => new GIStatus(2214, 'todo赤王陵debuff', '本回合结束前，我方每摸1张牌，就立刻生成1张【crd908】随机地置入我方牌库中。',
+    2214: () => new GIStatus(2214, '赤王陵(生效中)', '直到本回合结束前，所在阵营每摸1张牌，就立刻生成1张【crd908】，随机地置入我方牌库中。',
         'debuff', 1, [4, 10], -1, 0, 1, (_status, event = {}) => {
             const { getcard = 0 } = event;
             return {
@@ -2375,6 +2376,20 @@ const statusTotal: StatusObj = {
         }),
 
     2215: () => oncePerRound(2215, '禁忌知识'),
+
+    2216: () => new GIStatus(2216, 'todo', '我方召唤4个【smn3063】后，【hro1822】附属【sts2210】，并获得2点[护盾]。',
+        'ski1822,2', 1, [9], 0, 4, -1, (status, event = {}) => {
+            const { card, discards = [], heros = [] } = event;
+            if (card?.id != 907 && discards.every(c => c.id != 907) && status.useCnt < 4) return;
+            return {
+                trigger: ['card', 'discard'],
+                exec: () => {
+                    if (++status.useCnt == 4) {
+                        return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2210), heroStatus(2211)] }], hidxs: [heros.findIndex(h => h.id == 1822)] }
+                    }
+                }
+            }
+        }, { icbg: STATUS_BG_COLOR[7] }),
 
 };
 
