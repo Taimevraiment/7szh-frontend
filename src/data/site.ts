@@ -781,12 +781,11 @@ const siteTotal: SiteObj = {
     })),
     // 赤王陵
     4052: (cardId: number) => new GISite(4052, cardId, 0, 0, 2, (site, event = {}) => {
-        const { getcard = 0, trigger = '' } = event;
+        const { getcard = 0 } = event;
         return {
-            trigger: ['phase-start', 'getcard-oppo'],
+            trigger: ['getcard-oppo'],
             exec: () => {
-                if (trigger == 'phase-start') site.cnt += 2;
-                else if (trigger == 'getcard-oppo') site.cnt += getcard;
+                site.cnt += getcard;
                 if (site.cnt < 4) return { isDestroy: false }
                 return {
                     cmds: [

@@ -406,7 +406,7 @@ export default class GeniusInvokationClient {
             }
             aHeros = clone(player.heros);
             const isUseSkill = cardcmds.some(({ cmd }) => cmd == 'useSkill');
-            cardcmds.filter(cmds => ['attach', 'attack'].includes(cmds.cmd)).forEach(cmds => {
+            cardcmds.filter(({ cmd }) => ['attach', 'attack'].includes(cmd)).forEach(cmds => {
                 const { cmd, element = 0, hidxs: chidxs, cnt = 0, isOppo = false } = cmds;
                 // if (!chidxs) cmds.hidxs = [...hidxs];
                 if (cmd == 'attach') {
@@ -938,6 +938,9 @@ export default class GeniusInvokationClient {
                 await this._execTask(true);
                 this._doSite(startIdx ^ 1, 'phase-end');
                 await this._execTask(true);
+                this._doCmds([{ cmd: 'getCard', cnt: 2 }], { pidx: startIdx });
+                this._doCmds([{ cmd: 'getCard', cnt: 2 }], { pidx: startIdx ^ 1 });
+                await this._execTask(true);
                 this._wait(() => !this.taskQueue.isExecuting, { delay: 1100 });
                 // if (this.taskQueue.hasStatusAtk() || this.isSwitchAtking) {
                 // this.isSwitchAtking = true;
@@ -1463,6 +1466,10 @@ export default class GeniusInvokationClient {
         }
         const atriggers: Trigger[][] = new Array(ahlen).fill(0).map(() => []);
         const etriggers: Trigger[][] = new Array(ehlen).fill(0).map(() => []);
+        if (skillcmds.some(({ cmd }) => cmd == 'getCard')) {
+            atriggers[hidx].push('getcard');
+            etriggers[eFrontIdx].push('getcard-oppo');
+        }
         if (sidx > -1) {
             this.isShowChangeHero = 0;
             let mds: number[][] = [];
@@ -1533,7 +1540,7 @@ export default class GeniusInvokationClient {
                 aHeros, aSummon,
                 {
                     isExec, skidx: sidx, sktype: skill.type, isChargedAtk, isFallAtk, isReadySkill, multiDmg: skillres.multiDmgCdt,
-                    usedDice: skill.cost.reduce((a, b) => a + b.val, 0), minusDiceSkill: mds, willheals: aWillHeal
+                    usedDice: skill.cost.reduce((a, b) => a + b.val, 0), minusDiceSkill: mds, willheals: aWillHeal,
                 }
             );
             dmgElements = [...dmgElements1];
@@ -2628,6 +2635,10 @@ export default class GeniusInvokationClient {
                 });
                 if (res.willDamage[getDmgIdx][0] > 0) res.willDamage[getDmgIdx][0] += slotres.addDmg + (isSummon > -1 ? slotres.addDmgSummon : 0);
                 if (skidx > -1) res.minusDiceSkill = slotres.minusDiceSkill;
+                if (slotres.cmds.some(({ cmd }) => cmd == 'getCard')) {
+                    atriggers[aFrontIdx].push('getcard');
+                    etriggers[frontIdx].push('getcard-oppo');
+                }
             }
             res.asummon = this._updateSummon(slotSummons, res.asummon, afhero.outStatus, { isSummon });
             const getdmg = res.willDamage
@@ -2651,6 +2662,10 @@ export default class GeniusInvokationClient {
                         else res.willheals[hli] = Math.min(h.maxhp - h.hp, (res.willheals[hli] ?? 0) + slotres.willHeals[hi]);
                     }
                 });
+                if (slotres.cmds.some(({ cmd }) => cmd == 'getCard')) {
+                    atriggers[aFrontIdx].push('getcard-oppo');
+                    etriggers[frontIdx].push('getcard');
+                }
             }
         }
         const doStatus = (status: Status[], isSelf: boolean, trgs: Trigger[], hi: number) => {
@@ -2688,7 +2703,13 @@ export default class GeniusInvokationClient {
                     if (stsres.summon && isSelf) {
                         res.asummon = this._updateSummon(stsres.summon, res.asummon, afhero.outStatus);
                     }
-                    if (stsres.cmds) res.elrcmds[+!isSelf].push(...stsres.cmds);
+                    if (stsres.cmds) {
+                        res.elrcmds[+!isSelf].push(...stsres.cmds);
+                        if (stsres.cmds.some(({ cmd }) => cmd == 'getCard')) {
+                            (isSelf ? atriggers[aFrontIdx] : etriggers[frontIdx]).push('getcard');
+                            (isSelf ? etriggers[frontIdx] : atriggers[aFrontIdx]).push('getcard-oppo');
+                        }
+                    }
                     if (skidx > -1 && isSelf) res.minusDiceSkill = stsres.minusDiceSkill;
                     if (!sts.type.includes(1)) {
                         if (stsres.heal) {
@@ -3696,9 +3717,10 @@ export default class GeniusInvokationClient {
         let willHeals: number[] = new Array(heros.length).fill(-1);
         let addDmg = 0;
         let addDmgSummon = 0;
-        let inStatus: Status[] = [];
-        let outStatus: Status[] = [];
+        const inStatus: Status[] = [];
+        const outStatus: Status[] = [];
         let summon: Summonee[] | undefined;
+        const cmds: Cmds[] = [];
         let minusDiceHero = 0;
         let task: [(() => void)[], number[]] | undefined;
         const ahidx = player.hidx;
@@ -3716,7 +3738,7 @@ export default class GeniusInvokationClient {
             if (card?.type == 0 && slots.every(slot => slot?.id != card.id) && fHero.id == card.userType) slots.push(card);
             slots.forEach(slot => {
                 if (slot != null && (!taskMark || slot.subType.includes(taskMark[1]))) {
-                    const cmds: Cmds[] = [];
+                    const tcmds: Cmds[] = [];
                     let isAddTask: boolean = false;
                     for (const trigger of triggers) {
                         const slotres = cardsTotal(slot.id).handle(slot, {
@@ -3743,6 +3765,7 @@ export default class GeniusInvokationClient {
                             isExecTask: !!taskMark,
                         });
                         if (this._hasNotTrigger(slotres.trigger, trigger)) continue;
+                        tcmds.push(...(slotres.execmds ?? []));
                         cmds.push(...(slotres.execmds ?? []));
                         if (taskMark || (isExec && !slotres.execmds?.length && !slotres.isAddTask)) {
                             slotres.exec?.();
@@ -3755,8 +3778,8 @@ export default class GeniusInvokationClient {
                         addDmgSummon += slotres.addDmgSummon ?? 0;
                         minusDiceSkill = slotres.minusDiceSkill ?? minusDiceSkill;
                         if (trigger == 'will-killed' && slot.subType.includes(-4)) exwkhidxs.push(hidx);
-                        if (slotres.execmds?.some(cmds => cmds.cmd == 'heal') && !isExec) {
-                            const { cnt: heal = -1, hidxs } = slotres.execmds.find(cmds => cmds.cmd == 'heal') ?? {};
+                        if (slotres.execmds?.some(({ cmd }) => cmd == 'heal') && !isExec) {
+                            const { cnt: heal = -1, hidxs } = slotres.execmds.find(({ cmd }) => cmd == 'heal') ?? {};
                             willHeals.forEach((v, i, a) => {
                                 if (hidxs?.includes(i) || (hidxs == undefined && heros[i].isFront)) {
                                     if (v < 0) a[i] = heal;
@@ -3784,7 +3807,7 @@ export default class GeniusInvokationClient {
                             eheros[ehidx].outStatus = this._updateStatus(ostop, eheros[ehidx].outStatus).nstatus;
                         }
                     }
-                    if (isExec && (cmds.length > 0 || isAddTask)) {
+                    if (isExec && (tcmds.length > 0 || isAddTask)) {
                         if (!taskMark) {
                             const args = clone(Array.from(arguments));
                             args[1] = {
@@ -3800,14 +3823,14 @@ export default class GeniusInvokationClient {
                                 () => { },
                                 (isEndAtk = false) => {
                                     let dices: { val: number[], isDone: boolean } | undefined;
-                                    if (!isAddTask || cmds.length > 0) {
-                                        const { ndices: nd, willHeals } = this._doCmds(cmds, { pidx, heros, eheros, isEffectHero: true, isRollDice: true });
+                                    if (!isAddTask || tcmds.length > 0) {
+                                        const { ndices: nd, willHeals } = this._doCmds(tcmds, { pidx, heros, eheros, isEffectHero: true, isRollDice: true });
                                         dices = nd;
                                         this._doHeal(willHeals, heros, { pidx, isQuickAction });
                                     }
                                     this.socket.emit('sendToServer', {
                                         cpidx: pidx,
-                                        slotres: { cmds, slotIds: [hidx, slot] },
+                                        slotres: { cmds: tcmds, slotIds: [hidx, slot] },
                                         heros,
                                         eheros,
                                         dices,
@@ -3829,7 +3852,7 @@ export default class GeniusInvokationClient {
         }
         return {
             willHeals, pidx, changeHeroDiceCnt, addDmg, addDmgSummon, inStatus: isCdt(inStatus.length > 0, inStatus), nwkhidxs: hidxs.filter(hi => !exwkhidxs.includes(hi)),
-            outStatus: isCdt(outStatus.length > 0, outStatus), minusDiceHero, summon, isQuickAction, minusDiceCard, minusDiceSkill, task,
+            outStatus: isCdt(outStatus.length > 0, outStatus), minusDiceHero, summon, isQuickAction, minusDiceCard, minusDiceSkill, cmds, task,
         };
     }
     /**
@@ -3942,7 +3965,7 @@ export default class GeniusInvokationClient {
                     this.willSwitch[cpidx * ceheros.length + nhidx] = true;
                     if (isOppo) isSwitchOppo = nhidx;
                     else if (isSwitch == -1) isSwitch = nhidx;
-                    else if (!cmds.some(cmds => cmds.cmd == 'useSkill')) this.useSkill(-1, { isOnlyRead: true, otriggers: 'change-from' });
+                    else if (!cmds.some(({ cmd }) => cmd == 'useSkill')) this.useSkill(-1, { isOnlyRead: true, otriggers: 'change-from' });
                 }
                 if (nhidx > -1) cmds[i].hidxs = [nhidx];
             } else if (['getCard', 'addCard'].includes(cmd)) {
@@ -3950,9 +3973,9 @@ export default class GeniusInvokationClient {
                     const cards = Array.isArray(card) ? card : new Array(cnt).fill(0).map(() => clone(card));
                     cmds[i].card = cards.map(c => typeof c == 'number' ? cardsTotal(c) : c).filter(c => c.id > 0);
                 }
-                if (isExec && cmd == 'getCard') {
-                    this._doStatus(pidx, 4, 'getcard', { getcard: cnt, isQuickAction: isCdt(!isAction, 2) });
-                    this._doSite(pidx ^ 1, 'getcard-oppo', { getcard: cnt, isQuickAction: !isAction });
+                if (cmd == 'getCard') {
+                    this._doStatus(pidx, 4, 'getcard', { getcard: cnt, isExec, isQuickAction: isCdt(!isAction, 2) });
+                    this._doSite(pidx ^ 1, 'getcard-oppo', { getcard: cnt, isExec, isQuickAction: !isAction });
                 }
             } else if (cmd == 'discard') {
                 if (discards == undefined) discards = [];

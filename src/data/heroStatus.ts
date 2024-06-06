@@ -1378,14 +1378,10 @@ const statusTotal: StatusObj = {
                 trigger: [`${isDmg ? 'after-' : ''}skill`],
                 damage: isCdt(isDmg, 1),
                 element: 4,
+                cmds: isCdt(!!heros?.find(h => h.id == 1009)?.talentSlot || card?.id == 761, [{ cmd: 'getCard', cnt: 1 }]),
                 exec: eStatus => {
                     ++status.useCnt;
-                    if (eStatus) {
-                        eStatus.useCnt -= 4;
-                        if (heros?.find(h => h.id == 1009)?.talentSlot || card?.id == 761) {
-                            return { cmds: [{ cmd: 'getCard', cnt: 1 }] }
-                        }
-                    }
+                    if (eStatus) eStatus.useCnt -= 4;
                 }
             }
         }, { icbg: STATUS_BG_COLOR[4], act: 2 }),
@@ -1398,12 +1394,10 @@ const statusTotal: StatusObj = {
             return {
                 trigger: triggers,
                 attachEl: isCdt(status.useCnt >= 2 && trigger == 'skilltype1', 1),
+                cmds: isCdt(trigger == 'skilltype1', [{ cmd: 'getCard', cnt: 1 }]),
                 exec: () => {
-                    if (trigger == 'skilltype1') {
-                        status.useCnt -= 2;
-                        return { cmds: [{ cmd: 'getCard', cnt: 1 }] }
-                    }
-                    if (trigger == 'phase-end') status.useCnt = Math.min(status.maxCnt, status.useCnt + 1);
+                    if (trigger == 'skilltype1') status.useCnt -= 2;
+                    else if (trigger == 'phase-end') status.useCnt = Math.min(status.maxCnt, status.useCnt + 1);
                 }
             }
         }, { icbg: STATUS_BG_COLOR[1], act }),
@@ -1525,16 +1519,15 @@ const statusTotal: StatusObj = {
             const { dmgSource = 0, eheros = [] } = event;
             const getDmg = dmgSource == 1762 || dmgSource == 3052 ? 1 : 0;
             const talent = eheros.find(h => h.id == 1762)?.talentSlot;
+            const isTalent = talent && talent.useCnt > 0;
             return {
                 trigger: ['getdmg'],
                 getDmg,
                 onlyOne: true,
+                cmds: isCdt(isTalent, [{ cmd: 'getCard', cnt: 1, isOppo: true }]),
                 exec: () => {
                     if (getDmg > 0) --status.useCnt;
-                    if (talent && talent.useCnt > 0) {
-                        --talent.useCnt;
-                        return { cmds: [{ cmd: 'getCard', cnt: 1, isOppo: true }] }
-                    }
+                    if (isTalent) --talent.useCnt;
                 }
             }
         }, { isReset: false }),
@@ -1850,10 +1843,9 @@ const statusTotal: StatusObj = {
                 damage: 1,
                 element: 7,
                 trigger: ['change-from'],
+                cmds: [{ cmd: 'getCard', cnt: 1 }],
                 exec: eStatus => {
-                    if (!eStatus) return;
-                    --eStatus.useCnt;
-                    return { cmds: [{ cmd: 'getCard', cnt: 1 }] }
+                    if (eStatus) --eStatus.useCnt;
                 },
             }
         }, { icbg: STATUS_BG_COLOR[7] }),
@@ -2202,10 +2194,22 @@ const statusTotal: StatusObj = {
         'ski1608,1', 1, [1], useCnt, 3, -1, (_status, event = {}) => {
             const { heros = [], hidx = -1, summons = [], pile = [], card, playerInfo: { discardIds = [] } = {} } = event;
             if (pile.length == 0 || heros[hidx].outStatus.every(ost => ost.id != 2005) && summons.every(smn => smn.id != 3043)) return;
+            const cmds: Cmds[] = [{ cmd: 'discard', element: 2 }];
+            const thero = heros.find(h => h.id == 1608)!;
+            if (card?.id == 788 || !!thero.talentSlot) {
+                const talent = card ?? thero.talentSlot as Card;
+                if (talent.perCnt > 0) {
+                    const discards = [...discardIds, pile[0].id];
+                    const addCardId = discards[Math.floor(Math.random() * discards.length)];
+                    cmds.push({ cmd: 'getCard', cnt: 1, card: addCardId });
+                    if (Math.floor(addCardId / 100) == 2) cmds.push({ cmd: 'getStatus', status: [heroStatus(2204)] });
+                }
+            }
             return {
                 trigger: ['action-start', 'action-start-oppo'],
                 damage: pile[0].cost + pile[0].anydice + 1,
                 element: 7,
+                cmds,
                 exec: (eStatus, execEvent = {}) => {
                     if (eStatus) {
                         --eStatus.useCnt;
@@ -2217,19 +2221,11 @@ const statusTotal: StatusObj = {
                             const summon = smns.find(smn => smn.id == 3043);
                             --summon!.useCnt;
                         }
-                        const res: StatusExecRes = { cmds: [{ cmd: 'discard', element: 2 }] };
                         const thero = hs.find(h => h.id == 1608)!;
                         if (card?.id == 788 || !!thero.talentSlot) {
                             const talent = card ?? thero.talentSlot as Card;
-                            if (talent.perCnt > 0) {
-                                const discards = [...discardIds, pile[0].id];
-                                const addCardId = discards[Math.floor(Math.random() * discards.length)];
-                                --talent.perCnt;
-                                res.cmds!.push({ cmd: 'getCard', cnt: 1, card: addCardId });
-                                if (Math.floor(addCardId / 100) == 2) res.cmds!.push({ cmd: 'getStatus', status: [heroStatus(2204)] });
-                            }
+                            if (talent.perCnt > 0) --talent.perCnt;
                         }
-                        return res;
                     }
                 }
             }
@@ -2256,7 +2252,7 @@ const statusTotal: StatusObj = {
         }),
 
     2205: () => new GIStatus(2205, '深噬之域', '我方[舍弃]或[调和]的手牌，会被吞噬。；每吞噬3张牌：【hro1724】获得1点额外最大生命; 如果其中存在原本元素骰费用值相同的牌，则额外获得1点; 如果3张均相同，再额外获得1点。',
-        'ski1724,3', 1, [4, 9, 12], 0, 0, -1, (_status, event = {}) => {
+        'ski1724,3', 1, [4, 9], 0, 3, -1, (_status, event = {}) => {
             const { discards = [], card } = event;
             return {
                 trigger: ['discard', 'reconcile'],
@@ -2268,6 +2264,7 @@ const statusTotal: StatusObj = {
                     if (hidx == -1) return;
                     const [cost1, cost2, maxDice] = eStatus.addition;
                     if (card) discards.push(card);
+                    let cnt = 0;
                     discards.forEach(c => {
                         const cost = c.cost + c.anydice;
                         if (cost > maxDice) {
@@ -2276,16 +2273,18 @@ const statusTotal: StatusObj = {
                         } else if (cost == maxDice) {
                             ++eStatus.addition[3];
                         }
-                        if (cost1 == -1) eStatus.addition[0] = cost;
-                        else if (cost2 == -1) eStatus.addition[1] = cost;
-                        else {
-                            const cnt = 1 + +(cost1 == cost) + +(cost2 == cost);
-                            eStatus.useCnt += cnt;
+                        if (eStatus.useCnt < 2) {
+                            eStatus.addition[eStatus.useCnt] = cost;
+                            ++eStatus.useCnt;
+                        } else {
+                            cnt += 1 + +(cost1 == cost) + +(cost2 == cost);
+                            eStatus.useCnt = 0;
                             heros[hidx].maxhp += cnt;
-                            eStatus.addition[0] = -1;
-                            eStatus.addition[1] = -1;
                         }
                     });
+                    if (cnt > 0) {
+                        return { cmds: [{ cmd: 'heal', cnt, hidxs: [hidx] }, { cmd: 'getStatus', status: [heroStatus(2217, cnt)], hidxs: [hidx] }], }
+                    }
                 }
             }
         }, { icbg: STATUS_BG_COLOR[1], adt: [-1, -1, 0, 0] }),
@@ -2377,7 +2376,7 @@ const statusTotal: StatusObj = {
 
     2215: () => oncePerRound(2215, '禁忌知识'),
 
-    2216: () => new GIStatus(2216, 'todo', '我方召唤4个【smn3063】后，【hro1822】附属【sts2210】，并获得2点[护盾]。',
+    2216: () => new GIStatus(2216, '绿洲之心', '我方召唤4个【smn3063】后，【hro1822】附属【sts2210】，并获得2点[护盾]。',
         'ski1822,2', 1, [9], 0, 4, -1, (status, event = {}) => {
             const { card, discards = [], heros = [] } = event;
             if (card?.id != 907 && discards.every(c => c.id != 907) && status.useCnt < 4) return;
@@ -2390,6 +2389,9 @@ const statusTotal: StatusObj = {
                 }
             }
         }, { icbg: STATUS_BG_COLOR[7] }),
+
+    2217: (cnt = 1) => new GIStatus(2217, '奇异之躯', '【hro1724】获得1点额外最大生命。',
+        'ski1724,3', 0, [9, 12], cnt, 1000, -1, undefined, { icbg: STATUS_BG_COLOR[1] }),
 
 };
 

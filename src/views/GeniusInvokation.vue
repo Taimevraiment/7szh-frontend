@@ -428,7 +428,7 @@ const devOps = (cidx = 0) => {
     }
   }
   if (!opses) return;
-  const ops = opses.split(/[,，\.\/、]+/).filter(v => v != '');
+  const ops = opses.trim().split(/[,，\.\/、]+/).filter(v => v != '');
   const cpidx = client.value.playerIdx ^ cidx;
   let heros = client.value.players[cpidx].heros;
   let dices;
@@ -436,7 +436,12 @@ const devOps = (cidx = 0) => {
   let handCards: Card[] | undefined;
   const cmds: Cmds[] = [];
   const h = (v: string) => (v == '' ? undefined : Number(v));
-  for (const op of ops) {
+  for (let op of ops) {
+    const index = op.indexOf(' ');
+    if (index > -1) {
+      ops.push(op[0] + op.slice(index + 1).trim());
+      op = op.slice(0, index).trim();
+    }
     if (op.startsWith('&')) { // 附着
       const isAdd = op[1] == '+';
       const [el = 0, hidx = heros.findIndex(h => h.isFront)] = op.slice(isAdd ? 2 : 1).split(/[:：]+/).map(h);

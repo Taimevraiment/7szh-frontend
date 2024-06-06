@@ -1623,9 +1623,9 @@ const allHeros: HeroObj = {
             'https://act-webstatic.mihoyo.com/hk4e/e20230518cardlanding/picture/f5c0f89cf02925ec13e306d11a5f7bd8.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/04/258999284/942e3d28310f4395ee7e3f1580268db8_512199522496433076.png',
         ], event => {
-            const { hero: { outStatus } } = event;
+            const { hero: { inStatus } } = event;
             return {
-                addDmgCdt: Math.min(5, Math.floor((outStatus.find(ist => ist.id == 2205)?.useCnt ?? 0) / 3)),
+                addDmgCdt: Math.min(5, Math.floor((inStatus.find(ist => ist.id == 2217)?.useCnt ?? 0) / 3)),
                 cmds: [{ cmd: 'discard', element: 0 }],
             }
         }),
@@ -1636,8 +1636,7 @@ const allHeros: HeroObj = {
             const { hero: { outStatus } } = event;
             const sts2205 = outStatus.find(ost => ost.id == 2205);
             if (!sts2205) return;
-            const dmg = Math.max(...sts2205.addition[1]);
-            const cnt = sts2205.addition[1].filter((n: number) => n == dmg).length;
+            const [, , dmg, cnt] = sts2205.addition;
             return { pendamage: 1, summon: [newSummonee(3062, dmg, cnt)] }
         }),
         new GISkill('无尽食欲', '战斗开始时，生成【sts2205】。', 4, 0, 0, 0, {}, [

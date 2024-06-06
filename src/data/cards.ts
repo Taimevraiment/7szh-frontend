@@ -349,7 +349,9 @@ const allCards: CardObj = {
                     if (trigger == 'card') {
                         ++card.useCnt;
                         --card.perCnt;
-                    } else if (trigger == 'skill') card.useCnt = 0;
+                    } else if (trigger == 'skill') {
+                        card.useCnt = 0;
+                    }
                 }
             }
         }, { uct: 0, pct: 2 }),
