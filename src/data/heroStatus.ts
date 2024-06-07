@@ -608,7 +608,7 @@ const statusTotal: StatusObj = {
                 trigger: triggers,
                 isQuickAction: true,
                 exec: (_eStatus, execEvent = {}) => {
-                    if (!execEvent.isQuickAction) --status.useCnt;
+                    if (execEvent.isQuickAction) --status.useCnt;
                 },
             }
         }),
@@ -2253,7 +2253,8 @@ const statusTotal: StatusObj = {
 
     2205: () => new GIStatus(2205, '深噬之域', '我方[舍弃]或[调和]的手牌，会被吞噬。；每吞噬3张牌：【hro1724】获得1点额外最大生命; 如果其中存在原本元素骰费用值相同的牌，则额外获得1点; 如果3张均相同，再额外获得1点。',
         'ski1724,3', 1, [4, 9], 0, 3, -1, (_status, event = {}) => {
-            const { discards = [], card } = event;
+            const { discards: [discards, type] = [[], -1], card } = event;
+            if (type != 0) return;
             return {
                 trigger: ['discard', 'reconcile'],
                 isAddTask: true,
@@ -2378,7 +2379,7 @@ const statusTotal: StatusObj = {
 
     2216: () => new GIStatus(2216, '绿洲之心', '我方召唤4个【smn3063】后，【hro1822】附属【sts2210】，并获得2点[护盾]。',
         'ski1822,2', 1, [9], 0, 4, -1, (status, event = {}) => {
-            const { card, discards = [], heros = [] } = event;
+            const { card, discards: [discards] = [[]], heros = [] } = event;
             if (card?.id != 907 && discards.every(c => c.id != 907) && status.useCnt < 4) return;
             return {
                 trigger: ['card', 'discard'],

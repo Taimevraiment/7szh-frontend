@@ -2296,7 +2296,7 @@ const allCards: CardObj = {
         2, 8, 2, [6, 7], 1802, 1, (_card, event) => {
             const { heros = [] } = event;
             const element = [...new Set(heros.map(h => h.element))];
-            return { status: [heroStatus(2145)], cmds: [{ cmd: 'getDice', cnt: heros.length, element }] }
+            return { status: [heroStatus(2145)], cmds: [{ cmd: 'getDice', cnt: element.length, element }] }
         }),
 
     772: new GICard(772, '僚佐的才巧', '{action}；装备有此牌的【{hro}】生成的【sts2154】，初始[可用次数]+1。',

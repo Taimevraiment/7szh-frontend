@@ -935,9 +935,9 @@ constructor(
 
 ##### discards
 
-类型：Card[]
+类型：[Card[], number]
 
-解释：我方弃牌
+解释：被舍弃的卡牌及舍弃源 0手牌 1牌库
 
 #### SkillHandleRes
 
@@ -1281,9 +1281,9 @@ constructor(
 
 ##### discard
 
-类型：Card[]
+类型：[Card[], number]
 
-解释：被舍弃的卡牌
+解释：被舍弃的卡牌及舍弃源 0手牌 1牌库
 
 ##### isChargedAtk
 

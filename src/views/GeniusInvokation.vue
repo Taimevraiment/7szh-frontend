@@ -174,7 +174,8 @@
     {{ client.actionInfo }}
   </div>
   <div class="debug-mask" v-if="isOpenMask" :style="{ opacity: maskOpacity }"></div>
-  <div class="willskill-mask" v-if="client.player.status == 1 && client.currSkill.type > 0"></div>
+  <div class="willskill-mask"
+    v-if="client.player.status == 1 && (client.currSkill.type > 0 || client.isShowChangeHero >= 2)"></div>
 </template>
 
 <script setup lang='ts'>
@@ -408,6 +409,8 @@ onUnmounted(() => {
 
 // dev
 let prodEnv = 0;
+// const maskOpacity = ref<number>(0.84);
+// const isOpenMask = ref<boolean>(true);
 const maskOpacity = ref<number>(0.94);
 const isOpenMask = ref<boolean>(false);
 const devOps = (cidx = 0) => {
@@ -417,15 +420,15 @@ const devOps = (cidx = 0) => {
     if (!opses?.startsWith('debug')) return;
     opses = opses?.slice(5);
     prodEnv = 0;
-    if (opses.startsWith('--')) {
-      const opacity = +opses.slice(2);
-      if (opacity == 1) isOpenMask.value = false;
-      else {
-        if (opacity > 0) maskOpacity.value = opacity;
-        isOpenMask.value = opacity > 0 || !isOpenMask.value;
-      }
-      opses = null;
+  }
+  if (opses?.startsWith('--')) {
+    const opacity = +opses.slice(2);
+    if (opacity == 1) isOpenMask.value = false;
+    else {
+      if (opacity > 0) maskOpacity.value = opacity;
+      isOpenMask.value = opacity > 0 || !isOpenMask.value;
     }
+    opses = null;
   }
   if (!opses) return;
   const ops = opses.trim().split(/[,，\.\/、]+/).filter(v => v != '');

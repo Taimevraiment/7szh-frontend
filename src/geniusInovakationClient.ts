@@ -743,7 +743,9 @@ export default class GeniusInvokationClient {
                 await this._sendTip('等待对方选择出战角色');
             }
         }
-        if (this.playerIdx == execIdx && dieChangeBack == undefined && this._hasNotDieChange(players)) {
+        if (this.playerIdx == execIdx && dieChangeBack == undefined && this._hasNotDieChange(players) &&
+            // 回合末摸牌造成的事件(目前为赤王陵)不要立刻触发execTask
+            !flag.startsWith('infoHandle:getServerInfo-phase-end-getCard') && flag != 'dispatchCard') {
             this._execTask();
         }
         const siteDiffCnt = this.player.site.length - players[this.playerIdx].site.length - this.exchangeSite.length;
@@ -938,8 +940,14 @@ export default class GeniusInvokationClient {
                 await this._execTask(true);
                 this._doSite(startIdx ^ 1, 'phase-end');
                 await this._execTask(true);
-                this._doCmds([{ cmd: 'getCard', cnt: 2 }], { pidx: startIdx });
-                this._doCmds([{ cmd: 'getCard', cnt: 2 }], { pidx: startIdx ^ 1 });
+                const getCardCmds: Cmds[] = [{ cmd: 'getCard', cnt: 2 }, { cmd: 'getCard', cnt: 2, isOppo: true }];
+                this._doCmds(getCardCmds, { pidx: startIdx });
+                this.socket.emit('sendToServer', {
+                    cpidx: this.playerIdx,
+                    cmds: getCardCmds,
+                    flag: 'getServerInfo-phase-end-getCard-' + execIdx,
+                });
+                await this._delay(1600);
                 await this._execTask(true);
                 this._wait(() => !this.taskQueue.isExecuting, { delay: 1100 });
                 // if (this.taskQueue.hasStatusAtk() || this.isSwitchAtking) {
@@ -1466,7 +1474,9 @@ export default class GeniusInvokationClient {
         }
         const atriggers: Trigger[][] = new Array(ahlen).fill(0).map(() => []);
         const etriggers: Trigger[][] = new Array(ehlen).fill(0).map(() => []);
+        const getcards: number[] = [0, 0];
         if (skillcmds.some(({ cmd }) => cmd == 'getCard')) {
+            getcards[this.playerIdx] += skillcmds.filter(({ cmd }) => cmd == 'getCard').reduce((a, c) => a + (c.cnt ?? 0), 0);
             atriggers[hidx].push('getcard');
             etriggers[eFrontIdx].push('getcard-oppo');
         }
@@ -1540,7 +1550,7 @@ export default class GeniusInvokationClient {
                 aHeros, aSummon,
                 {
                     isExec, skidx: sidx, sktype: skill.type, isChargedAtk, isFallAtk, isReadySkill, multiDmg: skillres.multiDmgCdt,
-                    usedDice: skill.cost.reduce((a, b) => a + b.val, 0), minusDiceSkill: mds, willheals: aWillHeal,
+                    usedDice: skill.cost.reduce((a, b) => a + b.val, 0), minusDiceSkill: mds, willheals: aWillHeal, atriggers, etriggers, getcards,
                 }
             );
             dmgElements = [...dmgElements1];
@@ -2362,7 +2372,7 @@ export default class GeniusInvokationClient {
      * @param summon 受击方召唤物
      * @param aheros 攻击玩家角色数组
      * @param summonOppo 攻击方召唤物
-     * @param options isAttach 是否为自己附着元素, isSummon 召唤物攻击id, pidx 发起攻击的玩家idx, isExec 是否执行
+     * @param options isAttach 是否为自己附着元素, isSummon 召唤物攻击id, pidx 发起攻击的玩家idx, isExec 是否执行, getcards 双方准备摸牌数
      *                isChargedAtk 是否为重击, isWind 是否为扩散伤害, isFallAtk 是否为下落攻击, isReadySkill 是否为准备技能, willheals 回血,
      *                elrcmds 命令执行, atriggers 攻击者触发时机, etriggers 受击者触发时机, skidx 技能idx, sktype 技能类型, isWindExec 扩散伤害是否执行,
      *                usedDice 使用的骰子, dmgElements: 本次伤害元素, minusDiceSkill 使用技能减骰子, isSelf 是否为对自身攻击(目前仅用于statusAtk)
@@ -2389,14 +2399,14 @@ export default class GeniusInvokationClient {
         options: {
             isAttach?: boolean, isSummon?: number, pidx?: number, isExec?: boolean, isChargedAtk?: boolean, isWind?: boolean,
             skidx?: number, sktype?: number, isFallAtk?: boolean, isReadySkill?: boolean, isWindExec?: boolean, willheals?: number[],
-            elrcmds?: Cmds[][], atriggers?: Trigger[][], etriggers?: Trigger[][], usedDice?: number, dmgElements?: number[],
+            elrcmds?: Cmds[][], atriggers?: Trigger[][], etriggers?: Trigger[][], usedDice?: number, dmgElements?: number[], getcards?: number[],
             minusDiceSkill?: number[][], elTips?: [string, number, number][], willAttachs?: number[], multiDmg?: number, isSelf?: number,
         } = {}) {
         const { isAttach = false, isSummon = -1, pidx = this.playerIdx, isWind = false, isExec = true, isChargedAtk = false, multiDmg = 1,
             skidx = -1, sktype = -1, isReadySkill = false, isWindExec = true, isFallAtk = false, willheals = new Array(aheros.length + eheros.length).fill(-1),
             elrcmds = [[], []], usedDice = 0, dmgElements = new Array(eheros.length).fill(0), minusDiceSkill, willAttachs = new Array(eheros.length).fill(0),
             elTips = new Array(aheros.length + eheros.length).fill(0).map(() => ['', 0, 0]), atriggers: atrg = new Array(aheros.length).fill(0).map(() => []),
-            etriggers: etrg = new Array(eheros.length).fill(0).map(() => []), isSelf = 0 } = options;
+            etriggers: etrg = new Array(eheros.length).fill(0).map(() => []), isSelf = 0, getcards: gcds = [0, 0] } = options;
         let resdmg = willDamage;
         if (!isWind) {
             if (willDamage.length == 0) resdmg = new Array(aheros.length + eheros.length).fill(0).map(() => [-1, 0]);
@@ -2468,7 +2478,7 @@ export default class GeniusInvokationClient {
                             {
                                 ...options, isWind: true, isWindExec: idx == otheridx.length - 1,
                                 atriggers: res.atriggers, etriggers: res.etriggers, dmgElements: res.dmgElements,
-                                elTips: res.elTips, willAttachs: res.willAttachs,
+                                elTips: res.elTips, willAttachs: res.willAttachs, getcards: gcds,
                             });
                     });
                     res.willAttachs[frontIdx] = willAttach;
@@ -2529,8 +2539,8 @@ export default class GeniusInvokationClient {
             }
             res.eheros[frontIdx].attachElement = attachElements[frontIdx];
         }
-        const atriggers: Trigger[][] = new Array(aheros.length).fill(0).map(() => []);
-        const etriggers: Trigger[][] = new Array(eheros.length).fill(0).map(() => []);
+        const atriggers: Trigger[][] = clone(res.atriggers);
+        const etriggers: Trigger[][] = clone(res.etriggers);
         etriggers.forEach((trg, tidx) => {
             const [elDmg, penDmg] = res.willDamage[tidx + getDmgIdxOffset];
             const isOtherGetDmg = res.willDamage
@@ -2577,6 +2587,7 @@ export default class GeniusInvokationClient {
         const aost: Status[] = [];
         const eist: Status[][] = new Array(eheros.length).fill(0).map(() => []);
         const eost: Status[] = [];
+        const getcards: number[] = gcds;
         if (!isAttach) {
             if (isWind) {
                 etriggers[frontIdx].push(`${ELEMENT_ICON[willAttach]}-getdmg-wind` as Trigger);
@@ -2636,6 +2647,7 @@ export default class GeniusInvokationClient {
                 if (res.willDamage[getDmgIdx][0] > 0) res.willDamage[getDmgIdx][0] += slotres.addDmg + (isSummon > -1 ? slotres.addDmgSummon : 0);
                 if (skidx > -1) res.minusDiceSkill = slotres.minusDiceSkill;
                 if (slotres.cmds.some(({ cmd }) => cmd == 'getCard')) {
+                    getcards[pidx] += slotres.cmds.filter(({ cmd }) => cmd == 'getCard').reduce((a, c) => a + (c.cnt ?? 0), 0);
                     atriggers[aFrontIdx].push('getcard');
                     etriggers[frontIdx].push('getcard-oppo');
                 }
@@ -2663,6 +2675,7 @@ export default class GeniusInvokationClient {
                     }
                 });
                 if (slotres.cmds.some(({ cmd }) => cmd == 'getCard')) {
+                    getcards[epidx] += slotres.cmds.filter(({ cmd }) => cmd == 'getCard').reduce((a, c) => a + (c.cnt ?? 0), 0);
                     atriggers[aFrontIdx].push('getcard-oppo');
                     etriggers[frontIdx].push('getcard');
                 }
@@ -2706,6 +2719,7 @@ export default class GeniusInvokationClient {
                     if (stsres.cmds) {
                         res.elrcmds[+!isSelf].push(...stsres.cmds);
                         if (stsres.cmds.some(({ cmd }) => cmd == 'getCard')) {
+                            getcards[pidx ^ +!isSelf] += stsres.cmds.filter(({ cmd }) => cmd == 'getCard').reduce((a, c) => a + (c.cnt ?? 0), 0);
                             (isSelf ? atriggers[aFrontIdx] : etriggers[frontIdx]).push('getcard');
                             (isSelf ? etriggers[frontIdx] : atriggers[aFrontIdx]).push('getcard-oppo');
                         }
@@ -2745,19 +2759,21 @@ export default class GeniusInvokationClient {
                         }], trigger == 'getdmg');
                     }
                     if (stsres.exec && isWindExec && !sts.type.includes(11)) {
-                        const { cmds = [] } = stsres.exec(undefined, { isQuickAction: res.isQuickAction }) ?? {};
+                        const { cmds = [] } = stsres.exec(undefined, { isQuickAction: !res.isQuickAction && stsres.isQuickAction }) ?? {};
                         res.elrcmds[+!isSelf].push(...cmds);
                     }
                     if (isSelf) res.isQuickAction ||= !!stsres.isQuickAction;
                 }
             }
         }
-        atriggers.forEach((t, ti) => {
-            if (!isWind) res.atriggers[ti] = [...new Set([...res.atriggers[ti], ...t])];
-        });
-        etriggers.forEach((t, ti) => {
-            if (!isWind) res.etriggers[ti] = [...new Set([...res.etriggers[ti], ...t])];
-        });
+        if (!isWind) {
+            atriggers.forEach((t, ti) => {
+                res.atriggers[ti] = [...new Set([...res.atriggers[ti], ...t])];
+            });
+            etriggers.forEach((t, ti) => {
+                res.etriggers[ti] = [...new Set([...res.etriggers[ti], ...t])];
+            });
+        }
         res.aheros.forEach((h, hi) => {
             doStatus(h.inStatus, true, atriggers[hi], hi);
             if (hi == aFrontIdx) doStatus(h.outStatus, true, atriggers[hi], hi);
@@ -2772,6 +2788,7 @@ export default class GeniusInvokationClient {
                 isExec,
                 isSkill: skidx,
                 getdmg,
+                getcard: getcards[epidx],
                 minusDiceSkill: res.minusDiceSkill,
                 heal: res.willheals,
             });
@@ -2781,6 +2798,7 @@ export default class GeniusInvokationClient {
             const { cmds: siteoppocmds, siteCnt: siteOppoCnt } = this._doSite(epidx, [...new Set(etriggers.flat())], {
                 isExec,
                 getdmg,
+                getcard: getcards[pidx],
                 isSkill: skidx,
             });
             res.elrcmds[0].push(...siteoppocmds);
@@ -3345,7 +3363,7 @@ export default class GeniusInvokationClient {
      * @param options intvl 时间间隔, isQuickAction 是否有快速行动, isExec 是否执行, isOnlyFront 是否只执行出战角色, changeHeroDiceCnt 实际减少切换角色的骰子,
      *                phase 当前最新阶段, players 最新玩家信息, hidxs 只执行某几个角色, hidx 用于指定角色(目前只用于断流), heal 回血数,
      *                card 使用的卡, isOnlyInStatus 是否只执行角色状态, isOnlyOutStatus 是否只执行出战状态, heros 当前角色组,
-     *                isSwitchAtk 是否切换攻击角色, taskMark 任务标记, getcard 本次摸牌数, isSkill 使用技能的idx
+     *                isSwitchAtk 是否切换攻击角色, taskMark 任务标记, getcard 本次摸牌数, isSkill 使用技能的idx, discards 舍弃牌及舍弃源0手牌1牌库
      * @returns isQuickAction 是否有快速行动, minusDiceHero 减少切换角色的骰子,changeHeroDiceCnt 实际减少切换角色的骰子, cmds 要执行的命令, 
      *          statusIdsAndPidx 额外攻击, isInvalid 使用卡是否有效, minusDiceCard 使用卡减少骰子
     */
@@ -3353,7 +3371,7 @@ export default class GeniusInvokationClient {
         options: {
             intvl?: number[], isQuickAction?: boolean | number, isExec?: boolean, isOnlyFront?: boolean, changeHeroDiceCnt?: number, heal?: number[],
             phase?: number, players?: Player[], hidxs?: number[], hidx?: number, isSkill?: number,
-            card?: Card, discards?: Card[], isOnlyInStatus?: boolean, isOnlyOutStatus?: boolean, heros?: Hero[], minusDiceCard?: number,
+            card?: Card, discards?: [Card[], number], isOnlyInStatus?: boolean, isOnlyOutStatus?: boolean, heros?: Hero[], minusDiceCard?: number,
             eheros?: Hero[], isUnshift?: boolean, isSwitchAtk?: boolean, taskMark?: number[], getcard?: number,
         } = {}) {
         const types: number[] = [];
@@ -3365,7 +3383,7 @@ export default class GeniusInvokationClient {
         let { isQuickAction: oiqa = 0, changeHeroDiceCnt = 0, minusDiceCard = 0 } = options;
         let isQuickAction = Number(oiqa);
         const { intvl, isExec = true, isOnlyFront = false, players = this.players, phase = this.players[pidx].phase,
-            hidxs, hidx: ophidx = -1, card, isOnlyInStatus = false, isOnlyOutStatus = false, heal, discards = [],
+            hidxs, hidx: ophidx = -1, card, isOnlyInStatus = false, isOnlyOutStatus = false, heal, discards = [[], -1],
             isUnshift = false, isSwitchAtk = false, taskMark, getcard = 0, isSkill = -1 } = options;
         let addDiceHero = 0;
         let minusDiceHero = 0;
@@ -3614,10 +3632,10 @@ export default class GeniusInvokationClient {
     _doSkill(otrigger: Trigger | Trigger[],
         options: {
             pidx?: number, players?: Player[], heros?: Hero[], eheros?: Hero[], hidxs?: number[] | number, cskill?: [number, number],
-            isExec?: boolean, getdmg?: number[], heal?: number[], discards?: Card[], isExecTask?: boolean, isQuickAction?: boolean
+            isExec?: boolean, getdmg?: number[], heal?: number[], discards?: [Card[], number], isExecTask?: boolean, isQuickAction?: boolean
         } = {}
     ) {
-        const { pidx = this.playerIdx, players = this.players, isExec = true, getdmg = [], heal = [], discards = [],
+        const { pidx = this.playerIdx, players = this.players, isExec = true, getdmg = [], heal = [], discards = [[], -1],
             isExecTask = false, cskill } = options;
         let { heros = players[pidx].heros, eheros = players[pidx ^ 1].heros, hidxs, isQuickAction = false } = options;
         let isTriggered = false;
@@ -3880,9 +3898,10 @@ export default class GeniusInvokationClient {
     /**
      * 弃牌后的处理
      * @param cards 弃牌
+     * @param type 弃牌源 0手牌 1牌库
      * @param options pidx 玩家idx, heros 角色组, isAction 是否为战斗行动
      */
-    _doDiscard(cards: Card[], options: { pidx?: number, heros?: Hero[], isAction?: boolean } = {}) {
+    _doDiscard(cards: Card[], type: number, options: { pidx?: number, heros?: Hero[], isAction?: boolean } = {}) {
         const { pidx = this.playerIdx, heros = this.players[pidx].heros, isAction = false } = options;
         const summons: Summonee[] = [];
         const cmds: Cmds[] = [];
@@ -3893,8 +3912,8 @@ export default class GeniusInvokationClient {
             cmds.push(...cardcmds);
             summons.push(...(cardres.summon ?? []));
         }
-        this._doSkill('discard', { pidx, heros, discards: cards });
-        this._doStatus(pidx, 4, 'discard', { discards: cards, heros, isQuickAction: isCdt(!isAction, 2) });
+        this._doSkill('discard', { pidx, heros, discards: [cards, type] });
+        this._doStatus(pidx, 4, 'discard', { discards: [cards, type], heros, isQuickAction: isCdt(!isAction, 2) });
         this._doSite(pidx, 'discard', { discard: cards.length, isQuickAction: !isAction });
         return { cmds, summons }
     }
@@ -3974,8 +3993,8 @@ export default class GeniusInvokationClient {
                     cmds[i].card = cards.map(c => typeof c == 'number' ? cardsTotal(c) : c).filter(c => c.id > 0);
                 }
                 if (cmd == 'getCard') {
-                    this._doStatus(pidx, 4, 'getcard', { getcard: cnt, isExec, isQuickAction: isCdt(!isAction, 2) });
-                    this._doSite(pidx ^ 1, 'getcard-oppo', { getcard: cnt, isExec, isQuickAction: !isAction });
+                    this._doStatus(pidx ^ +isOppo, 4, 'getcard', { getcard: cnt, isExec, isQuickAction: isCdt(!isAction, 2) });
+                    this._doSite(pidx ^ +!isOppo, 'getcard-oppo', { getcard: cnt, isExec, isQuickAction: !isAction });
                 }
             } else if (cmd == 'discard') {
                 if (discards == undefined) discards = [];
@@ -4030,7 +4049,7 @@ export default class GeniusInvokationClient {
                 player.playerInfo.discardCnt += discards.length;
                 player.playerInfo.discardIds.push(...discards.map(c => c.id));
                 if (isExec) {
-                    const { cmds: discmds, summons: dissmns } = this._doDiscard(discards, { pidx, heros: cheros, isAction });
+                    const { cmds: discmds, summons: dissmns } = this._doDiscard(discards, Math.floor(+element / 2), { pidx, heros: cheros, isAction });
                     cmds.push(...discmds);
                     if (dissmns.length > 0) {
                         const nsmns = this._updateSummon(dissmns, summons, (heros ?? cheros)[player.hidx].outStatus);

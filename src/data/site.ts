@@ -784,6 +784,7 @@ const siteTotal: SiteObj = {
         const { getcard = 0 } = event;
         return {
             trigger: ['getcard-oppo'],
+            siteCnt: getcard + site.cnt < 4 ? getcard : -5,
             exec: () => {
                 site.cnt += getcard;
                 if (site.cnt < 4) return { isDestroy: false }

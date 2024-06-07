@@ -303,7 +303,7 @@ type SkillHandleEvent = {
     minusDiceSkill?: number[][],
     heal?: number[],
     playerInfo?: GameInfo,
-    discards?: Card[],
+    discards?: [Card[], number],
 }
 
 type SkillHandleRes = {
@@ -414,7 +414,7 @@ type StatusHandleEvent = {
     reset?: boolean,
     trigger?: Trigger,
     card?: Card,
-    discards?: Card[],
+    discards?: [Card[], number],
     isChargedAtk?: boolean,
     isFallAtk?: boolean,
     phase?: number,
