@@ -237,6 +237,7 @@ type Cmds = {
     status?: Status[],
     isReadySkill?: boolean,
     isOppo?: boolean,
+    round?: number,
 }
 
 type Cmd = 'getDice' | 'getCard' | 'getEnergy' | 'heal' | 'getStatus' | 'reroll' | 'revive' | 'switch-to' |
@@ -256,7 +257,7 @@ type GameInfo = {
     discardCnt: number, // 每回合舍弃卡牌的数量
     reconcileCnt: number, // 每回合调和次数
     discardIds: number[], // 舍弃卡牌的id
-    initCardIds: number[], // 初始手牌id
+    initCardIds: number[], // 初始牌组id
     isKillCurRound: boolean, // 本回合是否击倒对方角色
 }
 

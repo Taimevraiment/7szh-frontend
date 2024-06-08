@@ -1633,19 +1633,30 @@ const allCards: CardObj = {
         2, 0, 2, [-3], 0, 0, (_card, event) => {
             const { heros = [], hidxs: [hidx] = [] } = event;
             const hidxs = allHidxs(heros);
-            return {
-                cmds: [{ cmd: 'heal', cnt: 1, hidxs }],
-                exec: () => {
-                    if (hidxs.length > 1) {
-                        const allHp = heros.reduce((a, c) => c.hp > 0 ? a + c.hp : a, 0);
-                        const baseHp = Math.floor(allHp / hidxs.length);
-                        let restHp = allHp - baseHp * hidxs.length;
-                        for (let i = 0; i < heros.length; ++i) {
-                            heros[hidx + i].hp = baseHp + (restHp-- > 0 ? 1 : 0);
-                        }
-                    }
+            const cmds: Cmds[] = [];
+            if (hidxs.length > 1) {
+                const allHp = heros.reduce((a, c) => c.hp > 0 ? a + c.hp : a, 0);
+                const baseHp = Math.floor(allHp / hidxs.length);
+                const fhps = Array.from({ length: heros.length }, (_, hpi) => heros[hpi].hp > 0 ? baseHp : -1);
+                let restHp = allHp - baseHp * hidxs.length;
+                for (let i = 0; i < heros.length; ++i) {
+                    const hi = (hidx + i) % heros.length;
+                    if (fhps[hi] == -1) continue;
+                    if (restHp-- <= 0) break;
+                    ++fhps[hi];
+                }
+                for (let i = 0; i < heros.length; ++i) {
+                    if (fhps[i] == -1) continue;
+                    const chp = fhps[i] - heros[i].hp;
+                    if (chp == 0) continue;
+                    const cmd = chp > 0 ? 'heal' : 'attack';
+                    const isOppo = chp < 0;
+                    const element = isCdt(chp < 0, -1);
+                    cmds.push({ cmd, cnt: Math.abs(chp), element, isOppo, hidxs: [i] });
                 }
             }
+            cmds.push({ cmd: 'heal', cnt: 1, hidxs, round: 1 });
+            return { cmds }
         }),
 
     578: new GICard(578, '愚人众的阴谋', '在对方场上，生成1个随机类型的｢愚人众伏兵｣。',

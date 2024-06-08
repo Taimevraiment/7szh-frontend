@@ -2192,17 +2192,15 @@ const statusTotal: StatusObj = {
 
     2202: (useCnt = 1) => new GIStatus(2202, '迸发扫描', '【双方选择行动前：】如果我方场上存在草原核或丰穰之核，则使其[可用次数]-1，并[舍弃]我方牌库顶的1张卡牌。然后，造成所[舍弃]卡牌的元素骰费用+1的[草元素伤害]。；【[可用次数]：{useCnt}(可叠加，最多叠加到3次)】',
         'ski1608,1', 1, [1], useCnt, 3, -1, (_status, event = {}) => {
-            const { heros = [], hidx = -1, summons = [], pile = [], card, playerInfo: { discardIds = [] } = {} } = event;
+            const { heros = [], hidx = -1, summons = [], pile = [], card } = event;
             if (pile.length == 0 || heros[hidx].outStatus.every(ost => ost.id != 2005) && summons.every(smn => smn.id != 3043)) return;
             const cmds: Cmds[] = [{ cmd: 'discard', element: 2 }];
             const thero = heros.find(h => h.id == 1608)!;
             if (card?.id == 788 || !!thero.talentSlot) {
                 const talent = card ?? thero.talentSlot as Card;
                 if (talent.perCnt > 0) {
-                    const discards = [...discardIds, pile[0].id];
-                    const addCardId = discards[Math.floor(Math.random() * discards.length)];
-                    cmds.push({ cmd: 'getCard', cnt: 1, card: addCardId });
-                    if (Math.floor(addCardId / 100) == 2) cmds.push({ cmd: 'getStatus', status: [heroStatus(2204)] });
+                    cmds.push({ cmd: 'getCard', cnt: 1, card: pile[0].id });
+                    if (Math.floor(pile[0].id / 100) == 2) cmds.push({ cmd: 'getStatus', status: [heroStatus(2204)] });
                 }
             }
             return {
