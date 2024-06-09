@@ -49,7 +49,8 @@ class GIStatus implements Status {
         this.addition = adt;
         let thandle = handle ?? (() => ({}));
         if (type.includes(7)) {
-            this.icon = 'shield2';
+            // this.icon = 'shield2';
+            this.icon = 'https://gi-tcg-assets.guyutongxue.site/assets/UI_Gcg_Buff_Common_Shield.webp';
             this.iconBg = STATUS_BG_COLOR[12];
             thandle = (status, event = {}) => {
                 let { restDmg = 0 } = event;
@@ -65,17 +66,23 @@ class GIStatus implements Status {
                 return { restDmg: restDmg - shieldDmg, ...rest };
             }
         } else if (type.includes(2) && this.icon == '') {
-            this.icon = 'shield';
-            this.iconBg = '#9268db';
+            // this.icon = 'shield';
+            // this.iconBg = '#9268db';
+            this.icon = 'https://gi-tcg-assets.guyutongxue.site/assets/UI_Gcg_Buff_Common_Barrier.webp';
         }
         if (this.iconBg == '') {
             if (id == 2008) {
                 this.iconBg = STATUS_BG_COLOR[ELEMENT.indexOf(name.slice(0, 3))];
             } else if (icon.startsWith('buff')) {
+                if (icon == 'buff2') this.icon = 'https://gi-tcg-assets.guyutongxue.site/assets/UI_Gcg_Buff_Common_Buff.webp';
+                if (icon == 'buff3') this.icon = 'https://gi-tcg-assets.guyutongxue.site/assets/UI_Gcg_Buff_Common_Special.webp';
                 this.iconBg = STATUS_BG_COLOR[9];
-            } else if (['satiety', 'freeze', 'debuff'].includes(icon)) {
-                this.iconBg = DEBUFF_BG_COLOR;
+            } else if (['satiety', 'debuff'].includes(icon)) {
+                if (icon == 'satiety') this.icon = 'https://gi-tcg-assets.guyutongxue.site/assets/UI_Gcg_Buff_Common_Food.webp';
+                if (icon == 'debuff') this.icon = 'https://gi-tcg-assets.guyutongxue.site/assets/UI_Gcg_Buff_Common_Debuff.webp';
+                // this.iconBg = DEBUFF_BG_COLOR;
             } else if (['heal'].includes(icon)) {
+                if (icon == 'heal2') this.icon = 'https://gi-tcg-assets.guyutongxue.site/assets/UI_Gcg_Buff_Common_Revive.webp';
                 this.iconBg = '#95ff7a';
             } else {
                 this.iconBg = '#9a9a9a05';
@@ -158,10 +165,12 @@ const statusTotal: StatusObj = {
             },
         }), { icbg: STATUS_BG_COLOR[1] }),
 
-    2004: () => new GIStatus(2004, '冻结', '角色无法使用技能持续到回合结束。；角色受到[火元素伤害]或[物理伤害]时，移除此效果，使该伤害+2', 'freeze', 0, [3, 10, 14], -1, 0, 1),
+    2004: () => new GIStatus(2004, '冻结', '角色无法使用技能持续到回合结束。；角色受到[火元素伤害]或[物理伤害]时，移除此效果，使该伤害+2',
+        'https://gi-tcg-assets.guyutongxue.site/assets/UI_Gcg_Buff_Common_Frozen.webp', 0, [3, 10, 14], -1, 0, 1),
 
     2005: () => new GIStatus(2005, '草原核', '【我方对敌方出战角色造成[火元素伤害]或[雷元素伤害]时，】伤害值+2。；【[可用次数]：{useCnt}】',
-        'sts2005', 1, [6], 1, 0, -1, (status, event = {}) => {
+        'https://gi-tcg-assets.guyutongxue.site/assets/UI_Gcg_Buff_Reaction_116.webp',
+        1, [6], 1, 0, -1, (status, event = {}) => {
             const { eheros = [], getDmgIdx = -1 } = event;
             if (!eheros[getDmgIdx]?.isFront) return;
             return {
@@ -172,7 +181,8 @@ const statusTotal: StatusObj = {
         }, { icbg: STATUS_BG_COLOR[7] }),
 
     2006: () => new GIStatus(2006, '激化领域', '【我方对敌方出战角色造成[雷元素伤害]或[草元素伤害]时，】伤害值+1。；【[可用次数]：{useCnt}】',
-        'sts2006', 1, [6], 2, 0, -1, (status, event = {}) => {
+        'https://gi-tcg-assets.guyutongxue.site/assets/UI_Gcg_Buff_Reaction_117.webp',
+        1, [6], 2, 0, -1, (status, event = {}) => {
             const { eheros = [], getDmgIdx = -1 } = event;
             if (!eheros[getDmgIdx]?.isFront) return;
             return {
@@ -539,7 +549,8 @@ const statusTotal: StatusObj = {
         }), { pct: 1, icbg: STATUS_BG_COLOR[6] }),
 
     2047: () => new GIStatus(2047, '活化激能', '【本角色造成或受到元素伤害后：】累积1层｢活化激能｣。(最多累积3层)；【结束阶段：】如果｢活化激能｣层数已达到上限，就将其清空。同时，角色失去所有[充能]。',
-        'sts2047', 0, [9], 0, 3, -1, (status, event = {}) => {
+        'https://gi-tcg-assets.guyutongxue.site/assets/UI_Gcg_Buff_FungusRaptor_S.webp',
+        0, [9], 0, 3, -1, (status, event = {}) => {
             const { trigger = '', heros = [], hidx = -1 } = event;
             return {
                 trigger: ['el-dmg', 'el-getdmg', 'phase-end'],
@@ -976,7 +987,8 @@ const statusTotal: StatusObj = {
     2087: () => new GIStatus(2087, '石化', '【角色无法使用技能。】(持续到回合结束)', 'ski1504,3', 0, [3, 10, 14], -1, 0, 1, undefined, { icbg: DEBUFF_BG_COLOR }),
 
     2088: () => new GIStatus(2088, '蕴种印', '【任意具有蕴种印的所在阵营角色受到元素反应伤害后：】对所有附属角色1点[穿透伤害]。；【[可用次数]：{useCnt}】',
-        'sts2088', 0, [1], 2, 0, -1, (_status, event = {}) => {
+        'https://gi-tcg-assets.guyutongxue.site/assets/UI_Gcg_Buff_Nahida_S.webp',
+        0, [1], 2, 0, -1, (_status, event = {}) => {
             const { heros = [], eheros = [], hidx = -1 } = event;
             const hidxs: number[] = [];
             heros.forEach((h, hi) => {
@@ -1804,7 +1816,7 @@ const statusTotal: StatusObj = {
         }, { icbg: DEBUFF_BG_COLOR }),
 
     2164: (cnt = 1) => new GIStatus(2164, '源水之滴', `【〖hro1110〗进行｢普通攻击｣后：】治疗【hro1110】2点，然后如果【hro1110】是我方｢出战角色｣，则[准备技能]：【rsk17】。；【[可用次数]：{useCnt}】(可叠加，最多叠加到3次)`,
-        'https://api.hakush.in/gi/UI/UI_Talent_S_Neuvillette_03.webp', 1, [1], cnt, 3, -1, (_status, event = {}) => {
+        'https://gi-tcg-assets.guyutongxue.site/assets/UI_Gcg_Buff_Neuvillette_S.webp', 1, [1], cnt, 3, -1, (_status, event = {}) => {
             const { heros = [], hidx = -1 } = event;
             if (heros[hidx]?.id != 1110) return;
             return {
