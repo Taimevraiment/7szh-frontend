@@ -81,9 +81,10 @@ class GIStatus implements Status {
                 if (icon == 'satiety') this.icon = 'https://gi-tcg-assets.guyutongxue.site/assets/UI_Gcg_Buff_Common_Food.webp';
                 if (icon == 'debuff') this.icon = 'https://gi-tcg-assets.guyutongxue.site/assets/UI_Gcg_Buff_Common_Debuff.webp';
                 // this.iconBg = DEBUFF_BG_COLOR;
-            } else if (['heal'].includes(icon)) {
+            } else if (icon.includes('heal')) {
+                if (icon == 'heal') this.icon = 'https://gi-tcg-assets.guyutongxue.site/assets/UI_Gcg_Buff_Common_Heal.webp';
                 if (icon == 'heal2') this.icon = 'https://gi-tcg-assets.guyutongxue.site/assets/UI_Gcg_Buff_Common_Revive.webp';
-                this.iconBg = '#95ff7a';
+                // this.iconBg = '#95ff7a';
             } else {
                 this.iconBg = '#9a9a9a05';
             }
@@ -899,7 +900,8 @@ const statusTotal: StatusObj = {
         })),
 
     2079: () => new GIStatus(2079, '血梅香', '【结束阶段：】对所附属角色造成1点[火元素伤害]。；【[可用次数]：{useCnt}】',
-        'sts2079', 0, [1], 1, 0, -1, () => ({
+        'https://gi-tcg-assets.guyutongxue.site/assets/UI_Gcg_Buff_Common_Dot.webp',
+        0, [1], 1, 0, -1, () => ({
             damage: 1,
             element: 2,
             isSelf: true,
@@ -1984,7 +1986,8 @@ const statusTotal: StatusObj = {
         })),
 
     2180: () => new GIStatus(2180, '暗流的诅咒', '【所在阵营的角色使用｢元素战技｣或｢元素爆发｣时：】需要多花费1个元素骰。；【[可用次数]：{useCnt}】',
-        'sts2180', 1, [4], 2, 0, -1, status => ({
+        'https://gi-tcg-assets.guyutongxue.site/assets/UI_Gcg_Debuff_Common_CostSkill.webp',
+        1, [4], 2, 0, -1, status => ({
             trigger: ['skilltype2', 'skilltype3'],
             addDiceSkill: {
                 skilltype2: [0, 0, 1],
@@ -2016,7 +2019,8 @@ const statusTotal: StatusObj = {
         })),
 
     2184: () => new GIStatus(2184, '悠远雷暴', '【结束阶段：】对所附属角色造成2点[穿透伤害]。；【[可用次数]：{useCnt}】',
-        'sts2079', 0, [1], 1, 0, -1, (_status, event = {}) => {
+        'https://gi-tcg-assets.guyutongxue.site/assets/UI_Gcg_Buff_Common_Dot.webp',
+        0, [1], 1, 0, -1, (_status, event = {}) => {
             const { hidx = -1 } = event;
             return {
                 trigger: ['phase-end'],
@@ -2132,7 +2136,8 @@ const statusTotal: StatusObj = {
         }, { icbg: STATUS_BG_COLOR[1] }),
 
     2195: () => new GIStatus(2195, '狂欢值', '我方造成的伤害+1。(包括角色引发的扩散伤害)；【[可用次数]：{useCnt}(可叠加，没有上限)】',
-        'https://homdgcat.wiki/homdgcat-res/AvatarSkill/UI_Talent_S_Furina_01.png', 1, [4, 6], 1, 1000, 1, (status, { trigger } = {}) => ({
+        'https://gi-tcg-assets.guyutongxue.site/assets/UI_Gcg_Buff_Furina_E_02.webp',
+        1, [4, 6], 1, 1000, 1, (status, { trigger } = {}) => ({
             trigger: ['dmg', 'dmg-wind'],
             addDmg: 1,
             exec: () => {
@@ -2261,7 +2266,7 @@ const statusTotal: StatusObj = {
             }
         }),
 
-    2205: () => new GIStatus(2205, '深噬之域', '我方[舍弃]或[调和]的手牌，会被吞噬。；每吞噬3张牌：【hro1724】获得1点额外最大生命; 如果其中存在原本元素骰费用值相同的牌，则额外获得1点; 如果3张均相同，再额外获得1点。',
+    2205: () => new GIStatus(2205, '深噬之域', '我方[舍弃]或[调和]的手牌，会被吞噬。；【每吞噬3张牌：】【hro1724】获得1点额外最大生命; 如果其中存在原本元素骰费用值相同的牌，则额外获得1点; 如果3张均相同，再额外获得1点。',
         'ski1724,3', 1, [4, 9], 0, 3, -1, (_status, event = {}) => {
             const { discards: [discards, type] = [[], -1], card } = event;
             if (type != 0) return;
@@ -2294,14 +2299,15 @@ const statusTotal: StatusObj = {
                         }
                     });
                     if (cnt > 0) {
-                        return { cmds: [{ cmd: 'heal', cnt, hidxs: [hidx] }, { cmd: 'getStatus', status: [heroStatus(2217, cnt)], hidxs: [hidx] }], }
+                        const healcmds = Array.from<Cmds[], Cmds>({ length: cnt }, (_, i) => ({ cmd: 'heal', cnt: 1, hidxs: [hidx], round: i }));
+                        return { cmds: [{ cmd: 'getStatus', status: [heroStatus(2217, cnt)], hidxs: [hidx] }, ...healcmds], }
                     }
                 }
             }
         }, { icbg: STATUS_BG_COLOR[1], adt: [-1, -1, 0, 0] }),
 
-    2206: (useCnt = -1) => new GIStatus(2206, '雷锥陷阱', `【所在阵营的角色使用技能后：】对所在阵营的出战角色造成2点[雷元素伤害]。；【[可用次数]：${useCnt > 0 ? '{useCnt}' : '初始为创建时所弃置的噬骸能量块张数。'}(最多叠加到3)】`,
-        'debuff', 1, [1], useCnt, 3, -1, () => ({
+    2206: (useCnt = -1) => new GIStatus(2206, '雷锥陷阱', '【所在阵营的角色使用技能后：】对所在阵营的出战角色造成2点[雷元素伤害]。；【[可用次数]：初始为创建时所弃置的噬骸能量块张数。(最多叠加到3)】',
+        'skill1765,2', 1, [1], useCnt, 3, -1, () => ({
             damage: 2,
             element: 3,
             isSelf: true,
@@ -2309,12 +2315,12 @@ const statusTotal: StatusObj = {
             exec: eStatus => {
                 if (eStatus) --eStatus.useCnt;
             }
-        })),
+        }), { icbg: DEBUFF_BG_COLOR }),
 
     2207: () => oncePerRound(2207, '噬骸能量块'),
 
-    2208: () => new GIStatus(2208, '亡风啸卷(生效中)', '本回合中，我方下次切换角色后，生成1个出战角色类型的元素骰。',
-        'buff2', 1, [4, 10], 1, 0, 1, () => ({
+    2208: () => new GIStatus(2208, '亡风啸卷(生效中)', '【本回合中我方下次切换角色后】：生成1个出战角色类型的元素骰。',
+        'buff3', 1, [4, 10], 1, 0, 1, () => ({
             trigger: ['change-from'],
             isAddTask: true,
             exec: eStatus => {
@@ -2323,7 +2329,7 @@ const statusTotal: StatusObj = {
             }
         })),
 
-    2209: (useCnt = 1) => new GIStatus(2209, '绿洲之滋养', '我方打出【crd907】时：少花费1个元素骰。；【[可用次数]：{useCnt}(可叠加，最多到3)】',
+    2209: (useCnt = 1) => new GIStatus(2209, '绿洲之滋养', '【我方打出〖crd907〗时：】少花费1个元素骰。；【[可用次数]：{useCnt}(可叠加到3)】',
         'ski1822,1', 1, [4], useCnt, 3, -1, (status, event = {}) => {
             const { card, minusDiceCard: mdc = 0 } = event;
             if (card && card.id == 907 && card.cost > mdc) {
@@ -2353,7 +2359,7 @@ const statusTotal: StatusObj = {
 
     2211: () => shieldStatus(2211, 'todo重燃的绿洲之心护盾'),
 
-    2212: (summonId: number, useCnt = 1) => new GIStatus(2212, '黑色幻影', '【我方出战角色受到伤害时：】抵消1点伤害。；【[可用次数]：{useCnt}】',
+    2212: (summonId: number, useCnt = 1) => new GIStatus(2212, '黑色幻影', '【我方出战角色受到伤害时：】抵消1点伤害，然后[可用次数]-2。；【[可用次数]：{useCnt}】',
         '', 1, [2], useCnt, 0, -1, (status, event = {}) => {
             const { restDmg = 0, summon } = event;
             if (restDmg <= 0) return { restDmg }
@@ -2387,7 +2393,7 @@ const statusTotal: StatusObj = {
 
     2215: () => oncePerRound(2215, '禁忌知识'),
 
-    2216: () => new GIStatus(2216, '绿洲之心', '我方召唤4个【smn3063】后，【hro1822】附属【sts2210】，并获得2点[护盾]。',
+    2216: () => new GIStatus(2216, '绿洲之心', '我方召唤4个【smn3063】后，我方【hro1822】附属【sts2210】，并获得2点[护盾]。',
         'ski1822,2', 1, [9], 0, 4, -1, (status, event = {}) => {
             const { card, discards: [discards] = [[]], heros = [] } = event;
             if (card?.id != 907 && discards.every(c => c.id != 907) && status.useCnt < 4) return;
@@ -2401,7 +2407,7 @@ const statusTotal: StatusObj = {
             }
         }, { icbg: STATUS_BG_COLOR[7] }),
 
-    2217: (cnt = 1) => new GIStatus(2217, '奇异之躯', '【hro1724】获得1点额外最大生命。',
+    2217: (cnt = 1) => new GIStatus(2217, '奇异之躯', '每层为【hro1724】提供1点额外最大生命。',
         'ski1724,3', 0, [9, 12], cnt, 1000, -1, undefined, { icbg: STATUS_BG_COLOR[1] }),
 
 };

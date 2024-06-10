@@ -260,7 +260,8 @@
               'will-heal': (willHp[(hidx + 3 * playerIdx) % 6] ?? 0) > 0,
             }" :style="{ paddingLeft: `${hero.hp + (willHp[(hidx + 3 * playerIdx) % 6] ?? 0) <= 0 ? '0' : '3px'}` }"
               v-if="willHp[(hidx + 3 * playerIdx) % 6] != undefined">
-              <img v-if="(willHp[(hidx + 3 * playerIdx) % 6] ?? 0) % 1 != 0" :src="getPngIcon('heal2')"
+              <img v-if="(willHp[(hidx + 3 * playerIdx) % 6] ?? 0) % 1 != 0"
+                :src="getPngIcon('https://gi-tcg-assets.guyutongxue.site/assets/UI_Gcg_Buff_Common_Revive.webp')"
                 style="height: 16px" />
               <img v-else-if="hero.hp + (willHp[(hidx + 3 * playerIdx) % 6] ?? 0) <= 0" :src="getSvgIcon('die')"
                 style="height: 16px; padding-left: 3px" />

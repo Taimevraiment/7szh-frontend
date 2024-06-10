@@ -1019,8 +1019,12 @@ export default class GeniusInvokationClient {
         if (dmgElements) this.dmgElements = [...dmgElements];
         if (willHeals) { // 回血
             this.willHeals = willHeals;
-            this.isShowHeal = true;
-            setTimeout(() => this.isShowHeal = false, 1800);
+            const isShowHealing = this.isShowHeal;
+            if (isShowHealing) {
+                this.isShowHeal = false;
+                setTimeout(() => this.isShowHeal = true, 200);
+            } else this.isShowHeal = true;
+            setTimeout(() => this.isShowHeal = false, 1700);
         }
         if (willDamage) { // 受伤
             this.willDamages = [...willDamage];
@@ -3616,7 +3620,7 @@ export default class GeniusInvokationClient {
                 willDamage,
                 dmgElements,
                 elTips,
-                willHeals: isCdt(!!stsres.heal, willHeals),
+                willHeals: isCdt(!!stsres.heal, willHeals[0]),
                 dices,
                 cmds,
                 playerInfo: this.players[pidx].playerInfo,

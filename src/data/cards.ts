@@ -190,7 +190,9 @@ const elCard = (id: number, element: number, src: string) => {
 }
 
 const magicCount = (cnt: number, id?: number) => new GICard(id ?? (909 + 2 - cnt), `幻戏${cnt > 0 ? `倒计时：${cnt}` : '开始！'}`, `将我方所有元素骰转换为[万能元素骰]，摸4张牌。${cnt > 0 ? '；此牌在手牌或牌库中被[舍弃]后：将1张元素骰费用比此卡少1个的｢幻戏倒计时｣放置到你的牌库顶。' : ''}`,
-    id ? 'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/02/258999284/9c032dc20cdd269e79296d893806b112_6984839959914845407.png' : `/image/crd${909 + 2 - cnt}.png`,
+    id ? 'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/02/258999284/9c032dc20cdd269e79296d893806b112_6984839959914845407.png' :
+        `https://gi-tcg-assets.guyutongxue.site/assets/UI_Gcg_CardFace_Event_Event_MagicCount${cnt}.webp`,
+    //  `/image/crd${909 + 2 - cnt}.png`,
     cnt, 8, 2, [], 0, 0, (card, event) => {
         const { trigger = '' } = event;
         const cnt = +card.name.slice(-1) || 0;
@@ -335,7 +337,7 @@ const allCards: CardObj = {
     26: senlin1Weapon(26, '王下近侍', 3, 'https://act-upload.mihoyo.com/wiki-user-upload/2023/08/12/203927054/c667e01fa50b448958eff1d077a7ce1b_1806864451648421284.png'),
 
     27: new GICard(27, '竭泽', '【我方打出名称不存在于初始牌组中的行动牌后：】此牌累积1点｢渔猎｣。(最多累积2点，每回合最多累积2点)；【角色使用技能时：】如果此牌已有｢渔猎｣，则消耗所有｢渔猎｣，使此技能伤害+1，并且每消耗1点｢渔猎｣就摸1张牌。',
-        'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/02/258999284/e09e62a684575d632c731f3725280df2_7385957084481452662.png',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/02/258999284/ea03edad3c81f49bddc24a5689f278d2_6229118249248157024.png',
         2, 8, 0, [0], 3, 1, (card, event) => {
             const { playerInfo: { initCardIds = [] } = {}, hcard, trigger = '' } = event;
             const triggers: Trigger[] = [];
@@ -1649,9 +1651,9 @@ const allCards: CardObj = {
                     if (fhps[i] == -1) continue;
                     const chp = fhps[i] - heros[i].hp;
                     if (chp == 0) continue;
-                    const cmd = chp > 0 ? 'heal' : 'attack';
                     const isOppo = chp < 0;
-                    const element = isCdt(chp < 0, -1);
+                    const cmd = !isOppo ? 'heal' : 'attack';
+                    const element = isCdt(isOppo, -1);
                     cmds.push({ cmd, cnt: Math.abs(chp), element, isOppo, hidxs: [i] });
                 }
             }
@@ -2428,7 +2430,7 @@ const allCards: CardObj = {
         1, 2, 0, [6], 1744, 1, (_card, { hidxs }) => ({ cmds: [{ cmd: 'attach', hidxs, element: 2 }] }), { pct: 1 }),
 
     784: new GICard(784, '予行恶者以惩惧', '{action}；装备有此牌的【{hro}】受到伤害或治疗后，此牌累积1点｢惩戒计数｣。；装备有此牌的【{hro}】使用技能时：如果已有3点｢惩戒计数｣，则消耗3点使此技能伤害+1。',
-        'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/03/258999284/ba5051d7c24ad430dcd83d95e4a6bf42_8827773662019804646.png`',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/03/258999284/ba5051d7c24ad430dcd83d95e4a6bf42_1747806350562559991.png',
         1, 4, 0, [6, 7], 1011, 0, (card, event) => {
             const { hidxs: [hidx] = [], heal = [], getdmg = [], trigger = '' } = event;
             return {
@@ -2452,7 +2454,7 @@ const allCards: CardObj = {
     786: new GICard(786, '地狱里摇摆', '{action}；【装备有此牌的〖{hro}〗使用技能时：】如果我方手牌数量不多于1，则造成的伤害+2。(每回合1次)',
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/03/258999284/219c7c6843e4ead2ab8ab2ce7044f5c3_8151320593747508491.png',
         1, 2, 0, [6, 7], 1212, 0, (card, { hcards = [] }) => {
-            if (hcards.length > 1 || card.perCnt <= 0) return;
+            if ((hcards.length - (card.selected ? 1 : 0)) > 1 || card.perCnt <= 0) return;
             return { trigger: ['skill'], addDmgCdt: 2, exec: () => { --card.perCnt } }
         }, { pct: 1, anydice: 2 }),
 
@@ -2521,7 +2523,7 @@ const allCards: CardObj = {
         0, 8, 2, [], 0, 0, () => ({ status: [heroStatus(2185)] })),
 
     904: new GICard(904, '海底宝藏', '治疗我方出战角色1点，生成1个随机基础元素骰。',
-        '/image/crd904.png',
+        'https://gi-tcg-assets.guyutongxue.site/assets/UI_Gcg_CardFace_Summon_Xunbao.webp',
         0, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'heal', cnt: 1 }, { cmd: 'getDice', cnt: 1, element: -1 }] })),
 
     905: new GICard(905, '圣俗杂座', '在｢始基力:荒性｣和｢始基力:芒性｣之中，切换【芙宁娜】的形态。；如果我方场上存在【沙龙成员】或【众水的歌者】，也切换其形态。',

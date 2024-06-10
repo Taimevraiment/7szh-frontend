@@ -204,10 +204,12 @@ const summonTotal: SummoneeObj = {
         2, 2, 0, 2, 1),
 
     3017: () => new GISummonee(3017, '纯水幻形·飞鸢', '【结束阶段：】造成{dmg}点[水元素伤害]。；【[可用次数]：{useCnt}】',
-        '/image/smn3017.png', 3, 3, 0, 1, 1),
+        'https://gi-tcg-assets.guyutongxue.site/assets/UI_Gcg_CardFace_Summon_Raptor.webp',
+        3, 3, 0, 1, 1),
 
     3018: () => new GISummonee(3018, '纯水幻形·蛙', '【我方出战角色受到伤害时：】抵消{shield}点伤害。；【[可用次数]：{useCnt}】，耗尽时不弃置此牌。；【结束阶段，如果可用次数已耗尽：】弃置此牌以造成{dmg}点[水元素伤害]。',
-        '/image/smn3018.png', 1, 1, -1, 2, 1, summon => {
+        'https://gi-tcg-assets.guyutongxue.site/assets/UI_Gcg_CardFace_Summon_Frog.webp',
+        1, 1, -1, 2, 1, summon => {
             const trigger: Trigger[] = [];
             if (summon.useCnt == 0) trigger.push('phase-end');
             return {
