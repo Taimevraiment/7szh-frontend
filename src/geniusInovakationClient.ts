@@ -2450,7 +2450,7 @@ export default class GeniusInvokationClient {
         const aFrontIdx = getAtkHidx(aheros);
         let afhero = res.aheros[aFrontIdx];
         const isElReaction: number[] = new Array(8).fill(0);
-        const isElStatus = [false, false]; // [绽放, 激化]
+        const isElStatus = [false, false, false]; // [绽放, 激化, 超载, 蒸发, 融化, 感电, 超导]
         if (res.willDamage[getDmgIdx][0] > 0 || isAttach) {
             res.dmgElements[frontIdx] = willAttach;
             if (!attachElements[frontIdx].includes(willAttach) && ![5, 6].includes(willAttach)) res.willAttachs[frontIdx] = willAttach;
@@ -2495,6 +2495,7 @@ export default class GeniusInvokationClient {
                     } else if (hasEls(1, 2) || hasEls(2, 4)) { // 水火 蒸发  冰火 融化
                         res.willDamage[getDmgIdx][0] += isAttach ? 0 : 2;
                         res.elTips[elTipIdx] = [attachType == 6 ? '蒸发' : '融化', willAttach, attachElement];
+                        isElStatus[attachType == 6 ? 3 : 4] = true;
                     } else if (hasEls(1, 3) || hasEls(3, 4)) { // 水雷 感电  冰雷 超导
                         if (!isAttach) {
                             res.willDamage.forEach((dmg, i) => {
@@ -2506,6 +2507,7 @@ export default class GeniusInvokationClient {
                             });
                         }
                         res.elTips[elTipIdx] = [attachType == 10 ? '感电' : '超导', willAttach, attachElement];
+                        isElStatus[attachType == 10 ? 5 : 6] = true;
                     } else if (hasEls(1, 4)) { // 水冰 冻结
                         res.willDamage[getDmgIdx][0] += +!isAttach;
                         efhero.inStatus = this._updateStatus([heroStatus(2004)], efhero.inStatus).nstatus;
@@ -2517,6 +2519,7 @@ export default class GeniusInvokationClient {
                     } else if (hasEls(2, 3)) { // 火雷 超载
                         res.willDamage[getDmgIdx][0] += 2;
                         if (efhero.isFront) res.elrcmds[0].push({ cmd: 'switch-after', cnt: 2500, isOppo: !isSelf });
+                        isElStatus[2] = true;
                         res.elTips[elTipIdx] = ['超载', willAttach, attachElement];
                     } else if (hasEls(2, 7)) { // 火草 燃烧
                         ++res.willDamage[getDmgIdx][0];
@@ -2752,7 +2755,10 @@ export default class GeniusInvokationClient {
                         }], trigger == 'getdmg');
                     }
                     if (stsres.exec && isWindExec && !sts.type.includes(11)) {
-                        const { cmds = [] } = stsres.exec(undefined, { isQuickAction: !res.isQuickAction && stsres.isQuickAction }) ?? {};
+                        const { cmds = [] } = stsres.exec(undefined, {
+                            isQuickAction: !res.isQuickAction && stsres.isQuickAction,
+                            heros: isSelf ? res.aheros : res.eheros,
+                        }) ?? {};
                         res.elrcmds[+!isSelf].push(...cmds);
                     }
                     if (isSelf) res.isQuickAction ||= !!stsres.isQuickAction;
@@ -2809,7 +2815,6 @@ export default class GeniusInvokationClient {
                 isFallAtk,
                 isExec,
                 heros: res.aheros,
-                hcard: this.currCard,
                 minusDiceSkill: res.minusDiceSkill,
                 isSkill: skidx,
             });
@@ -2885,13 +2890,29 @@ export default class GeniusInvokationClient {
         }
         res.willDamage[getDmgIdx][0] = restDmg;
         const aGetDmgIdxOffset = res.aheros.length * (pidx ^ 1);
+        const dmg = res.willDamage.slice(getDmgIdxOffset, getDmgIdxOffset + res.eheros.length).map(v => v.reduce((a, b) => a + Math.max(0, b)));
+        const getdmg = res.willDamage.slice(aGetDmgIdxOffset, aGetDmgIdxOffset + res.aheros.length).map(v => v.reduce((a, b) => a + Math.max(0, b)));
         res.aheros.forEach((h, hi) => {
             res.willheals[hi + epidx * res.aheros.length] = Math.min(h.maxhp - h.hp, res.willheals[hi + epidx * res.aheros.length])
-            this._doSkill(atriggers[hi], { pidx, hidxs: hi, heros: res.aheros, isExec, getdmg: res.willDamage.slice(aGetDmgIdxOffset, aGetDmgIdxOffset + res.aheros.length).map(v => v.reduce((a, b) => a + Math.max(0, b))) });
+            this._doSkill(atriggers[hi], {
+                pidx,
+                hidxs: hi,
+                heros: res.aheros,
+                isElStatus,
+                isExec,
+                getdmg,
+                dmg,
+            });
         });
         res.eheros.forEach((h, hi) => {
             res.willheals[hi + pidx * res.eheros.length] = Math.min(h.maxhp - h.hp, res.willheals[hi + pidx * res.eheros.length]);
-            this._doSkill(etriggers[hi], { pidx: pidx ^ 1, hidxs: hi, heros: res.eheros, isExec, getdmg: res.willDamage.slice(getDmgIdxOffset, getDmgIdxOffset + hi).map(v => v.reduce((a, b) => a + Math.max(0, b))) });
+            this._doSkill(etriggers[hi], {
+                pidx: pidx ^ 1,
+                hidxs: hi,
+                heros: res.eheros,
+                isExec,
+                getdmg: dmg,
+            });
         });
 
         if (isElReaction[6] > 0) aost.push(heroStatus(2007));
@@ -2990,7 +3011,7 @@ export default class GeniusInvokationClient {
         if (typeof ostate == 'string') states.push(ostate);
         else states.push(...ostate);
         const { intvl = [100, 100, 1500, 100], isUnshift = false, csummon, isExec = true, isDmg = false, isChargedAtk = false,
-            hidx = this.players[pidx].hidx, isFallAtk = false, hcard, isExecTask = false, isSkill = -1, tsummon,
+            hidx = this.players[pidx].hidx, isFallAtk = false, hcard = this.currCard, isExecTask = false, isSkill = -1, tsummon,
             players = this.players, heros = players[pidx].heros, eheros = players[pidx ^ 1].heros, tround = 0 } = options;
         let { minusDiceSkill } = options;
         const p = players[pidx];
@@ -3636,18 +3657,19 @@ export default class GeniusInvokationClient {
     * @param hidx 发动技能角色的索引idx
     * @param trigger 触发的时机
     * @param options pidx 玩家idx, players 玩家组, heros 角色组, eheros 敌方角色组, isExec 是否执行, getdmg 受到伤害数,
-    *                isEffectHero 是否直接作用于改变角色组, heal 回血数, discards 我方弃牌
+    *                isEffectHero 是否直接作用于改变角色组, heal 回血数, discards 我方弃牌, isElStatus 元素反应类型, dmg 造成的伤害
     * @returns isQuickAction: 是否为快速行动, heros 变化后的我方角色组, eheros 变化后的对方角色组, isTriggered 是否触发被动
     */
     _doSkill(otrigger: Trigger | Trigger[],
         options: {
             pidx?: number, players?: Player[], heros?: Hero[], eheros?: Hero[], hidxs?: number[] | number, cskill?: [number, number],
-            isExec?: boolean, getdmg?: number[], heal?: number[], discards?: [Card[], number], isExecTask?: boolean, isQuickAction?: boolean
+            isExec?: boolean, getdmg?: number[], heal?: number[], discards?: [Card[], number], isExecTask?: boolean, isQuickAction?: boolean,
+            isElStatus?: boolean[], dmg?: number[],
         } = {}
     ) {
         const { pidx = this.playerIdx, players = this.players, isExec = true, getdmg = [], heal = [], discards = [[], -1],
             isExecTask = false, cskill } = options;
-        let { heros = players[pidx].heros, eheros = players[pidx ^ 1].heros, hidxs, isQuickAction = false } = options;
+        let { heros = players[pidx].heros, eheros = players[pidx ^ 1].heros, hidxs, isQuickAction = false, isElStatus = [], dmg = [] } = options;
         let isTriggered = false;
         const cmds: Cmds[] = [];
         let task: [(() => void)[], number[]] | undefined;
@@ -3663,7 +3685,18 @@ export default class GeniusInvokationClient {
                 if (cskill && cskill[1] != skidx) continue;
                 const skill = skills[skidx];
                 for (const trigger of triggers) {
-                    const skillres = skill.handle({ hero, skidx, getdmg: getdmg[hidx], trigger, heros, heal, discards });
+                    const skillres = skill.handle({
+                        hero,
+                        skidx,
+                        getdmg: getdmg[hidx],
+                        trigger,
+                        heros,
+                        heal,
+                        discards,
+                        isElStatus,
+                        dmg,
+                        card: this.currCard,
+                    });
                     if (this._hasNotTrigger(skillres.trigger, trigger)) continue;
                     isTriggered = true;
                     isQuickAction ||= !!skillres.isQuickAction;
@@ -3732,6 +3765,7 @@ export default class GeniusInvokationClient {
         changeHeroDiceCnt?: number, heal?: number[], heros?: Hero[], eheros?: Hero[], minusDiceCard?: number, isUnshift?: boolean,
         hcard?: Card, isChargedAtk?: boolean, isFallAtk?: boolean, isSkill?: number, minusDiceSkill?: number[][], isSummon?: number,
         isExec?: boolean, intvl?: number[], dieChangeBack?: boolean, usedDice?: number, isQuickAction?: boolean, getdmg?: number[],
+        isElStatus?: boolean[],
     } = {}) {
         const triggers: Trigger[] = [];
         if (typeof otriggers == 'string') triggers.push(otriggers);
@@ -3739,7 +3773,7 @@ export default class GeniusInvokationClient {
         const { pidx = this.playerIdx, summons = this.players[pidx].summon, heal, hcard, ehidx = this.players[pidx ^ 1].hidx,
             heros = this.players[pidx].heros, eheros = this.players[pidx ^ 1].heros, taskMark, isUnshift = false,
             isChargedAtk = false, isFallAtk = this.isFall, isExec = true, intvl = [0, 0, 0, 0], card, isSummon = -1,
-            dieChangeBack = false, isSkill = -1, usedDice = 0, getdmg } = options;
+            dieChangeBack = false, isSkill = -1, usedDice = 0, getdmg, isElStatus = [] } = options;
         const player = this.players[pidx];
         let { changeHeroDiceCnt = 0, minusDiceCard = 0, hidxs = [player.hidx], minusDiceSkill, isQuickAction = false } = options;
         let willHeals: number[] = new Array(heros.length).fill(-1);
@@ -3791,6 +3825,7 @@ export default class GeniusInvokationClient {
                             getdmg,
                             playerInfo: player.playerInfo,
                             isExecTask: !!taskMark,
+                            isElStatus,
                         });
                         if (this._hasNotTrigger(slotres.trigger, trigger)) continue;
                         tcmds.push(...(slotres.execmds ?? []));

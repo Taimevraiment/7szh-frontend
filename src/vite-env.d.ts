@@ -273,7 +273,7 @@ type Trigger = 'phase-start' | 'phase-end' | 'phase-dice' | 'game-start' | 'acti
     `el${TrgEl}Reaction` | `el5Reaction:${TrgElRe}` | `other-el${TrgEl}Reaction` | 'other-elReaction' | 'ecard' | `el6Reaction:${TrgElRe}` |
     'get-elReaction' | `get-el${TrgEl}Reaction` | 'get-elReaction-oppo' | 'kill' | 'killed' | 'will-killed' | 'dmg' | 'other-dmg' | `${TrgDmg}-dmg` |
     'dmg-wind' | `${TrgElReDmg}-dmg-wind` | 'getdmg' | 'other-getdmg' | `${TrgDmg}-getdmg` | 'getdmg-oppo' | 'revive' | `${TrgDmg}-getdmg-oppo` |
-    'heal' | 'eheal' | 'useReadySkill' | 'status-destroy' | 'summon-destroy' | 'slot-destroy' | 'site-destroy' | 'calc' |
+    'heal' | 'eheal' | 'pre-heal' | 'useReadySkill' | 'status-destroy' | 'summon-destroy' | 'slot-destroy' | 'site-destroy' | 'calc' |
     'reconcile' | 'discard' | 'getcard' | 'getcard-oppo' | '';
 
 type ExplainContent = Skill | Status | Summonee | Card | string;
@@ -305,6 +305,8 @@ type SkillHandleEvent = {
     heal?: number[],
     playerInfo?: GameInfo,
     discards?: [Card[], number],
+    isElStatus?: boolean[],
+    dmg?: number[],
 }
 
 type SkillHandleRes = {
@@ -368,6 +370,7 @@ type CardHandleEvent = {
     getdmg?: number[],
     slotUse?: boolean,
     isExecTask?: boolean,
+    isElStatus?: boolean[],
 }
 
 type CardHandleRes = {

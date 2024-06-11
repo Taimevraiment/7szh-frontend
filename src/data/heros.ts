@@ -1,7 +1,7 @@
 import { ELEMENT } from './constant';
 import { heroStatus } from './heroStatus';
 import { newSummonee } from './summonee';
-import { allHidxs, clone, getBackHidxs, isCdt, minusDiceSkillHandle } from './utils';
+import { allHidxs, clone, getBackHidxs, getMaxHertHidxs, isCdt, minusDiceSkillHandle } from './utils';
 
 class GIHero implements Hero {
     id: number;
@@ -865,6 +865,31 @@ const allHeros: HeroObj = {
         ], () => ({ pendamage: 2, status: [heroStatus(2199)], cmds: [{ cmd: 'discard', element: 1 }] }))
     ]),
 
+    1213: new GIHero(1213, '夏沃蕾', [5, 11], 10, 2, 5,
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Char_Avatar_Chevreuse.webp',
+        skill1('线列枪刺·改'), [
+        new GISkill('近迫式急促拦射', '造成{dmg}点[火元素伤害]。；【此技能结算后：】如果我方手牌中含有【crd912】，则[舍弃]1张并治疗我方受伤最多的角色1点。。', 2, 3, 3, 2, {}, [
+            '',
+            '',
+        ], event => {
+            const { hcards = [], heros = [] } = event;
+            if (hcards.every(c => c.id != 912)) return;
+            return { cmds: [{ cmd: 'discard', cnt: 1, card: 912 }, { cmd: 'heal', cnt: 1, hidxs: getMaxHertHidxs(heros) }] }
+        }),
+        new GISkill('圆阵掷弹爆轰术', '造成{dmg}点[火元素伤害]，在敌方场上生成【sts2218】。', 3, 3, 3, 2, { ec: 2 }, [
+            '',
+            '',
+        ], () => ({ statusOppo: [heroStatus(2218)] })),
+        new GISkill('纵阵武力统筹', '【敌方角色受到超载反应伤害后：】生成手牌【crd912】。(每回合1次)', 4, 0, 0, 0, {}, [
+            '',
+            '',
+        ], event => {
+            const { isElStatus = [], hero: { skills: [, , , { useCnt }] } } = event;
+            if (!isElStatus[2] || useCnt > 0) return;
+            return { cmds: [{ cmd: 'getCard', cnt: 1, card: 912 }] }
+        })
+    ]),
+
     1301: new GIHero(1301, '菲谢尔', 1, 10, 3, 3,
         'https://act-upload.mihoyo.com/ys-obc/2023/08/02/195563531/41fc0a943f93c80bdcf24dbce13a0956_3894833720039304594.png',
         skill1('灭罪之矢'), [
@@ -1341,6 +1366,27 @@ const allHeros: HeroObj = {
         ], () => ({ status: [heroStatus(2198, 3)] }))
     ]),
 
+    1508: new GIHero(1508, '娜维娅', [5, 11], 10, 6, 2,
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Char_Avatar_Navia.webp',
+        skill1('直率的辞绝'), [
+        new GISkill('典仪式晶火', '造成{dmg}点[岩元素伤害]，本角色附属【sts2008,6】; 从手牌中[舍弃]至多5张【crd913】，每[舍弃]1张都使此伤害+1并摸1张牌。', 2, 3, 3, 6, {}, [
+            '',
+            '',
+        ], event => {
+            const { hcards = [] } = event;
+            const cnt = Math.min(5, hcards.filter(c => c.id == 913).length);
+            return { addDmgCdt: cnt, status: [heroStatus(2008, 6)], cmds: [{ cmd: 'discard', cnt, card: 913 }, { cmd: 'getCard', cnt }] }
+        }),
+        new GISkill('如霰澄天的鸣礼', '造成{dmg}点[岩元素伤害]，对所有敌方后台角色造成1点[穿透伤害]。召唤【smn3067】，生成1张【crd913】加入手牌。', 3, 1, 3, 6, { ec: 2 }, [
+            '',
+            '',
+        ], () => ({ pendamage: 1, summon: [newSummonee(3067)], cmds: [{ cmd: 'getCard', cnt: 1, card: 913 }] })),
+        new GISkill('互助关系网', '【敌方角色受到结晶反应伤害后：】生成3张【crd913】，随机置入我方牌库中。', 4, 0, 0, 0, {}, [
+            '',
+            '',
+        ], () => ({ trigger: ['el6Reaction'], cmds: [{ cmd: 'addCard', cnt: 3, card: 913 }] }))
+    ]),
+
     1601: new GIHero(1601, '柯莱', 4, 10, 7, 3,
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/12109492/cca275e9c7e6fa6cf61c5e1d6768db9d_4064677380613373250.png',
         skill1('祈颂射艺'), [
@@ -1533,6 +1579,33 @@ const allHeros: HeroObj = {
             'https://patchwiki.biligame.com/images/ys/f/fd/mgyby1c37lbykdol0uuyzduyugfmb0f.png',
             'https://act-upload.mihoyo.com/wiki-user-upload/2024/01/27/258999284/5e08c69f4911a028c4a559c1de33a4d9_7840872634290634295.png',
         ], () => ({ trigger: ['game-start'], status: [heroStatus(2157)] }))
+    ]),
+
+    1704: new GIHero(1704, '愚人众·霜役人', 8, 10, 4, 0,
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Char_Monster_EscadronIce.webp',
+        skill1('迅捷剑锋'), [
+        new GISkill('霜刃截击', '造成{dmg}点[冰元素伤害]。', 2, 3, 3, 4, {}, [
+            '',
+            '',
+        ]),
+        new GISkill('掠袭之刺', '造成{dmg}点[冰元素伤害]，本角色附属【sts2220】。', 3, 4, 3, 4, { ec: 2 }, [
+            '',
+            '',
+        ], () => ({ status: [heroStatus(2220)] })),
+        new GISkill('血契掠影', '【本角色使用技能后：】对敌方出战角色附属[可用次数]为(本技能最终伤害值-2)的【sts2221】。(最多5层)', 4, 0, 0, 0, {}, [
+            '',
+            '',
+        ], event => {
+            const { dmg = [], hero: { talentSlot }, card, eheros = [] } = event;
+            let fdmg = Math.min(5, Math.max(0, dmg.reduce((a, b) => a + b, 0) - 2));
+            if (talentSlot || card?.id == 795) {
+                const ocnt = eheros.find(h => h.isFront)?.inStatus.find(ist => ist.id == 2221)?.useCnt ?? 0;
+                const fcnt = (ocnt + fdmg) * 2;
+                fdmg = fcnt - ocnt;
+            }
+            if (fdmg <= 0) return;
+            return { trigger: ['skill'], status: [heroStatus(2221, fdmg)] }
+        })
     ]),
 
     1721: new GIHero(1721, '纯水精灵·洛蒂娅', 0, 10, 1, 0,

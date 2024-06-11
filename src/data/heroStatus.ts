@@ -1,6 +1,6 @@
 import { DEBUFF_BG_COLOR, ELEMENT, STATUS_BG_COLOR, ELEMENT_ICON } from "./constant";
 import { newSummonee } from "./summonee";
-import { allHidxs, getAtkHidx, getBackHidxs, getMaxHertHidxs, getMinHertHidxs, isCdt, minusDiceSkillHandle } from "./utils";
+import { allHidxs, clone, getAtkHidx, getBackHidxs, getMaxHertHidxs, getMinHertHidxs, isCdt, minusDiceSkillHandle } from "./utils";
 
 class GIStatus implements Status {
     id: number;
@@ -86,7 +86,7 @@ class GIStatus implements Status {
                 if (icon == 'heal2') this.icon = 'https://gi-tcg-assets.guyutongxue.site/assets/UI_Gcg_Buff_Common_Revive.webp';
                 // this.iconBg = '#95ff7a';
             } else {
-                this.iconBg = '#9a9a9a05';
+                // this.iconBg = '#9a9a9a05';
             }
         }
         this.handle = (status, event = {}) => {
@@ -179,7 +179,7 @@ const statusTotal: StatusObj = {
                 trigger: ['fire-dmg', 'thunder-dmg'],
                 exec: () => { --status.useCnt },
             }
-        }, { icbg: STATUS_BG_COLOR[7] }),
+        }),
 
     2006: () => new GIStatus(2006, '激化领域', '【我方对敌方出战角色造成[雷元素伤害]或[草元素伤害]时，】伤害值+1。；【[可用次数]：{useCnt}】',
         'https://gi-tcg-assets.guyutongxue.site/assets/UI_Gcg_Buff_Reaction_117.webp',
@@ -569,7 +569,7 @@ const statusTotal: StatusObj = {
                     }
                 },
             }
-        }, { icbg: STATUS_BG_COLOR[7] }),
+        }),
 
     2048: () => new GIStatus(2048, '千年的大乐章·别离之歌', '我方角色造成的伤害+1。；【[持续回合]：{roundCnt}】',
         'buff5', 0, [3, 6], -1, 0, 2, () => ({ addDmg: 1 })),
@@ -909,7 +909,7 @@ const statusTotal: StatusObj = {
             exec: eStatus => {
                 if (eStatus) --eStatus.useCnt;
             },
-        }), { icbg: DEBUFF_BG_COLOR }),
+        })),
 
     2080: () => new GIStatus(2080, '诸愿百眼之轮', '【其他我方角色使用｢元素爆发｣后：】累积1点｢愿力｣。(最多累积3点)；【所附属角色使用〖ski1307,2〗时：】消耗所有｢愿力｣，每点｢愿力｣使造成的伤害+1。',
         'ski1307,2', 0, [6, 9], 0, 3, -1, (status, event = {}) => {
@@ -1027,7 +1027,7 @@ const statusTotal: StatusObj = {
                     if (hasEl2 && eStatus) --eStatus.useCnt;
                 }
             }
-        }, { icbg: DEBUFF_BG_COLOR }),
+        }),
 
     2089: (isTalent = false) => new GIStatus(2089, '摩耶之殿', '【我方引发元素反应时：】伤害额外+1。；【[持续回合]：{roundCnt}】',
         'ski1603,3', 1, [6], -1, 0, isTalent ? 3 : 2, () => ({
@@ -1833,7 +1833,7 @@ const statusTotal: StatusObj = {
                     }
                 },
             }
-        }, { icbg: STATUS_BG_COLOR[1] }),
+        }),
 
     2165: () => new GIStatus(2165, '衡平推裁', `本角色将在下次行动时，直接使用技能：【rsk17】。`,
         'buff3', 0, [10, 11], 1, 0, -1, status => ({
@@ -1994,7 +1994,7 @@ const statusTotal: StatusObj = {
                 skilltype3: [0, 0, 1],
             },
             exec: () => { --status.useCnt },
-        }), { icbg: DEBUFF_BG_COLOR }),
+        })),
 
     2181: () => new GIStatus(2181, '水之新生', '【所附属角色被击倒时：】移除此效果，使角色[免于被击倒]，并治疗该角色到4点生命值。触发此效果后，角色造成的[物理伤害]变为[水元素伤害]，且[水元素伤害]+1。',
         'heal2', 0, [10, 13], 1, 0, -1, () => ({
@@ -2031,7 +2031,7 @@ const statusTotal: StatusObj = {
                     if (eStatus) --eStatus.useCnt;
                 }
             }
-        }, { icbg: DEBUFF_BG_COLOR }),
+        }),
 
     2185: () => new GIStatus(2185, '｢清洁工作｣(生效中)', '我方出战角色下次造成的伤害+1。；(可叠加，最多叠加到+2)',
         'buff5', 1, [4, 6], 1, 2, -1, status => ({
@@ -2143,7 +2143,7 @@ const statusTotal: StatusObj = {
             exec: () => {
                 if (trigger == 'dmg') --status.useCnt
             },
-        }), { icbg: STATUS_BG_COLOR[1] }),
+        })),
 
     2196: () => new GIStatus(2196, '万众瞩目', '【角色进行｢普通攻击｣时：】使角色造成的造成的[物理伤害]变为[水元素伤害]。如果角色处于｢荒｣形态，则治疗我方所有后台角色1点; 如果角色处于｢芒｣形态，则此伤害+2，但是对一位受伤最少的我方角色造成1点[穿透伤害]。；【[可用次数]：{useCnt}】',
         'buff4', 0, [1, 8], 1, 0, -1, (_status, event = {}) => {
@@ -2207,7 +2207,7 @@ const statusTotal: StatusObj = {
             }
         })),
 
-    2202: (useCnt = 1) => new GIStatus(2202, '迸发扫描', '【双方选择行动前：】如果我方场上存在草原核或丰穰之核，则使其[可用次数]-1，并[舍弃]我方牌库顶的1张卡牌。然后，造成所[舍弃]卡牌的元素骰费用+1的[草元素伤害]。；【[可用次数]：{useCnt}(可叠加，最多叠加到3次)】',
+    2202: (useCnt = 1) => new GIStatus(2202, '迸发扫描', '【双方选择行动前：】如果我方场上存在【sts2005】或【smn3043】，则使其[可用次数]-1，并[舍弃]我方牌库顶的1张卡牌。然后，造成所[舍弃]卡牌的元素骰费用+1的[草元素伤害]。；【[可用次数]：{useCnt}(可叠加，最多叠加到3次)】',
         'ski1608,1', 1, [1], useCnt, 3, -1, (_status, event = {}) => {
             const { heros = [], hidx = -1, summons = [], pile = [], card } = event;
             if (pile.length == 0 || heros[hidx].outStatus.every(ost => ost.id != 2005) && summons.every(smn => smn.id != 3043)) return;
@@ -2217,7 +2217,7 @@ const statusTotal: StatusObj = {
                 const talent = card ?? thero.talentSlot as Card;
                 if (talent.perCnt > 0) {
                     cmds.push({ cmd: 'getCard', cnt: 1, card: pile[0].id });
-                    if (Math.floor(pile[0].id / 100) == 2) cmds.push({ cmd: 'getStatus', status: [heroStatus(2204)] });
+                    if (pile[0].subType.includes(2)) cmds.push({ cmd: 'getStatus', status: [heroStatus(2204)] });
                 }
             }
             return {
@@ -2246,7 +2246,7 @@ const statusTotal: StatusObj = {
             }
         }, { icbg: STATUS_BG_COLOR[7] }),
 
-    2203: () => new GIStatus(2203, '梅赫拉克的助力', '角色｢普通攻击｣造成的伤害+1，且造成的[物理伤害]变为[草元素伤害]。；角色｢普通攻击｣后：生成【sts2202】。；【[持续回合]:{roundCnt}】',
+    2203: () => new GIStatus(2203, '梅赫拉克的助力', '角色｢普通攻击｣造成的伤害+1，且造成的[物理伤害]变为[草元素伤害]。；【角色｢普通攻击｣后：】生成【sts2202】。；【[持续回合]:{roundCnt}】',
         'ski1608,2', 0, [4, 6, 8], -1, 0, 2, () => ({
             trigger: ['skilltype1'],
             attachEl: 7,
@@ -2254,8 +2254,8 @@ const statusTotal: StatusObj = {
             exec: () => ({ cmds: [{ cmd: 'getStatus', status: [heroStatus(2202)] }] })
         }), { icbg: STATUS_BG_COLOR[7] }),
 
-    2204: () => new GIStatus(2204, '预算师的技艺todo名字待定', '【本回合中，我方下次打出场地牌时：】少花费2个元素骰。',
-        'buff2', 1, [4, 10], 1, 0, 1, (status, event = {}) => {
+    2204: () => new GIStatus(2204, '预算师的技艺(生效中)', '我方下次【打出｢场地｣支援牌时：】少花费2个元素骰。',
+        'buff3', 1, [4, 10], 1, 0, 1, (status, event = {}) => {
             const { card, minusDiceCard: mdc = 0 } = event;
             if (card && card.subType.includes(2) && card.cost > mdc) {
                 return {
@@ -2267,19 +2267,19 @@ const statusTotal: StatusObj = {
         }),
 
     2205: () => new GIStatus(2205, '深噬之域', '我方[舍弃]或[调和]的手牌，会被吞噬。；【每吞噬3张牌：】【hro1724】获得1点额外最大生命; 如果其中存在原本元素骰费用值相同的牌，则额外获得1点; 如果3张均相同，再额外获得1点。',
-        'ski1724,3', 1, [4, 9], 0, 3, -1, (_status, event = {}) => {
-            const { discards: [discards, type] = [[], -1], card } = event;
-            if (type != 0) return;
+        'ski1724,3', 1, [4, 9], 0, 3, -1, (status, event = {}) => {
+            const { discards: [discards, type] = [[], -1], card, heros = [], trigger = '' } = event;
+            if (trigger == 'discard' && type != 0) return;
             return {
                 trigger: ['discard', 'reconcile'],
                 isAddTask: true,
                 exec: (eStatus, execEvent = {}) => {
-                    if (!eStatus) return;
-                    const { heros = [] } = execEvent;
-                    const hidx = heros.findIndex(h => h.id == 1724);
+                    eStatus ??= clone(status);
+                    const { heros: hs = heros } = execEvent;
+                    const hidx = hs.findIndex(h => h.id == 1724);
                     if (hidx == -1) return;
                     const [cost1, cost2, maxDice] = eStatus.addition;
-                    if (card) discards.push(card);
+                    if (card) discards.splice(0, 10, card);
                     let cnt = 0;
                     discards.forEach(c => {
                         const cost = c.cost + c.anydice;
@@ -2307,7 +2307,7 @@ const statusTotal: StatusObj = {
         }, { icbg: STATUS_BG_COLOR[1], adt: [-1, -1, 0, 0] }),
 
     2206: (useCnt = -1) => new GIStatus(2206, '雷锥陷阱', '【所在阵营的角色使用技能后：】对所在阵营的出战角色造成2点[雷元素伤害]。；【[可用次数]：初始为创建时所弃置的噬骸能量块张数。(最多叠加到3)】',
-        'skill1765,2', 1, [1], useCnt, 3, -1, () => ({
+        'ski1765,2', 1, [1], useCnt, 3, -1, () => ({
             damage: 2,
             element: 3,
             isSelf: true,
@@ -2409,6 +2409,41 @@ const statusTotal: StatusObj = {
 
     2217: (cnt = 1) => new GIStatus(2217, '奇异之躯', '每层为【hro1724】提供1点额外最大生命。',
         'ski1724,3', 0, [9, 12], cnt, 1000, -1, undefined, { icbg: STATUS_BG_COLOR[1] }),
+
+    2218: () => new GIStatus(2218, '二重毁伤弹', '【所在阵营切换角色后：】对切换到的角色造成1点[火元素伤害]。；【[可用次数]：{useCnt}】',
+        'ski1213,2', 1, [1], 2, 0, -1, () => ({
+            damage: 1,
+            element: 2,
+            isSelf: true,
+            trigger: ['change-from'],
+            exec: eStatus => {
+                if (eStatus) --eStatus.useCnt;
+            }
+        }), { icbg: DEBUFF_BG_COLOR }),
+
+    2219: () => new GIStatus(2219, '尖兵协同战法(生效中)', '我方造成的[火元素伤害]或[雷元素伤害]+1。(包括角色引发的扩散伤害)；【[可用次数]：{useCnt}】',
+        'buff2', 1, [4, 6], 2, 0, -1, status => ({
+            trigger: ['fire-dmg', 'thunder-dmg', 'fire-dmg-wind', 'thunder-dmg-wind'],
+            addDmgCdt: 1,
+            exec: () => { --status.useCnt },
+        })),
+
+    2220: () => new GIStatus(2220, '掠袭锐势', '【结束阶段：】对所有附属有【sts2221】的敌方角色造成1点[穿透伤害]。；【[持续回合]：{useCnt}】',
+        'ski1704,2', 0, [1], 2, 0, -1, (status, { heros = [] } = {}) => ({
+            trigger: ['phase-end'],
+            pendamage: 1,
+            hidxs: heros.map((h, hi) => ({ h, hi })).filter(v => v.h.inStatus.some(ist => ist.id == 2221)).map(v => v.hi),
+            exec: () => { --status.useCnt },
+        }), { icbg: STATUS_BG_COLOR[4] }),
+
+    2221: (useCnt = 1) => new GIStatus(2221, '生命之契', '【所附属角色受到治疗时：】此效果每有1次[可用次数]，就消耗1次，以抵消1点所受到的治疗。(无法抵消复苏治疗和分配生命值引发的治疗)；【[可用次数]：{useCnt}(可叠加，没有上限)】',
+        '', 0, [1], useCnt, 0, -1, (status, event = {}) => {
+            const { heal = [] } = event;
+            return {
+                trigger: ['pre-heal'],
+                exec: () => { --status.useCnt },
+            }
+        }, { icbg: DEBUFF_BG_COLOR }),
 
 };
 

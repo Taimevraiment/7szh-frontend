@@ -67,7 +67,8 @@ class GICard implements Card {
             }
             this.description = this.description
                 .replace(/{action}/, `[战斗行动]：我方出战角色为【{hro}】时，装备此牌。；【{hro}】装备此牌后，立刻使用一次【{ski}】。`)
-                .replace(/{hro}/g, hro).replace(/{ski}/g, ski) + `；(牌组中包含【${hro}】，才能加入牌组)`;
+                .replace(/{hro}/g, hro)
+                .replace(/{ski}/g, ski) + `；(牌组中包含【${hro}】，才能加入牌组)`;
             canSelectHero = 1;
         } else if (subType?.includes(8)) this.description += `；(整局游戏只能打出一张｢秘传｣卡牌; 这张牌一定在你的起始手牌中)`;
         else if (subType?.includes(9)) {
@@ -2503,6 +2504,31 @@ const allCards: CardObj = {
             return { cmds: [{ cmd: 'addCard', cnt: 4, card: 907 }], trigger: ['dmg', 'other-dmg'], addDmgSummon: isCdt(isSummon == 3063, 1) }
         }),
 
+    793: new GICard(793, '尖兵协同战法', '【队伍中包含‹2火元素›角色和‹3雷元素›角色且不包含其他元素的角色，才能打出：】将此牌装备给【hro】。；装备有此牌的【hro】在场，敌方角色受到超载反应伤害后：我方接下来造成的2次[火元素伤害]或[雷元素伤害]+1。(包括扩散反应造成的[火元素伤害]或[雷元素伤害])',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_Chevreuse.webp',
+        2, 2, 0, [6], 1213, 1, (_card, event) => {
+            const { heros = [], isElStatus = [] } = event;
+            return {
+                isValid: heros.every(h => [2, 3].includes(h.element)),
+                status: isCdt(isElStatus[2], [heroStatus(2219)]),
+            }
+        }),
+
+    794: new GICard(794, '不明流通渠道', '{action}；【装备有此牌的〖hro〗使用技能后：】摸2张【crd913】。(每回合1次)',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_Navia.webp',
+        3, 6, 0, [6, 7], 1508, 1, card => {
+            if (card.perCnt <= 0) return;
+            return {
+                trigger: ['skill'],
+                execmds: [{ cmd: 'getCard', cnt: 2, card: 913, isAttach: true }],
+                exec: () => { --card.perCnt },
+            }
+        }, { pct: 1 }),
+
+    795: new GICard(795, '冰雅刺剑', '{action}；【装备有此牌的〖hro〗触发【sts2221】后：】使敌方出战角色的【sts2221】层数翻倍。',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_EscadronIce.webp',
+        3, 4, 0, [6, 7], 1704, 1),
+
 
     901: new GICard(901, '雷楔', '[战斗行动]：将【hro1303】切换到场上，立刻使用【ski1303,2】。本次【ski1303,2】会为【hro1303】附属【sts2008,3】，但是不会再生成【雷楔】。(【hro1303】使用【ski1303,2】时，如果此牌在手中：不会再生成【雷楔】，而是改为[舍弃]此牌，并为【hro1303】附属【sts2008,3】)',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/12/12109492/3d370650e825a27046596aaf4a53bb8d_7172676693296305743.png',
@@ -2581,6 +2607,14 @@ const allCards: CardObj = {
     910: magicCount(1),
 
     911: magicCount(0),
+
+    912: new GICard(912, '超量装药弹头', '[战斗行动]：对敌方｢出战角色｣造成1点[火元素伤害]。；【此牌被[舍弃]时：】对敌方｢出战角色｣造成1点[火元素伤害]。',
+        '',
+        2, 2, 2, [7], 0, 0, () => ({ trigger: ['discard'], cmds: [{ cmd: 'attack', element: 2, cnt: 1 }] })),
+
+    913: new GICard(913, '裂晶弹片', '对敌方｢出战角色｣造成1点物理伤害，摸1张牌。',
+        '',
+        1, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'attack', element: 0, cnt: 1 }, { cmd: 'getCard', cnt: 1 }] })),
 
 }
 

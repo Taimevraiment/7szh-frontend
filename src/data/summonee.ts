@@ -891,6 +891,16 @@ const summonTotal: SummoneeObj = {
 
     3066: () => crd907summon(3066),
 
+    3067: () => new GISummonee(3067, '金花礼炮', '【结束阶段：】造成{dmg}点[岩元素伤害]，摸1张【crd913】。；【[可用次数]：{useCnt}】',
+        '',
+        2, 2, 0, 1, 6, summon => ({
+            trigger: ['phase-end'],
+            exec: execEvent => {
+                const { summon: smn = summon } = execEvent;
+                smn.useCnt = Math.max(0, smn.useCnt - 1);
+                return { cmds: [{ cmd: 'attack' }, { cmd: 'getCard', cnt: 1, card: 913, isAttach: true }] }
+            }
+        })),
 
 }
 

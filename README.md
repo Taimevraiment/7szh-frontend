@@ -336,6 +336,12 @@ constructor(
 
 解释：是否进入执行队列
 
+##### isElStatus
+
+类型：boolean[]
+
+解释：元素反应类型 [绽放, 激化, 超载, 蒸发, 融化, 感电, 超导]
+
 #### CardHandleRes
 
 ##### site
@@ -938,6 +944,18 @@ constructor(
 类型：[Card[], number]
 
 解释：被舍弃的卡牌及舍弃源 0手牌 1牌库
+
+##### isElStatus
+
+类型：boolean[]
+
+解释：元素反应类型 [绽放, 激化, 超载, 蒸发, 融化, 感电, 超导]
+
+##### dmg
+
+类型：number[]
+
+解释：造成的伤害
 
 #### SkillHandleRes
 
