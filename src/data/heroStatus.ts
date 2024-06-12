@@ -482,7 +482,7 @@ const statusTotal: StatusObj = {
             }
         }, { icbg: STATUS_BG_COLOR[2], isTalent }),
 
-    2041: () => new GIStatus(2041, '琉金火光', '宵宫以外的我方角色使用技能后：造成1点[火元素伤害]。；【[持续回合]：{roundCnt}】',
+    2041: () => new GIStatus(2041, '琉金火光', '【hro1204】以外的我方角色使用技能后：造成1点[火元素伤害]。；【[持续回合]：{roundCnt}】',
         'ski1204,2', 1, [1], -1, 0, 2, (_status, event = {}) => {
             const { heros = [], hidx = -1 } = event;
             return {
@@ -2268,8 +2268,8 @@ const statusTotal: StatusObj = {
 
     2205: () => new GIStatus(2205, '深噬之域', '我方[舍弃]或[调和]的手牌，会被吞噬。；【每吞噬3张牌：】【hro1724】获得1点额外最大生命; 如果其中存在原本元素骰费用值相同的牌，则额外获得1点; 如果3张均相同，再额外获得1点。',
         'ski1724,3', 1, [4, 9], 0, 3, -1, (status, event = {}) => {
-            const { discards: [discards, type] = [[], -1], card, heros = [], trigger = '' } = event;
-            if (trigger == 'discard' && type != 0) return;
+            const { discards: [discards, type] = [[], 0], card, heros = [] } = event;
+            if (type != 0) return;
             return {
                 trigger: ['discard', 'reconcile'],
                 isAddTask: true,
@@ -2279,7 +2279,7 @@ const statusTotal: StatusObj = {
                     const hidx = hs.findIndex(h => h.id == 1724);
                     if (hidx == -1) return;
                     const [cost1, cost2, maxDice] = eStatus.addition;
-                    if (card) discards.splice(0, 10, card);
+                    if (card && card.id > 0) discards.splice(0, 10, card);
                     let cnt = 0;
                     discards.forEach(c => {
                         const cost = c.cost + c.anydice;
@@ -2444,6 +2444,17 @@ const statusTotal: StatusObj = {
                 exec: () => { --status.useCnt },
             }
         }, { icbg: DEBUFF_BG_COLOR }),
+
+    2222: () => new GIStatus(2222, '噔噔！(生效中)', '结束阶段时，摸2张牌。',
+        'buff3', 0, [1], 1, 0, -1, () => {
+            return {
+                trigger: ['phase-end'],
+                cmds: [{ cmd: 'getCard', cnt: 2 }],
+                exec: eStatus => {
+                    if (eStatus) --eStatus.useCnt;
+                },
+            }
+        }),
 
 };
 

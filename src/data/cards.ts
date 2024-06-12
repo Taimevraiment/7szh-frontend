@@ -407,6 +407,22 @@ const allCards: CardObj = {
 
     47: senlin2Weapon(47, '森林王器', 2, 'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/02/258999284/9d317a3a81e47ab989c633ff609b5861_5509350951295616421.png'),
 
+    48: new GICard(48, '｢究极霸王超级魔剑｣', '此牌会记录本局游戏中你打出过的名称不存在于初始牌组中的行动牌种类，称为｢声援｣。如果此牌的｢声援｣至少为2/4/8，则角色造成的伤害+1/2/3。',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Weapon_BaWangJian.webp',
+        2, 8, 0, [0], 2, 1, (card, event) => {
+            const { playerInfo: { usedCardIds = [], initCardIds = [] } = {}, hcard, slotUse = false } = event;
+            if (slotUse) {
+                card.useCnt = usedCardIds.filter(c => !initCardIds.includes(c)).length;
+                return;
+            }
+            const cardid = hcard?.id ?? 0;
+            return {
+                trigger: isCdt(!initCardIds.includes(cardid) && !usedCardIds.includes(cardid), ['card']),
+                addDmg: card.useCnt >= 8 ? 3 : card.useCnt >= 4 ? 2 : card.useCnt >= 2 ? 1 : 0,
+                exec: () => { ++card.useCnt }
+            }
+        }),
+
     61: normalWeapon(61, '白缨枪', 5, 'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/75720734/2618b55f8449904277794039473df17c_5042678227170067991.png'),
 
     62: new GICard(62, '千岩长枪', '【角色造成的伤害+1】。；【入场时：】队伍中每有一名｢璃月｣角色，此牌就为附属的角色提供1点[护盾]。(最多3点)',
@@ -477,6 +493,23 @@ const allCards: CardObj = {
                 exec: () => {
                     if (++card.useCnt >= 3) card.useCnt -= 3;
                 }
+            }
+        }, { uct: 0 }),
+
+    69: new GICard(69, '勘探钻机', '【所附属角色受到伤害时：】如可能，[舍弃]原本元素骰费用最高的1张手牌，以抵消1点伤害，然后累积1点｢团结｣。(每回合最多触发2次)；【角色使用技能时：】如果此牌已有｢团结｣，则消耗所有｢团结｣，使此技能伤害+1，并且每消耗1点｢团结｣就摸1张牌。',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Weapon_KanTanQiang.webp',
+        2, 8, 0, [-1, 0], 5, 1, (card, event) => {
+            const { restDmg = -1, hcards: { length: hcardsCnt } = [] } = event;
+            if (restDmg > -1) {
+                if (hcardsCnt == 0) return;
+                return { restDmg: restDmg - 1, execmds: [{ cmd: 'discard', element: 0 }] }
+            }
+            if (card.useCnt <= 0) return;
+            return {
+                trigger: ['skill'],
+                addDmgCdt: 1,
+                execmds: [{ cmd: 'getCard', cnt: card.useCnt }],
+                exec: () => { card.useCnt = 0 }
             }
         }, { uct: 0 }),
 
@@ -990,6 +1023,21 @@ const allCards: CardObj = {
                 }
             }
         }, { uct: 0, pct: 2 }),
+
+    129: new GICard(129, '角斗士的凯旋', '【角色使用｢普通攻击｣时：】如果我方手牌数量不多于2，则少消耗1个元素骰。(每回合1次)',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Weapon_JiaoDouShiXiao.webp',
+        0, 8, 0, [1], 0, 1, (card, event) => {
+            const { hcards: { length: hcardsCnt } = [] } = event;
+            if (hcardsCnt > 2 || card.perCnt <= 0) return;
+            const { minusSkillRes, isMinusSkill } = minusDiceSkillHandle(event, { skilltype1: [0, 0, 1] });
+            return {
+                trigger: ['skilltype1'],
+                ...minusSkillRes,
+                exec: () => {
+                    if (isMinusSkill) --card.perCnt;
+                }
+            }
+        }, { pct: 1 }),
 
     180: normalElArtifact(180, '破冰踏雪的回音', 4, 'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/75720734/65841e618f66c6cb19823657118de30e_3244206711075165707.png'),
 
@@ -1548,6 +1596,10 @@ const allCards: CardObj = {
         2, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'addCard', cnt: 6, card: 904 }] })),
 
     530: magicCount(3, 530),
+
+    532: new GICard(532, '噔噔！', '对我方｢出战角色｣造成1点[物理伤害]。本回合的结束阶段时，摸2张牌。',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Event_Event_DengDeng.webp',
+        0, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'attack', element: 0, cnt: 1, isOppo: true }], status: [heroStatus(2222)] })),
 
     561: new GICard(561, '自由的新风', '【本回合中，轮到我方行动期间有对方角色被击倒时：】本次行动结束后，我方可以再连续行动一次。；【[可用次数]：】1',
         'https://act-upload.mihoyo.com/wiki-user-upload/2023/09/24/258999284/bccf12a9c926bec7203e543c469ac58d_1423280855629304603.png',
@@ -2504,7 +2556,7 @@ const allCards: CardObj = {
             return { cmds: [{ cmd: 'addCard', cnt: 4, card: 907 }], trigger: ['dmg', 'other-dmg'], addDmgSummon: isCdt(isSummon == 3063, 1) }
         }),
 
-    793: new GICard(793, '尖兵协同战法', '【队伍中包含‹2火元素›角色和‹3雷元素›角色且不包含其他元素的角色，才能打出：】将此牌装备给【hro】。；装备有此牌的【hro】在场，敌方角色受到超载反应伤害后：我方接下来造成的2次[火元素伤害]或[雷元素伤害]+1。(包括扩散反应造成的[火元素伤害]或[雷元素伤害])',
+    793: new GICard(793, '尖兵协同战法', '【队伍中包含‹2火元素›角色和‹3雷元素›角色且不包含其他元素的角色，才能打出：】将此牌装备给【{hro}】。；装备有此牌的【{hro}】在场，敌方角色受到超载反应伤害后：我方接下来造成的2次[火元素伤害]或[雷元素伤害]+1。(包括扩散反应造成的[火元素伤害]或[雷元素伤害])',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_Chevreuse.webp',
         2, 2, 0, [6], 1213, 1, (_card, event) => {
             const { heros = [], isElStatus = [] } = event;
@@ -2514,7 +2566,7 @@ const allCards: CardObj = {
             }
         }),
 
-    794: new GICard(794, '不明流通渠道', '{action}；【装备有此牌的〖hro〗使用技能后：】摸2张【crd913】。(每回合1次)',
+    794: new GICard(794, '不明流通渠道', '{action}；【装备有此牌的〖{hro}〗使用技能后：】摸2张【crd913】。(每回合1次)',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_Navia.webp',
         3, 6, 0, [6, 7], 1508, 1, card => {
             if (card.perCnt <= 0) return;
@@ -2525,7 +2577,7 @@ const allCards: CardObj = {
             }
         }, { pct: 1 }),
 
-    795: new GICard(795, '冰雅刺剑', '{action}；【装备有此牌的〖hro〗触发【sts2221】后：】使敌方出战角色的【sts2221】层数翻倍。',
+    795: new GICard(795, '冰雅刺剑', '{action}；【装备有此牌的〖{hro}〗触发【sts2221】后：】使敌方出战角色的【sts2221】层数翻倍。',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Modify_Talent_EscadronIce.webp',
         3, 4, 0, [6, 7], 1704, 1),
 
