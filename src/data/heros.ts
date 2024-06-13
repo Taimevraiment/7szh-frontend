@@ -885,8 +885,8 @@ const allHeros: HeroObj = {
             '',
         ], event => {
             const { isElStatus = [], hero: { skills: [, , , { useCnt }] } } = event;
-            if (!isElStatus[2] || useCnt > 0) return;
-            return { cmds: [{ cmd: 'getCard', cnt: 1, card: 912 }] }
+            if (useCnt > 0) return;
+            return { trigger: ['el2Reaction'], cmds: isCdt<Cmds[]>(isElStatus[2], [{ cmd: 'getCard', cnt: 1, card: 912 }]) }
         })
     ]),
 

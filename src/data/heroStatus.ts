@@ -2446,13 +2446,23 @@ const statusTotal: StatusObj = {
         }, { icbg: DEBUFF_BG_COLOR }),
 
     2222: () => new GIStatus(2222, '噔噔！(生效中)', '结束阶段时，摸2张牌。',
-        'buff3', 0, [1], 1, 0, -1, () => {
+        'buff3', 0, [3], 1, 0, -1, () => ({
+            trigger: ['phase-end'],
+            cmds: [{ cmd: 'getCard', cnt: 2 }],
+            exec: eStatus => {
+                if (eStatus) --eStatus.useCnt;
+            },
+        })),
+
+    2223: () => new GIStatus(2223, '｢看到那小子挣钱…｣(生效中)', '本回合中，每当对方获得2个元素骰，你就获得1个[万能元素骰]。(此效果提供的元素骰除外)',
+        'buff3', 1, [4, 9], 0, 0, 1, (status, event = {}) => {
+            const { getcard = 0 } = event;
+            const cnt = status.useCnt + getcard;
             return {
-                trigger: ['phase-end'],
-                cmds: [{ cmd: 'getCard', cnt: 2 }],
-                exec: eStatus => {
-                    if (eStatus) --eStatus.useCnt;
-                },
+                trigger: ['getdice-oppo'],
+                isAddTask: true,
+                cmds: isCdt(cnt >= 2, [{ cmd: 'getDice', cnt: Math.floor(cnt / 2), element: 0, isAttach: true }]),
+                exec: () => { status.useCnt = cnt % 2 }
             }
         }),
 

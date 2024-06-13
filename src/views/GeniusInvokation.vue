@@ -464,7 +464,7 @@ const devOps = (cidx = 0) => {
       flag.add('setHp');
     } else if (op.startsWith('@')) { // 充能
       const [cnt = 3, hidx = heros.findIndex(h => h.isFront)] = op.slice(1).split(/[:：]+/).map(h);
-      const { heros: nheros } = client.value._doCmds([{ cmd: 'getEnergy', cnt, hidxs: hidx > 2 ? new Array(heros.length).fill(0).map((_, i) => i) : [hidx] }], { heros });
+      const { heros: nheros } = client.value._doCmds([{ cmd: 'getEnergy', cnt, hidxs: hidx > 2 ? new Array(heros.length).fill(0).map((_, i) => i) : [hidx] }], { pidx: cpidx, heros });
       if (nheros) heros = nheros;
       flag.add('setEnergy');
     } else if (op.startsWith('#')) { // 骰子
@@ -508,7 +508,7 @@ const devOps = (cidx = 0) => {
       } else {
         const sts = heroStatus(stsid);
         const cmds: Cmds[] = [{ cmd: 'getStatus', status: [sts], hidxs: hidx > 2 ? new Array(heros.length).fill(0).map((_, i) => i) : [hidx] }];
-        client.value._doCmds(cmds, { heros, isEffectHero: true });
+        client.value._doCmds(cmds, { pidx: cpidx, heros, isEffectHero: true });
       }
       flag.add('setStatus');
     } else if (op.startsWith('+')) { // 在牌库中加牌
@@ -520,7 +520,7 @@ const devOps = (cidx = 0) => {
       const element = elidx == -1 ? 0 : (parseInt(rest.slice(elidx + 1)) || 0);
       const cnt = cidx == -1 ? 1 : (parseInt(rest.slice(cidx + 1)) || 1);
       const hidxs = hidx == -1 ? undefined : (parseInt(rest.slice(hidx + 1)) || undefined)?.toString().split('```').map(Number) || undefined;
-      const { cmds: acmds = [] } = client.value._doCmds([{ cmd: 'addCard', card: cid, element, cnt, hidxs }]);
+      const { cmds: acmds = [] } = client.value._doCmds([{ cmd: 'addCard', card: cid, element, cnt, hidxs }], { pidx: cpidx });
       flag.add('addCard');
       cmds.push(...acmds);
     } else { // 摸牌

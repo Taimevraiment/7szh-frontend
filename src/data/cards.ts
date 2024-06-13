@@ -501,7 +501,9 @@ const allCards: CardObj = {
         2, 8, 0, [-1, 0], 5, 1, (card, event) => {
             const { restDmg = -1, hcards: { length: hcardsCnt } = [] } = event;
             if (restDmg > -1) {
-                if (hcardsCnt == 0) return;
+                if (hcardsCnt == 0 || card.perCnt <= 0) return { restDmg }
+                ++card.useCnt;
+                --card.perCnt;
                 return { restDmg: restDmg - 1, execmds: [{ cmd: 'discard', element: 0 }] }
             }
             if (card.useCnt <= 0) return;
@@ -511,7 +513,7 @@ const allCards: CardObj = {
                 execmds: [{ cmd: 'getCard', cnt: card.useCnt }],
                 exec: () => { card.useCnt = 0 }
             }
-        }, { uct: 0 }),
+        }, { uct: 0, pct: 2 }),
 
     81: normalWeapon(81, '旅行剑', 1, 'https://uploadstatic.mihoyo.com/ys-obc/2022/12/05/75720734/2540a7ead6f2e957a6f25c9899ce428b_3859616323968734996.png'),
 
@@ -1279,6 +1281,10 @@ const allCards: CardObj = {
         'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/02/258999284/c2b793adbb8201b2e886bfd05b55b216_2354473128226348221.png',
         0, 8, 1, [3], 0, 0, () => ({ site: [newSite(4054, 326)] })),
 
+    327: new GICard(327, '瑟琳', '【每回合自动触发1次：】将1张随机的｢美露莘的声援｣放入我方手牌。；[可用次数]：3',
+        'https://act-upload.mihoyo.com/wiki-user-upload/2024/06/02/258999284/c2b793adbb8201b2e886bfd05b55b216_2354473128226348221.png',
+        2, 0, 1, [3], 0, 0, () => ({ site: [newSite(4054, 327)] })),
+
     401: new GICard(401, '参量质变仪', '【双方角色使用技能后：】如果造成了元素伤害，此牌积累1个｢质变进度｣。；此牌已累积3个｢质变进度｣时，弃置此牌并生成3个不同的基础元素骰。',
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/158741257/380f0bb73ffac88a2e8b60a1069a8246_3779576916894165131.png',
         2, 0, 1, [4], 0, 0, () => ({ site: [newSite(4002, 401)] })),
@@ -1596,6 +1602,10 @@ const allCards: CardObj = {
         2, 8, 2, [], 0, 0, () => ({ cmds: [{ cmd: 'addCard', cnt: 6, card: 904 }] })),
 
     530: magicCount(3, 530),
+
+    531: new GICard(531, '｢看到那小子挣钱…｣', '本回合中，每当对方获得2个元素骰，你就获得1个[万能元素骰]。(此效果提供的元素骰除外)',
+        'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Event_Event_ZhuanQian.webp',
+        0, 8, 2, [], 0, 0, () => ({ status: [heroStatus(2223)] })),
 
     532: new GICard(532, '噔噔！', '对我方｢出战角色｣造成1点[物理伤害]。本回合的结束阶段时，摸2张牌。',
         'https://api.hakush.in/gi/UI/UI_Gcg_CardFace_Event_Event_DengDeng.webp',

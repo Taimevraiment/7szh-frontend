@@ -853,6 +853,11 @@ const siteTotal: SiteObj = {
             },
         }
     }),
+    // 瑟琳
+    4056: (cardId: number) => new GISite(4056, cardId, 3, 0, 1, site => ({
+        trigger: ['phase-start'],
+        exec: () => ({ cmds: [{ cmd: 'getCard', cnt: 1, card: 914 }], isDestroy: --site.cnt == 0 }),
+    })),
 }
 
 export const newSite = (id: number, ...args: any) => siteTotal[id]?.(...args) ?? siteTotal[4000]();

@@ -430,7 +430,7 @@ export default class GeniusInvokationClient {
                     if (!dmgElements) dmgElements = new Array(eHeros.length).fill(0);
                     if (!willAttachs) willAttachs = new Array(aHeros.length + eHeros.length).fill(0).map(() => []);
                     eHeros = clone(opponent.heros);
-                    (chidxs ?? []).forEach((hidx, hi) => {
+                    (chidxs ?? [(isOppo ? player : opponent).hidx]).forEach((hidx, hi) => {
                         const dmgElement = typeof element == 'number' ? element == -2 ? aHeros[player.hidx].element : element : element[hi];
                         const { willDamage: willDamage1, willAttachs: willAttachs1, dmgElements: dmgElements1, elrcmds: elrcmds1,
                             aheros: aheros1, eheros: eheros1, asummon: asummon1, esummon: esummon1, elTips: elTips1,
@@ -2873,14 +2873,18 @@ export default class GeniusInvokationClient {
         }
 
         let restDmg = res.willDamage[getDmgIdx][0];
-        if (efhero.talentSlot?.subType.includes(-1) && efhero.isFront) {
-            const { restDmg: slotresdmg = 0, statusOppo = [], hidxs, execmds = [] }
-                = cardsTotal(efhero.talentSlot.id).handle(efhero.talentSlot, { restDmg, heros: res.eheros, hidxs: [frontIdx] });
-            restDmg = slotresdmg;
-            for (const slidx of (hidxs ?? [aFrontIdx])) {
-                aist[slidx].push(...statusOppo.filter(s => s.group == 0));
-            }
-            res.elrcmds[1].push(...execmds);
+        if (efhero.isFront) {
+            [efhero.weaponSlot, efhero.artifactSlot, efhero.talentSlot].forEach(slot => {
+                if (slot?.subType.includes(-1)) {
+                    const { restDmg: slotresdmg = 0, statusOppo = [], hidxs, execmds = [] }
+                        = cardsTotal(slot.id).handle(slot, { restDmg, heros: res.eheros, hidxs: [frontIdx], hcards: this.players[pidx].handCards });
+                    restDmg = slotresdmg;
+                    for (const slidx of (hidxs ?? [aFrontIdx])) {
+                        aist[slidx].push(...statusOppo.filter(s => s.group == 0));
+                    }
+                    res.elrcmds[1].push(...execmds);
+                }
+            });
         }
         efhero.inStatus.filter(ist => ist.type.some(t => [2, 7].includes(t))).forEach(ist => {
             restDmg = heroStatus(ist.id).handle(ist, { restDmg, willAttach, heros: res.eheros, hidx: frontIdx, dmgSource: isSummon })?.restDmg ?? 0;
@@ -4024,7 +4028,7 @@ export default class GeniusInvokationClient {
         let curRound = -1;
         let tWillHeals: number[] | undefined;
         for (let i = 0; i < cmdlen; ++i) {
-            const { cmd = '', cnt = 0, element = 0, isReadySkill = false, status: getstatus = [], card, isOppo = false, round = 0 } = cmds[i];
+            const { cmd = '', cnt = 0, element = 0, isReadySkill = false, status: getstatus = [], card, isOppo = false, round = 0, isAttach = false } = cmds[i];
             let { hidxs } = cmds[i];
             if (!hidxs && chidxs) {
                 cmds[i].hidxs = [...chidxs];
@@ -4125,6 +4129,9 @@ export default class GeniusInvokationClient {
                 }
             } else if (cmd == 'getDice' && isExec) {
                 ndices = this._getDice(dices, cnt, element, { pidx });
+                if (!isAttach) {
+                    this._doStatus(pidx ^ 1, 4, 'getdice-oppo', { isOnlyOutStatus: true, getcard: cnt, isQuickAction: isAction ? 0 : 2, isExec });
+                }
             } else if (cmd == 'getEnergy' && isExec) {
                 if (isOppo) eheros = eheros ?? ceheros;
                 else heros = heros ?? cheros;
@@ -4333,6 +4340,7 @@ export default class GeniusInvokationClient {
                     hidxs: [hidx],
                     isChargedAtk: (this.players[plidx].dice.length & 1) == 0,
                     minusDiceSkill: mds,
+                    hcards: this.players[plidx].handCards,
                     trigger: 'calc',
                 });
                 calcDmgChange(slotres);
