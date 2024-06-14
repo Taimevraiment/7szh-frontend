@@ -2408,14 +2408,14 @@ const statusTotal: StatusObj = {
         }, { icbg: STATUS_BG_COLOR[7] }),
 
     2217: (cnt = 1) => new GIStatus(2217, '奇异之躯', '每层为【hro1724】提供1点额外最大生命。',
-        'ski1724,3', 0, [9, 12], cnt, 1000, -1, undefined, { icbg: STATUS_BG_COLOR[1] }),
+        'ski1724,3', 0, [9], cnt, 1000, -1, undefined, { icbg: STATUS_BG_COLOR[1] }),
 
     2218: () => new GIStatus(2218, '二重毁伤弹', '【所在阵营切换角色后：】对切换到的角色造成1点[火元素伤害]。；【[可用次数]：{useCnt}】',
         'ski1213,2', 1, [1], 2, 0, -1, () => ({
             damage: 1,
             element: 2,
             isSelf: true,
-            trigger: ['change-from'],
+            trigger: ['change-to'],
             exec: eStatus => {
                 if (eStatus) --eStatus.useCnt;
             }

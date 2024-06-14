@@ -1123,7 +1123,7 @@ export default class GeniusInvokationClient {
                 }
             });
             this.modalInfo = { ...NULL_MODAL };
-            this.useSkill(-1, { isOnlyRead: true, otriggers: 'change-from' });
+            this.useSkill(-1, { isOnlyRead: true, otriggers: ['change-from', 'change-to'] });
         }
     }
     /**
@@ -1382,44 +1382,46 @@ export default class GeniusInvokationClient {
         let isQuickAction = false;
         let switchAtkPre = 0;
         if (isSwitch > -1) {
-            const { statusIdsAndPidx } = this._doStatus(this.playerIdx, 1, 'change-from', { isOnlyFront: true, isExec: false });
+            const { statusIdsAndPidx } = this._doStatus(this.playerIdx, 1, ['change-from', 'change-to'], { isOnlyFront: true, isExec: false });
             switchAtkPre = statusIdsAndPidx.length;
             if (statusIdsAndPidx.length > 0 && !isExec) {
                 for (let i = 0; i < switchAtkPre; ++i) {
                     const { id: stsId, type: stsType } = statusIdsAndPidx[i];
                     const sts = clone([aHeros[ahidx].inStatus, aHeros[ahidx].outStatus][stsType].find(sts => sts.id == stsId));
                     if (sts == undefined) throw new Error('status not found');
-                    const stsres = heroStatus(stsId).handle(sts, {
-                        heros: aHeros,
-                        eheros: eaHeros,
-                        trigger: 'change-from',
-                        hidx,
-                    });
-                    const stsreshidxs = stsres.hidxs ?? getBackHidxs(eaHeros);
-                    const { willDamage: willDamage0, willAttachs: willAttachs0, eheros: eheros0,
-                        esummon: esummon0, aheros: aheros0, asummon: asummon0, elrcmds: elrcmds0, isQuickAction: iqa0,
-                    } = this._elementReaction(
-                        stsres.element ?? 0,
-                        new Array(ehlen).fill(0).map((_, i) => [
-                            i == eFrontIdx ? (stsres.damage ?? -1) : -1,
-                            stsreshidxs.includes(i) ? (stsres.pendamage ?? 0) : 0
-                        ]),
-                        eFrontIdx,
-                        eaHeros, esummon,
-                        aHeros, aSummon,
-                        { isExec, usedDice: skill.cost.reduce((a, b) => a + b.val, 0) }
-                    );
-                    willDamage0.forEach((dmg, di) => {
-                        willDamagesPre[di] = allHeros[di].hp > 0 ? [...dmg] : [-1, 0];
-                    });
-                    for (let i = 0; i < ehlen; ++i) willAttachPre[i + (this.playerIdx ^ 1) * ahlen].push(willAttachs0[i]);
-                    eaHeros = [...eheros0];
-                    aHeros = [...aheros0];
-                    aSummon = [...asummon0];
-                    esummon = [...esummon0];
-                    skillcmds.push(...elrcmds0[0]);
-                    eskillcmds.push(...elrcmds0[1]);
-                    isQuickAction ||= iqa0;
+                    for (const trigger of ['change-from', 'change-to'] as Trigger[]) {
+                        const stsres = heroStatus(stsId).handle(sts, {
+                            heros: aHeros,
+                            eheros: eaHeros,
+                            trigger,
+                            hidx,
+                        });
+                        const stsreshidxs = stsres.hidxs ?? getBackHidxs(eaHeros);
+                        const { willDamage: willDamage0, willAttachs: willAttachs0, eheros: eheros0,
+                            esummon: esummon0, aheros: aheros0, asummon: asummon0, elrcmds: elrcmds0, isQuickAction: iqa0,
+                        } = this._elementReaction(
+                            stsres.element ?? 0,
+                            new Array(ehlen).fill(0).map((_, i) => [
+                                i == eFrontIdx ? (stsres.damage ?? -1) : -1,
+                                stsreshidxs.includes(i) ? (stsres.pendamage ?? 0) : 0
+                            ]),
+                            eFrontIdx,
+                            eaHeros, esummon,
+                            aHeros, aSummon,
+                            { isExec, usedDice: skill.cost.reduce((a, b) => a + b.val, 0) }
+                        );
+                        willDamage0.forEach((dmg, di) => {
+                            willDamagesPre[di] = allHeros[di].hp > 0 ? [...dmg] : [-1, 0];
+                        });
+                        for (let i = 0; i < ehlen; ++i) willAttachPre[i + (this.playerIdx ^ 1) * ahlen].push(willAttachs0[i]);
+                        eaHeros = [...eheros0];
+                        aHeros = [...aheros0];
+                        aSummon = [...asummon0];
+                        esummon = [...esummon0];
+                        skillcmds.push(...elrcmds0[0]);
+                        eskillcmds.push(...elrcmds0[1]);
+                        isQuickAction ||= iqa0;
+                    }
                 }
             }
             if (!isOnlyRead) {
@@ -1684,13 +1686,13 @@ export default class GeniusInvokationClient {
                 ehidx = cswo > -1 ? cswo : ehidx;
             }
             if (isSelf) {
-                if (isSwitchOppo(elrcmds3[0])) atriggers3[hidx].push('change-from');
+                if (isSwitchOppo(elrcmds3[0])) atriggers3[hidx].push('change-from', 'change-to');
                 const { statusIdsAndPidx } = this._doStatus(this.playerIdx, 1, atriggers3[hidx], { hidxs: [ahidx], isExec: false });
                 if (statusIdsAndPidx.length > 0) isSwitchAtk = true;
                 doAfterStatus(aHeros[ahidx].inStatus, 0, atriggers3[ahidx], ahidx, ehidx, 1, true);
                 doAfterStatus(aHeros[hidx].outStatus, 1, atriggers3[hidx], ahidx, ehidx, 1, true);
             } else {
-                if (isSwitchOppo(elrcmds3[0])) etriggers3[hidx].push('change-from');
+                if (isSwitchOppo(elrcmds3[0])) etriggers3[hidx].push('change-from', 'change-to');
                 const { statusIdsAndPidx } = this._doStatus(this.playerIdx ^ 1, 1, etriggers3[oeFrontIdx], { hidxs: [ehidx], isExec: false });
                 if (statusIdsAndPidx.length > 0) isSwitchAtk = true;
                 doAfterStatus(eaHeros[ehidx].inStatus, 0, etriggers3[ehidx], ahidx, ehidx, 0, true);
@@ -1746,7 +1748,10 @@ export default class GeniusInvokationClient {
         }
         const { ndices, isSwitch: swc = -1, isSwitchOppo: swco = -1 } = this._doCmds(skillcmds, { heros: aHeros, eheros: eaHeros, summons: aSummon, isEffectHero: true, isRollDice: true, isExec, isAction: true });
         const { ndices: edices } = this._doCmds(eskillcmds, { heros: eaHeros, eheros: aHeros, isEffectHero: true, pidx: this.playerIdx ^ 1, isRollDice: true, isExec, isAction: true });
-        const aswhidx = isSwitchSelf(skillcmds) ? swc : -1;
+        const dtriggers: Trigger[] = [];
+        if (typeof otriggers == 'string') dtriggers.push(otriggers);
+        else dtriggers.push(...otriggers);
+        const aswhidx = isSwitchSelf(skillcmds) ? swc : sidx == -1 && dtriggers.includes('change-to') ? aHeros.findIndex(h => h.isSelected > 0) : -1;
         const eswhidx = isSwitchOppo(skillcmds) ? swco : -1;
         if (sidx > -1) {
             const [afterASkillTrgs, afterESkillTrgs] = [atriggers, etriggers]
@@ -1771,16 +1776,13 @@ export default class GeniusInvokationClient {
             }
         }
         if (isSwitchOppo(skillcmds)) {
-            const { statusIdsAndPidx } = this._doStatus(this.playerIdx ^ 1, 1, 'change-from', { hidxs: [oeFrontIdx], isExec: false, heros: eaHeros });
+            const { statusIdsAndPidx } = this._doStatus(this.playerIdx ^ 1, 1, ['change-from', 'change-to'], { hidxs: [oeFrontIdx], isExec: false, heros: eaHeros });
             if (statusIdsAndPidx.length > 0) isSwitchAtk = true;
-            doAfterStatus(eaHeros[oeFrontIdx].inStatus, 0, ['change-from'], aswhidx, eswhidx, 0, true);
-            doAfterStatus(eaHeros[oeFrontIdx].outStatus, 1, ['change-from'], aswhidx, eswhidx, 0, true);
+            doAfterStatus(eaHeros[oeFrontIdx].inStatus, 0, ['change-from', 'change-to'], aswhidx, eswhidx, 0, true);
+            doAfterStatus(eaHeros[oeFrontIdx].outStatus, 1, ['change-from', 'change-to'], aswhidx, eswhidx, 0, true);
         }
         if (sidx == -1 || isSwitchSelf(skillcmds)) {
-            const dtriggers: Trigger[] = [];
-            if (typeof otriggers == 'string') dtriggers.push(otriggers);
-            else dtriggers.push(...otriggers);
-            const triggers: Trigger[] = sidx == -1 ? dtriggers : ['change-from'];
+            const triggers: Trigger[] = sidx == -1 ? dtriggers : ['change-from', 'change-to'];
             const { statusIdsAndPidx } = this._doStatus(this.playerIdx, 1, triggers, { hidxs: [hidx], isExec: false, heros: aHeros });
             if (statusIdsAndPidx.length > 0) isSwitchAtk = true;
             doAfterStatus(aHeros[ahidx].inStatus, 0, triggers, aswhidx, eswhidx, 1, true);
@@ -1976,7 +1978,7 @@ export default class GeniusInvokationClient {
             Array.from({ length: this.player.heros.length - 1 }, (_, i) => (this.player.hidx + i + 1) % this.player.heros.length);
         }
         this.player.heros[hidx].outStatus = this.player.heros[this.player.hidx].outStatus;
-        this._doStatus(this.playerIdx, 1, 'change-from', { hidxs: [hidx], isQuickAction: isCdt(isQuickAction, 2) });
+        this._doStatus(this.playerIdx, 1, ['change-from', 'change-to'], { hidxs: [hidx], isQuickAction: isCdt(isQuickAction, 2) });
         const { heros } = this._doCmds(cmds);
         if (heros) this.player.heros = heros;
         this.socket.emit('sendToServer', {
@@ -3320,7 +3322,7 @@ export default class GeniusInvokationClient {
                 siteCnt[pidx][stidx] += siteres.siteCnt ?? 0;
                 if (isExec) {
                     if (siteres.isNotAddTask) {
-                        const siteexecres = siteres.exec?.({ isQuickAction, changeHeroDiceCnt, summonDiffCnt, minusDiceCard });
+                        const siteexecres = siteres.exec?.({ isQuickAction, changeHeroDiceCnt, summonDiffCnt });
                         changeHeroDiceCnt = siteexecres?.changeHeroDiceCnt ?? 0;
                         cmds.push(...(siteexecres?.cmds ?? []));
                         if (siteexecres?.isDestroy && (!siteres.isExchange || isExchange)) destroys.push(stidx);
@@ -3346,7 +3348,7 @@ export default class GeniusInvokationClient {
                                     });
                                 },
                                 () => { // 数量、效果变化
-                                    siteexecres = siteres.exec?.({ isQuickAction, changeHeroDiceCnt, summonDiffCnt, minusDiceCard }) ?? siteexecres;
+                                    siteexecres = siteres.exec?.({ isQuickAction, changeHeroDiceCnt, summonDiffCnt }) ?? siteexecres;
                                     console.info(`[${p.name}]${state}:${site.card.name}-${site.sid}.cnt:${site.cnt}.perCnt:${site.perCnt}`);
                                     if (siteexecres.cmds) {
                                         if (siteexecres.cmds.some(({ cmd }) => cmd == 'getCard')) curIntvl[2] = 2000;
@@ -3651,7 +3653,7 @@ export default class GeniusInvokationClient {
             willHeals.forEach(whl => this._doHeal(whl, aheros, { pidx }));
             let isSwitchAtk = false;
             if (!isSelf && elrcmds[0].some(cmds => cmds.cmd?.includes('switch') && cmds.isOppo)) {
-                const { statusIdsAndPidx: stpidx } = this._doStatus(pidx ^ 1, 1, 'change-from', { hidxs: [eFrontIdx] });
+                const { statusIdsAndPidx: stpidx } = this._doStatus(pidx ^ 1, 1, ['change-from', 'change-to'], { hidxs: [eFrontIdx] });
                 if (stpidx.length > 0) isSwitchAtk = true;
             }
             this.socket.emit('sendToServer', {
@@ -4055,7 +4057,7 @@ export default class GeniusInvokationClient {
                     this.willSwitch[cpidx * ceheros.length + nhidx] = true;
                     if (isOppo) isSwitchOppo = nhidx;
                     else if (isSwitch == -1) isSwitch = nhidx;
-                    else if (!cmds.some(({ cmd }) => cmd == 'useSkill')) this.useSkill(-1, { isOnlyRead: true, otriggers: 'change-from' });
+                    else if (!cmds.some(({ cmd }) => cmd == 'useSkill')) this.useSkill(-1, { isOnlyRead: true, otriggers: ['change-from', 'change-to'] });
                 }
                 if (nhidx > -1) cmds[i].hidxs = [nhidx];
             } else if (['getCard', 'addCard'].includes(cmd)) {

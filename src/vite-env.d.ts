@@ -520,7 +520,7 @@ type SiteHandleEvent = {
 
 type SiteHandleRes = {
     trigger?: Trigger[],
-    exec?: (event: SiteExeEvent) => SiteExecRes,
+    exec?: (event: SiteExecEvent) => SiteExecRes,
     minusDiceCard?: number,
     minusDiceHero?: number,
     minusDiceSkill?: number[][],
