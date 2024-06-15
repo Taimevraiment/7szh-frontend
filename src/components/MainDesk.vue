@@ -1333,15 +1333,12 @@ button:active {
   margin: 0 3%;
 }
 
-.site-can-use {
+.site-can-use,
+.summon-can-use {
   box-shadow: 0 0 15px yellow inset;
 }
 
 .slot-can-use {
-  box-shadow: 0 0 5px 2px yellow inset;
-}
-
-.summon-can-use {
   box-shadow: 0 0 5px 2px yellow inset;
 }
 

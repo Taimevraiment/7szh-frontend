@@ -130,7 +130,7 @@ const card751sts = (windEl: number) => {
         }), { icbg: STATUS_BG_COLOR[windEl] })
 }
 
-const shieldStatus = (id: number, name: string, cnt = 2, mcnt = 0) => new GIStatus(id, name, `为我方出战角色提供${cnt}点[护盾]。${mcnt > 0 ? `(可叠加，最多到${mcnt})` : ''}`, '', 1, [7], cnt, mcnt, -1)
+const shieldStatus = (id: number, name: string, cnt = 2, mcnt = 0) => new GIStatus(id, name, `为我方出战角色提供${cnt}点[护盾]。${mcnt > 0 ? `(可叠加，最多到${mcnt})` : ''}`, '', 1, [7], cnt, mcnt, -1);
 
 const readySkillShieldStatus = (id: number, name: string) => new GIStatus(id, name, '准备技能期间，提供2点[护盾]，保护所附属角色。', '', 0, [7], 2, 0, -1);
 
@@ -2353,11 +2353,11 @@ const statusTotal: StatusObj = {
             return {
                 trigger: ['skill'],
                 addDmg: 3,
-                exec: () => ({ cmds: [{ cmd: 'heal', cnt }] })
+                cmds: [{ cmd: 'heal', cnt }],
             }
-        }),
+        }, { icbg: STATUS_BG_COLOR[7] }),
 
-    2211: () => shieldStatus(2211, 'todo重燃的绿洲之心护盾'),
+    2211: () => new GIStatus(2211, '绿洲之庇护', '提供2点[护盾]，保护所附属角色。', '', 0, [7], 2, 0, -1),
 
     2212: (summonId: number, useCnt = 1) => new GIStatus(2212, '黑色幻影', '【我方出战角色受到伤害时：】抵消1点伤害，然后[可用次数]-2。；【[可用次数]：{useCnt}】',
         '', 1, [2], useCnt, 0, -1, (status, event = {}) => {
