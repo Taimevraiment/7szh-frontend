@@ -105,7 +105,7 @@ type Site = {
     perCnt: number, // 每回合x次
     hpCnt: number, // 回血数
     type: number, // 类型 1轮次 2收集物 3常驻
-    handle: (site: Site, event: SiteHandleEvent) => SiteHandleRes, // 处理效果函数
+    handle: (site: Site, event?: SiteHandleEvent) => SiteHandleRes, // 处理效果函数
     isSelected: boolean, // 是否被选择
     canSelect: boolean, // 能否被选择
 }

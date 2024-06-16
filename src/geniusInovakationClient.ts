@@ -1715,7 +1715,7 @@ export default class GeniusInvokationClient {
                         isChargedAtk: isSelf ? isChargedAtk : false,
                     });
                     const isSelfAtk = +!!stsres.isSelf;
-                    if (this._hasNotTrigger(stsres.trigger, state)) continue;
+                    if (this._hasNotTriggered(stsres.trigger, state)) continue;
                     if (sts.type.includes(1) && (stsres.damage || stsres.pendamage || stsres.heal)) {
                         // if (state.startsWith('after') || state.startsWith('change')) {
                         if (state.startsWith('change')) {
@@ -2000,8 +2000,7 @@ export default class GeniusInvokationClient {
     /**
      * 投骰子
      * @param dices 骰子具体情况的数组
-     * @param isDone 是否结束重投
-     * @param options 投骰子的玩家idx, frontIdx 出战角色idx(重新排序，不会增加骰子，不会重投)
+     * @param options pidx 投骰子的玩家idx, frontIdx 出战角色idx(重新排序，不会增加骰子，不会重投)
      * @returns val:骰子数组, isDone:是否结束重投
      */
     rollDice(dices?: DiceVO[], options: { pidx?: number, frontIdx?: number } = {}) {
@@ -2018,27 +2017,24 @@ export default class GeniusInvokationClient {
         } else {
             if (player.dice.length > 0) return;
             player.heros.forEach((h, hi) => {
-                [h.artifactSlot, h.talentSlot, h.weaponSlot].forEach(slot => {
-                    if (slot != null) {
-                        const slotres = cardsTotal(slot.id).handle(slot, { heros: player.heros, hidxs: [hi], trigger: 'phase-dice' });
-                        if (slotres.trigger?.includes('phase-dice')) {
-                            const { element = 0, cnt = 0 } = slotres;
-                            tmpDice[element][1] += cnt;
-                            diceLen -= cnt;
-                        }
-                    }
-                });
-            });
-            player.site.forEach(site => {
-                const siteres = newSite(site.id, site.card.id).handle(site);
-                if (siteres.trigger?.includes('phase-dice')) {
-                    let { element = 0, cnt = 0, addRollCnt = 0 } = siteres;
-                    if (element == -2) element = this._getFrontHero(pidx).element;
+                for (const slot of [h.artifactSlot, h.talentSlot, h.weaponSlot]) {
+                    if (slot == null) continue;
+                    const slotres = cardsTotal(slot.id).handle(slot, { heros: player.heros, hidxs: [hi], trigger: 'phase-dice' });
+                    if (this._hasNotTriggered(slotres.trigger, 'phase-dice')) continue;
+                    const { element = 0, cnt = 0 } = slotres;
                     tmpDice[element][1] += cnt;
                     diceLen -= cnt;
-                    this.rollCnt += addRollCnt;
                 }
             });
+            for (const site of player.site) {
+                const siteres = newSite(site.id, site.card.id).handle(site);
+                if (this._hasNotTriggered(siteres.trigger, 'phase-dice')) continue;
+                let { element = 0, cnt = 0, addRollCnt = 0 } = siteres;
+                if (element == -2) element = this._getFrontHero(pidx).element;
+                tmpDice[element][1] += cnt;
+                diceLen -= cnt;
+                this.rollCnt += addRollCnt;
+            }
         }
         const isDone = dices != undefined && --this.rollCnt == 0;
         player.rollCnt = this.rollCnt;
@@ -2063,7 +2059,7 @@ export default class GeniusInvokationClient {
         const restDice = tmpDice.filter(v => v[1] > 0).sort((a, b) => b[1] - a[1]);
         for (const idx in restDice) {
             while (restDice[idx][1]-- > 0) {
-                pdice.push(Number(restDice[idx][0]));
+                pdice.push(restDice[idx][0]);
             }
         }
         if (frontIdx == undefined) this.modalInfo = { ...NULL_MODAL };
@@ -2716,7 +2712,7 @@ export default class GeniusInvokationClient {
                     if (sts.type.includes(6) && isReadySkill && skillAddDmgTrgs.some(trg => stsres.trigger?.includes(trg))) {
                         stsres.trigger = [...(stsres.trigger ?? []), 'useReadySkill'];
                     }
-                    if (this._hasNotTrigger(stsres.trigger, trigger)) continue;
+                    if (this._hasNotTriggered(stsres.trigger, trigger)) continue;
                     if (res.willDamage[getDmgIdx][0] > 0) {
                         res.willDamage[getDmgIdx][0] += (stsres?.[`${dmg}`] ?? 0) + (isSummon > -1 ? stsres.addDmgSummon ?? 0 : 0);
                     }
@@ -3063,7 +3059,7 @@ export default class GeniusInvokationClient {
                     tround,
                     force: isExecTask,
                 });
-                if (this._hasNotTrigger(summonres.trigger, state)) continue;
+                if (this._hasNotTriggered(summonres.trigger, state)) continue;
                 if (summonres.isNotAddTask) {
                     addDmg += summonres.addDmgCdt ?? 0;
                     addDiceHero += summonres.addDiceHero ?? 0;
@@ -3312,7 +3308,7 @@ export default class GeniusInvokationClient {
                     epile: players[pidx ^ 1].pile,
                 });
                 if (siteres.isLast && !isLast) lastSite.push(site);
-                if (this._hasNotTrigger(siteres.trigger, state) || (siteres.isLast && !isLast)) continue;
+                if (this._hasNotTriggered(siteres.trigger, state) || (siteres.isLast && !isLast)) continue;
                 isQuickAction ||= siteres.isQuickAction ?? false;
                 minusDiceHero += siteres.minusDiceHero ?? 0;
                 minusDiceCard += siteres.minusDiceCard ?? 0;
@@ -3474,7 +3470,7 @@ export default class GeniusInvokationClient {
                     getcard,
                     isSkill,
                 });
-                if (this._hasNotTrigger(stsres.trigger, trigger)) continue;
+                if (this._hasNotTriggered(stsres.trigger, trigger)) continue;
                 const isTriggeredQuick = isQuickAction == 0 && stsres.isQuickAction;
                 if (group == 1) {
                     if (isQuickAction == 1 && stsres.isQuickAction && stsres.minusDiceHero == undefined) continue;
@@ -3723,7 +3719,7 @@ export default class GeniusInvokationClient {
                         dmg,
                         card: this.currCard,
                     });
-                    if (this._hasNotTrigger(skillres.trigger, trigger)) continue;
+                    if (this._hasNotTriggered(skillres.trigger, trigger)) continue;
                     isTriggered = true;
                     isQuickAction ||= !!skillres.isQuickAction;
                     cmds.push(...(skillres.cmds ?? []));
@@ -3853,7 +3849,7 @@ export default class GeniusInvokationClient {
                             isExecTask: !!taskMark,
                             isElStatus,
                         });
-                        if (this._hasNotTrigger(slotres.trigger, trigger)) continue;
+                        if (this._hasNotTriggered(slotres.trigger, trigger)) continue;
                         tcmds.push(...(slotres.execmds ?? []));
                         cmds.push(...(slotres.execmds ?? []));
                         if (taskMark || (isExec && !slotres.execmds?.length && !slotres.isAddTask)) {
@@ -3978,7 +3974,7 @@ export default class GeniusInvokationClient {
         const cmds: Cmds[] = [];
         for (const card of cards) {
             const cardres = cardsTotal(card.id).handle(card, { trigger: 'discard' });
-            if (this._hasNotTrigger(cardres.trigger, 'discard')) continue;
+            if (this._hasNotTriggered(cardres.trigger, 'discard')) continue;
             const { cmds: cardcmds = [] } = this._doCmds(cardres.cmds, { pidx });
             cmds.push(...cardcmds);
             summons.push(...(cardres.summon ?? []));
@@ -4529,12 +4525,12 @@ export default class GeniusInvokationClient {
         });
     }
     /**
-     * 是否触发
+     * 是否未触发
      * @param triggers 触发组
      * @param trigger 触发值
-     * @returns 是否触发
+     * @returns 是否未触发
      */
-    _hasNotTrigger(triggers: Trigger[] | undefined, trigger: Trigger) {
+    _hasNotTriggered(triggers: Trigger[] | undefined, trigger: Trigger) {
         return (triggers ?? []).every(tr => tr != trigger.split(':')[0]);
     }
     /**
