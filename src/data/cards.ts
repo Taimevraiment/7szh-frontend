@@ -2076,7 +2076,7 @@ const allCards: CardObj = {
         'https://uploadstatic.mihoyo.com/ys-obc/2022/12/06/12109492/29356bd9bc7cbd8bf4843d6725cb8af6_6954582480310016602.png',
         3, 5, 0, [6, 7], 1781, 1),
 
-    725: new GICard(725, '重铸：岩盔', '{action}；装备有此牌的【{hro}】击倒地方角色后：【{hro}】重新附属【sts2045】和【sts2046】。',
+    725: new GICard(725, '重铸：岩盔', '{action}；装备有此牌的【{hro}】击倒敌方角色后：【{hro}】重新附属【sts2045】和【sts2046】。',
         'https://patchwiki.biligame.com/images/ys/9/9f/ijpaagvk7o9jh1pzb933vl9l2l4islk.png',
         4, 6, 0, [6, 7], 1801, 2, () => ({
             trigger: ['kill'],
